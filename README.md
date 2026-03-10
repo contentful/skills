@@ -4,7 +4,7 @@ Repository for Agent Skills
 
 ## Skills
 
-- [contentful-personalization](./contentful-personalization/) for global personalization
+- [contentful-personalization](./skills/contentful-personalization/) for global personalization
 
 ## Getting started
 
@@ -12,6 +12,5 @@ Repository for Agent Skills
 git clone git@github.com:contentful/skills.git
 
 # hand pick the tools you want
-ln -s "$HOME/Projects/contentful/skills/contentful-personalization" "$HOME/.config/opencode/skills/contentful-personalization"
+ln -s "$HOME/Projects/contentful/skills/skills/contentful-personalization" "$HOME/.config/opencode/skills/contentful-personalization"
 ```
-g
