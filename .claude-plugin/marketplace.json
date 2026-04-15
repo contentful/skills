@@ -1,0 +1,11 @@
+{
+  "name": "contentful-skills",
+  "owner": {
+    "name": "Contentful"
+  },
+  "metadata": {
+    "description": "Agent Skills for the Contentful platform",
+    "version": "0.0.0"
+  },
+  "plugins": []
+}
