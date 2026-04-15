@@ -1,0 +1,7 @@
+{
+  "name": "@contentful/skill-optimization-setup",
+  "version": "0.0.0",
+  "description": "Guided setup of Contentful optimization and personalization SDKs",
+  "license": "MIT",
+  "files": ["SKILL.md", "references/**"]
+}

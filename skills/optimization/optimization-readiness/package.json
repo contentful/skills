@@ -1,0 +1,7 @@
+{
+  "name": "@contentful/skill-optimization-readiness",
+  "version": "0.0.0",
+  "description": "Assess optimization and personalization readiness for a Contentful project",
+  "license": "MIT",
+  "files": ["SKILL.md", "references/**"]
+}
