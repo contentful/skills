@@ -5,12 +5,14 @@ description: >-
   Analyzes framework, Contentful SDK setup, component architecture, and rendering
   pipeline by reading code — no execution, no API calls. Produces a readiness report
   with actionable recommendations. Use when asked to check optimization readiness,
-  audit personalization setup, evaluate prerequisites, determine if a project can
-  support personalization or A/B testing. Also triggers on "am I ready for
-  personalization", "can I install Ninetailed", "is my project ready", "evaluate my
-  codebase", "readiness check", "can my app support A/B testing". Not for installing
-  or configuring SDKs — use $optimization-setup for that. Not for diagnosing issues
-  in an existing setup — use $optimization-doctor for that.
+  audit personalization setup, evaluate prerequisites, validate setup, determine if
+  a project can support personalization or A/B testing. Also triggers on "am I ready
+  for personalization", "can I install Ninetailed", "is my project ready", "evaluate
+  my codebase", "readiness check", "can my app support A/B testing", "pre-check",
+  "prerequisites for personalization". Not for installing or configuring SDKs — use
+  $optimization-setup for that. Not for diagnosing issues in an existing setup — use
+  $optimization-doctor for that.
+license: MIT
 ---
 
 # Optimization Readiness
@@ -20,6 +22,11 @@ personalization, optimization, and analytics.
 
 This is a **read-only analysis** — read files, search code, inspect configs.
 Do not run the project, execute scripts, or call external APIs.
+
+For background on how personalization works (the content model, rendering
+flow, and why each check matters), see
+[references/how-personalization-works.md](references/how-personalization-works.md).
+Read it before starting if you're unfamiliar with Ninetailed.
 
 ## Procedure
 
@@ -163,20 +170,33 @@ For detailed patterns, see [references/component-patterns.md](references/compone
    - Components with literal text/images that should come from Contentful
    - These can't be personalized until migrated to CMS content
 
-4. **Check Contentful query depth**:
-   - The `include` parameter in `getEntries` calls
-   - Needs at least 2 for experiences to resolve (entry → experience → variant)
+4. **Check Contentful query depth** (critical — see how-personalization-works.md):
+   - Search for `.include(` or `include:` in `getEntries`/`getEntry` calls
+   - Parse the actual numeric value:
+     - `include: 3` or higher → good (entry → experience → variant all resolved)
+     - `include: 2` → minimum viable (works with `.withoutUnresolvableLinks`)
+     - `include: 1` or `include: 0` → experiences won't resolve; MINOR CHANGES
+     - No include parameter → defaults vary by SDK version; flag for review
+   - No Contentful queries found at all → content not from CMS; NEEDS WORK
    - Check if `.withoutUnresolvableLinks` is used (recommended)
 
 5. **Check for ISR/revalidation**:
    - `revalidate` in `getStaticProps` return value
    - ISR is ideal for personalization — static generation with incremental updates
 
+6. **Note SSR/edge capability** (not a blocker — just capability assessment):
+   - Search for `middleware.ts` or `middleware.js` → Next.js edge middleware
+   - Search for `wrangler.toml` → Cloudflare Workers
+   - Search for `@ninetailed/experience.js-plugin-ssr` in package.json
+   - If any found: note "SSR/edge-side personalization possible (no flash of default content)"
+   - If none: note "Client-side personalization only (baseline shows briefly before variant swap)"
+
 **Assess**:
-- Page-level fetching + sufficient include depth → Ready
+- Page-level fetching + include ≥ 2 → Ready
 - Component-level fetching → Needs restructuring
 - Hard-coded content → Needs CMS migration
 - Include depth < 2 → Simple fix (increase include value)
+- No Contentful queries → Content not from CMS; needs migration
 
 For framework-specific notes, see [references/framework-notes.md](references/framework-notes.md).
 
@@ -228,6 +248,51 @@ Use $optimization-setup for guided installation and configuration.
 - `MINOR CHANGES` — Small fixes (config tweaks, increasing include depth)
 - `NEEDS WORK` — Moderate effort (add mapper, restructure fetching)
 - `NOT READY` — Significant restructuring required
+
+## Example Report
+
+```markdown
+## Optimization Readiness Report
+
+### Framework: Next.js 14.1.0 (App Router) READY
+- App Router detected (`app/` directory with `layout.tsx`)
+- Server Components with `'use client'` boundaries in place
+- ISR via `revalidate: 5` in multiple routes
+- Compatible with both client-side and server-side personalization
+
+### Contentful Setup: READY
+- `contentful` v10.6.21 installed
+- Client configured in `lib/contentful.ts` with space ID from env var
+- Preview client configured (preview.contentful.com)
+- Include depth: 10 (sufficient)
+- `.withoutUnresolvableLinks` used
+
+### Existing Ninetailed Setup: NOT INSTALLED
+- No `@ninetailed/*` packages in package.json
+- No NinetailedProvider in source
+- Fresh setup — use $optimization-setup for guided installation
+
+### Component Architecture: MINOR CHANGES
+- Component mapper found in `components/Renderer/BlockRenderer.tsx`
+  - Maps 8 content types: hero, cta, feature, banner, pricing, faq, testimonial, footer
+  - Components are well-isolated (props → JSX, no internal data fetching)
+- No `nt_experiences` field references (expected — Ninetailed not yet installed)
+- 2 content types (`callout`, `stat-grid`) have components but are not in the mapper
+- Recommendation: Add `callout` and `stat-grid` to ContentTypeMap
+
+### Rendering Pipeline: READY
+- Data fetched at page level in Server Components
+- Entries passed down as props to Client Component wrappers
+- No hard-coded content detected in personalizable components
+- SSR/edge capability: `middleware.ts` present (edge middleware ready)
+
+### Overall: READY WITH MINOR CHANGES
+
+### Recommendations
+1. Add `callout` and `stat-grid` to the ContentTypeMap in BlockRenderer.tsx
+2. Run $optimization-setup for guided Ninetailed SDK installation
+3. Edge middleware detected — consider server-side personalization for no-flash experience
+```
 
 ## Assessment Criteria
 

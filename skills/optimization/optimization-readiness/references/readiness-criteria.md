@@ -40,7 +40,7 @@ Detailed rubric for each readiness check.
 | SDK installed | `contentful` in deps | — | Not installed |
 | Client configured | `createClient()` found | Multiple clients not unified | No client setup |
 | Env vars | Space ID + token in .env | Hardcoded values | Neither .env nor hardcoded |
-| Include depth | ≥ 2 in queries | < 2 (easy fix) | No Contentful queries found |
+| Include depth | ≥ 3 in queries | 2 (works with `.withoutUnresolvableLinks`) | < 2 (easy fix — increase value) |
 | Preview client | Configured | — | Not configured (optional) |
 
 ## Component Architecture Rubric
@@ -83,7 +83,7 @@ Report any gaps:
 |-----------|-------|---------------|------------|-----------|
 | Fetching location | Page level | Mix of page + some component | All component-level | No clear pattern |
 | Content source | All from Contentful | Mostly CMS, some hardcoded | Mix | Mostly hardcoded |
-| Include depth | ≥ 2 | 1 (increase it) | 0 or not set | No Contentful queries |
+| Include depth | ≥ 3 | 2 (minimum viable) | 0 or 1 (increase it) | No Contentful queries found |
 | Data flow | Props down from page | Some context, mostly props | Heavy context/global state | Chaotic |
 
 ## Environment Variables Checklist
