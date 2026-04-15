@@ -24,7 +24,7 @@ variant content.
 
 ## Content Model
 
-Three Contentful content types power personalization:
+Two Contentful content types power personalization:
 
 ### nt_experience
 
@@ -40,7 +40,7 @@ An audience defines targeting rules (e.g., "visitors from Germany",
 "returning users", "users with trait plan=enterprise"). Rules are
 evaluated server-side by the Experience API.
 
-### The `nt_experiences` field
+### The `nt_experiences` field (on your own content types)
 
 Regular content types (hero, banner, CTA, etc.) get an `nt_experiences`
 field added in Contentful — an array of references to `nt_experience`
