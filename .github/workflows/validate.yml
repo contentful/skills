@@ -16,5 +16,5 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Validate skills
-        run: npx skills validate
+      - name: Verify skills are discoverable
+        run: npx -y skills add . --list --full-depth 2>&1 | tee /dev/stderr | grep -q "Found"

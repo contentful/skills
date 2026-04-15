@@ -47,9 +47,13 @@ For code skills with scripts, see `skill-authoring`'s script conventions section
 
 ## Validation
 
+Verify all skills are discoverable:
+
 ```bash
-npx skills validate
+npx skills add . --list --full-depth
 ```
+
+This should list every skill in the repo with its name and description. CI runs this automatically on PRs.
 
 ## Commit Conventions
 

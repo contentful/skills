@@ -344,7 +344,7 @@ This is a documentation convention for the agent — no runtime enforcement.
    - `scripts/` for executable code
    - `assets/` for templates and static resources
 
-6. Validate: `npx skills validate`
+6. Verify discovery: `npx skills add . --list --full-depth`
 
 7. Update `README.md` if it's a distributed skill
 
