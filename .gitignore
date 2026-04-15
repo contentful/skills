@@ -21,3 +21,6 @@ out/
 
 # Logs
 *.log
+
+# Local research docs
+.docs/
