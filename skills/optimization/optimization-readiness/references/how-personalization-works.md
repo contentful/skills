@@ -24,7 +24,7 @@ variant content.
 
 ## Content Model
 
-Two Contentful content types power personalization:
+Three Contentful content types are installed by the Ninetailed app:
 
 ### nt_experience
 
@@ -39,6 +39,37 @@ An experience defines the personalization rule:
 An audience defines targeting rules (e.g., "visitors from Germany",
 "returning users", "users with trait plan=enterprise"). Rules are
 evaluated server-side by the Experience API.
+
+### nt_mergetag
+
+A merge tag is a content entry that maps a display name to a profile data
+path. Content editors create these in Contentful (e.g., "City of the visitor"
+→ `location.city`). Fields:
+
+| Field | Purpose |
+|-------|---------|
+| `nt_name` | Display name (e.g., "First Name", "City of the visitor") |
+| `nt_mergetag_id` | Dot-notation path into the visitor profile (e.g., `traits.firstName`, `location.city`, `session.count`) |
+| `nt_fallback` | Optional fallback text when the profile value is unavailable |
+
+Merge tags provide **inline personalization** — inserting visitor-specific
+values into content, as opposed to the `<Experience>` component which swaps
+entire component variants.
+
+Two usage paths:
+1. **In rich text** (CMS-authored): editors embed `nt_mergetag` entries
+   inline in Contentful rich text fields. The rich text renderer detects
+   embedded entries with content type `nt_mergetag` and renders a `<MergeTag>`
+   component.
+2. **Direct in code** (developer-authored): use `<MergeTag id="traits.firstName"
+   fallback="friend" />` anywhere in JSX. This bypasses Contentful entries
+   entirely — just reads from the visitor profile.
+
+The `<MergeTag>` React component resolves the `id` path against the current
+visitor profile (via `useProfile()` hook) and renders the value or fallback.
+The path supports both dot notation (`traits.firstName`) and underscore
+notation (`traits_firstName`) — underscores are treated as potential dots
+for backward compatibility.
 
 ### The `nt_experiences` field (on your own content types)
 
