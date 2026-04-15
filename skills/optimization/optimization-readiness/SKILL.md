@@ -130,11 +130,14 @@ works if components are self-contained and rendered via a content type mapper.
    - Are components tightly coupled to parent state? (problem)
    - Do components have side effects that depend on specific content? (problem)
 
-3. **Check for existing experience integration**:
-   - Search for `nt_experiences` field references in code
+3. **Check for existing experience integration** (presence is a positive signal;
+   absence tells us nothing — content types may be extended in Contentful
+   without any explicit code references):
+   - Search for `nt_experiences` field references in code or type definitions
    - Search for `ExperienceMapper` usage
    - Search for `<Experience` component usage
-   - If found: which content types are already wrapped?
+   - If found: which content types are already wrapped? This means
+     personalization is already partially integrated.
 
 4. **Identify personalizable content types**:
    - Look at the component mapper — which content types have corresponding components?

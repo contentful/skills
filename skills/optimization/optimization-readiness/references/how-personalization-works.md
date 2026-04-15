@@ -43,12 +43,27 @@ evaluated server-side by the Experience API.
 ### The `nt_experiences` field
 
 Regular content types (hero, banner, CTA, etc.) get an `nt_experiences`
-field added — an array of references to `nt_experience` entries. This
-links a piece of content to the experiences that can personalize it.
+field added in Contentful — an array of references to `nt_experience`
+entries. This links a piece of content to the experiences that can
+personalize it. The field is added via the Ninetailed app in the
+Contentful UI, not in code.
 
-**This is why the readiness check looks for `nt_experiences` in code** —
-if content types already have this field, they're already extended for
-personalization.
+When the SDK's `BlockRenderer` accesses `block.fields.nt_experiences`,
+it handles absence gracefully (`|| []`). The field silently appears in
+API responses once the content type is extended — no code changes needed
+for it to show up.
+
+**What finding `nt_experiences` references in code tells you**: the customer
+has already done integration work — they built a BlockRenderer or typed
+their entries to include this field. This means they're **past the setup
+phase** and personalization is wired into their rendering pipeline.
+
+**What NOT finding it tells you**: very little. The content types may or
+may not be extended in Contentful — we can't tell from code alone because
+this skill doesn't make API calls. Many customers use dynamic typing
+and never explicitly reference `nt_experiences` in their TypeScript types.
+The absence is not a problem — it just means we can't assess CMS-side
+readiness from the codebase.
 
 ## The Rendering Flow
 
