@@ -33,12 +33,19 @@ Contentful is a headless, API-first CMS (composable content platform) that lets 
 
 ## Workflow
 
-1. Confirm Next.js project structure (App Router vs Pages Router).
-2. Configure required env vars.
-3. Install and initialize `contentful` SDK.
-4. Implement published-content fetching.
-5. Add preview-aware behavior for Draft Mode.
-6. Validate with a minimal test route/page and troubleshooting checklist.
+1. Check the latest stable Next.js release online at `https://github.com/vercel/next.js/releases` when version-specific guidance is needed.
+2. Confirm Next.js project structure (App Router vs Pages Router).
+3. Configure required env vars.
+4. Install and initialize `contentful` SDK.
+5. Implement published-content fetching.
+6. Add preview-aware behavior for Draft Mode.
+7. Validate with a minimal test route/page and troubleshooting checklist.
+
+## Version-check policy
+
+- Do not rely on memory for "latest Next.js version" claims.
+- Verify against `https://github.com/vercel/next.js/releases` before recommending upgrades, compatibility workarounds, or version-specific fixes.
+- Treat the latest non-prerelease tag as default unless the user explicitly asks for canary/RC guidance.
 
 ## Required environment variables
 
@@ -48,6 +55,7 @@ Contentful is a headless, API-first CMS (composable content platform) that lets 
 
 ## Defaults
 
+- If the user does not specify router type, default to Next.js App Router guidance.
 - Use CDA host for normal delivery.
 - Use `preview.contentful.com` and preview token when Draft Mode is enabled.
 - Prefer an environment alias (for example `master`) as the client `environment` value to decouple runtime clients from release environment IDs.
