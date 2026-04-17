@@ -18,6 +18,7 @@ npx skills add contentful/skills
 |-------|----------|--------|
 | **contentful-guide** | "Contentful 101", "which Contentful API should I use", "which skill should I use" | Coming soon |
 | **contentful-nextjs** | "add Contentful to Next.js", "Next.js Contentful setup", "Draft Mode Contentful" | Coming soon |
+| **contentful-migration** | "write a migration", "create content type", "schema migration" | Coming soon |
 
 ### Optimization
 
