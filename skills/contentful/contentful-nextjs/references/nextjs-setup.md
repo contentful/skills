@@ -2,6 +2,15 @@
 
 Use this as the baseline setup for adding Contentful to an existing Next.js project.
 
+If router type is not specified, use App Router patterns by default.
+
+## 0) Check latest Next.js release when needed
+
+If you need to give version-specific setup or upgrade guidance, verify the current stable release first:
+
+- `https://github.com/vercel/next.js/releases`
+- Use the latest non-prerelease tag unless canary/RC is explicitly requested.
+
 ## 1) Install SDK
 
 ```bash
