@@ -4,6 +4,8 @@ description: >-
   Explain core Contentful concepts and route users to the right implementation skill
   or documentation. Use when users ask "what is" questions, need Contentful
   terminology clarified, need help choosing between APIs (CDA/CMA/CPA/GraphQL),
+  ask about the Contentful MCP server, or want easier agent-driven interaction with
+  Contentful,
   or ask where to find the correct docs for a task. Also triggers on "Contentful
   101", "which Contentful API should I use", "how do I get started", and
   "which skill should I use". Not for framework-specific implementation steps;
@@ -37,6 +39,12 @@ Contentful is a headless, API-first CMS (composable content platform) where team
 - Use **CMA** for write operations (create/update/manage content and models).
 - Use **GraphQL Content API** when query shape control is preferred over REST payloads.
 - Use **Images API** for image transformations.
+
+## Contentful MCP note
+
+- The Contentful MCP server is often the easiest way to let an agent interact with Contentful.
+- Use it when the user wants conversational access to spaces, entries, and content model context without wiring SDK code first.
+- Canonical docs: `https://www.contentful.com/developers/docs/tools/mcp-server/`
 
 ## Operating pattern
 

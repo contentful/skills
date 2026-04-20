@@ -11,6 +11,8 @@ Stay here when the user asks:
 - "Where are the right docs for this task?"
 - "What is the difference between space/environment/content type?"
 - "How do environment aliases work?"
+- "How do I use Contentful MCP?"
+- "Is there an MCP server for Contentful?"
 
 ## Route to `the contentful-nextjs skill`
 
@@ -36,3 +38,4 @@ Use the appropriate optimization skill for setup, readiness, development, or dia
 
 - If user intent mixes concepts and implementation, answer conceptually in 1-3 bullets, then route.
 - If framework is not Next.js, do not force Next.js instructions; route to platform docs instead.
+- For MCP questions, first share the MCP docs path, then route to implementation skills only if app code changes are requested.
