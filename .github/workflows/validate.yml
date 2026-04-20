@@ -17,7 +17,7 @@ jobs:
           node-version-file: ".nvmrc"
 
       - name: Validate skill frontmatter
-        run: python3 .agents/skills/skill-authoring/scripts/quick_validate.py skills --all
+        run: python3 local-skills/skills/skill-authoring/scripts/quick_validate.py skills --all
 
       - name: Verify skills are discoverable
         run: npx -y skills add . --list --full-depth 2>&1 | tee /dev/stderr | grep -q "Found"
