@@ -130,7 +130,7 @@ description: >-
   troubleshooting optimization problems, debugging personalization behavior,
   or checking why experiments aren't running. Also triggers on "why isn't
   personalization working" or "check my config". Not for initial setup —
-  use $optimization-setup for that.
+  use the optimization-setup skill for that.
 ```
 
 **Bad:**
@@ -143,7 +143,7 @@ Include:
 - Direct trigger keywords the user would naturally say
 - Indirect keywords (e.g., for a deploy skill, also mention "ship", "release")
 - Negative scope to prevent false activations
-- Cross-references to related skills using `$skill-name`
+- Cross-references to related skills with explicit phrasing (for example, `the optimization-setup skill`)
 
 ## Directory Structure
 
@@ -304,11 +304,11 @@ For output patterns, exit code conventions, and `--help` templates, see
 
 ## Cross-Skill References
 
-Use the `$skill-name` convention in SKILL.md body to reference related skills:
+Use explicit phrasing in SKILL.md body to reference related skills:
 
 ```markdown
-Before running this, ensure $optimization-readiness checks pass.
-For initial SDK installation, use $optimization-setup instead.
+Before running this, ensure the optimization-readiness skill checks pass.
+For initial SDK installation, use the optimization-setup skill instead.
 ```
 
 This is a documentation convention for the agent — no runtime enforcement.

@@ -60,7 +60,7 @@ npx skills add contentful/skills --skill optimization-readiness
 
 ## Contributing
 
-See [AGENTS.md](AGENTS.md) for project conventions. Use the internal `skill-authoring` skill for guidance on creating new skills.
+See [AGENTS.md](AGENTS.md) & [CONTRIBUTING.md](CONTRIBUTING.md) for project conventions. Use the internal `skill-authoring` skill for guidance on creating new skills.
 
 ## License
 
