@@ -22,6 +22,9 @@ out/
 # Logs
 *.log
 
+# TypeScript
+*.tsbuildinfo
+
 # Local research docs
 .docs/
 

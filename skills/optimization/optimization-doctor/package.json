@@ -1,7 +1,4 @@
 {
-  "name": "@contentful/skill-optimization-doctor",
-  "version": "0.0.0",
-  "description": "Diagnose and fix Contentful optimization and personalization issues",
-  "license": "MIT",
-  "files": ["SKILL.md", "scripts/**"]
+  "name": "optimization-doctor",
+  "version": "1.0.0"
 }

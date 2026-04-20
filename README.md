@@ -10,13 +10,6 @@ Works with Claude Code, Cursor, GitHub Copilot, OpenAI Codex, Gemini CLI, and [3
 npx skills add contentful/skills
 ```
 
-## Contentful MCP Server
-
-If you want to interact with Contentful more easily through AI agents, use the Contentful MCP server:
-
-- Docs: `https://www.contentful.com/developers/docs/tools/mcp-server/`
-- It provides a simpler conversational interface to work with Contentful content and models.
-
 ## Available Skills
 
 ### Contentful
@@ -57,6 +50,13 @@ gemini skills install contentful/skills
 ```bash
 npx skills add contentful/skills --skill optimization-readiness
 ```
+
+## Contentful MCP Server
+
+If you want to interact with Contentful more easily through AI agents, use the Contentful MCP server:
+
+- Docs: `https://www.contentful.com/developers/docs/tools/mcp-server/`
+- It provides a simpler conversational interface to work with Contentful content and models.
 
 ## Contributing
 
