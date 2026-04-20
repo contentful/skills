@@ -23,6 +23,12 @@ Contentful is a headless, API-first CMS (composable content platform) that separ
 - **GraphQL Content API**: GraphQL endpoint generated from content model.
 - **Images API**: Image transformation and optimization endpoints.
 
+## Common shorthand
+
+- **p13n**: Personalization.
+- **ninetailed**: Personalization.
+- **cf** or **ctfl**: Contentful.
+
 ## Alias usage notes
 
 - Use an alias when you want stable API paths across deploys while switching the target environment.

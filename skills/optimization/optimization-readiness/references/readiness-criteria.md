@@ -6,8 +6,9 @@ Detailed rubric for each readiness check.
 
 | Framework | Version | Support Level | Notes |
 |-----------|---------|--------------|-------|
-| Next.js (Pages Router) | Any | Full | SSR, SSG, ISR all supported |
+| Next.js (Pages Router) | 13+ | Full | SSR, SSG, ISR all supported |
 | Next.js (App Router) | 13.4+ | Full | Server Components require client boundary for provider |
+| Next.js (older baseline) | < 13 | Not ready for setup | Upgrade Next.js before starting personalization setup |
 | Gatsby | 4+ | Full (client-side) | No SSR personalization; plugin-based provider |
 | Remix | 1+ | Partial | Community patterns; loader-based data fetching compatible |
 | React (CRA) | 16.8+ | Full (client-side) | Hooks required; no SSR |
@@ -17,8 +18,8 @@ Detailed rubric for each readiness check.
 
 ### Next.js Version Details
 
-- **< 13.0**: Pages Router only. Fully supported.
-- **13.0-13.3**: App Router experimental. Pages Router recommended.
+- **< 13.0**: Too old for this setup workflow. Mark as `NOT READY` and require upgrade.
+- **13.0-13.3**: Pages Router baseline supported; App Router is experimental.
 - **13.4+**: App Router stable. Both routers supported.
 - **14+**: App Router preferred. Server Actions available but not required.
 
@@ -42,6 +43,20 @@ Detailed rubric for each readiness check.
 | Env vars | Space ID + token in .env | Hardcoded values | Neither .env nor hardcoded |
 | Include depth | ≥ 3 in queries | 2 (works with `.withoutUnresolvableLinks`) | < 2 (easy fix — increase value) |
 | Preview client | Configured | — | Not configured (optional) |
+
+## Existing Ninetailed Setup Rubric
+
+This check measures adoption progress, not code quality.
+
+| Situation | Status | Guidance |
+|----------|--------|----------|
+| No `@ninetailed/experience.js*` packages found | `NOT INSTALLED` | Neutral baseline for projects that have not started personalization yet |
+| Packages found but provider/wrappers missing | `PARTIAL SETUP` | Installation started; wiring and usage still needed |
+| Provider + core wrappers/plugins found | `CONFIGURED` | Existing setup present; validate completeness |
+
+Tone guidance:
+- Do not call this state `NOT READY` when the SDK is simply not installed yet.
+- Prefer neutral wording: "fresh setup", "not installed yet", or "setup not started".
 
 ## Component Architecture Rubric
 
@@ -120,6 +135,11 @@ The overall verdict is the **worst** individual assessment, with one exception:
 - If the only issue is "no Ninetailed packages installed" (check C) but all
   other checks pass, the overall is still **READY** — installing packages is
   what $optimization-setup handles.
+
+Hard gate:
+
+- If framework compatibility is below baseline (for example Next.js < 13), the
+  overall should be treated as blocked for setup until upgrade prerequisites are complete.
 
 | Worst Individual | Overall |
 |-----------------|---------|
