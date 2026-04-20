@@ -30,7 +30,17 @@ CONTENTFUL_ENVIRONMENT_ALIAS=master
 CONTENTFUL_ENVIRONMENT_ID=master
 ```
 
-Get values in Contentful at **Settings -> API keys**.
+If these values are missing, ask the user to add them to `.env.local` before continuing.
+
+Where to find each value:
+- `CONTENTFUL_SPACE_ID`: in the Contentful URL (`/spaces/<SPACE_ID>/...`) or **Space settings -> API keys**.
+- `CONTENTFUL_ACCESS_TOKEN`: from **Space settings -> API keys** (CDA token).
+- `CONTENTFUL_PREVIEW_ACCESS_TOKEN`: from **Space settings -> API keys** (CPA token / Content Preview API).
+- `CONTENTFUL_ENVIRONMENT_ALIAS` and `CONTENTFUL_ENVIRONMENT_ID`: **Space settings -> Environments** / environment aliases.
+
+Creating a single API key in Contentful gives both content delivery tokens:
+- CDA token -> `CONTENTFUL_ACCESS_TOKEN`
+- CPA token -> `CONTENTFUL_PREVIEW_ACCESS_TOKEN`
 
 ## 3) Create a shared client factory
 

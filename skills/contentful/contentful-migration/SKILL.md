@@ -2,7 +2,8 @@
 name: contentful-migration
 description: >-
   Write and run Contentful content model migration scripts using the
-  contentful-migration CLI and library. Covers creating, editing, and deleting
+  contentful-migration library and the Contentful CLI migration command. Covers
+  creating, editing, and deleting
   content types and fields, field types and validations, editor interface
   configuration, editor layouts, sidebar widgets, entry transformations, tags,
   annotations, and the migration context object. Use when asked to write a
@@ -37,7 +38,9 @@ This skill covers:
 - Entry transformations (in-place transforms, deriving linked entries, cross-type transforms)
 - Tags, annotations, taxonomy validations
 - Editor layouts, sidebar widgets
-- Running migrations via CLI and programmatic API
+- Running migrations via `npx contentful space migration` (Contentful CLI) and programmatic API
+
+Do not run migrations with `npx contentful-migration`. Use `contentful-cli` for CLI execution, install it as a dev dependency when needed, and run via `npx contentful ...`.
 
 Not covered: SDK client setup ($contentful-nextjs), Contentful concepts and API routing ($contentful-guide).
 
@@ -70,11 +73,20 @@ The function also receives a `context` object as its second parameter, providing
 
 When writing a migration:
 
-1. **Assess the change.** Identify which content types and fields need to change. Check the current content model in the Contentful web app or via CMA.
-2. **Write the migration script.** Use the operations below. Prefer chaining over object notation — it gives better error messages with line numbers.
-3. **Test in a sandbox environment.** Never run untested migrations against production. Create a sandbox environment first: `contentful environment create --name sandbox --source master`.
-4. **Run the migration.** See [Running Migrations](references/running-migrations.md) for CLI and programmatic options.
-5. **Verify.** Check the content model in the web app. Confirm entries are intact.
+1. **Confirm required env vars first.** If values are missing, ask the user to add them to a local `.env` file before proceeding.
+2. **Assess the change.** Identify which content types and fields need to change. Check the current content model in the Contentful web app or via CMA.
+3. **Write the migration script.** Use the operations below. Prefer chaining over object notation — it gives better error messages with line numbers.
+4. **Test in a sandbox environment.** Never run untested migrations against production. Create a sandbox environment first: `contentful environment create --name sandbox --source master`.
+5. **Run the migration.** See [Running Migrations](references/running-migrations.md) for CLI and programmatic options.
+6. **Verify.** Check the content model in the web app. Confirm entries are intact.
+
+## Required environment variables
+
+- `CONTENTFUL_SPACE_ID` - Space ID. Find it in the Contentful web app URL (`/spaces/<SPACE_ID>/...`) or in **Space settings -> API keys**.
+- `CONTENTFUL_MANAGEMENT_ACCESS_TOKEN` - CMA token used for migrations. Create it in **Account settings -> CMA tokens** (`https://app.contentful.com/account/profile/cma_tokens`) or from a space-scoped CMA tokens page (`https://app.contentful.com/spaces/<SPACE_ID>/api/cma_tokens`).
+- `CONTENTFUL_ENVIRONMENT_ID` (optional) - Target environment ID (for example `master` or `sandbox`) when you want to avoid passing `--environment-id`.
+
+If any required value is missing, explicitly ask the user for the missing values and tell them where to find each one.
 
 ## Content Type Operations
 
