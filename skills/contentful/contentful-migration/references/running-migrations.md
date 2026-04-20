@@ -12,7 +12,11 @@ npm install contentful-migration
 
 Requires Node.js 18 or later.
 
-You need a **Content Management API (CMA) access token** with write access to the target space. Generate one at: Settings > API keys > Content management tokens in the Contentful web app.
+You need a **Content Management API (CMA) access token** with write access to the target space.
+
+Create it in one of these places:
+- Account settings -> CMA tokens: `https://app.contentful.com/account/profile/cma_tokens`
+- Space-scoped CMA tokens page: `https://app.contentful.com/spaces/<SPACE_ID>/api/cma_tokens`
 
 ## CLI Usage
 
@@ -53,11 +57,25 @@ done
 
 | Variable | Description |
 |----------|-------------|
+| `CONTENTFUL_SPACE_ID` | Space ID used by CLI examples and scripts |
 | `CONTENTFUL_MANAGEMENT_ACCESS_TOKEN` | CMA token (avoids passing `--access-token` every time) |
+| `CONTENTFUL_ENVIRONMENT_ID` | Optional default environment ID (for example `master` or `sandbox`) |
 
 ```bash
-export CONTENTFUL_MANAGEMENT_ACCESS_TOKEN=CFPAT-xxxxx
+# .env
+CONTENTFUL_SPACE_ID=your_space_id
+CONTENTFUL_MANAGEMENT_ACCESS_TOKEN=your_cma_token
+CONTENTFUL_ENVIRONMENT_ID=sandbox
+```
 
+Where to find each value:
+- `CONTENTFUL_SPACE_ID`: in the Contentful URL (`/spaces/<SPACE_ID>/...`) or **Space settings -> API keys**.
+- `CONTENTFUL_MANAGEMENT_ACCESS_TOKEN`: **Account settings -> CMA tokens** (`https://app.contentful.com/account/profile/cma_tokens`) or `https://app.contentful.com/spaces/<SPACE_ID>/api/cma_tokens`.
+- `CONTENTFUL_ENVIRONMENT_ID`: **Space settings -> Environments** (for example `master`, `sandbox`, `staging`).
+
+If any required value is missing, ask the user to populate it in `.env` before running migrations.
+
+```bash
 npx contentful-migration -s abc123 -e sandbox 001-create-blog.ts
 ```
 

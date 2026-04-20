@@ -70,11 +70,20 @@ The function also receives a `context` object as its second parameter, providing
 
 When writing a migration:
 
-1. **Assess the change.** Identify which content types and fields need to change. Check the current content model in the Contentful web app or via CMA.
-2. **Write the migration script.** Use the operations below. Prefer chaining over object notation — it gives better error messages with line numbers.
-3. **Test in a sandbox environment.** Never run untested migrations against production. Create a sandbox environment first: `contentful environment create --name sandbox --source master`.
-4. **Run the migration.** See [Running Migrations](references/running-migrations.md) for CLI and programmatic options.
-5. **Verify.** Check the content model in the web app. Confirm entries are intact.
+1. **Confirm required env vars first.** If values are missing, ask the user to add them to a local `.env` file before proceeding.
+2. **Assess the change.** Identify which content types and fields need to change. Check the current content model in the Contentful web app or via CMA.
+3. **Write the migration script.** Use the operations below. Prefer chaining over object notation — it gives better error messages with line numbers.
+4. **Test in a sandbox environment.** Never run untested migrations against production. Create a sandbox environment first: `contentful environment create --name sandbox --source master`.
+5. **Run the migration.** See [Running Migrations](references/running-migrations.md) for CLI and programmatic options.
+6. **Verify.** Check the content model in the web app. Confirm entries are intact.
+
+## Required environment variables
+
+- `CONTENTFUL_SPACE_ID` - Space ID. Find it in the Contentful web app URL (`/spaces/<SPACE_ID>/...`) or in **Space settings -> API keys**.
+- `CONTENTFUL_MANAGEMENT_ACCESS_TOKEN` - CMA token used for migrations. Create it in **Account settings -> CMA tokens** (`https://app.contentful.com/account/profile/cma_tokens`) or from a space-scoped CMA tokens page (`https://app.contentful.com/spaces/<SPACE_ID>/api/cma_tokens`).
+- `CONTENTFUL_ENVIRONMENT_ID` (optional) - Target environment ID (for example `master` or `sandbox`) when you want to avoid passing `--environment-id`.
+
+If any required value is missing, explicitly ask the user for the missing values and tell them where to find each one.
 
 ## Content Type Operations
 

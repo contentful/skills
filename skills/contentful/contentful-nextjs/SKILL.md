@@ -35,7 +35,7 @@ Contentful is a headless, API-first CMS (composable content platform) that lets 
 
 1. Check the latest stable Next.js release online at `https://github.com/vercel/next.js/releases` when version-specific guidance is needed.
 2. Confirm Next.js project structure (App Router vs Pages Router).
-3. Configure required env vars.
+3. Configure required env vars. If they are missing, ask the user to add them to `.env.local` before continuing, and explain where to find each value.
 4. Install and initialize `contentful` SDK.
 5. Implement published-content fetching.
 6. Add preview-aware behavior for Draft Mode.
@@ -49,9 +49,13 @@ Contentful is a headless, API-first CMS (composable content platform) that lets 
 
 ## Required environment variables
 
-- `CONTENTFUL_SPACE_ID`
-- `CONTENTFUL_ACCESS_TOKEN`
-- `CONTENTFUL_PREVIEW_ACCESS_TOKEN` (for preview workflows)
+- `CONTENTFUL_SPACE_ID` - Find it in the Contentful URL (`/spaces/<SPACE_ID>/...`) or in **Space settings -> API keys**.
+- `CONTENTFUL_ACCESS_TOKEN` - CDA token from **Space settings -> API keys**.
+- `CONTENTFUL_PREVIEW_ACCESS_TOKEN` (for preview workflows) - CPA token from **Space settings -> API keys**.
+
+Creating an API key in Contentful provides both tokens needed here:
+- CDA token -> `CONTENTFUL_ACCESS_TOKEN`
+- CPA token -> `CONTENTFUL_PREVIEW_ACCESS_TOKEN`
 
 ## Defaults
 
