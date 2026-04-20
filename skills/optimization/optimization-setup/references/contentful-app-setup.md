@@ -31,7 +31,7 @@ The app setup is responsible for:
 
 ## API Key / Client ID
 
-The Client ID needed for the `NEXT_PUBLIC_NINETAILED_CLIENT_ID` environment variable is found in **Organization settings** > **Optimization** > **Data sources and metrics** > **SDK keys**. Copy it during installation so the frontend SDK can connect to the correct data bucket.
+The Client ID is found in **Organization settings** > **Optimization** > **Data sources and metrics** > **SDK keys**. Copy it during installation so the frontend SDK can connect to the correct data bucket.
 
 ## Data Bucket Guidance
 
