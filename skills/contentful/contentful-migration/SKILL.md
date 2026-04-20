@@ -2,7 +2,8 @@
 name: contentful-migration
 description: >-
   Write and run Contentful content model migration scripts using the
-  contentful-migration CLI and library. Covers creating, editing, and deleting
+  contentful-migration library and the Contentful CLI migration command. Covers
+  creating, editing, and deleting
   content types and fields, field types and validations, editor interface
   configuration, editor layouts, sidebar widgets, entry transformations, tags,
   annotations, and the migration context object. Use when asked to write a
@@ -37,7 +38,9 @@ This skill covers:
 - Entry transformations (in-place transforms, deriving linked entries, cross-type transforms)
 - Tags, annotations, taxonomy validations
 - Editor layouts, sidebar widgets
-- Running migrations via CLI and programmatic API
+- Running migrations via `npx contentful space migration` (Contentful CLI) and programmatic API
+
+Do not run migrations with `npx contentful-migration`. Use `contentful-cli` for CLI execution, install it as a dev dependency when needed, and run via `npx contentful ...`.
 
 Not covered: SDK client setup ($contentful-nextjs), Contentful concepts and API routing ($contentful-guide).
 
