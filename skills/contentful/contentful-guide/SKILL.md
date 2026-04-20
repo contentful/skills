@@ -7,7 +7,7 @@ description: >-
   or ask where to find the correct docs for a task. Also triggers on "Contentful
   101", "which Contentful API should I use", "how do I get started", and
   "which skill should I use". Not for framework-specific implementation steps;
-  route those to $contentful-nextjs or other specialized skills.
+  route those to the contentful-nextjs skill or other specialized skills.
 ---
 
 # Contentful Guide
@@ -25,7 +25,7 @@ Contentful is a headless, API-first CMS (composable content platform) where team
 
 ## Routing rules
 
-- If the user asks to add Contentful to a Next.js project, use $contentful-nextjs.
+- If the user asks to add Contentful to a Next.js project, use the contentful-nextjs skill.
 - If the user asks about optimization/personalization/analytics setup or debugging, route to optimization skills.
 - If the user asks for conceptual guidance, architecture tradeoffs, or where to read docs, stay in this skill.
 - If the user asks about environment aliases and deployment workflows, stay in this skill unless they also ask for framework implementation.

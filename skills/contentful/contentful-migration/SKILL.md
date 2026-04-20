@@ -13,8 +13,8 @@ description: >-
   "space migration", "content model migration", "field validation", "editor
   interface", "field control", "moveField", "changeFieldId", "write a migration",
   "create content type", "add field to content type". Not for SDK client setup
-  or Next.js integration — use $contentful-nextjs. Not for Contentful terminology
-  or API routing — use $contentful-guide.
+  or Next.js integration — use the contentful-nextjs skill. Not for Contentful terminology
+  or API routing — use the contentful-guide skill.
 license: MIT
 ---
 
@@ -42,7 +42,7 @@ This skill covers:
 
 Do not run migrations with `npx contentful-migration`. Use `contentful-cli` for CLI execution, install it as a dev dependency when needed, and run via `npx contentful ...`.
 
-Not covered: SDK client setup ($contentful-nextjs), Contentful concepts and API routing ($contentful-guide).
+Not covered: SDK client setup (the contentful-nextjs skill), Contentful concepts and API routing (the contentful-guide skill).
 
 ## Migration Script Format
 
@@ -286,5 +286,5 @@ See [API Reference — Editor Interface](references/api-reference.md#editor-inte
 
 ## Related Skills
 
-- $contentful-guide — Contentful concepts, terminology, API routing
-- $contentful-nextjs — Next.js integration with Contentful
+- the contentful-guide skill — Contentful concepts, terminology, API routing
+- the contentful-nextjs skill — Next.js integration with Contentful

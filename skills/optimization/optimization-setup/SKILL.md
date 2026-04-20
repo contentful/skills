@@ -1,20 +1,20 @@
 ---
 name: optimization-setup
 description: >-
-  Set up Contentful Personalization end to end in Contentful and code. Covers
+  Set up Contentful Personalization end-to-end in Contentful and code. Covers
   Contentful app installation, data buckets, nt_experience/nt_audience/nt_mergetag
   content model setup, the current production `@ninetailed/experience.js` SDKs,
   the modern `@contentful/optimization` SDKs, Next.js Pages Router and App Router,
   SSR and edge preflight, cookie handling, analytics, preview, and verification.
   Use when asked to set up personalization, install Contentful Personalization,
-  configure Ninetailed, wire the new optimization SDKs, or prepare A/B testing.
-  Not for readiness audits or debugging broken integrations; use
-  $optimization-readiness or $optimization-doctor.
+  configure Ninetailed, wire the new optimization SDKs, prepare A/B testing or just 
+  about how to personalize. Not for readiness audits or debugging broken integrations; use
+  the optimization-readiness skill or the optimization-doctor skill.
 ---
 
 # Optimization Setup
 
-Use this skill to implement a complete customer-ready personalization setup.
+Use this skill to implement a complete customer-ready personalization setup. Always start with the optimization-readiness skill first to assess the project.
 
 ## Default Recommendation
 
@@ -33,16 +33,16 @@ Use this skill to implement a complete customer-ready personalization setup.
 - Next.js Pages Router or App Router integration work
 - Contentful Personalization app installation and content-model preparation
 - Analytics, preview, or middleware setup as part of initial implementation
-- NOT for readiness assessment, use $optimization-readiness
-- NOT for debugging a broken setup, use $optimization-doctor
+- NOT for readiness assessment, use the optimization-readiness skill
+- NOT for debugging a broken setup, use the optimization-doctor skill
 
 ## Setup Workflow
 
 Follow these steps in order. Do not skip the Contentful app setup or verification steps.
 
-### 1) Run a Readiness Check First
+### 1) Run an Optimization Readiness Check First
 
-1. Run $optimization-readiness to understand framework, router, rendering mode, and component mapping patterns.
+1. Run the optimization-readiness skill to understand framework, router, rendering mode, and component mapping patterns.
 2. Confirm the project already fetches Contentful content successfully.
 3. Confirm whether personalization must happen in the browser only, on the server, at the edge, or in a hybrid setup.
 4. Treat readiness as a hard gate before setup implementation:
@@ -201,7 +201,7 @@ For details, see [references/analytics-and-preview.md](references/analytics-and-
 6. Confirm click or component insights fire when expected.
 7. Confirm preview only appears where intended.
 8. Confirm SSR or edge flows keep the anonymous ID stable across requests.
-9. If verification fails, move to $optimization-doctor.
+9. If verification fails, move to the optimization-doctor skill.
 
 ## Common Failure Modes
 

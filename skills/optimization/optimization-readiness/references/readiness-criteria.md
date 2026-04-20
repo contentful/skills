@@ -103,7 +103,7 @@ Report any gaps:
 
 ## Environment Variables Checklist
 
-### Required for Ninetailed (will be needed by $optimization-setup)
+### Required for Ninetailed (will be needed by the optimization-setup skill)
 
 ```
 NEXT_PUBLIC_NINETAILED_CLIENT_ID    # Ninetailed API key
@@ -134,7 +134,7 @@ The overall verdict is the **worst** individual assessment, with one exception:
 
 - If the only issue is "no Ninetailed packages installed" (check C) but all
   other checks pass, the overall is still **READY** — installing packages is
-  what $optimization-setup handles.
+  what the optimization-setup skill handles.
 
 Hard gate:
 
