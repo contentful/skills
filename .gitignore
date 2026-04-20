@@ -27,3 +27,5 @@ out/
 
 # Local research docs
 .docs/
+
+.agents

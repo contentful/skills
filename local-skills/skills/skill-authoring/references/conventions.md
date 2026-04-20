@@ -54,8 +54,8 @@ Describe how to validate the result.
 
 ## Related Skills
 
-- $optimization-setup — for initial SDK installation
-- $optimization-doctor — for troubleshooting issues
+- the optimization-setup skill — for initial SDK installation
+- the optimization-doctor skill — for troubleshooting issues
 ```
 
 ### Code skill with scripts
@@ -173,7 +173,7 @@ description: >-
   SDK compatibility. Use when asked to check optimization readiness, audit
   personalization setup, or evaluate prerequisites. Also triggers on "am I
   ready for personalization" or "can my app support A/B testing". Not for
-  setting up SDKs — use $optimization-setup for that.
+  setting up SDKs — use the optimization-setup skill for that.
 ```
 
 ```yaml
@@ -184,7 +184,7 @@ description: >-
   handling, and hydration. Use when asked to set up optimization, configure
   personalization, install Ninetailed SDK, or initialize A/B testing. Also
   triggers on "add personalization to my project", "configure edge rendering",
-  or "set up experiments". Not for diagnosing issues — use $optimization-doctor.
+  or "set up experiments". Not for diagnosing issues — use the optimization-doctor skill.
 ```
 
 ### Bad Examples
@@ -210,7 +210,7 @@ description: Use when the user says "run the optimization readiness check".
 - **Use imperative voice**: "Diagnose and fix" not "A tool for diagnosing"
 - **Include synonyms**: users say "personalization", "p13n", "targeting", "segments"
 - **Add indirect triggers**: for a deploy skill, also mention "ship", "release", "go live"
-- **Negative scope prevents false activations**: "Not for X — use $other-skill"
+- **Negative scope prevents false activations**: "Not for X — use the other-skill skill"
 - **Hard limit**: 1024 characters. Aim for 200-400 in practice.
 
 ## Script Design
