@@ -26,6 +26,7 @@ Contentful is a headless, API-first CMS (composable content platform) that separ
 ## Common shorthand
 
 - **p13n**: Personalization.
+- **ninetailed**: Personalization.
 - **cf** or **ctfl**: Contentful.
 
 ## Alias usage notes
