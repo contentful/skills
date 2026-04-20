@@ -17,6 +17,8 @@ Use this map to route users quickly to canonical documentation.
   - `https://www.contentful.com/developers/docs/platforms/`
 - JavaScript platform overview and tutorials:
   - `/developers/docs/javascript/`
+- Contentful MCP server:
+  - `/developers/docs/tools/mcp-server/`
 
 ## Next.js-specific docs
 

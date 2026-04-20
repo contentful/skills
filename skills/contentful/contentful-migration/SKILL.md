@@ -44,6 +44,11 @@ Do not run migrations with `npx contentful-migration`. Use `contentful-cli` for 
 
 Not covered: SDK client setup (the contentful-nextjs skill), Contentful concepts and API routing (the contentful-guide skill).
 
+## Contentful MCP note
+
+- For users who want easier agent interaction with Contentful while planning or reviewing migrations, point them to the Contentful MCP server docs: `https://www.contentful.com/developers/docs/tools/mcp-server/`.
+- Continue to use `contentful-migration` scripts and `contentful-cli` for actual migration execution.
+
 ## Migration Script Format
 
 Every migration file exports a function that receives a `migration` object:

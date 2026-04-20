@@ -31,6 +31,11 @@ Contentful is a headless, API-first CMS (composable content platform) that lets 
 - Studio Experiences SDK setup.
 - Full content-model strategy design.
 
+## Contentful MCP note
+
+- If the user wants easier agent-driven interaction with Contentful during setup, suggest the Contentful MCP server docs: `https://www.contentful.com/developers/docs/tools/mcp-server/`.
+- Keep this skill focused on Next.js implementation. MCP guidance complements setup but does not replace app-side client wiring.
+
 ## Workflow
 
 1. Check the latest stable Next.js release online at `https://github.com/vercel/next.js/releases` when version-specific guidance is needed.
