@@ -39,18 +39,20 @@ export default skill({
 })
   // --- Step 1: Identify the project ---
   .step('diagnose', {
-    prompt: `Inspect the current project to identify the framework and layout.
+    prompt: prompt`
+      Inspect the current project to identify the framework and layout.
 
-Check for:
-- package.json for Next.js, Gatsby, Remix, or other frameworks
-- next.config.js/ts for Next.js confirmation
-- app/ directory (Next.js App Router)
-- pages/ directory (Next.js Pages Router)
-- gatsby-config.js for Gatsby
+      Check for:
+      - package.json for Next.js, Gatsby, Remix, or other frameworks
+      - next.config.js/ts for Next.js confirmation
+      - app/ directory (Next.js App Router)
+      - pages/ directory (Next.js Pages Router)
+      - gatsby-config.js for Gatsby
 
-Determine the project root path (usually the current working directory).
+      Determine the project root path (usually the current working directory).
 
-Return the framework type, its version if detectable, and the project path.`,
+      Return the framework type, its version if detectable, and the project path.
+    `,
     output: z.object({
       framework: z.enum(['nextjs-app', 'nextjs-pages', 'nextjs-hybrid', 'gatsby', 'remix', 'other']),
       frameworkVersion: z.string().optional(),
@@ -65,15 +67,16 @@ Return the framework type, its version if detectable, and the project path.`,
 
   // --- Step 2: Deterministic scan ---
   .step('scan', {
-    prompt: ({ stash }) =>
-      prompt`Confirm the project path and framework for the automated scan.
+    prompt: ({ stash }) => prompt`
+      Confirm the project path and framework for the automated scan.
 
-The project appears to be at: ${stash.projectPath}
-Framework detected: ${stash.framework}
+      The project appears to be at: ${stash.projectPath}
+      Framework detected: ${stash.framework}
 
-Return the project path and framework so the automated scanner can check
-environment variables, installed packages, provider configuration,
-middleware, component wiring, and analytics setup.`,
+      Return the project path and framework so the automated scanner can check
+      environment variables, installed packages, provider configuration,
+      middleware, component wiring, and analytics setup.
+    `,
     output: z.object({
       projectPath: z.string(),
       framework: z.string(),
@@ -118,17 +121,19 @@ middleware, component wiring, and analytics setup.`,
         refSections.push('## Analytics patterns to look for:\n' + refs.load('analytics-patterns.md'));
       }
 
-      return prompt`The automated scan could not find: ${gaps.join(', ')}.
+      return prompt`
+        The automated scan could not find: ${gaps.join(', ')}.
 
-Search the codebase manually for these patterns. Look for:
-- Custom wrappers or aliased imports
-- Alternative naming conventions
-- Components that serve the same purpose but are named differently
-- Configuration spread across multiple files
+        Search the codebase manually for these patterns. Look for:
+        - Custom wrappers or aliased imports
+        - Alternative naming conventions
+        - Components that serve the same purpose but are named differently
+        - Configuration spread across multiple files
 
-For each category you search, report what you found (or confirm it's genuinely missing).
+        For each category you search, report what you found (or confirm it's genuinely missing).
 
-${refSections.join('\n\n')}`;
+        ${refSections.join('\n\n')}
+      `;
     },
     output: z.object({
       provider: z.object({ found: z.boolean(), location: z.string().optional(), detail: z.string() }).optional(),
@@ -146,11 +151,13 @@ ${refSections.join('\n\n')}`;
     prompt: ({ stash }) => {
       const apiKey = stash.scan?.env.apiKey;
       if (apiKey) {
-        return prompt`The scan found an API key: ${apiKey.slice(0, 8)}****
+        return prompt`
+          The scan found an API key: ${apiKey.slice(0, 8)}****
 
-Return the API key, environment, and shouldCheck=true to test connectivity.`;
+          Return the API key, environment, and shouldCheck=true to test connectivity.
+        `;
       }
-      return `No API key was found in the environment scan. Set shouldCheck to false.`;
+      return 'No API key was found in the environment scan. Set shouldCheck to false.';
     },
     output: z.object({
       apiKey: z.string().optional(),
@@ -167,32 +174,34 @@ Return the API key, environment, and shouldCheck=true to test connectivity.`;
     prompt: ({ stash, getStep, refs }) => {
       const deepSearch = getStep('deep-search');
 
-      return prompt`Review all diagnostic results and generate prioritized recommendations.
+      return prompt`
+        Review all diagnostic results and generate prioritized recommendations.
 
-## Scan Results
-${JSON.stringify(stash.scan, null, 2)}
+        ## Scan Results
+        ${JSON.stringify(stash.scan, null, 2)}
 
-## API Connectivity
-${JSON.stringify(stash.api, null, 2)}
+        ## API Connectivity
+        ${JSON.stringify(stash.api, null, 2)}
 
-## Deep Search Results
-${deepSearch ? JSON.stringify(deepSearch.output, null, 2) : 'Not performed (no gaps found)'}
+        ## Deep Search Results
+        ${deepSearch ? JSON.stringify(deepSearch.output, null, 2) : 'Not performed (no gaps found)'}
 
-## Reference: Environment Variables
-${refs.load('env-var-spec.md')}
+        ## Reference: Environment Variables
+        ${refs.load('env-var-spec.md')}
 
-## Reference: Package Versions
-${refs.load('package-versions.md')}
+        ## Reference: Package Versions
+        ${refs.load('package-versions.md')}
 
-For each issue found, generate a recommendation with:
-- priority: "critical" for missing core requirements, "warning" for suboptimal config, "info" for suggestions
-- message: specific, actionable advice
-- check: which diagnostic category it belongs to
+        For each issue found, generate a recommendation with:
+        - priority: "critical" for missing core requirements, "warning" for suboptimal config, "info" for suggestions
+        - message: specific, actionable advice
+        - check: which diagnostic category it belongs to
 
-Determine the overall status:
-- "pass" if all checks pass
-- "warn" if there are warnings but nothing critical
-- "fail" if any critical issues exist`;
+        Determine the overall status:
+        - "pass" if all checks pass
+        - "warn" if there are warnings but nothing critical
+        - "fail" if any critical issues exist
+      `;
     },
     output: z.object({
       overallStatus: CheckStatus,
@@ -204,10 +213,12 @@ Determine the overall status:
 
   // --- Step 6: Render final report ---
   .step('report', {
-    prompt: ({ rendered }) =>
-      prompt`Output the following Optimization Doctor Report to the user exactly as shown, with no preamble or trailing commentary:
+    prompt: ({ rendered }) => prompt`
+      Output the following Optimization Doctor Report to the user exactly as shown,
+      with no preamble or trailing commentary:
 
-${rendered ?? ''}`,
+      ${rendered ?? ''}
+    `,
     output: z.object({
       report: z.string(),
     }),
