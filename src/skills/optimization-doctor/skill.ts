@@ -4,30 +4,33 @@ import { checkApiConnectivity } from './actions/check-api.js';
 import {
   CheckStatus,
   Recommendation,
-  type ScanResult,
-  type ApiCheckResult,
+  ScanResult,
+  ApiCheckResult,
   type CheckResult,
 } from './schemas.js';
-
-const DESCRIPTION =
-  'Diagnose Contentful optimization and personalization issues. ' +
-  'Validates environment variables, SDK packages, provider configuration, middleware, ' +
-  'component wiring, API connectivity, and analytics setup. ' +
-  'Use when troubleshooting personalization, debugging experiments, or validating SDK setup. ' +
-  'Triggers: "debug personalization", "personalization not working", "check my setup", ' +
-  '"ninetailed doctor", "analytics not tracking", "diagnose optimization".';
 
 export default skill({
   name: 'optimization-doctor',
   version: '1.0.0',
-  description: DESCRIPTION,
+  description:
+    'Diagnose Contentful optimization and personalization issues. ' +
+    'Validates environment variables, SDK packages, provider configuration, middleware, ' +
+    'component wiring, API connectivity, and analytics setup.',
+  triggers: [
+    'debug personalization',
+    'personalization not working',
+    'check my setup',
+    'ninetailed doctor',
+    'analytics not tracking',
+    'diagnose optimization',
+  ],
   entry: 'diagnose',
 
   stash: z.object({
     framework: z.string(),
     projectPath: z.string(),
-    apiKey: z.string().optional(),
-    environment: z.string().optional(),
+    scan: ScanResult.optional(),
+    api: ApiCheckResult.optional(),
   }),
 
   finalOutput: z.object({
@@ -58,8 +61,6 @@ Return the framework type, its version if detectable, and the project path.`,
       projectPath: output.projectPath,
     }),
     next: 'scan',
-    maxVisits: 1,
-    onMaxVisits: 'scan',
   })
 
   // --- Step 2: Deterministic scan ---
@@ -78,86 +79,46 @@ middleware, component wiring, and analytics setup.`,
       framework: z.string(),
     }),
     action: scanProject,
-    next: 'triage',
-    maxVisits: 1,
-    onMaxVisits: 'triage',
+    afterAction: ({ action }) => ({ scan: action }),
+    next: ({ action }) => {
+      const scan = action as z.infer<typeof ScanResult>;
+      if (!scan) return 'check-api';
+      const hasGaps =
+        scan.provider.status === 'not_found' ||
+        scan.middleware.status === 'not_found' ||
+        scan.components.status === 'not_found' ||
+        scan.analytics.status === 'not_found';
+      return hasGaps ? 'deep-search' : 'check-api';
+    },
   })
 
-  // --- Step 3: Decide if deep search is needed ---
-  .step('triage', {
-    prompt: ({ history }) => {
-      const scanStep = history.find((s) => s.step === 'scan');
-      const scanResults = scanStep?.action as ScanResult | undefined;
-
-      if (!scanResults) {
-        return 'The automated scan produced no results. Recommend a deep search for all categories.';
-      }
+  // --- Step 3: Agentic deep search (conditional) ---
+  .step('deep-search', {
+    prompt: ({ stash, refs }) => {
+      const scan = stash.scan;
+      if (!scan) return 'The scan produced no results. Search for all categories.';
 
       const gaps: string[] = [];
-      if (scanResults.provider.status === 'not_found') gaps.push('provider configuration');
-      if (scanResults.middleware.status === 'not_found') gaps.push('middleware setup');
-      if (scanResults.components.status === 'not_found') gaps.push('experience components');
-      if (scanResults.analytics.status === 'not_found') gaps.push('analytics configuration');
-
-      if (gaps.length === 0) {
-        return prompt`The automated scan found results for all categories. No deep search needed.
-
-Scan summary:
-- Environment: ${scanResults.env.status}
-- Packages: ${scanResults.packages.status}
-- Provider: ${scanResults.provider.status} ${scanResults.provider.location ? `(${scanResults.provider.location})` : ''}
-- Middleware: ${scanResults.middleware.status}
-- Components: ${scanResults.components.status} (${scanResults.components.files.length} files)
-- Analytics: ${scanResults.analytics.status}
-
-Set needsDeepSearch to false.`;
-      }
-
-      return prompt`The automated scan could not find results for: ${gaps.join(', ')}.
-
-These items were not detected by pattern matching, but may exist under
-different names, custom wrappers, or alternative patterns.
-
-Scan results that were found:
-- Environment: ${scanResults.env.status}
-- Packages: ${scanResults.packages.status}
-- Provider: ${scanResults.provider.status}
-- Middleware: ${scanResults.middleware.status}
-- Components: ${scanResults.components.status}
-- Analytics: ${scanResults.analytics.status}
-
-Set needsDeepSearch to true and list which checks need searching.`;
-    },
-    output: z.object({
-      needsDeepSearch: z.boolean(),
-      checksToSearch: z.array(z.string()),
-    }),
-    next: ({ output }) => (output.needsDeepSearch ? 'deep-search' : 'check-api'),
-    maxVisits: 1,
-    onMaxVisits: 'check-api',
-  })
-
-  // --- Step 4: Agentic deep search (conditional) ---
-  .step('deep-search', {
-    prompt: ({ history, refs }) => {
-      const triageStep = history.find((s) => s.step === 'triage');
-      const checksToSearch = (triageStep?.output as { checksToSearch: string[] })?.checksToSearch ?? [];
-
       const refSections: string[] = [];
-      if (checksToSearch.includes('provider configuration')) {
+
+      if (scan.provider.status === 'not_found') {
+        gaps.push('provider configuration');
         refSections.push('## Provider patterns to look for:\n' + refs.load('provider-patterns.md'));
       }
-      if (checksToSearch.includes('middleware setup')) {
+      if (scan.middleware.status === 'not_found') {
+        gaps.push('middleware setup');
         refSections.push('## Middleware patterns to look for:\n' + refs.load('middleware-patterns.md'));
       }
-      if (checksToSearch.includes('experience components')) {
+      if (scan.components.status === 'not_found') {
+        gaps.push('experience components');
         refSections.push('## Component patterns to look for:\n' + refs.load('component-patterns.md'));
       }
-      if (checksToSearch.includes('analytics configuration')) {
+      if (scan.analytics.status === 'not_found') {
+        gaps.push('analytics configuration');
         refSections.push('## Analytics patterns to look for:\n' + refs.load('analytics-patterns.md'));
       }
 
-      return prompt`The automated scan could not find: ${checksToSearch.join(', ')}.
+      return prompt`The automated scan could not find: ${gaps.join(', ')}.
 
 Search the codebase manually for these patterns. Look for:
 - Custom wrappers or aliased imports
@@ -178,23 +139,17 @@ ${refSections.join('\n\n')}`;
       analytics: z.object({ found: z.boolean(), detail: z.string() }).optional(),
     }),
     next: 'check-api',
-    maxVisits: 1,
-    onMaxVisits: 'check-api',
   })
 
-  // --- Step 5: API connectivity check ---
+  // --- Step 4: API connectivity check ---
   .step('check-api', {
-    prompt: ({ history }) => {
-      const scanStep = history.find((s) => s.step === 'scan');
-      const scanResults = scanStep?.action as ScanResult | undefined;
-      const apiKey = scanResults?.env.apiKey;
-
+    prompt: ({ stash }) => {
+      const apiKey = stash.scan?.env.apiKey;
       if (apiKey) {
         return prompt`The scan found an API key: ${apiKey.slice(0, 8)}****
 
 Return the API key, environment, and shouldCheck=true to test connectivity.`;
       }
-
       return `No API key was found in the environment scan. Set shouldCheck to false.`;
     },
     output: z.object({
@@ -202,35 +157,26 @@ Return the API key, environment, and shouldCheck=true to test connectivity.`;
       environment: z.string().default('main'),
       shouldCheck: z.boolean(),
     }),
-    stash: ({ output }) => ({
-      apiKey: output.apiKey,
-      environment: output.environment,
-    }),
     action: checkApiConnectivity,
+    afterAction: ({ action }) => ({ api: action }),
     next: 'review',
-    maxVisits: 1,
-    onMaxVisits: 'review',
   })
 
-  // --- Step 6: Interpret results and generate recommendations ---
+  // --- Step 5: Interpret results and generate recommendations ---
   .step('review', {
-    prompt: ({ history, refs }) => {
-      const scanStep = history.find((s) => s.step === 'scan');
-      const scanResults = scanStep?.action as ScanResult | undefined;
-      const apiStep = history.find((s) => s.step === 'check-api');
-      const apiResults = apiStep?.action as ApiCheckResult | undefined;
-      const deepSearchStep = history.find((s) => s.step === 'deep-search');
+    prompt: ({ stash, getStep, refs }) => {
+      const deepSearch = getStep('deep-search');
 
       return prompt`Review all diagnostic results and generate prioritized recommendations.
 
 ## Scan Results
-${JSON.stringify(scanResults, null, 2)}
+${JSON.stringify(stash.scan, null, 2)}
 
 ## API Connectivity
-${JSON.stringify(apiResults, null, 2)}
+${JSON.stringify(stash.api, null, 2)}
 
 ## Deep Search Results
-${deepSearchStep ? JSON.stringify(deepSearchStep.output, null, 2) : 'Not performed (no gaps found)'}
+${deepSearch ? JSON.stringify(deepSearch.output, null, 2) : 'Not performed (no gaps found)'}
 
 ## Reference: Environment Variables
 ${refs.load('env-var-spec.md')}
@@ -254,11 +200,9 @@ Determine the overall status:
       summary: z.string(),
     }),
     next: 'report',
-    maxVisits: 1,
-    onMaxVisits: 'report',
   })
 
-  // --- Step 7: Render final report ---
+  // --- Step 6: Render final report ---
   .step('report', {
     prompt: ({ rendered }) =>
       prompt`Output the following Optimization Doctor Report to the user exactly as shown, with no preamble or trailing commentary:
@@ -267,34 +211,19 @@ ${rendered ?? ''}`,
     output: z.object({
       report: z.string(),
     }),
-    render: ({ history }) => {
-      const scanStep = history.find((s) => s.step === 'scan');
-      const scan = scanStep?.action as ScanResult | undefined;
-      const apiStep = history.find((s) => s.step === 'check-api');
-      const api = apiStep?.action as ApiCheckResult | undefined;
-      const reviewStep = history.find((s) => s.step === 'review');
-      const review = reviewStep?.output as {
-        overallStatus: string;
-        recommendations: Array<{ priority: string; message: string; check: string }>;
-        summary: string;
-      } | undefined;
-      const deepSearchStep = history.find((s) => s.step === 'deep-search');
-      const deepSearch = deepSearchStep?.output as Record<string, { found: boolean; detail: string }> | undefined;
+    render: ({ stash, getStep }) => {
+      const scan = stash.scan;
+      const api = stash.api;
+      const reviewStep = getStep<{ overallStatus: string; recommendations: Array<{ priority: string; message: string; check: string }>; summary: string }>('review');
+      const deepSearch = getStep<Record<string, { found: boolean; detail: string }>>('deep-search');
 
       const icon = (status: string) => {
         switch (status) {
-          case 'pass':
-            return '\u2705';
-          case 'warn':
-            return '\u26A0\uFE0F';
-          case 'fail':
-            return '\u274C';
-          case 'skip':
-            return '\u23ED\uFE0F';
-          case 'not_found':
-            return '\u2753';
-          default:
-            return '\u2753';
+          case 'pass': return '\u2705';
+          case 'warn': return '\u26A0\uFE0F';
+          case 'fail': return '\u274C';
+          case 'skip': return '\u23ED\uFE0F';
+          default: return '\u2753';
         }
       };
 
@@ -305,13 +234,13 @@ ${rendered ?? ''}`,
         category: string,
         scanResult: CheckResult,
       ): { status: string; findings: Array<{ item: string; status: string; detail: string }> } => {
-        if (!deepSearch?.[category]?.found) return scanResult;
+        if (!deepSearch?.output?.[category]?.found) return scanResult;
         return {
           ...scanResult,
           status: 'pass',
           findings: [
             ...scanResult.findings,
-            { item: `${category} (deep search)`, status: 'pass' as const, detail: deepSearch[category].detail },
+            { item: `${category} (deep search)`, status: 'pass' as const, detail: deepSearch.output[category].detail },
           ],
         };
       };
@@ -319,37 +248,28 @@ ${rendered ?? ''}`,
       const sections: string[] = [];
 
       if (scan) {
-        const env = scan.env;
-        sections.push(render.section(`Environment Configuration ${icon(env.status)}`, renderFindings(env.findings)));
-
-        const packages = scan.packages;
-        sections.push(render.section(`Package Installation ${icon(packages.status)}`, renderFindings(packages.findings)));
+        sections.push(render.section(`Environment Configuration ${icon(scan.env.status)}`, renderFindings(scan.env.findings)));
+        sections.push(render.section(`Package Installation ${icon(scan.packages.status)}`, renderFindings(scan.packages.findings)));
 
         const provider = mergeDeepSearch('provider', scan.provider);
-        sections.push(
-          render.section(`Provider Configuration ${icon(provider.status)}`, renderFindings(provider.findings)),
-        );
+        sections.push(render.section(`Provider Configuration ${icon(provider.status)}`, renderFindings(provider.findings)));
 
         const middleware = mergeDeepSearch('middleware', scan.middleware);
         sections.push(render.section(`Middleware ${icon(middleware.status)}`, renderFindings(middleware.findings)));
 
         const components = mergeDeepSearch('components', scan.components);
-        sections.push(
-          render.section(`Component Wiring ${icon(components.status)}`, renderFindings(components.findings)),
-        );
+        sections.push(render.section(`Component Wiring ${icon(components.status)}`, renderFindings(components.findings)));
 
         const analytics = mergeDeepSearch('analytics', scan.analytics);
-        sections.push(
-          render.section(`Analytics ${icon(analytics.status)}`, renderFindings(analytics.findings)),
-        );
+        sections.push(render.section(`Analytics ${icon(analytics.status)}`, renderFindings(analytics.findings)));
       }
 
       if (api) {
         sections.push(render.section(`API Connectivity ${icon(api.status)}`, renderFindings(api.findings)));
       }
 
-      if (review && review.recommendations.length > 0) {
-        const recs = review.recommendations
+      if (reviewStep?.output?.recommendations?.length) {
+        const recs = reviewStep.output.recommendations
           .sort((a, b) => {
             const order: Record<string, number> = { critical: 0, warning: 1, info: 2 };
             return (order[a.priority] ?? 3) - (order[b.priority] ?? 3);

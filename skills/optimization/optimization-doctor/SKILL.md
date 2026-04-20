@@ -1,6 +1,6 @@
 ---
 name: optimization-doctor
-description: Diagnose Contentful optimization and personalization issues. Validates environment variables, SDK packages, provider configuration, middleware, component wiring, API connectivity, and analytics setup. Use when troubleshooting personalization, debugging experiments, or validating SDK setup. Triggers: "debug personalization", "personalization not working", "check my setup", "ninetailed doctor", "analytics not tracking", "diagnose optimization".
+description: Diagnose Contentful optimization and personalization issues. Validates environment variables, SDK packages, provider configuration, middleware, component wiring, API connectivity, and analytics setup. Trigger keywords: debug personalization, personalization not working, check my setup, ninetailed doctor, analytics not tracking, diagnose optimization
 metadata:
   version: "1.0.0"
 ---
@@ -73,7 +73,6 @@ contains the skill's result. Present it to the user.
 Check for:
 - package.json for ...
 - **scan**: (dynamic)
-- **triage**: (dynamic)
 - **deep-search**: (dynamic)
 - **check-api**: (dynamic)
 - **review**: (dynamic)

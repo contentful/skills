@@ -14,7 +14,7 @@
     "validate": "python3 .disabled/skills/skill-authoring/scripts/quick_validate.py skills --all"
   },
   "devDependencies": {
-    "@contentful/skill-kit": "^0.1.6",
+    "@contentful/skill-kit": "^0.1.7",
     "@types/node": "^25.2.3",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
