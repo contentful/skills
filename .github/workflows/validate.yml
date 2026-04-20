@@ -6,8 +6,12 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
-  validate:
+  validate-prose:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -17,7 +21,31 @@ jobs:
           node-version-file: ".nvmrc"
 
       - name: Validate skill frontmatter
-        run: python3 .agents/skills/skill-authoring/scripts/quick_validate.py skills --all
+        run: python3 .disabled/skills/skill-authoring/scripts/quick_validate.py skills --all
 
       - name: Verify skills are discoverable
         run: npx -y skills add . --list --full-depth 2>&1 | tee /dev/stderr | grep -q "Found"
+
+  typecheck-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+          registry-url: https://npm.pkg.github.com/
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Test
+        run: pnpm run test
