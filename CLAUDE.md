@@ -33,3 +33,30 @@ When authoring skills for this repo, these Claude Code-specific frontmatter fiel
 ## Dynamic Context
 
 Use `` !`command` `` in SKILL.md to run a shell command before sending skill content to Claude.
+
+## skill-kit Skills
+
+Some skills are built with `@contentful/skill-kit` — TypeScript source compiled to CLI binaries. Source lives in `src/skills/`, build output in `skills/`.
+
+### Commands
+
+- `pnpm install` — install dependencies
+- `pnpm run typecheck` — type check TypeScript source
+- `pnpm run test` — run all skill tests
+- `pnpm run build` — build skill-kit skills (requires Bun)
+
+### Structure
+
+```
+src/skills/<skill-name>/     # TypeScript source (not distributed)
+  skill.ts                   # Skill definition
+  skill.test.ts              # Tests
+  schemas.ts                 # Shared Zod schemas
+  actions/                   # CLI-side actions
+  references/                # Reference docs (copied to output)
+skills/<domain>/<skill-name>/ # Build output (distributed)
+  SKILL.md                   # Generated
+  scripts/run                # Generated shell wrapper
+  bin/                       # Compiled binaries
+  references/                # Copied from source
+```

@@ -74,6 +74,32 @@ fix(optimization-doctor): correct SDK version detection [NT-2955]
 docs: update README with new install commands [NT-2960]
 ```
 
+## skill-kit Skills
+
+Some skills are built with [`@contentful/skill-kit`](https://github.com/contentful/skill-kit) — TypeScript state machines compiled to CLI binaries. These coexist with prose skills in `skills/`.
+
+### Source and output
+
+- **Source**: `src/skills/<skill-name>/` — TypeScript, tests, reference docs
+- **Output**: `skills/<domain>/<skill-name>/` — generated SKILL.md, binaries, references
+
+Build maps source to distribution:
+```
+skill-kit build src/skills/optimization-doctor/skill.ts -o skills/optimization/optimization-doctor
+```
+
+### Adding a new skill-kit skill
+
+1. Create source at `src/skills/<skill-name>/skill.ts`
+2. Add a build script to `package.json`
+3. Build: `pnpm run build`
+4. Verify: `python3 .disabled/skills/skill-authoring/scripts/quick_validate.py skills/<domain>/<skill-name>`
+5. Commit both source and build output (including `bin/` binaries)
+
+### Binaries in git
+
+Compiled binaries in `skills/*/bin/` are committed to git because `npx skills add` clones from the repo. Large binary changes should only happen when the skill source changes.
+
 ## Distribution
 
 Skills are installed by customers via the [skills CLI](https://github.com/vercel-labs/skills):
