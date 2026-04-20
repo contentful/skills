@@ -23,7 +23,7 @@ Create it in one of these places:
 ## CLI Usage (Contentful CLI)
 
 ```bash
-npx contentful space migration --space-id <space-id> <migration-file>
+npx contentful space migration --space-id <space-id> --management-token <cma-token> <migration-file>
 ```
 
 ### Flags
