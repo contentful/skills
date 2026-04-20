@@ -12,7 +12,7 @@ Stay here when the user asks:
 - "What is the difference between space/environment/content type?"
 - "How do environment aliases work?"
 
-## Route to `$contentful-nextjs`
+## Route to `the contentful-nextjs skill`
 
 Route when the user asks to:
 
