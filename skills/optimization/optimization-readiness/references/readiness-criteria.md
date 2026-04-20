@@ -6,9 +6,9 @@ Detailed rubric for each readiness check.
 
 | Framework | Version | Support Level | Notes |
 |-----------|---------|--------------|-------|
-| Next.js (Pages Router) | 12+ | Full | SSR, SSG, ISR all supported |
+| Next.js (Pages Router) | 13+ | Full | SSR, SSG, ISR all supported |
 | Next.js (App Router) | 13.4+ | Full | Server Components require client boundary for provider |
-| Next.js (older baseline) | < 12 | Not ready for setup | Upgrade Next.js before starting personalization setup |
+| Next.js (older baseline) | < 13 | Not ready for setup | Upgrade Next.js before starting personalization setup |
 | Gatsby | 4+ | Full (client-side) | No SSR personalization; plugin-based provider |
 | Remix | 1+ | Partial | Community patterns; loader-based data fetching compatible |
 | React (CRA) | 16.8+ | Full (client-side) | Hooks required; no SSR |
@@ -18,9 +18,8 @@ Detailed rubric for each readiness check.
 
 ### Next.js Version Details
 
-- **< 12.0**: Too old for this setup workflow. Mark as `NOT READY` and require upgrade.
-- **12.x**: Pages Router baseline supported.
-- **13.0-13.3**: App Router experimental. Prefer Pages Router patterns.
+- **< 13.0**: Too old for this setup workflow. Mark as `NOT READY` and require upgrade.
+- **13.0-13.3**: Pages Router baseline supported; App Router is experimental.
 - **13.4+**: App Router stable. Both routers supported.
 - **14+**: App Router preferred. Server Actions available but not required.
 
@@ -139,7 +138,7 @@ The overall verdict is the **worst** individual assessment, with one exception:
 
 Hard gate:
 
-- If framework compatibility is below baseline (for example Next.js < 12), the
+- If framework compatibility is below baseline (for example Next.js < 13), the
   overall should be treated as blocked for setup until upgrade prerequisites are complete.
 
 | Worst Individual | Overall |

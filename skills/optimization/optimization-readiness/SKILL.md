@@ -55,8 +55,8 @@ assess readiness. Then produce the final report.
 
 **Assess**:
 - Next.js 13.4+ → Fully supported (App Router stable)
-- Next.js 12.x to 13.3 → Supported with caution (prefer Pages Router patterns)
-- Next.js < 12 (for example Next.js 10/11) → `NOT READY` for setup; recommend framework upgrade first
+- Next.js 13.0 to 13.3 → Supported with caution (App Router is experimental; prefer Pages Router patterns)
+- Next.js < 13 (for example Next.js 10/11/12) → `NOT READY` for setup; recommend framework upgrade first
 - Gatsby → Supported (client-side only)
 - Remix → Partially supported (community patterns)
 - Plain React → Supported (client-side only)

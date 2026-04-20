@@ -6,7 +6,6 @@ present or missing.
 
 ## Common shorthand
 
-- **a13y** means accessibility.
 - **p13n** or **ninetailed** means personalization.
 - **cf** or **ctfl** means Contentful.
 
