@@ -6,7 +6,7 @@ Set environment variables by runtime. Do not treat browser, server, preview, and
 
 | Variable | Purpose | Typical runtime |
 |---------|---------|-----------------|
-| `NEXT_PUBLIC_NINETAILED_CLIENT_ID` | SDK client ID or API key for browser-facing SDK initialization | Browser |
+| Client ID | SDK client ID or API key for browser-facing SDK initialization | Browser |
 | `NEXT_PUBLIC_NINETAILED_ENVIRONMENT` | Personalization environment slug, often `main` | Browser |
 | `NEXT_PUBLIC_CONTENTFUL_SPACE_ID` | Contentful space ID | Browser or shared Next.js code |
 | `NEXT_PUBLIC_CONTENTFUL_TOKEN` | Contentful Delivery API token | Browser or shared Next.js code |
@@ -50,6 +50,17 @@ Recommended approach:
 - pick clear project-local names such as `NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID`
 - use one naming scheme consistently across browser, server, and deployment config
 - keep Contentful preview tokens server-only unless preview architecture requires otherwise
+
+## Where to Obtain Ninetailed Credentials
+
+The Client ID and environment slug come from the **Contentful Personalization app** installed in your Contentful space. There is no separate Ninetailed dashboard — `app.ninetailed.io` is outdated and should not be referenced.
+
+To find your credentials:
+
+1. Open Contentful.
+2. Go to **Organization settings** > **Optimization** > **Data sources and metrics** > **SDK keys**.
+3. Copy the **Client ID**.
+4. The **Environment** is also visible on this screen. Use this value for `NEXT_PUBLIC_NINETAILED_ENVIRONMENT`.
 
 ## Rules
 

@@ -29,6 +29,10 @@ The app setup is responsible for:
 8. Select the content types that should become personalizable.
 9. Save the configuration.
 
+## API Key / Client ID
+
+The Client ID is found in **Organization settings** > **Optimization** > **Data sources and metrics** > **SDK keys**. Copy it during installation so the frontend SDK can connect to the correct data bucket.
+
 ## Data Bucket Guidance
 
 - `Main`: production-oriented bucket
