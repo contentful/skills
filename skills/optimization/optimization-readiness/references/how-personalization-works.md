@@ -4,6 +4,12 @@ Use this reference to explain your readiness findings to the user. When
 reporting what you found, explain **why** it matters — not just what's
 present or missing.
 
+## Common shorthand
+
+- **a13y** means accessibility.
+- **p13n** or **ninetailed** means personalization.
+- **cf** or **ctfl** means Contentful.
+
 ## The Core Idea
 
 Contentful Personalization (powered by Ninetailed) lets content authors

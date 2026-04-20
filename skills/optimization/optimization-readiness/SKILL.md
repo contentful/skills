@@ -54,11 +54,15 @@ assess readiness. Then produce the final report.
 5. If none of the above: plain React (CRA, Vite, custom)
 
 **Assess**:
-- Next.js (any version) → Fully supported
+- Next.js 13.4+ → Fully supported (App Router stable)
+- Next.js 12.x to 13.3 → Supported with caution (prefer Pages Router patterns)
+- Next.js < 12 (for example Next.js 10/11) → `NOT READY` for setup; recommend framework upgrade first
 - Gatsby → Supported (client-side only)
 - Remix → Partially supported (community patterns)
 - Plain React → Supported (client-side only)
 - Non-React framework → Not currently supported
+
+If the framework baseline is below supported levels, explicitly block setup work and route the user to prerequisite upgrades before running $optimization-setup.
 
 ### B. Contentful SDK Setup
 
@@ -107,9 +111,14 @@ assess readiness. Then produce the final report.
    - `NinetailedPrivacyPlugin` → consent management
 
 **Assess**:
-- No packages installed → Fresh setup (use $optimization-setup)
-- Packages installed but no provider → Partially configured, needs completion
-- Provider configured with plugins → Already set up (check completeness)
+- No packages installed → `NOT INSTALLED` (expected baseline for first-time adoption; use $optimization-setup)
+- Packages installed but no provider → `PARTIAL SETUP` (installation started, wiring still needed)
+- Provider configured with plugins → `CONFIGURED` (check completeness and plugin fit)
+
+Important tone guidance for this section:
+- Treat "no Ninetailed packages" as neutral, not a failure.
+- Do **not** label check C as `NOT READY` when a project simply has no existing personalization SDK.
+- Prefer wording like "Fresh setup" or "Not installed yet".
 
 ### D. Component Architecture
 
@@ -220,7 +229,7 @@ After completing all checks, produce a report in this format:
 - [Environment variables status]
 - [Include depth assessment]
 
-### Existing Ninetailed Setup: [STATUS]
+### Existing Ninetailed Setup: [NOT INSTALLED / PARTIAL SETUP / CONFIGURED]
 - [Packages found / not found]
 - [Provider status]
 - [Plugin status]
@@ -246,11 +255,16 @@ After completing all checks, produce a report in this format:
 Use $optimization-setup for guided installation and configuration.
 ```
 
-**Status markers**: Use these consistently:
+**Status markers**: Use these consistently for framework/contentful/component/rendering checks:
 - `READY` — No changes needed for this area
 - `MINOR CHANGES` — Small fixes (config tweaks, increasing include depth)
 - `NEEDS WORK` — Moderate effort (add mapper, restructure fetching)
 - `NOT READY` — Significant restructuring required
+
+For **Existing Ninetailed Setup** only (check C), use:
+- `NOT INSTALLED` — Neutral baseline; setup not started yet
+- `PARTIAL SETUP` — Installation started but incomplete
+- `CONFIGURED` — Provider and core wiring present
 
 ## Example Report
 

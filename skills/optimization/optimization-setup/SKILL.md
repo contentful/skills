@@ -45,7 +45,11 @@ Follow these steps in order. Do not skip the Contentful app setup or verificatio
 1. Run $optimization-readiness to understand framework, router, rendering mode, and component mapping patterns.
 2. Confirm the project already fetches Contentful content successfully.
 3. Confirm whether personalization must happen in the browser only, on the server, at the edge, or in a hybrid setup.
-4. If readiness gaps are found, fix those before wiring the SDK.
+4. Treat readiness as a hard gate before setup implementation:
+   - If readiness is `NEEDS WORK` or `SIGNIFICANT RESTRUCTURING NEEDED`, stop setup and give a prerequisite-fix plan first.
+   - If the framework/runtime is below supported baseline (for example Next.js 10), do not install SDK packages yet.
+   - Resume setup only after prerequisites are fixed and readiness is re-run.
+5. If readiness gaps are found, fix those before wiring the SDK.
 
 ### 2) Complete the Contentful Setup Before Writing App Code
 
@@ -227,3 +231,8 @@ When applying this skill, return:
 - verification results and remaining risks
 
 If the agent cannot complete Contentful UI steps directly, it must still leave the user with an exact checklist of what to click and configure.
+
+Always include a readiness gate statement:
+
+- `Readiness passed, proceeding with setup.`
+- or `Readiness not passed, prerequisite upgrades required before setup.`
