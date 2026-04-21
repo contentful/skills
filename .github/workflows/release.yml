@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   release:
+    if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
     runs-on: ubuntu-latest
     steps:
       - name: Retrieve Secrets from Vault
@@ -53,9 +54,7 @@ jobs:
           git config --global user.email '${{ steps.get-user-id.outputs.user-id }}+contentful-automation[bot]@users.noreply.github.com'
 
       - name: Setup npmrc for publishing
-        run: |
-          echo "//npm.pkg.github.com/:_authToken=${{ steps.vault.outputs.GITHUB_PACKAGES_WRITE_TOKEN }}" > .npmrc
-          echo "@contentful:registry=https://npm.pkg.github.com" >> .npmrc
+        run: echo "//npm.pkg.github.com/:_authToken=${{ steps.vault.outputs.GITHUB_PACKAGES_WRITE_TOKEN }}" >> "$HOME/.npmrc"
 
       - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5
 
