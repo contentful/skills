@@ -62,6 +62,17 @@ If you want to interact with Contentful more easily through AI agents, use the C
 
 See [AGENTS.md](AGENTS.md) & [CONTRIBUTING.md](CONTRIBUTING.md) for project conventions. Use the internal `skill-authoring` skill for guidance on creating new skills.
 
+## Help and Support
+
+- Open a GitHub issue for bugs and feature requests.
+- For security issues, follow [SECURITY.md](SECURITY.md).
+- Contentful support resources: https://www.contentful.com/help/getting-started/how-to-get-help/
+
 ## License
 
-[MIT](LICENSE)
+This project is licensed under [MIT](LICENSE).
+
+Third-party notices and license automation docs:
+
+- [NOTICE](NOTICE)
+- [AUTOMATION-FOR-LICENSES.md](AUTOMATION-FOR-LICENSES.md)

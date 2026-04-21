@@ -2,6 +2,15 @@
   "name": "@contentful/skills",
   "version": "0.0.0",
   "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/contentful/skills"
+  },
+  "bugs": {
+    "url": "https://github.com/contentful/skills/issues"
+  },
+  "homepage": "https://github.com/contentful/skills#readme",
   "type": "module",
   "engines": {
     "node": ">=24"
@@ -11,7 +20,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test --import tsx/esm 'src/skills/**/*.test.ts'",
     "build": "skill-kit build src/skills/contentful-personalization-doctor/skill.ts -o skills/contentful-personalization-doctor",
-    "validate": "python3 .disabled/skills/skill-authoring/scripts/quick_validate.py skills --all"
+    "validate": "python3 .disabled/skills/skill-authoring/scripts/quick_validate.py skills --all",
+    "update-licenses": "node ./scripts/update-licenses.mjs"
   },
   "devDependencies": {
     "@contentful/skill-kit": "^0.1.7",
