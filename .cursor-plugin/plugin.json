@@ -1,6 +1,6 @@
 {
   "name": "contentful-skills",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Agent skills for Contentful optimization",
   "homepage": "https://github.com/contentful/skills",
   "repository": "https://github.com/contentful/skills",
@@ -10,6 +10,11 @@
     "email": "skills@contentful.com",
     "url": "https://www.contentful.com"
   },
-  "keywords": ["contentful", "personalization", "analytics", "ninetailed"],
+  "keywords": [
+    "contentful",
+    "personalization",
+    "analytics",
+    "ninetailed"
+  ],
   "logo": "contentful-logo.svg"
 }
