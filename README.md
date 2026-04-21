@@ -20,14 +20,14 @@ npx skills add contentful/skills
 | **contentful-nextjs** | "add Contentful to Next.js", "Next.js Contentful setup", "Draft Mode Contentful" | Coming soon |
 | **contentful-migration** | "write a migration", "create content type", "schema migration" | Coming soon |
 
-### Optimization
+### Personalization
 
 | Skill | Triggers | Status |
 |-------|----------|--------|
-| **optimization-readiness** | "check optimization readiness", "audit personalization setup" | Coming soon |
-| **optimization-setup** | "set up optimization", "configure personalization" | Coming soon |
-| **optimization-dev** | "build personalization component", "add analytics hook" | Coming soon |
-| **optimization-doctor** | "diagnose optimization issues", "troubleshoot personalization" | Coming soon |
+| **contentful-personalization-readiness** | "check optimization readiness", "audit personalization setup" | Coming soon |
+| **contentful-personalization-setup** | "set up optimization", "configure personalization" | Coming soon |
+| **contentful-personalization-dev** | "build personalization component", "add analytics hook" | Coming soon |
+| **contentful-personalization-doctor** | "diagnose optimization issues", "troubleshoot personalization" | Coming soon |
 
 ## Platform Install Commands
 
@@ -48,7 +48,7 @@ gemini skills install contentful/skills
 ### Install a single skill
 
 ```bash
-npx skills add contentful/skills --skill optimization-readiness
+npx skills add contentful/skills --skill contentful-personalization-readiness
 ```
 
 ## Contentful MCP Server

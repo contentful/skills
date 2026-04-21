@@ -1,5 +1,5 @@
 ---
-name: optimization-setup
+name: contentful-personalization-setup
 description: >-
   Set up Contentful Personalization end-to-end in Contentful and code. Covers
   Contentful app installation, data buckets, nt_experience/nt_audience/nt_mergetag
@@ -9,12 +9,12 @@ description: >-
   Use when asked to set up personalization, install Contentful Personalization,
   configure Ninetailed, wire the new optimization SDKs, prepare A/B testing or just 
   about how to personalize. Not for readiness audits or debugging broken integrations; use
-  the optimization-readiness skill or the optimization-doctor skill.
+  the contentful-personalization-readiness skill or the contentful-personalization-doctor skill.
 ---
 
 # Optimization Setup
 
-Use this skill to implement a complete customer-ready personalization setup. Always start with the optimization-readiness skill first to assess the project.
+Use this skill to implement a complete customer-ready personalization setup. Always start with the contentful-personalization-readiness skill first to assess the project.
 
 ## Default Recommendation
 
@@ -33,8 +33,8 @@ Use this skill to implement a complete customer-ready personalization setup. Alw
 - Next.js Pages Router or App Router integration work
 - Contentful Personalization app installation and content-model preparation
 - Analytics, preview, or middleware setup as part of initial implementation
-- NOT for readiness assessment, use the optimization-readiness skill
-- NOT for debugging a broken setup, use the optimization-doctor skill
+- NOT for readiness assessment, use the contentful-personalization-readiness skill
+- NOT for debugging a broken setup, use the contentful-personalization-doctor skill
 
 ## Setup Workflow
 
@@ -42,7 +42,7 @@ Follow these steps in order. Do not skip the Contentful app setup or verificatio
 
 ### 1) Run an Optimization Readiness Check First
 
-1. Run the optimization-readiness skill to understand framework, router, rendering mode, and component mapping patterns.
+1. Run the contentful-personalization-readiness skill to understand framework, router, rendering mode, and component mapping patterns.
 2. Confirm the project already fetches Contentful content successfully.
 3. Confirm whether personalization must happen in the browser only, on the server, at the edge, or in a hybrid setup.
 4. Treat readiness as a hard gate before setup implementation:
@@ -201,7 +201,7 @@ For details, see [references/analytics-and-preview.md](references/analytics-and-
 6. Confirm click or component insights fire when expected.
 7. Confirm preview only appears where intended.
 8. Confirm SSR or edge flows keep the anonymous ID stable across requests.
-9. If verification fails, move to the optimization-doctor skill.
+9. If verification fails, move to the contentful-personalization-doctor skill.
 
 ## Common Failure Modes
 

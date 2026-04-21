@@ -10,7 +10,7 @@ SKILL.md instructions with templates, examples, and complete rules.
 
 ```markdown
 ---
-name: optimization-example
+name: contentful-personalization-example
 description: >-
   One to three sentences describing what this skill does and when to use it.
   Include specific trigger keywords and negative scope. Use when [scenarios].
@@ -54,15 +54,15 @@ Describe how to validate the result.
 
 ## Related Skills
 
-- the optimization-setup skill — for initial SDK installation
-- the optimization-doctor skill — for troubleshooting issues
+- the contentful-personalization-setup skill — for initial SDK installation
+- the contentful-personalization-doctor skill — for troubleshooting issues
 ```
 
 ### Code skill with scripts
 
 ```markdown
 ---
-name: optimization-example
+name: contentful-personalization-example
 description: >-
   Description with triggers and scope. Use when [scenarios].
   Also triggers on [phrases]. Not for [boundary conditions].
@@ -122,7 +122,7 @@ For API details, see [references/api.md](references/api.md).
 
 ```json
 {
-  "name": "@contentful/skill-optimization-readiness",
+  "name": "@contentful/skill-contentful-personalization-readiness",
   "version": "1.0.0",
   "description": "Assess optimization and personalization readiness for a Contentful project",
   "license": "MIT",
@@ -173,7 +173,7 @@ description: >-
   SDK compatibility. Use when asked to check optimization readiness, audit
   personalization setup, or evaluate prerequisites. Also triggers on "am I
   ready for personalization" or "can my app support A/B testing". Not for
-  setting up SDKs — use the optimization-setup skill for that.
+  setting up SDKs — use the contentful-personalization-setup skill for that.
 ```
 
 ```yaml
@@ -184,7 +184,7 @@ description: >-
   handling, and hydration. Use when asked to set up optimization, configure
   personalization, install Ninetailed SDK, or initialize A/B testing. Also
   triggers on "add personalization to my project", "configure edge rendering",
-  or "set up experiments". Not for diagnosing issues — use the optimization-doctor skill.
+  or "set up experiments". Not for diagnosing issues — use the contentful-personalization-doctor skill.
 ```
 
 ### Bad Examples
@@ -321,7 +321,7 @@ Document exit codes in `--help` output.
 ### Minimum (documentation-only)
 
 ```
-optimization-readiness/
+contentful-personalization-readiness/
   SKILL.md
   package.json
 ```
@@ -329,7 +329,7 @@ optimization-readiness/
 ### With references
 
 ```
-optimization-readiness/
+contentful-personalization-readiness/
   SKILL.md
   package.json
   references/
@@ -340,7 +340,7 @@ optimization-readiness/
 ### With scripts (simple)
 
 ```
-optimization-doctor/
+contentful-personalization-doctor/
   SKILL.md
   package.json
   scripts/
@@ -353,7 +353,7 @@ Use this when scripts are small and self-contained.
 ### With scripts (complex — with implementation dir)
 
 ```
-optimization-doctor/
+contentful-personalization-doctor/
   SKILL.md
   package.json
   scripts/
@@ -371,7 +371,7 @@ a build step or unit tests.
 ### Full skill with everything
 
 ```
-optimization-setup/
+contentful-personalization-setup/
   SKILL.md
   package.json
   scripts/
@@ -400,10 +400,10 @@ With additional constraint: no consecutive hyphens (`--`).
 
 ### Valid names
 
-- `optimization-readiness`
-- `optimization-setup`
-- `optimization-dev`
-- `optimization-doctor`
+- `contentful-personalization-readiness`
+- `contentful-personalization-setup`
+- `contentful-personalization-dev`
+- `contentful-personalization-doctor`
 - `content-audit`
 - `a`
 - `my-skill-2`
@@ -420,33 +420,31 @@ With additional constraint: no consecutive hyphens (`--`).
 ### How directory names map to identifiers
 
 ```
-skills/optimization/optimization-readiness/SKILL.md
-       ^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
-       grouping dir   skill directory = name field
+skills/contentful-personalization-readiness/SKILL.md
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+       skill directory = name field
 
-name: optimization-readiness                     (SKILL.md frontmatter)
-"name": "@contentful/skill-optimization-readiness"  (package.json)
+name: contentful-personalization-readiness                     (SKILL.md frontmatter)
+"name": "@contentful/skill-contentful-personalization-readiness"  (package.json)
 ```
 
-The organizational grouping directory (`optimization/`) is for filesystem
-organization. The skill's identity comes from its immediate parent directory.
-
-**Why the redundancy?** The agentskills.io spec requires `name` to match the
-parent directory exactly, and the name must be globally unambiguous across all
-installed skills. A short name like `readiness` would collide if another
-Contentful product also has a readiness skill. So the domain prefix appears in
-both the grouping dir and the skill dir.
+The skill's identity comes from its immediate parent directory. The agentskills.io
+spec requires `name` to match the parent directory exactly, and the name must be
+globally unambiguous across all installed skills. A short name like `readiness`
+would collide if another Contentful product also has a readiness skill.
 
 ## Distribution Boundary
 
 ```
 contentful/skills/
 ├── skills/                    ← DISTRIBUTED (npx skills add)
-│   └── optimization/
-│       ├── optimization-readiness/
-│       ├── optimization-setup/
-│       ├── optimization-dev/
-│       └── optimization-doctor/
+│   ├── contentful-guide/
+│   ├── contentful-migration/
+│   ├── contentful-nextjs/
+│   ├── contentful-personalization-readiness/
+│   ├── contentful-personalization-setup/
+│   ├── contentful-personalization-dev/
+│   └── contentful-personalization-doctor/
 ├── .agents/skills/            ← INTERNAL (never distributed)
 │   └── skill-authoring/
 ├── .claude/skills             ← Symlink to .agents/skills/

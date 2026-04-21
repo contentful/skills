@@ -1,5 +1,5 @@
 ---
-name: optimization-dev
+name: contentful-personalization-dev
 description: >-
   Day-to-day development companion for building with Contentful optimization and personalization.
   Guides creation of personalized components, experience wrappers, analytics hooks, and A/B test

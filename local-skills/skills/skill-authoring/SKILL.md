@@ -41,11 +41,10 @@ determines whether the skill activates. Keep the `SKILL.md` body concise (under
 
 ```
 skills/                         Distributed to customers (distribution boundary)
-  optimization/                 Organizational grouping by domain
-    optimization-readiness/     A skill — name field is "optimization-readiness"
-      SKILL.md
-      package.json
-      references/
+  contentful-personalization-readiness/   A skill — name field is "contentful-personalization-readiness"
+    SKILL.md
+    package.json
+    references/
 .agents/skills/                 Internal contributor skills (never distributed)
   skill-authoring/
     SKILL.md
@@ -130,7 +129,7 @@ description: >-
   troubleshooting optimization problems, debugging personalization behavior,
   or checking why experiments aren't running. Also triggers on "why isn't
   personalization working" or "check my config". Not for initial setup —
-  use the optimization-setup skill for that.
+  use the contentful-personalization-setup skill for that.
 ```
 
 **Bad:**
@@ -143,7 +142,7 @@ Include:
 - Direct trigger keywords the user would naturally say
 - Indirect keywords (e.g., for a deploy skill, also mention "ship", "release")
 - Negative scope to prevent false activations
-- Cross-references to related skills with explicit phrasing (for example, `the optimization-setup skill`)
+- Cross-references to related skills with explicit phrasing (for example, `the contentful-personalization-setup skill`)
 
 ## Directory Structure
 
@@ -212,19 +211,16 @@ frontmatter should mirror `package.json` version.
 
 | Context | Pattern | Example |
 |---------|---------|---------|
-| Directory name | `<domain>-<skill>`, lowercase-hyphen | `optimization-readiness` |
-| `name` field | must match directory | `optimization-readiness` |
-| npm package | `@contentful/skill-<domain>-<name>` | `@contentful/skill-optimization-readiness` |
-| Organizational dir | groups skills by domain | `optimization/` |
+| Directory name | `<domain>-<subdomain>-<skill>`, lowercase-hyphen | `contentful-personalization-readiness` |
+| `name` field | must match directory | `contentful-personalization-readiness` |
+| npm package | `@contentful/skill-<skill-name>` | `@contentful/skill-contentful-personalization-readiness` |
 
 Name validation rules: 1-64 chars, `[a-z0-9-]` only, no leading/trailing/consecutive
 hyphens, must match parent directory name exactly.
 
-This means directory paths look like `optimization/optimization-readiness/` — the
-domain prefix appears in both the grouping dir and the skill dir. This is intentional:
-the agentskills.io spec requires `name` to match the parent directory, and the name
-must be globally unambiguous (not just `readiness`). The redundancy is the price of
-spec compliance and reliable tooling.
+Skills live in a flat structure directly under `skills/`. The name must be globally
+unambiguous (not just `readiness`) — the domain prefix makes this possible while
+remaining compatible with the agentskills.io spec.
 
 ## Script Conventions
 
@@ -240,7 +236,7 @@ the design rules below.
 **Simple skills** — executables directly in `scripts/`:
 
 ```
-optimization-doctor/
+contentful-personalization-doctor/
   scripts/
     check                 Bash script, Python script, etc. (chmod +x)
     fix
@@ -250,7 +246,7 @@ optimization-doctor/
 directory (e.g., `src/`):
 
 ```
-optimization-doctor/
+contentful-personalization-doctor/
   scripts/
     check                 Thin wrapper → delegates to src/
     fix                   Thin wrapper → delegates to src/
@@ -307,8 +303,8 @@ For output patterns, exit code conventions, and `--help` templates, see
 Use explicit phrasing in SKILL.md body to reference related skills:
 
 ```markdown
-Before running this, ensure the optimization-readiness skill checks pass.
-For initial SDK installation, use the optimization-setup skill instead.
+Before running this, ensure the contentful-personalization-readiness skill checks pass.
+For initial SDK installation, use the contentful-personalization-setup skill instead.
 ```
 
 This is a documentation convention for the agent — no runtime enforcement.

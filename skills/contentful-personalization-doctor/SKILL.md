@@ -1,11 +1,11 @@
 ---
-name: optimization-doctor
+name: contentful-personalization-doctor
 description: Diagnose Contentful optimization and personalization issues. Validates environment variables, SDK packages, provider configuration, middleware, component wiring, API connectivity, and analytics setup. Trigger keywords: debug personalization, personalization not working, check my setup, ninetailed doctor, analytics not tracking, diagnose optimization
 metadata:
   version: "1.0.0"
 ---
 
-# optimization-doctor
+# contentful-personalization-doctor
 
 This skill is a structured workflow driven by a compiled CLI binary. You interact with it
 by calling the binary, reading its JSON output, following the instructions in the `prompt`

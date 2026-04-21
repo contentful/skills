@@ -10,7 +10,7 @@ import {
 } from './schemas.js';
 
 export default skill({
-  name: 'optimization-doctor',
+  name: 'contentful-personalization-doctor',
   version: '1.0.0',
   description:
     'Diagnose Contentful optimization and personalization issues. ' +

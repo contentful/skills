@@ -13,7 +13,7 @@ skills/                    Distributed to customers via `npx skills add contentf
 
 `skills/` is the **distribution boundary**. Only its contents are installed to customer environments. Everything outside (`AGENTS.md`, `.agents/`, `.claude-plugin/`) stays in the repo.
 
-The `skills` CLI discovers skills recursively, so organizational grouping directories (e.g., `skills/optimization/optimization-readiness/`) work correctly.
+The `skills` CLI discovers skills recursively, so subdirectories work correctly. Skills are organized in a flat structure directly under `skills/` (e.g., `skills/contentful-personalization-readiness/`).
 
 ## Skill Requirements
 
@@ -26,10 +26,9 @@ Even documentation-only skills require both files.
 
 ## Naming Conventions
 
-- **Directory names**: lowercase, hyphen-separated, prefixed with the domain (e.g., `optimization-readiness`, `optimization-setup`)
+- **Directory names**: lowercase, hyphen-separated, prefixed with the domain (e.g., `contentful-personalization-readiness`, `contentful-personalization-setup`)
 - **`name` field** in SKILL.md frontmatter: must exactly match the immediate parent directory name
-- **`package.json` name**: `@contentful/skill-<domain>-<skill-name>` (e.g., `@contentful/skill-optimization-readiness`)
-- **Organizational grouping directories** (e.g., `optimization/`) group related skills by domain
+- **`package.json` name**: `@contentful/skill-<skill-name>` (e.g., `@contentful/skill-contentful-personalization-readiness`)
 
 ### Name Rules (agentskills.io spec)
 
@@ -70,7 +69,7 @@ Use [conventional commits](https://www.conventionalcommits.org/) with a Jira tic
 **Examples**:
 ```
 feat(optimization): add readiness skill [NT-2950]
-fix(optimization-doctor): correct SDK version detection [NT-2955]
+fix(contentful-personalization-doctor): correct SDK version detection [NT-2955]
 docs: update README with new install commands [NT-2960]
 ```
 
@@ -81,11 +80,11 @@ Some skills are built with [`@contentful/skill-kit`](https://github.com/contentf
 ### Source and output
 
 - **Source**: `src/skills/<skill-name>/` — TypeScript, tests, reference docs
-- **Output**: `skills/<domain>/<skill-name>/` — generated SKILL.md, binaries, references
+- **Output**: `skills/<skill-name>/` — generated SKILL.md, binaries, references
 
 Build maps source to distribution:
 ```
-skill-kit build src/skills/optimization-doctor/skill.ts -o skills/optimization/optimization-doctor
+skill-kit build src/skills/contentful-personalization-doctor/skill.ts -o skills/contentful-personalization-doctor
 ```
 
 ### Adding a new skill-kit skill
@@ -93,7 +92,7 @@ skill-kit build src/skills/optimization-doctor/skill.ts -o skills/optimization/o
 1. Create source at `src/skills/<skill-name>/skill.ts`
 2. Add a build script to `package.json`
 3. Build: `pnpm run build`
-4. Verify: `python3 .disabled/skills/skill-authoring/scripts/quick_validate.py skills/<domain>/<skill-name>`
+4. Verify: `python3 .disabled/skills/skill-authoring/scripts/quick_validate.py skills/<skill-name>`
 5. Commit both source and build output (including `bin/` binaries)
 
 ### Binaries in git
@@ -106,7 +105,7 @@ Skills are installed by customers via the [skills CLI](https://github.com/vercel
 
 ```bash
 npx skills add contentful/skills                          # all skills
-npx skills add contentful/skills --skill optimization-readiness  # one skill
+npx skills add contentful/skills --skill contentful-personalization-readiness  # one skill
 ```
 
 The CLI copies skill directories in isolation. Each skill must be fully self-contained — no dependencies on files outside its own directory.
