@@ -19,12 +19,12 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "node --test --import tsx/esm 'src/skills/**/*.test.ts'",
-    "build": "skill-kit build src/skills/contentful-personalization-doctor/skill.ts -o skills/contentful-personalization-doctor",
+    "build": "skill-kit build src/skills/contentful-personalization-doctor/skill.ts -o skills/contentful-personalization-doctor --mode node",
     "validate": "python3 .disabled/skills/skill-authoring/scripts/quick_validate.py skills --all",
     "update-licenses": "node ./scripts/update-licenses.mjs"
   },
   "devDependencies": {
-    "@contentful/skill-kit": "^0.1.7",
+    "@contentful/skill-kit": "^0.1.9",
     "@release-it/bumper": "^7.0.5",
     "@release-it/conventional-changelog": "^10.0.6",
     "@types/node": "^25.2.3",
