@@ -5,13 +5,13 @@
     "email": "skills@contentful.com"
   },
   "metadata": {
-    "description": "Agent skills for Contentful optimization",
+    "description": "Skills for the Contentful Platform (CMS, Personalization, Analytics, etc.)",
     "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "contentful-skills",
-      "description": "Personalization, analytics, and optimization skills",
+      "description": "Contentful and Personalization skills",
       "source": "./",
       "skills": [
         "./skills/contentful-guide",
