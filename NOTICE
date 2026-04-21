@@ -8,7 +8,7 @@ None
 Development Dependencies
 
 @contentful/skill-kit
-    License: UNKNOWN
+    License: MIT
     https://www.npmjs.com/package/@contentful/skill-kit [npmjs.com]
 @types/node
     License: MIT

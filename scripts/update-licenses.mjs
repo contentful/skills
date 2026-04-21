@@ -237,6 +237,10 @@ SOFTWARE.
 `,
 };
 
+const LICENSE_OVERRIDES = {
+  '@contentful/skill-kit': 'MIT',
+};
+
 function toNpmUrl(name) {
   return `https://www.npmjs.com/package/${name}`;
 }
@@ -288,15 +292,17 @@ async function readDependencyMetadata(name) {
     const raw = await readFile(dependencyPackageJsonPath, 'utf8');
     const pkg = JSON.parse(raw);
 
+    const detectedLicense = readLicenseString(pkg);
+
     return {
       name,
-      license: readLicenseString(pkg),
+      license: LICENSE_OVERRIDES[name] || detectedLicense,
       url: pkg.homepage || normalizeRepositoryUrl(pkg.repository?.url) || toNpmUrl(name),
     };
   } catch {
     return {
       name,
-      license: 'UNKNOWN',
+      license: LICENSE_OVERRIDES[name] || 'UNKNOWN',
       url: toNpmUrl(name),
     };
   }
