@@ -1,11 +1,27 @@
 {
   "name": "contentful-skills",
   "owner": {
-    "name": "Contentful"
+    "name": "Contentful",
+    "email": "skills@contentful.com"
   },
   "metadata": {
-    "description": "Agent Skills for the Contentful platform",
-    "version": "0.0.0"
+    "description": "Agent skills for Contentful optimization",
+    "version": "1.0.0"
   },
-  "plugins": []
+  "plugins": [
+    {
+      "name": "contentful-skills",
+      "description": "Personalization, analytics, and optimization skills",
+      "source": "./",
+      "skills": [
+        "./skills/contentful-guide",
+        "./skills/contentful-migration",
+        "./skills/contentful-nextjs",
+        "./skills/contentful-personalization-dev",
+        "./skills/contentful-personalization-doctor",
+        "./skills/contentful-personalization-readiness",
+        "./skills/contentful-personalization-setup"
+      ]
+    }
+  ]
 }
