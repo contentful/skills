@@ -1,6 +1,6 @@
 {
   "name": "@contentful/skill-contentful-personalization-setup",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Set up Contentful Personalization in Contentful and code using current or new SDKs",
   "license": "MIT",
   "files": ["SKILL.md", "references/**"]

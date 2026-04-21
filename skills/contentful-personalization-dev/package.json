@@ -1,6 +1,6 @@
 {
   "name": "@contentful/skill-contentful-personalization-dev",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Development workflow for Contentful optimization and personalization features",
   "license": "MIT",
   "files": ["SKILL.md", "references/**"]

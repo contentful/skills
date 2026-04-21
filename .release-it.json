@@ -1,0 +1,34 @@
+{
+  "$schema": "https://unpkg.com/release-it@20/schema/release-it.json",
+  "git": {
+    "commitMessage": "chore(release): v${version}",
+    "tagAnnotation": "Release ${version}",
+    "requireBranch": "main",
+    "requireCleanWorkingDir": true,
+    "push": true,
+    "pushArgs": ["--follow-tags"]
+  },
+  "npm": {
+    "publish": false
+  },
+  "github": {
+    "release": true,
+    "releaseName": "v${version}",
+    "tokenRef": "GITHUB_TOKEN"
+  },
+  "hooks": {
+    "before:init": ["pnpm run typecheck", "pnpm run test"],
+    "after:bump": "pnpm run build"
+  },
+  "plugins": {
+    "@release-it/bumper": {
+      "out": [
+        { "file": "skills/*/package.json", "path": "version" },
+        { "file": ".claude-plugin/plugin.json", "path": "version" },
+        { "file": ".cursor-plugin/plugin.json", "path": "version" },
+        { "file": ".claude-plugin/marketplace.json", "path": "metadata.version" },
+        { "file": ".cursor-plugin/marketplace.json", "path": "metadata.version" }
+      ]
+    }
+  }
+}
