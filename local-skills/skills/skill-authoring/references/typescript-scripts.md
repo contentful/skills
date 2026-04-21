@@ -5,7 +5,7 @@ How to set up a skill with TypeScript scripts running on Node.js.
 ## Directory layout
 
 ```
-optimization-doctor/
+contentful-personalization-doctor/
   SKILL.md
   package.json
   package-lock.json         Committed — pins dependency versions
@@ -50,7 +50,7 @@ public interface) to `src/` (the implementation).
 
 ```json
 {
-  "name": "@contentful/skill-optimization-doctor",
+  "name": "@contentful/skill-contentful-personalization-doctor",
   "version": "1.0.0",
   "description": "Diagnose and fix Contentful optimization issues",
   "license": "MIT",

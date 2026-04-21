@@ -1,5 +1,5 @@
 ---
-name: optimization-readiness
+name: contentful-personalization-readiness
 description: >-
   Assess whether a codebase is ready for Contentful optimization and personalization.
   Analyzes framework, Contentful SDK setup, component architecture, and rendering
@@ -10,8 +10,8 @@ description: >-
   for personalization", "can I install Ninetailed", "is my project ready", "evaluate
   my codebase", "readiness check", "can my app support A/B testing", "pre-check",
   "prerequisites for personalization". Not for installing or configuring SDKs — use
-  the optimization-setup skill for that. Not for diagnosing issues in an existing setup — use
-  the optimization-doctor skill for that.
+  the contentful-personalization-setup skill for that. Not for diagnosing issues in an existing setup — use
+  the contentful-personalization-doctor skill for that.
 license: MIT
 ---
 
@@ -62,7 +62,7 @@ assess readiness. Then produce the final report.
 - Plain React → Supported (client-side only)
 - Non-React framework → Not currently supported
 
-If the framework baseline is below supported levels, explicitly block setup work and route the user to prerequisite upgrades before running the optimization-setup skill.
+If the framework baseline is below supported levels, explicitly block setup work and route the user to prerequisite upgrades before running the contentful-personalization-setup skill.
 
 ### B. Contentful SDK Setup
 
@@ -111,7 +111,7 @@ If the framework baseline is below supported levels, explicitly block setup work
    - `NinetailedPrivacyPlugin` → consent management
 
 **Assess**:
-- No packages installed → `NOT INSTALLED` (expected baseline for first-time adoption; use the optimization-setup skill)
+- No packages installed → `NOT INSTALLED` (expected baseline for first-time adoption; use the contentful-personalization-setup skill)
 - Packages installed but no provider → `PARTIAL SETUP` (installation started, wiring still needed)
 - Provider configured with plugins → `CONFIGURED` (check completeness and plugin fit)
 
@@ -252,7 +252,7 @@ After completing all checks, produce a report in this format:
 2. [...]
 3. [...]
 
-Use the optimization-setup skill for guided installation and configuration.
+Use the contentful-personalization-setup skill for guided installation and configuration.
 ```
 
 **Status markers**: Use these consistently for framework/contentful/component/rendering checks:
@@ -287,7 +287,7 @@ For **Existing Ninetailed Setup** only (check C), use:
 ### Existing Ninetailed Setup: NOT INSTALLED
 - No `@ninetailed/*` packages in package.json
 - No NinetailedProvider in source
-- Fresh setup — use the optimization-setup skill for guided installation
+- Fresh setup — use the contentful-personalization-setup skill for guided installation
 
 ### Component Architecture: MINOR CHANGES
 - Component mapper found in `components/Renderer/BlockRenderer.tsx`
@@ -307,7 +307,7 @@ For **Existing Ninetailed Setup** only (check C), use:
 
 ### Recommendations
 1. Add `callout` and `stat-grid` to the ContentTypeMap in BlockRenderer.tsx
-2. Run the optimization-setup skill for guided Ninetailed SDK installation
+2. Run the contentful-personalization-setup skill for guided Ninetailed SDK installation
 3. Edge middleware detected — consider server-side personalization for no-flash experience
 ```
 
@@ -324,4 +324,4 @@ The **overall assessment** is determined by the worst-performing area:
 
 Exception: if the only issue is "no Ninetailed packages installed" but
 everything else is ready, the overall assessment is still **READY** — that's
-what the optimization-setup skill is for.
+what the contentful-personalization-setup skill is for.
