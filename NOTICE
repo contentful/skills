@@ -1,0 +1,28 @@
+This project includes the following third-party open-source software components. Each is provided under its respective license.
+
+Runtime Dependencies (Production)
+
+None
+
+
+Development Dependencies
+
+@contentful/skill-kit
+    License: UNKNOWN
+    https://www.npmjs.com/package/@contentful/skill-kit [npmjs.com]
+@types/node
+    License: MIT
+    https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node [npmjs.com]
+tsx
+    License: MIT
+    https://tsx.is [npmjs.com]
+typescript
+    License: Apache-2.0
+    https://www.typescriptlang.org/ [npmjs.com]
+
+
+Each component is used in accordance with its open-source license. The
+applicable license texts are included in this repository under the
+licenses/ directory.
+
+For more details, please refer to the LICENSE file for this project.

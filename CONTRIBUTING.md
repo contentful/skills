@@ -1,12 +1,46 @@
-## Development
+# Contributing to Contentful Skills
 
-To edit the skills locally, please symlink them:
+Thanks for your interest in contributing.
+
+## How to contribute
+
+- Open an issue to report bugs or suggest enhancements.
+- For larger changes, start with an issue before opening a PR.
+- For smaller fixes and docs updates, feel free to open a PR directly.
+
+## Local development
+
+To edit skills locally, symlink them into `.agents/skills`:
 
 ```sh
-mkdir .agents
+mkdir -p .agents
 ln -sn "$(pwd)/local-skills/skills" .agents/skills
 ```
 
-> [!NOTE] 
-> If we commit the .agents folder, any users installing the Contentful skills will end up with only the `.agents/skills` and not the `./skills`
+## Validate your changes
 
+Run the checks before opening a PR:
+
+```sh
+pnpm typecheck
+pnpm test
+pnpm validate
+```
+
+If you changed dependencies, also refresh licensing files:
+
+```sh
+pnpm run update-licenses
+```
+
+## Pull request checklist
+
+- Keep PRs focused and easy to review.
+- Use conventional commits where possible.
+- Update docs when behavior or usage changes.
+- Do not include secrets or credentials.
+
+## Code of conduct
+
+By participating in this project, you agree to follow the Contentful Developer Code of Conduct:
+https://www.contentful.com/developers/code-of-conduct/

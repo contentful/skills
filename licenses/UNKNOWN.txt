@@ -1,0 +1,7 @@
+Some dependencies do not expose a machine-readable SPDX license in their package metadata.
+
+The following direct dependencies are currently marked as UNKNOWN:
+
+- @contentful/skill-kit
+
+Please review these packages manually and update this file if needed.
