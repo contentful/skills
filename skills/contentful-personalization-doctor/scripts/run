@@ -15,4 +15,4 @@ if [ "$NODE_VERSION" -lt 24 ] 2>/dev/null; then
 fi
 
 export SKILL_DIR
-exec node "$SKILL_DIR/bin/optimization-doctor.mjs" "$@"
+exec node "$SKILL_DIR/bin/contentful-personalization-doctor.mjs" "$@"
