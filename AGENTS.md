@@ -75,17 +75,19 @@ docs: update README with new install commands [NT-2960]
 
 ## skill-kit Skills
 
-Some skills are built with [`@contentful/skill-kit`](https://github.com/contentful/skill-kit) — TypeScript state machines compiled to CLI binaries. These coexist with prose skills in `skills/`.
+Some skills are built with [`@contentful/skill-kit`](https://github.com/contentful/skill-kit) — TypeScript state machines compiled to JavaScript bundles. These coexist with prose skills in `skills/`.
 
 ### Source and output
 
 - **Source**: `src/skills/<skill-name>/` — TypeScript, tests, reference docs
-- **Output**: `skills/<skill-name>/` — generated SKILL.md, binaries, references
+- **Output**: `skills/<skill-name>/` — generated SKILL.md, JS bundle, references
 
 Build maps source to distribution:
 ```
-skill-kit build src/skills/contentful-personalization-doctor/skill.ts -o skills/contentful-personalization-doctor
+skill-kit build src/skills/contentful-personalization-doctor/skill.ts -o skills/contentful-personalization-doctor --mode node
 ```
+
+The `--mode node` flag produces a single `.mjs` bundle that runs on the host's Node.js (≥24) instead of self-contained platform binaries. This keeps the repo lightweight.
 
 ### Adding a new skill-kit skill
 
@@ -93,11 +95,7 @@ skill-kit build src/skills/contentful-personalization-doctor/skill.ts -o skills/
 2. Add a build script to `package.json`
 3. Build: `pnpm run build`
 4. Verify: `python3 .disabled/skills/skill-authoring/scripts/quick_validate.py skills/<skill-name>`
-5. Commit both source and build output (including `bin/` binaries)
-
-### Binaries in git
-
-Compiled binaries in `skills/*/bin/` are committed to git because `npx skills add` clones from the repo. Large binary changes should only happen when the skill source changes.
+5. Commit both source and build output
 
 ## Distribution
 
