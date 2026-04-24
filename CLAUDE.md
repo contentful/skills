@@ -54,9 +54,20 @@ src/skills/<skill-name>/     # TypeScript source (not distributed)
   schemas.ts                 # Shared Zod schemas
   actions/                   # CLI-side actions
   references/                # Reference docs (copied to output)
-skills/<domain>/<skill-name>/ # Build output (distributed)
+skills/<skill-name>/         # Build output (distributed)
   SKILL.md                   # Generated
+  package.json               # Manually maintained (see below)
   scripts/run                # Generated shell wrapper
   bin/                       # Compiled binaries
   references/                # Copied from source
 ```
+
+### package.json for skill-kit skills
+
+`skill-kit build` generates a minimal `package.json`. After building, update it to match the repo convention:
+
+- `name`: `@contentful/skill-<skill-name>`
+- `version`: must match the repo version in the root `package.json` (release-it bumps `skills/*/package.json` automatically)
+- Include `description`, `license: "MIT"`, and `files` array
+
+If you add a new skill-kit skill, always check its `package.json` version matches the repo version before committing.
