@@ -64,10 +64,6 @@ skills/<skill-name>/         # Build output (distributed)
 
 ### package.json for skill-kit skills
 
-`skill-kit build` generates a minimal `package.json`. After building, update it to match the repo convention:
+`skill-kit build` overwrites `package.json` with a minimal `{name, version}`. The release pipeline runs `node scripts/fix-skill-packagejson.mjs` after build to restore repo conventions (`@contentful/skill-*` name, repo version, license, files).
 
-- `name`: `@contentful/skill-<skill-name>`
-- `version`: must match the repo version in the root `package.json` (release-it bumps `skills/*/package.json` automatically)
-- Include `description`, `license: "MIT"`, and `files` array
-
-If you add a new skill-kit skill, always check its `package.json` version matches the repo version before committing.
+When adding a new skill-kit skill, ensure its built `package.json` has a `description` field — the fix script preserves existing fields but doesn't invent descriptions. Run `node scripts/fix-skill-packagejson.mjs` after your first build to verify.

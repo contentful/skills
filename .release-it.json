@@ -18,7 +18,7 @@
   },
   "hooks": {
     "before:init": ["pnpm run typecheck", "pnpm run test"],
-    "after:bump": "pnpm run build"
+    "after:bump": ["pnpm run build", "node scripts/fix-skill-packagejson.mjs"]
   },
   "plugins": {
     "@release-it/conventional-changelog": {
