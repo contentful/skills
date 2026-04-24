@@ -1,0 +1,179 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { runComposite, runSkill, mockModel } from '@contentful/skill-kit/test';
+import skill from './skill.js';
+import doctorSkill from './subskills/doctor.js';
+import developSkill from './subskills/develop.js';
+
+// --- Dispatcher routing tests ---
+
+test('classify routes to onboard for setup requests', async () => {
+  const result = await runComposite(skill, {
+    model: mockModel({
+      classify: { intent: 'onboard', confidence: 0.95, reasoning: 'User wants to set up personalization' },
+      'onboard/explore': {
+        framework: 'nextjs-app', routerType: 'app', projectPath: '.', frameworkVersion: '14.0.0',
+        explorationSummary: 'Next.js project', personalizableCandidates: [], existingSetup: 'none', readinessOnly: false,
+      },
+      'onboard/check-packages': { projectPath: '.' },
+      'onboard/assess': { readinessStatus: 'ready', report: 'All good', prerequisites: [], readinessOnly: false },
+      'onboard/choose': { sdkChoice: 'ninetailed', architecture: 'client-only', reasoning: 'Simple setup' },
+      'onboard/cms-setup': { choice: 'done' },
+      'onboard/plan': { packagesToInstall: ['@ninetailed/experience.js'], envVars: {}, plan: 'Install SDK' },
+      'onboard/install': { projectPath: '.', packages: ['@ninetailed/experience.js'], packageManager: 'npm' },
+      'onboard/write-env': { projectPath: '.', variables: {}, fileName: '.env.local' },
+      'onboard/implement': { filesModified: [], summary: 'Done' },
+      'onboard/verify': { projectPath: '.' },
+      'onboard/fix': { fixesMade: ['fixed issue'] },
+      'onboard/report': { summary: 'Setup complete' },
+    }),
+  });
+
+  assert.equal(result.redirectedTo?.kind, 'subskill');
+  assert.equal(result.redirectedTo?.name, 'onboard');
+  assert.ok(result.path.includes('classify'));
+});
+
+test('classify routes to doctor for debugging requests', async () => {
+  const result = await runComposite(skill, {
+    model: mockModel({
+      classify: { intent: 'doctor', confidence: 0.9, reasoning: 'User says personalization is broken' },
+      'doctor/explore': {
+        framework: 'nextjs-app', projectPath: '.', explorationSummary: 'Broken setup', concerns: ['No provider'],
+      },
+      'doctor/check-facts': { projectPath: '.' },
+      'doctor/check-api': { shouldCheck: false, environment: 'main' },
+      'doctor/review': { overallStatus: 'fail', recommendations: [], summary: 'Needs fixes' },
+      'doctor/report': { report: 'Report' },
+      'doctor/ask-fix': { choice: 'no' },
+      'doctor/report-only': { message: 'Ok' },
+    }),
+  });
+
+  assert.equal(result.redirectedTo?.kind, 'subskill');
+  assert.equal(result.redirectedTo?.name, 'doctor');
+});
+
+test('classify routes to develop for component tasks', async () => {
+  const result = await runComposite(skill, {
+    model: mockModel({
+      classify: { intent: 'develop', confidence: 0.85, reasoning: 'User wants to personalize a component' },
+      'develop/analyze': {
+        taskType: 'personalize-component', sdkInUse: 'ninetailed', framework: 'nextjs-app',
+        targetFiles: ['Hero.tsx'], analysis: 'Wrap Hero',
+      },
+      'develop/plan': { plan: 'Add Experience wrapper', filesToModify: ['Hero.tsx'] },
+      'develop/implement': { filesModified: ['Hero.tsx'], summary: 'Done' },
+    }),
+  });
+
+  assert.equal(result.redirectedTo?.kind, 'subskill');
+  assert.equal(result.redirectedTo?.name, 'develop');
+});
+
+test('classify routes to topic for reference questions', async () => {
+  const result = await runComposite(skill, {
+    model: mockModel({
+      classify: { intent: 'reference', confidence: 0.9, topic: 'sdk-selection', reasoning: 'User asks which SDK to use' },
+    }),
+  });
+
+  assert.equal(result.redirectedTo?.kind, 'topic');
+  assert.equal(result.redirectedTo?.name, 'sdk-selection');
+});
+
+test('low confidence routes to gather-context', async () => {
+  const result = await runComposite(skill, {
+    model: mockModel({
+      classify: { intent: 'unclear', confidence: 0.3, reasoning: 'Ambiguous request' },
+      'gather-context': { intent: 'doctor', reasoning: 'Found broken setup' },
+      'doctor/explore': {
+        framework: 'nextjs-app', projectPath: '.', explorationSummary: 'Broken', concerns: [],
+      },
+      'doctor/check-facts': { projectPath: '.' },
+      'doctor/check-api': { shouldCheck: false, environment: 'main' },
+      'doctor/review': { overallStatus: 'warn', recommendations: [], summary: 'Issues found' },
+      'doctor/report': { report: 'Report' },
+      'doctor/ask-fix': { choice: 'no' },
+      'doctor/report-only': { message: 'Ok' },
+    }),
+  });
+
+  assert.ok(result.path.includes('gather-context'));
+  assert.equal(result.redirectedTo?.kind, 'subskill');
+  assert.equal(result.redirectedTo?.name, 'doctor');
+});
+
+test('reference without topic routes to pick-topic', async () => {
+  const result = await runComposite(skill, {
+    model: mockModel({
+      classify: { intent: 'reference', confidence: 0.8, reasoning: 'User wants to look something up' },
+      'pick-topic': { choice: 'common-errors' },
+    }),
+  });
+
+  assert.ok(result.path.includes('pick-topic'));
+  assert.equal(result.redirectedTo?.kind, 'topic');
+  assert.equal(result.redirectedTo?.name, 'common-errors');
+});
+
+// --- Doctor sub-skill tests ---
+
+test('doctor explore → check-facts → check-api → review → report path', async () => {
+  const result = await runSkill(doctorSkill, {
+    model: mockModel({
+      explore: {
+        framework: 'nextjs-app',
+        frameworkVersion: '14.1.0',
+        projectPath: '.',
+        explorationSummary: 'Next.js 14 App Router project with partial Ninetailed setup',
+        concerns: ['Provider not found', 'Missing middleware'],
+      },
+      'check-facts': { projectPath: '.' },
+      'check-api': { apiKey: 'nt_prod_test123', environment: 'main', shouldCheck: true },
+      review: {
+        overallStatus: 'warn',
+        recommendations: [
+          { priority: 'warning', message: 'Provider not found in source', category: 'provider' },
+        ],
+        summary: 'Partial setup detected.',
+      },
+      report: { report: 'Doctor report rendered' },
+      'ask-fix': { choice: 'no' },
+      'report-only': { message: 'Good luck!' },
+    }),
+  });
+
+  assert.ok(result.path.includes('explore'));
+  assert.ok(result.path.includes('check-facts'));
+  assert.ok(result.path.includes('check-api'));
+  assert.ok(result.path.includes('review'));
+  assert.ok(result.path.includes('report'));
+});
+
+// --- Develop sub-skill tests ---
+
+test('develop analyze → plan → implement path', async () => {
+  const result = await runSkill(developSkill, {
+    context: { userQuery: 'Personalize the Hero component' },
+    model: mockModel({
+      analyze: {
+        taskType: 'personalize-component',
+        sdkInUse: 'ninetailed',
+        framework: 'nextjs-app',
+        targetFiles: ['components/Hero.tsx', 'components/BlockRenderer.tsx'],
+        analysis: 'Hero component needs Experience wrapper',
+      },
+      plan: {
+        plan: 'Wrap Hero in Experience component, add to ContentTypeMap',
+        filesToModify: ['components/Hero.tsx', 'components/BlockRenderer.tsx'],
+      },
+      implement: {
+        filesModified: ['components/Hero.tsx', 'components/BlockRenderer.tsx'],
+        summary: 'Added Experience wrapper to Hero',
+      },
+    }),
+  });
+
+  assert.deepEqual(result.path, ['analyze', 'plan', 'implement']);
+});

@@ -1,0 +1,127 @@
+---
+name: contentful-personalization
+description: Unified Contentful personalization skill. Covers readiness assessment, guided setup, diagnostics and debugging, day-to-day development, and reference documentation for SDKs, APIs, and patterns. Trigger keywords: personalization, optimization, ninetailed, A/B test, set up personalization, personalization not working, personalize this component, am I ready for personalization, experience API
+metadata:
+  version: "1.0.0"
+---
+
+# contentful-personalization
+
+This skill is a structured workflow driven by a compiled CLI binary. You interact with it
+by calling the binary, reading its JSON output, following the instructions in the `prompt`
+field, and passing your response back. **Do not show the raw JSON or Bash commands to the user.**
+
+## How to run this skill
+
+This SKILL.md file is inside the skill directory. Resolve the **absolute path** to `scripts/run`
+from this file's location (e.g., `/path/to/skill/scripts/run`). Use the absolute path in all
+Bash commands — do not `cd` into the skill directory.
+
+In the examples below, `<skill>/scripts/run` is a placeholder for this absolute path.
+
+**Before you begin:** Tell the user that they may be prompted to allow `scripts/run` and to
+read a file called `skill-kit-<id>.jsonl`. They should allow both permanently.
+
+### Detect your host
+
+Determine which agent host you are running in, and pass it as `--host`:
+- Claude Code: `--host claude-code`
+- Codex: `--host codex`
+- OpenCode: `--host opencode`
+- Unknown/other: omit the flag (defaults to generic)
+
+### Step 1: Start with a session
+
+```bash
+<skill>/scripts/run --context '{}' --host claude-code --session new 2>/dev/null
+```
+
+This returns a JSON pointer with `sessionId`, `file`, and `line`. The `line` field tells you
+which line to read — it will be `2`, not `1` (line 1 is an internal header, never read it).
+
+Read **only** line `line` from `file`. It contains the step prompt, schema, and preamble.
+
+**Read the `preamble` first.** It defines verb-to-tool mappings (e.g., ASK_STRUCTURED, ASK_FREEFORM)
+that prompts use throughout the skill. Follow these mappings for every step.
+
+### Step 2: Follow the prompt
+
+Read the `prompt` field from the session file line. It contains instructions — follow them.
+The prompt may ask you to use specific tools, write files, analyze code, or interact with the user.
+Produce a JSON object matching the `schema`.
+
+### Step 3: Advance
+
+Pass your output back with the step name:
+
+```bash
+<skill>/scripts/run advance --step <step-name> --output '<your-json>' --session abc123 2>/dev/null
+```
+
+This returns a single line number (e.g., `4`). Read **exactly and only that line** from the session file — it contains the next prompt. Do not read any other lines.
+
+### Step 4: Repeat until done
+
+Keep advancing until the line you read contains `"type":"done"`. The `finalOutput` field
+contains the skill's result. Present it to the user.
+
+### Important
+
+- **Never show raw JSON output or Bash commands to the user.** The user sees your natural
+  language responses, not the protocol.
+- **If you get a validation error** (the response has `"error": "validation"` or `"type":"error"`),
+  read the `message` field, fix your output, and retry the same step.
+
+## Steps in this skill
+
+- **classify**: Classify the user's request to determine which personalization capability
+they need. You have the...
+- **gather-context**: You're not sure what the user needs yet. Before asking, try to
+learn more by exploring the projec...
+- **pick-topic**: (dynamic)
+
+
+## Sub-skills
+
+This skill contains sub-skills that the workflow routes to automatically.
+Start the skill normally — the dispatcher will determine which sub-skill to use.
+Only use direct sub-skill access if the user explicitly requests a specific sub-skill by name.
+
+Sub-skill step names are prefixed: `<subskill>/<step>` (e.g., `doctor/diagnose`).
+
+### Direct sub-skill access
+
+```bash
+<skill>/scripts/run <subskill> --context '{}' --session new
+<skill>/scripts/run <subskill> advance --session <id>
+```
+
+### Available sub-skills
+
+- **onboard**: Assess readiness and guide Contentful personalization setup end-to-end. Explores the codebase, checks readiness, helps choose SDK and architecture, installs packages, and guides implementation.
+- **doctor**: Diagnose and fix Contentful personalization issues. Explores the codebase, checks packages and env vars, tests API connectivity, and helps fix problems.
+- **develop**: Day-to-day development companion for building with Contentful personalization. Helps add personalization to components, create experiments, and wire analytics.
+
+## Reference topics
+
+Quick-reference topics accessible without running the full workflow:
+
+```bash
+<skill>/scripts/run topics              # list all topics
+<skill>/scripts/run topic <name>         # load a specific topic
+```
+
+- **how-personalization-works**: Core concepts: content model, rendering flow, and how personalization works
+- **sdk-selection**: SDK decision framework: legacy (@ninetailed/experience.js) vs modern (@contentful/optimization)
+- **provider-patterns**: Provider placement patterns for Pages Router, App Router, and both SDKs
+- **middleware-patterns**: Middleware and SSR/edge patterns: preflight, cookies, matcher config
+- **component-patterns**: Component architecture patterns: ContentTypeMap, BlockRenderer, isolation
+- **rendering-pipeline**: Rendering pipeline: Contentful client setup, include depth, component mapper
+- **environment-variables**: Environment variables: names, runtime matrix, framework prefixes
+- **analytics-and-preview**: Analytics plugins (Insights, GTM, Segment) and preview configuration
+- **common-errors**: Common failure modes with root causes and fixes
+- **ssr-guide**: SSR and edge-side personalization: patterns, anti-patterns, troubleshooting
+- **sdk-legacy-guide**: @ninetailed/experience.js complete SDK reference
+- **sdk-next-guide**: @contentful/optimization next-gen SDK reference
+- **contentful-integration-guide**: Contentful CMS integration: content types, ExperienceMapper, publishing workflow
+- **implementation-examples**: Real code examples: providers, BlockRenderer, Experience component patterns
