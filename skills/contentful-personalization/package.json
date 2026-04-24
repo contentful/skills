@@ -1,11 +1,4 @@
 {
-  "name": "@contentful/skill-contentful-personalization",
-  "version": "1.2.2",
-  "license": "MIT",
-  "files": [
-    "SKILL.md",
-    "scripts/**",
-    "bin/**",
-    "references/**"
-  ]
+  "name": "contentful-personalization",
+  "version": "1.0.0"
 }
