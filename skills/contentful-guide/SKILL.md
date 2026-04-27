@@ -28,7 +28,7 @@ Contentful is a headless, API-first CMS (composable content platform) where team
 ## Routing rules
 
 - If the user asks to add Contentful to a Next.js project, use the contentful-nextjs skill.
-- If the user asks about optimization/personalization/analytics setup or debugging, route to contentful-personalization skills.
+- If the user asks about optimization/personalization/analytics setup or debugging, route to the `contentful-personalization` skill.
 - If the user asks for conceptual guidance, architecture tradeoffs, or where to read docs, stay in this skill.
 - If the user asks about environment aliases and deployment workflows, stay in this skill unless they also ask for framework implementation.
 

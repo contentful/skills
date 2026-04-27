@@ -1,5 +1,5 @@
 {
-  "name": "contentful-skills",
+  "name": "contentful",
   "owner": {
     "name": "Contentful",
     "email": "skills@contentful.com"
@@ -17,10 +17,7 @@
         "./skills/contentful-guide",
         "./skills/contentful-migration",
         "./skills/contentful-nextjs",
-        "./skills/contentful-personalization-dev",
-        "./skills/contentful-personalization-doctor",
-        "./skills/contentful-personalization-readiness",
-        "./skills/contentful-personalization-setup"
+        "./skills/contentful-personalization"
       ]
     }
   ]

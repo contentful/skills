@@ -13,7 +13,7 @@ skills/                    Distributed to customers via `npx skills add contentf
 
 `skills/` is the **distribution boundary**. Only its contents are installed to customer environments. Everything outside (`AGENTS.md`, `.agents/`, `.claude-plugin/`) stays in the repo.
 
-The `skills` CLI discovers skills recursively, so subdirectories work correctly. Skills are organized in a flat structure directly under `skills/` (e.g., `skills/contentful-personalization-readiness/`).
+The `skills` CLI discovers skills recursively, so subdirectories work correctly. Skills are organized in a flat structure directly under `skills/` (e.g., `skills/contentful-personalization/`).
 
 ## Skill Requirements
 
@@ -26,9 +26,9 @@ Even documentation-only skills require both files.
 
 ## Naming Conventions
 
-- **Directory names**: lowercase, hyphen-separated, prefixed with the domain (e.g., `contentful-personalization-readiness`, `contentful-personalization-setup`)
+- **Directory names**: lowercase, hyphen-separated, prefixed with the domain (e.g., `contentful-personalization`, `contentful-migration`)
 - **`name` field** in SKILL.md frontmatter: must exactly match the immediate parent directory name
-- **`package.json` name**: `@contentful/skill-<skill-name>` (e.g., `@contentful/skill-contentful-personalization-readiness`)
+- **`package.json` name**: `@contentful/skill-<skill-name>` (e.g., `@contentful/skill-contentful-personalization`)
 
 ### Name Rules (agentskills.io spec)
 
@@ -69,7 +69,7 @@ Use [conventional commits](https://www.conventionalcommits.org/) with a Jira tic
 **Examples**:
 ```
 feat(optimization): add readiness skill [NT-2950]
-fix(contentful-personalization-doctor): correct SDK version detection [NT-2955]
+fix(contentful-personalization): correct SDK version detection [NT-2955]
 docs: update README with new install commands [NT-2960]
 ```
 
@@ -84,7 +84,7 @@ Some skills are built with [`@contentful/skill-kit`](https://github.com/contentf
 
 Build maps source to distribution:
 ```
-skill-kit build src/skills/contentful-personalization-doctor/skill.ts -o skills/contentful-personalization-doctor --mode node
+skill-kit build src/skills/contentful-personalization/skill.ts -o skills/contentful-personalization --mode node
 ```
 
 The `--mode node` flag produces a single `.mjs` bundle that runs on the host's Node.js (≥24) instead of self-contained platform binaries. This keeps the repo lightweight.
@@ -103,7 +103,7 @@ Skills are installed by customers via the [skills CLI](https://github.com/vercel
 
 ```bash
 npx skills add contentful/skills                          # all skills
-npx skills add contentful/skills --skill contentful-personalization-readiness  # one skill
+npx skills add contentful/skills --skill contentful-personalization  # one skill
 ```
 
 The CLI copies skill directories in isolation. Each skill must be fully self-contained — no dependencies on files outside its own directory.

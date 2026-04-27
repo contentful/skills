@@ -19,15 +19,7 @@ npx skills add contentful/skills
 | **contentful-guide** | "Contentful 101", "which Contentful API should I use", "which skill should I use" | Coming soon |
 | **contentful-nextjs** | "add Contentful to Next.js", "Next.js Contentful setup", "Draft Mode Contentful" | Coming soon |
 | **contentful-migration** | "write a migration", "create content type", "schema migration" | Coming soon |
-
-### Personalization
-
-| Skill | Triggers | Status |
-|-------|----------|--------|
-| **contentful-personalization-readiness** | "check optimization readiness", "audit personalization setup" | Coming soon |
-| **contentful-personalization-setup** | "set up optimization", "configure personalization" | Coming soon |
-| **contentful-personalization-dev** | "build personalization component", "add analytics hook" | Coming soon |
-| **contentful-personalization-doctor** | "diagnose optimization issues", "troubleshoot personalization" | Coming soon |
+| **contentful-personalization** | "set up personalization", "optimization readiness", "Ninetailed", "A/B test", "personalization not working", "experience API" | Coming soon |
 
 ## Platform Install Commands
 
@@ -37,6 +29,9 @@ npx skills add contentful/skills
 
 # Claude Code
 claude /install-skill contentful/skills
+
+# Cursor (Plugin Marketplace)
+/plugin marketplace add contentful/skills
 
 # Cursor / Copilot / Codex
 # Auto-discovers from .agents/skills/ when added to project
@@ -48,7 +43,7 @@ gemini skills install contentful/skills
 ### Install a single skill
 
 ```bash
-npx skills add contentful/skills --skill contentful-personalization-readiness
+npx skills add contentful/skills --skill contentful-personalization
 ```
 
 ## Contentful MCP Server
