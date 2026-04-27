@@ -28,8 +28,7 @@ export default skill({
   }),
 })
   .step('explore', {
-    prompt: ({ refs }) => [
-      prompt`
+    prompt: ({ refs }) => prompt`
         Explore this project to understand the current personalization setup.
         You are gathering facts about the CURRENT state — do NOT diagnose problems
         or suggest fixes yet. That happens in a later step.
@@ -63,9 +62,10 @@ export default skill({
 
         For each area, note the specific file paths and what you found.
         If something looks wrong, describe what you see but do NOT attempt to fix it.
+
+        ## Reference: How Personalization Works
+        ${refs.load('how-personalization-works.md')}
       `,
-      view('Reference: How Personalization Works', refs.load('how-personalization-works.md')),
-    ],
     output: z.object({
       framework: z.enum(['nextjs-app', 'nextjs-pages', 'nextjs-hybrid', 'gatsby', 'remix', 'other']),
       frameworkVersion: z.string().optional(),
@@ -152,8 +152,7 @@ export default skill({
           )
         : 'No API data available';
 
-      return [
-        prompt`
+      return prompt`
           Synthesize ALL diagnostic findings below into prioritized recommendations.
 
           For each issue found, create a recommendation:
@@ -168,14 +167,25 @@ export default skill({
 
           Be conversational — explain WHY things are wrong, not just WHAT is wrong.
           Do NOT attempt fixes or modify any files. Diagnosis only.
-        `,
-        view('Exploration Findings', explorationView),
-        view('Package & Environment Data', packageView),
-        view('API Connectivity Results', apiView),
-        view('Reference: Environment Variables', refs.load('env-var-spec.md')),
-        view('Reference: Package Versions', refs.load('package-versions.md')),
-        view('Reference: Common Errors', refs.load('common-errors.md')),
-      ];
+
+          ## Exploration Findings
+          ${explorationView}
+
+          ## Package & Environment Data
+          ${packageView}
+
+          ## API Connectivity Results
+          ${apiView}
+
+          ## Reference: Environment Variables
+          ${refs.load('env-var-spec.md')}
+
+          ## Reference: Package Versions
+          ${refs.load('package-versions.md')}
+
+          ## Reference: Common Errors
+          ${refs.load('common-errors.md')}
+        `;
     },
     output: z.object({
       overallStatus: z.enum(['pass', 'warn', 'fail']),
@@ -325,12 +335,14 @@ export default skill({
             'Framework': stash.framework,
             'Project': stash.projectPath,
           })}
+
+          ## Reference Material
+          ${refSections.map(r => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
         `,
         act.plan({
           summary: `Fix ${recs.length} issue${recs.length !== 1 ? 's' : ''} in ${stash.framework} personalization setup`,
           steps: recs.map((r) => `${priorityIcon[r.priority] ?? '•'} [${r.priority}] ${r.message}`),
         }),
-        ...refSections.map(r => view(`Reference: ${r.label}`, r.content)),
       ];
     },
     output: z.object({
@@ -371,6 +383,9 @@ export default skill({
 
           ${plan?.output?.plan ? `**Plan:** ${plan.output.plan}` : ''}
           ${plan?.output?.filesToModify?.length ? `**Files to modify:** ${plan.output.filesToModify.join(', ')}` : ''}
+
+          ## Reference Material
+          ${refSections.map((r: { label: string; content: string }) => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
         `,
         act.checklist({
           create: recs.map((r) => ({
@@ -378,7 +393,6 @@ export default skill({
             status: 'pending' as const,
           })),
         }),
-        ...refSections.map(r => view(`Reference: ${r.label}`, r.content)),
       ];
     },
     output: z.object({

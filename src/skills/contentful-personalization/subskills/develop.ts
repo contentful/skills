@@ -1,4 +1,4 @@
-import { skill, z, prompt, act, terminal, view, render } from '@contentful/skill-kit';
+import { skill, z, prompt, act, terminal, render } from '@contentful/skill-kit';
 import { VERSION } from '../version.js';
 
 export default skill({
@@ -21,32 +21,34 @@ export default skill({
   }),
 })
   .step('analyze', {
-    prompt: ({ context, refs }) => [
-      prompt`
-        Analyze the codebase to understand the existing personalization setup
-        and determine what the user wants to accomplish.
+    prompt: ({ context, refs }) => prompt`
+      Analyze the codebase to understand the existing personalization setup
+      and determine what the user wants to accomplish.
 
-        ## What to investigate
+      ## What to investigate
 
-        1. **SDK in use** — Is it @ninetailed/experience.js or @contentful/optimization?
-        2. **Component mapper** — How does the project map content types to components?
-           (ContentTypeMap, BlockRenderer, etc.)
-        3. **Provider configuration** — Where is it? What plugins are registered?
-        4. **User's task** — What do they want? (personalize a component, add analytics,
-           create an experiment, add a merge tag)
-        5. **Target files** — Which specific files need to change?
+      1. **SDK in use** — Is it @ninetailed/experience.js or @contentful/optimization?
+      2. **Component mapper** — How does the project map content types to components?
+         (ContentTypeMap, BlockRenderer, etc.)
+      3. **Provider configuration** — Where is it? What plugins are registered?
+      4. **User's task** — What do they want? (personalize a component, add analytics,
+         create an experiment, add a merge tag)
+      5. **Target files** — Which specific files need to change?
 
-        Focus on understanding the existing patterns so your changes will be consistent.
-        Spend no more than a few minutes exploring — get the key facts and move on.
+      Focus on understanding the existing patterns so your changes will be consistent.
+      Spend no more than a few minutes exploring — get the key facts and move on.
 
-        Do NOT start making changes or create a plan. Do NOT ask the user questions.
-        Just analyze and report what you find.
+      Do NOT start making changes or create a plan. Do NOT ask the user questions.
+      Just analyze and report what you find.
 
-        ${context?.userQuery ? `\nUser's request: "${context.userQuery}"` : ''}
-      `,
-      view('Reference: Component Patterns', refs.load('component-patterns.md')),
-      view('Reference: Implementation Examples', refs.load('implementation-examples.md')),
-    ],
+      ${context?.userQuery ? `\nUser's request: "${context.userQuery}"` : ''}
+
+      ## Reference: Component Patterns
+      ${refs.load('component-patterns.md')}
+
+      ## Reference: Implementation Examples
+      ${refs.load('implementation-examples.md')}
+    `,
     output: z.object({
       taskType: z.enum(['personalize-component', 'create-experiment', 'add-analytics', 'add-merge-tag', 'other']),
       sdkInUse: z.enum(['ninetailed', 'optimization', 'unknown']),
@@ -90,13 +92,17 @@ export default skill({
             'SDK': stash.sdkInUse,
             'Framework': stash.framework,
           })}
+
+          ## SDK Reference
+          ${sdkRef}
+
+          ## Contentful Integration
+          ${refs.load('contentful-integration-guide.md')}
         `,
         act.plan({
           summary: `${taskDesc} in ${stash.framework} project`,
           steps: stash.targetFiles.map((f) => `📝 ${f} — ${taskDesc}`),
         }),
-        view('SDK Reference', sdkRef),
-        view('Contentful Integration Guide', refs.load('contentful-integration-guide.md')),
       ];
     },
     output: z.object({
@@ -131,23 +137,23 @@ export default skill({
         refSections.push({ label: 'Component Patterns', content: refs.load('component-patterns.md') });
       }
 
-      return [
-        prompt`
-          Implement the approved plan. Match the project's existing code style
-          and patterns — do not introduce a different convention.
+      return prompt`
+        Implement the approved plan. Match the project's existing code style
+        and patterns — do not introduce a different convention.
 
-          ${render.kv({
-            'Task': stash.taskType.replace(/-/g, ' '),
-            'SDK': stash.sdkInUse,
-            'Files': stash.targetFiles.join(', '),
-          })}
+        ${render.kv({
+          'Task': stash.taskType.replace(/-/g, ' '),
+          'SDK': stash.sdkInUse,
+          'Files': stash.targetFiles.join(', '),
+        })}
 
-          ${plan?.output ? `\n**Plan:** ${plan.output.plan}` : ''}
+        ${plan?.output ? `\n**Plan:** ${plan.output.plan}` : ''}
 
-          After making changes, briefly summarize what you did and list all modified files.
-        `,
-        ...refSections.map(r => view(`Reference: ${r.label}`, r.content)),
-      ];
+        After making changes, briefly summarize what you did and list all modified files.
+
+        ## Reference Material
+        ${refSections.map((r: { label: string; content: string }) => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
+      `;
     },
     output: z.object({
       filesModified: z.array(z.string()),

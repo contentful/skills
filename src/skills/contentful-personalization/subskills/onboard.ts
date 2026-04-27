@@ -34,8 +34,7 @@ export default skill({
   }),
 })
   .step('explore', {
-    prompt: ({ context, refs }) => [
-      prompt`
+    prompt: ({ context, refs }) => prompt`
         Investigate this project to understand its structure, Contentful integration,
         and what personalization would look like here. You are gathering facts —
         do NOT make recommendations, produce a readiness verdict, or ask the user
@@ -65,11 +64,14 @@ export default skill({
 
         ${context?.userQuery ? `\nUser's request: "${context.userQuery}"` : ''}
         ${context?.readinessOnly ? '\nNote: The user only asked about readiness — keep that in mind but still explore fully.' : ''}
+
+        ## Reference Material
+        ${refs.load('how-personalization-works.md')}
+
+        ${refs.load('component-patterns.md')}
+
+        ${refs.load('framework-notes.md')}
       `,
-      view('Reference: How Personalization Works', refs.load('how-personalization-works.md')),
-      view('Reference: Component Patterns', refs.load('component-patterns.md')),
-      view('Reference: Framework Notes', refs.load('framework-notes.md')),
-    ],
     output: z.object({
       framework: z.enum(['nextjs-app', 'nextjs-pages', 'nextjs-hybrid', 'gatsby', 'remix', 'other']),
       frameworkVersion: z.string().optional(),
@@ -138,8 +140,7 @@ export default skill({
           ].join('\n')
         : 'No package data available';
 
-      return [
-        prompt`
+      return prompt`
           Combine the exploration findings with the deterministic package/env data below
           to produce a readiness assessment. Assess these five areas:
 
@@ -160,11 +161,16 @@ export default skill({
           Do NOT ask the user any questions.
 
           ${stash.readinessOnly ? 'The user is only asking about readiness, not requesting a full setup. Set readinessOnly to true.' : 'Set readinessOnly to false unless the exploration data suggests the user only wanted a readiness check.'}
-        `,
-        view('Readiness Rubric', refs.load('readiness-criteria.md')),
-        view('Exploration Findings', explorationView),
-        view('Package & Environment Data', packageView),
-      ];
+
+          ## Readiness Rubric
+          ${refs.load('readiness-criteria.md')}
+
+          ## Exploration Findings
+          ${explorationView}
+
+          ## Package & Environment Data
+          ${packageView}
+        `;
     },
     output: z.object({
       readinessStatus: ReadinessStatus,
@@ -230,8 +236,7 @@ export default skill({
     prompt: ({ stash, getStep, refs }) => {
       const explore = getStep('explore');
 
-      return [
-        prompt`
+      return prompt`
           Recommend a specific SDK and architecture for this project.
           Explain your reasoning conversationally — help the user understand WHY
           this choice fits their project, not just WHAT the choice is.
@@ -257,9 +262,10 @@ export default skill({
           Present your recommendation clearly but do NOT ask the user to confirm —
           that happens automatically in the next step.
           Do NOT start implementing anything or install packages.
-        `,
-        view('SDK Selection Guide', refs.load('sdk-selection.md')),
-      ];
+
+          ## SDK Selection Guide
+          ${refs.load('sdk-selection.md')}
+        `;
     },
     output: z.object({
       sdkChoice: z.enum(['ninetailed', 'optimization']),
@@ -370,12 +376,14 @@ export default skill({
             'Architecture': stash.architecture ?? 'TBD',
             'Framework': `${stash.framework} (${stash.routerType} router)`,
           })}
+
+          ## Reference Material
+          ${refSections.map(r => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
         `,
         act.plan({
           summary: `Implement ${stash.sdkChoice} personalization with ${stash.architecture} architecture`,
           steps,
         }),
-        ...refSections.map(r => view(`Reference: ${r.label}`, r.content)),
       ];
     },
     output: z.object({
@@ -463,6 +471,9 @@ export default skill({
 
           Do NOT ask the user questions during implementation.
           If you hit an ambiguous decision, use the reference material to make the best choice.
+
+          ## Reference Material
+          ${refSections.map(r => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
         `,
         act.checklist({
           create: [
@@ -474,7 +485,6 @@ export default skill({
             { title: '🔄 Rendering pipeline adjustments', status: 'pending' as const },
           ],
         }),
-        ...refSections.map(r => view(`Reference: ${r.label}`, r.content)),
       ];
     },
     output: z.object({
@@ -485,8 +495,7 @@ export default skill({
   })
 
   .step('verify', {
-    prompt: ({ stash, refs }) => [
-      prompt`
+    prompt: ({ stash, refs }) => prompt`
         Verify the personalization setup. Confirm the project path so the
         automated validation can run, then also manually check these items:
 
@@ -501,10 +510,11 @@ export default skill({
         If you find issues, just report them — do NOT fix them here.
         The fix step handles repairs.
 
+        ## Reference: Common Errors
+        ${refs.load('common-errors.md')}
+
         Project path: ${stash.projectPath}
       `,
-      view('Reference: Common Errors', refs.load('common-errors.md')),
-    ],
     output: z.object({ projectPath: z.string() }),
     action: { run: validateSetup },
     next: ({ action, attempts }) => {
@@ -516,8 +526,7 @@ export default skill({
   })
 
   .step('fix', {
-    prompt: ({ stash, refs }) => [
-      prompt`
+    prompt: ({ stash, refs }) => prompt`
         Fix the issues found during verification. Work through them systematically:
 
         ## Fix Strategy
@@ -534,9 +543,10 @@ export default skill({
           'Framework': stash.framework,
           'Project': stash.projectPath,
         })}
+
+        ## Reference: Common Errors & Fixes
+        ${refs.load('common-errors.md')}
       `,
-      view('Reference: Common Errors & Fixes', refs.load('common-errors.md')),
-    ],
     output: z.object({
       fixesMade: z.array(z.string()),
     }),
