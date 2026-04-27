@@ -71,38 +71,25 @@ export default skill({
       framework: output.framework,
       projectPath: output.projectPath,
     }),
-    next: 'check-facts',
-  })
-
-  .step('check-facts', {
-    prompt: ({ stash }) => prompt`
-      Confirm the project path for the automated package and env var check.
-      Project path: ${stash.projectPath}
-    `,
-    output: z.object({ projectPath: z.string() }),
     action: checkPackagesAndEnv,
+    actionInput: ({ output }) => ({ projectPath: output.projectPath }),
     afterAction: ({ action }) => ({ packageData: action }),
     next: 'check-api',
   })
 
   .step('check-api', {
-    prompt: ({ stash }) => {
-      const apiKey = stash.packageData?.apiKey;
-      if (apiKey) {
-        return prompt`
-          An API key was found: ${apiKey.slice(0, 8)}****
-          Environment: ${stash.packageData?.environment ?? 'main'}
-          Return the key, environment, and shouldCheck=true.
-        `;
-      }
-      return 'No API key was found in env files. Set shouldCheck to false.';
-    },
+    prompt: 'Run the API connectivity check.',
     output: z.object({
       apiKey: z.string().optional(),
       environment: z.string().default('main'),
       shouldCheck: z.boolean(),
     }),
     action: checkApiConnectivity,
+    actionInput: ({ stash }) => ({
+      apiKey: stash.packageData?.apiKey,
+      environment: stash.packageData?.environment ?? 'main',
+      shouldCheck: !!stash.packageData?.apiKey,
+    }),
     afterAction: ({ action }) => ({ apiData: action }),
     next: 'review',
   })
@@ -158,13 +145,19 @@ export default skill({
   })
 
   .step('report', {
-    prompt: ({ rendered }) => prompt`
-      Present the following Optimization Doctor Report to the user.
-      Then ask if they'd like help fixing the issues found.
-
-      ${rendered ?? ''}
-    `,
-    output: z.object({ report: z.string() }),
+    prompt: ({ rendered, act }) => [
+      rendered ?? '',
+      act.askUser({
+        type: 'structured',
+        question: 'Would you like help fixing these issues?',
+        options: [
+          { value: 'yes', label: 'Yes, help me fix them' },
+          { value: 'no', label: 'No, the report is enough' },
+        ],
+      }),
+      'Present the Optimization Doctor Report above. Then let the user decide whether to proceed with fixes.',
+    ],
+    output: z.object({ choice: z.enum(['yes', 'no']) }),
     render: ({ stash, getStep }) => {
       const explore = getStep<{ explorationSummary: string; concerns: string[] }>('explore');
       const review = getStep<{
@@ -194,7 +187,6 @@ export default skill({
         sections.push(render.section('Exploration Summary', explore.output.explorationSummary));
       }
 
-      // Package & env summary
       const pkg = stash.packageData;
       if (pkg) {
         const pkgLines: string[] = [];
@@ -210,14 +202,12 @@ export default skill({
         sections.push(render.section('Packages & Environment', pkgLines.join('\n')));
       }
 
-      // API check summary
       const api = stash.apiData;
       if (api) {
         const apiLines = api.findings.map((f) => `${icon(f.status)} ${f.item}: ${f.detail}`);
         sections.push(render.section('API Connectivity', apiLines.join('\n')));
       }
 
-      // Recommendations
       if (review?.output?.recommendations?.length) {
         const recs = review.output.recommendations
           .sort((a, b) => {
@@ -231,19 +221,6 @@ export default skill({
 
       return `## Optimization Doctor Report\n\n${sections.join('\n\n')}`;
     },
-    next: 'ask-fix',
-  })
-
-  .step('ask-fix', {
-    act: act.askUser({
-      type: 'structured',
-      question: 'Would you like help fixing these issues?',
-      options: [
-        { value: 'yes', label: 'Yes, help me fix them' },
-        { value: 'no', label: 'No, the report is enough' },
-      ],
-    }),
-    output: z.object({ choice: z.enum(['yes', 'no']) }),
     next: ({ output }) => (output.choice === 'yes' ? 'plan-fix' : 'report-only'),
   })
 
@@ -254,13 +231,11 @@ export default skill({
   })
 
   .step('plan-fix', {
-    prompt: ({ stash, refs }) => {
-      const recLines = (stash.recommendations ?? [])
-        .map((r) => `- [${r.priority}] ${r.message} (${r.category})`)
-        .join('\n');
+    prompt: ({ stash, act, refs }) => {
+      const recs = stash.recommendations ?? [];
 
       const refSections: string[] = [];
-      const categories = new Set((stash.recommendations ?? []).map((r) => r.category));
+      const categories = new Set(recs.map((r) => r.category));
 
       if (categories.has('provider')) refSections.push(refs.load('provider-patterns.md'));
       if (categories.has('middleware')) refSections.push(refs.load('middleware-patterns.md'));
@@ -268,35 +243,36 @@ export default skill({
       if (categories.has('analytics')) refSections.push(refs.load('analytics-patterns.md'));
       if (categories.has('middleware')) refSections.push(refs.load('ssr-guide.md'));
 
-      return prompt`
-        Present a fix plan for the issues found. Use planning mode for complex
-        fixes (rewriting middleware, restructuring components) to get the user's
-        agreement on the approach.
+      return [
+        act.plan({
+          summary: `Fix ${recs.length} issue${recs.length !== 1 ? 's' : ''} in ${stash.framework} personalization setup`,
+          steps: recs.map((r) => `[${r.priority}] ${r.message}`),
+        }),
+        prompt`
+          ## Project Context
+          Framework: ${stash.framework}
+          Project: ${stash.projectPath}
 
-        ## Issues to Fix
-        ${recLines}
+          ${refSections.length > 0 ? '## Reference Context\n' + refSections.join('\n\n') : ''}
 
-        ## Project Context
-        Framework: ${stash.framework}
-        Project: ${stash.projectPath}
-
-        ${refSections.length > 0 ? '## Reference Context\n' + refSections.join('\n\n') : ''}
-
-        Explain what you'll change, which files you'll modify, and why.
-        Be specific about the approach.
-      `;
+          Explain what you'll change, which files you'll modify, and why.
+          Be specific about the approach.
+        `,
+      ];
     },
     output: z.object({
+      approved: z.boolean(),
       plan: z.string(),
       filesToModify: z.array(z.string()),
     }),
-    next: 'fix',
+    next: ({ output }) => (output.approved ? 'fix' : 'done'),
   })
 
   .step('fix', {
-    prompt: ({ stash, getStep, refs }) => {
+    prompt: ({ stash, act, system, getStep, refs }) => {
       const plan = getStep('plan-fix');
-      const categories = new Set((stash.recommendations ?? []).map((r) => r.category));
+      const recs = stash.recommendations ?? [];
+      const categories = new Set(recs.map((r) => r.category));
 
       const refSections: string[] = [];
       if (categories.has('packages') || categories.has('env'))
@@ -308,17 +284,23 @@ export default skill({
       if (categories.has('components'))
         refSections.push(refs.load('component-patterns.md'));
 
-      return prompt`
-        Implement the fixes from the plan. For package and env var issues,
-        use the installPackages and writeEnvFile actions. For code issues,
-        make the changes directly.
+      return [
+        system`Apply each fix methodically. Update the checklist as you complete each one.`,
+        act.checklist({
+          create: recs.map((r) => ({ title: `[${r.priority}] ${r.message}`, status: 'pending' as const })),
+        }),
+        prompt`
+          Implement the fixes from the plan. For package and env var issues,
+          use the installPackages and writeEnvFile actions. For code issues,
+          make the changes directly.
 
-        ## Plan
-        ${plan?.output ? JSON.stringify(plan.output, null, 2) : 'No plan available'}
+          ## Plan
+          ${plan?.output ? JSON.stringify(plan.output, null, 2) : 'No plan available'}
 
-        ## Reference
-        ${refSections.join('\n\n')}
-      `;
+          ## Reference
+          ${refSections.join('\n\n')}
+        `,
+      ];
     },
     output: z.object({
       fixesMade: z.array(z.string()),

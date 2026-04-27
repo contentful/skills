@@ -1,4 +1,4 @@
-import { skill, z, prompt } from '@contentful/skill-kit';
+import { skill, z, prompt, act } from '@contentful/skill-kit';
 import { VERSION } from '../version.js';
 
 export default skill({
@@ -58,33 +58,37 @@ export default skill({
   })
 
   .step('plan', {
-    prompt: ({ stash, refs }) => {
+    prompt: ({ stash, act, refs }) => {
       const sdkRef = stash.sdkInUse === 'optimization'
         ? refs.load('sdk-next-guide.md')
         : refs.load('sdk-legacy-guide.md');
 
-      return prompt`
-        Present a brief plan for the changes. For simple tasks (wrapping one
-        component), keep it concise. For complex tasks, use planning mode.
+      return [
+        act.plan({
+          summary: `${stash.taskType.replace(/-/g, ' ')} using ${stash.sdkInUse} SDK`,
+          steps: stash.targetFiles.map((f) => `Modify ${f}`),
+        }),
+        prompt`
+          ## SDK Reference
+          ${sdkRef}
 
-        ## SDK Reference
-        ${sdkRef}
+          ## Contentful Integration
+          ${refs.load('contentful-integration-guide.md')}
 
-        ## Contentful Integration
-        ${refs.load('contentful-integration-guide.md')}
+          Task: ${stash.taskType}
+          SDK: ${stash.sdkInUse}
+          Target files: ${stash.targetFiles.join(', ')}
 
-        Task: ${stash.taskType}
-        SDK: ${stash.sdkInUse}
-        Target files: ${stash.targetFiles.join(', ')}
-
-        Explain what you'll change and why.
-      `;
+          Explain what you'll change and why. Expand the plan steps with specifics.
+        `,
+      ];
     },
     output: z.object({
+      approved: z.boolean(),
       plan: z.string(),
       filesToModify: z.array(z.string()),
     }),
-    next: 'implement',
+    next: ({ output }) => (output.approved ? 'implement' : { terminal: true } as const),
   })
 
   .step('implement', {

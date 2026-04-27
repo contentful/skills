@@ -87,16 +87,8 @@ export default skill({
       projectPath: output.projectPath,
       readinessOnly: output.readinessOnly,
     }),
-    next: 'check-packages',
-  })
-
-  .step('check-packages', {
-    prompt: ({ stash }) => prompt`
-      Confirm the project path for the package and env var check.
-      Project path: ${stash.projectPath}
-    `,
-    output: z.object({ projectPath: z.string() }),
     action: checkPackagesAndEnv,
+    actionInput: ({ output }) => ({ projectPath: output.projectPath }),
     afterAction: ({ action }) => ({ packageData: action }),
     next: 'assess',
   })
@@ -149,7 +141,7 @@ export default skill({
       const status = output.readinessStatus;
       if (status === 'not-ready' || status === 'needs-work') return 'gate';
       if (output.readinessOnly) return 'gate';
-      return 'choose';
+      return 'recommend';
     },
   })
 
@@ -185,7 +177,7 @@ export default skill({
     next: { terminal: true },
   })
 
-  .step('choose', {
+  .step('recommend', {
     prompt: ({ stash, getStep, refs }) => {
       const explore = getStep('explore');
 
@@ -201,7 +193,7 @@ export default skill({
         Router: ${stash.routerType}
         ${explore?.output ? `Exploration: ${(explore.output as { explorationSummary: string }).explorationSummary}` : ''}
 
-        Make a recommendation and explain your reasoning. Confirm with the user.
+        Make a recommendation and explain your reasoning.
         For SDK choice: current (@ninetailed/experience.js) or modern (@contentful/optimization).
         For architecture: client-only, hybrid SSR/edge + client, or server-only.
       `;
@@ -215,7 +207,21 @@ export default skill({
       sdkChoice: output.sdkChoice,
       architecture: output.architecture,
     }),
-    next: 'cms-setup',
+    next: 'confirm-choice',
+  })
+
+  .step('confirm-choice', {
+    prompt: ({ stash }) => prompt`
+      Present the recommendation:
+      - SDK: ${stash.sdkChoice}
+      - Architecture: ${stash.architecture}
+    `,
+    act: act.confirm({
+      message: 'Proceed with this SDK and architecture choice?',
+      defaultAnswer: 'yes',
+    }),
+    output: z.object({ approved: z.boolean() }),
+    next: ({ output }) => (output.approved ? 'cms-setup' : 'recommend'),
   })
 
   .step('cms-setup', {
@@ -246,7 +252,7 @@ export default skill({
   })
 
   .step('plan', {
-    prompt: ({ stash, refs }) => {
+    prompt: ({ stash, act, refs }) => {
       const refSections = [
         refs.load('env-var-spec.md'),
         refs.load('provider-patterns.md'),
@@ -261,36 +267,36 @@ export default skill({
       refSections.push(refs.load('analytics-and-preview.md'));
       refSections.push(refs.load('implementation-examples.md'));
 
-      return prompt`
-        Present an implementation plan. Use planning mode to lay out a thorough,
-        step-by-step plan and get the user's approval before proceeding.
+      const steps = [
+        `Install packages: ${stash.sdkChoice === 'ninetailed' ? '@ninetailed/experience.js + plugins' : '@contentful/optimization + plugins'}`,
+        'Configure environment variables with placeholder values',
+        'Add provider wrapper to the appropriate layout/app file',
+        'Wire components with Experience/Personalize wrappers and update component mapper',
+        ...(stash.architecture === 'hybrid-ssr' ? ['Set up middleware with preflight, cookie management, and matcher config'] : []),
+        ...(stash.architecture !== 'server-only' ? ['Configure analytics/insights plugin'] : []),
+        'Verify setup and fix any issues',
+      ];
 
-        ## Decisions Made
-        SDK: ${stash.sdkChoice}
-        Architecture: ${stash.architecture}
-        Framework: ${stash.framework} (${stash.routerType} router)
+      return [
+        act.plan({
+          summary: `Implement ${stash.sdkChoice} personalization with ${stash.architecture} architecture for ${stash.framework} (${stash.routerType} router)`,
+          steps,
+        }),
+        prompt`
+          ## Reference Material
+          ${refSections.join('\n\n---\n\n')}
 
-        ## Reference Material
-        ${refSections.join('\n\n---\n\n')}
-
-        The plan should specify:
-        1. Exact packages to install
-        2. Environment variables to set (with placeholder values)
-        3. Provider placement (which file, how to structure)
-        4. Component wiring changes
-        ${stash.architecture === 'hybrid-ssr' ? '5. Middleware setup (matcher, cookies, preflight)' : ''}
-        ${stash.architecture !== 'server-only' ? '6. Analytics/insights plugin setup' : ''}
-        7. Verification steps
-
-        Be specific about file paths based on what you found during exploration.
-      `;
+          Be specific about file paths based on what you found during exploration.
+        `,
+      ];
     },
     output: z.object({
+      approved: z.boolean(),
       packagesToInstall: z.array(z.string()),
       envVars: z.record(z.string(), z.string()),
       plan: z.string(),
     }),
-    next: 'install',
+    next: ({ output }) => (output.approved ? 'install' : 'recommend'),
   })
 
   .step('install', {
@@ -339,7 +345,7 @@ export default skill({
   })
 
   .step('implement', {
-    prompt: ({ stash, refs }) => {
+    prompt: ({ stash, act, system, refs }) => {
       const refSections = [
         refs.load('provider-patterns.md'),
         refs.load('rendering-pipeline.md'),
@@ -358,25 +364,32 @@ export default skill({
 
       refSections.push(refs.load('implementation-examples.md'));
 
-      return prompt`
-        Implement the personalization setup. Write the code changes needed:
+      return [
+        system`Complete each task methodically. Update the checklist as you go.`,
+        act.checklist({
+          create: [
+            { title: 'Provider wrapper setup', status: 'pending' as const },
+            { title: 'Component wiring (Experience/Personalize wrappers)', status: 'pending' as const },
+            ...(stash.architecture === 'hybrid-ssr'
+              ? [{ title: 'Middleware (preflight, cookies, matcher)', status: 'pending' as const }] : []),
+            { title: 'Analytics plugin configuration', status: 'pending' as const },
+            { title: 'Rendering pipeline adjustments', status: 'pending' as const },
+          ],
+        }),
+        prompt`
+          Implement the personalization setup.
 
-        - Provider wrapper (adapt to the project's patterns and conventions)
-        - Component wiring (Experience/Personalize components, ExperienceMapper)
-        ${stash.architecture === 'hybrid-ssr' ? '- Middleware with preflight, cookie management, matcher config' : ''}
-        - Analytics plugin configuration
-        - Any rendering pipeline adjustments (include depth, component mapper)
+          SDK: ${stash.sdkChoice}
+          Architecture: ${stash.architecture}
+          Framework: ${stash.framework} (${stash.routerType} router)
 
-        SDK: ${stash.sdkChoice}
-        Architecture: ${stash.architecture}
-        Framework: ${stash.framework} (${stash.routerType} router)
+          ## Reference
+          ${refSections.join('\n\n---\n\n')}
 
-        ## Reference
-        ${refSections.join('\n\n---\n\n')}
-
-        Adapt to the project's existing patterns. Don't force a different style
-        than what the codebase already uses.
-      `;
+          Adapt to the project's existing patterns. Don't force a different style
+          than what the codebase already uses.
+        `,
+      ];
     },
     output: z.object({
       filesModified: z.array(z.string()),
