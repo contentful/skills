@@ -1,0 +1,6 @@
+{
+  "contentful-mcp": {
+    "type": "http",
+    "url": "https://mcp.contentful.com/mcp"
+  }
+}
