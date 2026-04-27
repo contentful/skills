@@ -1,4 +1,4 @@
-import { skill, z, prompt, render, act } from '@contentful/skill-kit';
+import { skill, z, prompt, render, act, view, terminal } from '@contentful/skill-kit';
 import { checkPackagesAndEnv } from '../actions/check-packages-env.js';
 import { validateSetup } from '../actions/validate-setup.js';
 import { installPackages } from '../actions/install-packages.js';
@@ -87,9 +87,11 @@ export default skill({
       projectPath: output.projectPath,
       readinessOnly: output.readinessOnly,
     }),
-    action: checkPackagesAndEnv,
-    actionInput: ({ output }) => ({ projectPath: output.projectPath }),
-    afterAction: ({ action }) => ({ packageData: action }),
+    action: {
+      input: ({ output }) => ({ projectPath: output.projectPath }),
+      run: checkPackagesAndEnv,
+      stash: ({ result }) => ({ packageData: result }),
+    },
     next: 'assess',
   })
 
@@ -146,18 +148,14 @@ export default skill({
   })
 
   .step('gate', {
-    prompt: ({ rendered }) => prompt`
-      Present the readiness report to the user exactly as rendered.
-      If the status is positive but they only asked about readiness,
-      mention they can come back when ready to set up.
-      If the status indicates issues, explain what needs fixing first.
-
-      ${rendered ?? ''}
-    `,
-    output: z.object({ message: z.string() }),
-    render: ({ stash, getStep }) => {
+    prompt: ({ stash, getStep }) => {
       const assess = getStep<{ readinessStatus: string; report: string; prerequisites: string[] }>('assess');
-      if (!assess?.output) return '## Readiness Report\n\nNo assessment data available.';
+      if (!assess?.output) {
+        return [
+          view('## Readiness Report\n\nNo assessment data available.'),
+          'Present the readiness report to the user.',
+        ];
+      }
 
       const icon = stash.readinessStatus === 'ready' || stash.readinessStatus === 'minor-changes' ? '✅' : '⚠️';
       const sections: string[] = [];
@@ -165,16 +163,20 @@ export default skill({
       sections.push(assess.output.report);
 
       if (assess.output.prerequisites.length > 0) {
-        sections.push(render.section('Prerequisites', assess.output.prerequisites.map((p, i) => `${i + 1}. ${p}`).join('\n')));
+        sections.push(render.section('Prerequisites', assess.output.prerequisites.map((p: string, i: number) => `${i + 1}. ${p}`).join('\n')));
       }
 
       if (stash.readinessStatus === 'ready' || stash.readinessStatus === 'minor-changes') {
         sections.push('\n---\nYour project is ready for personalization. Run this skill again when you want to start setup.');
       }
 
-      return sections.join('\n\n');
+      return [
+        view(sections.join('\n\n')),
+        'Present the readiness report to the user exactly as rendered. If the status is positive but they only asked about readiness, mention they can come back when ready to set up. If the status indicates issues, explain what needs fixing first.',
+      ];
     },
-    next: { terminal: true },
+    output: z.object({ message: z.string() }),
+    next: terminal,
   })
 
   .step('recommend', {
@@ -211,38 +213,42 @@ export default skill({
   })
 
   .step('confirm-choice', {
-    prompt: ({ stash }) => prompt`
-      Present the recommendation:
-      - SDK: ${stash.sdkChoice}
-      - Architecture: ${stash.architecture}
-    `,
-    act: act.confirm({
-      message: 'Proceed with this SDK and architecture choice?',
-      defaultAnswer: 'yes',
-    }),
+    prompt: ({ stash, act }) => [
+      act.confirm({
+        message: 'Proceed with this SDK and architecture choice?',
+        defaultAnswer: 'yes',
+      }),
+      prompt`
+        Present the recommendation:
+        - SDK: ${stash.sdkChoice}
+        - Architecture: ${stash.architecture}
+      `,
+    ],
     output: z.object({ approved: z.boolean() }),
     next: ({ output }) => (output.approved ? 'cms-setup' : 'recommend'),
   })
 
   .step('cms-setup', {
-    prompt: ({ refs }) => prompt`
-      Guide the user through the Contentful app installation.
-      You cannot do this yourself — these are steps the user must
-      perform in the Contentful web UI.
+    prompt: ({ refs, act }) => [
+      act.askUser({
+        type: 'structured',
+        question: 'Have you completed the Contentful app setup (installed the app, selected data bucket, extended content types)?',
+        options: [
+          { value: 'done', label: 'Yes, Contentful setup is complete' },
+          { value: 'help', label: 'I need more guidance' },
+        ],
+      }),
+      prompt`
+        Guide the user through the Contentful app installation.
+        You cannot do this yourself — these are steps the user must
+        perform in the Contentful web UI.
 
-      ${refs.load('contentful-app-setup.md')}
+        ${refs.load('contentful-app-setup.md')}
 
-      Present a clear, numbered checklist. Ask the user to confirm
-      when they've completed the Contentful side of setup.
-    `,
-    act: act.askUser({
-      type: 'structured',
-      question: 'Have you completed the Contentful app setup (installed the app, selected data bucket, extended content types)?',
-      options: [
-        { value: 'done', label: 'Yes, Contentful setup is complete' },
-        { value: 'help', label: 'I need more guidance' },
-      ],
-    }),
+        Present a clear, numbered checklist. Ask the user to confirm
+        when they've completed the Contentful side of setup.
+      `,
+    ],
     output: z.object({ choice: z.enum(['done', 'help']) }),
     next: ({ output, attempts }) => {
       if (output.choice === 'done') return 'plan';
@@ -318,7 +324,7 @@ export default skill({
       packages: z.array(z.string()),
       packageManager: z.enum(['npm', 'yarn', 'pnpm', 'bun']),
     }),
-    action: installPackages,
+    action: { run: installPackages },
     next: 'write-env',
   })
 
@@ -340,7 +346,7 @@ export default skill({
       variables: z.record(z.string(), z.string()),
       fileName: z.string(),
     }),
-    action: writeEnvFile,
+    action: { run: writeEnvFile },
     next: 'implement',
   })
 
@@ -414,7 +420,7 @@ export default skill({
       - Middleware matcher excludes static assets (if applicable)
     `,
     output: z.object({ projectPath: z.string() }),
-    action: validateSetup,
+    action: { run: validateSetup },
     next: ({ action, attempts }) => {
       const result = action as { overallStatus: string } | undefined;
       if (result?.overallStatus === 'pass') return 'report';
@@ -442,13 +448,7 @@ export default skill({
   })
 
   .step('report', {
-    prompt: ({ rendered }) => prompt`
-      Present the setup completion report to the user.
-
-      ${rendered ?? ''}
-    `,
-    output: z.object({ summary: z.string() }),
-    render: ({ stash, getStep }) => {
+    prompt: ({ stash, getStep }) => {
       const impl = getStep<{ filesModified: string[]; summary: string }>('implement');
       const verify = getStep('verify');
 
@@ -458,7 +458,7 @@ export default skill({
       if (impl?.output) {
         sections.push(render.section('What was done', impl.output.summary));
         if (impl.output.filesModified.length > 0) {
-          sections.push(render.section('Files modified', impl.output.filesModified.map((f) => `- ${f}`).join('\n')));
+          sections.push(render.section('Files modified', impl.output.filesModified.map((f: string) => `- ${f}`).join('\n')));
         }
       }
 
@@ -480,9 +480,13 @@ export default skill({
         '4. Monitor analytics and experiment results',
       ].join('\n')));
 
-      return sections.join('\n\n');
+      return [
+        view(sections.join('\n\n')),
+        'Present the setup completion report to the user.',
+      ];
     },
-    next: { terminal: true },
+    output: z.object({ summary: z.string() }),
+    next: terminal,
   })
 
   .build();

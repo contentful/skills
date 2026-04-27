@@ -1,4 +1,4 @@
-import { skill, z, prompt, act } from '@contentful/skill-kit';
+import { skill, z, prompt, act, terminal } from '@contentful/skill-kit';
 import { VERSION } from '../version.js';
 
 export default skill({
@@ -88,7 +88,13 @@ export default skill({
       plan: z.string(),
       filesToModify: z.array(z.string()),
     }),
-    next: ({ output }) => (output.approved ? 'implement' : { terminal: true } as const),
+    next: ({ output }) => (output.approved ? 'implement' : 'declined'),
+  })
+
+  .step('declined', {
+    prompt: 'The user declined the plan. Acknowledge and wish them well.',
+    output: z.object({ message: z.string() }),
+    next: terminal,
   })
 
   .step('implement', {
@@ -119,7 +125,7 @@ export default skill({
       filesModified: z.array(z.string()),
       summary: z.string(),
     }),
-    next: { terminal: true },
+    next: terminal,
   })
 
   .build();

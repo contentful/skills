@@ -116,26 +116,28 @@ export default skill({
   })
 
   .step('pick-topic', {
-    act: act.askUser({
-      type: 'structured',
-      question: 'What would you like to know about?',
-      options: [
-        { value: 'how-personalization-works', label: 'How personalization works', description: 'Core concepts, content model, rendering flow' },
-        { value: 'sdk-selection', label: 'Which SDK to use', description: 'Decision framework for legacy vs modern SDK' },
-        { value: 'provider-patterns', label: 'Provider setup', description: 'Placement, Pages/App Router, hydration' },
-        { value: 'middleware-patterns', label: 'Middleware & SSR', description: 'Preflight, cookies, edge personalization' },
-        { value: 'component-patterns', label: 'Component patterns', description: 'ContentTypeMap, BlockRenderer, isolation' },
-        { value: 'rendering-pipeline', label: 'Rendering pipeline', description: 'Data fetching, include depth, merge tags' },
-        { value: 'environment-variables', label: 'Environment variables', description: 'Variable names, runtime matrix, common mistakes' },
-        { value: 'analytics-and-preview', label: 'Analytics & preview', description: 'Insights plugin, event tracking, preview' },
-        { value: 'common-errors', label: 'Common errors', description: 'Failure modes and fixes' },
-        { value: 'ssr-guide', label: 'SSR/edge guide', description: 'Server-side patterns and anti-patterns' },
-        { value: 'sdk-legacy-guide', label: 'Legacy SDK reference', description: '@ninetailed/experience.js API' },
-        { value: 'sdk-next-guide', label: 'Next-gen SDK reference', description: '@contentful/optimization API' },
-        { value: 'contentful-integration-guide', label: 'CMS integration', description: 'Content types, ExperienceMapper, publishing' },
-        { value: 'implementation-examples', label: 'Code examples', description: 'Real implementation patterns' },
-      ],
-    }),
+    prompt: [
+      act.askUser({ type: 'open', question: 'What would you like to know about?' }),
+      prompt`
+        Available topics:
+        - **how-personalization-works** — Core concepts, content model, rendering flow
+        - **sdk-selection** — Decision framework for legacy vs modern SDK
+        - **provider-patterns** — Placement, Pages/App Router, hydration
+        - **middleware-patterns** — Preflight, cookies, edge personalization
+        - **component-patterns** — ContentTypeMap, BlockRenderer, isolation
+        - **rendering-pipeline** — Data fetching, include depth, merge tags
+        - **environment-variables** — Variable names, runtime matrix, common mistakes
+        - **analytics-and-preview** — Insights plugin, event tracking, preview
+        - **common-errors** — Failure modes and fixes
+        - **ssr-guide** — Server-side patterns and anti-patterns
+        - **sdk-legacy-guide** — @ninetailed/experience.js API
+        - **sdk-next-guide** — @contentful/optimization API
+        - **contentful-integration-guide** — Content types, ExperienceMapper, publishing
+        - **implementation-examples** — Real implementation patterns
+
+        Match the user's answer to the closest topic and return its exact key.
+      `,
+    ],
     output: z.object({ choice: z.string() }),
     next: ({ output }) => `topic:${output.choice}`,
   })

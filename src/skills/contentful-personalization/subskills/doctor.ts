@@ -1,4 +1,4 @@
-import { skill, z, prompt, render, act } from '@contentful/skill-kit';
+import { skill, z, prompt, render, act, view, terminal } from '@contentful/skill-kit';
 import { checkPackagesAndEnv } from '../actions/check-packages-env.js';
 import { checkApiConnectivity } from '../actions/check-api.js';
 import { validateSetup } from '../actions/validate-setup.js';
@@ -71,9 +71,11 @@ export default skill({
       framework: output.framework,
       projectPath: output.projectPath,
     }),
-    action: checkPackagesAndEnv,
-    actionInput: ({ output }) => ({ projectPath: output.projectPath }),
-    afterAction: ({ action }) => ({ packageData: action }),
+    action: {
+      input: ({ output }) => ({ projectPath: output.projectPath }),
+      run: checkPackagesAndEnv,
+      stash: ({ result }) => ({ packageData: result }),
+    },
     next: 'check-api',
   })
 
@@ -84,13 +86,15 @@ export default skill({
       environment: z.string().default('main'),
       shouldCheck: z.boolean(),
     }),
-    action: checkApiConnectivity,
-    actionInput: ({ stash }) => ({
-      apiKey: stash.packageData?.apiKey,
-      environment: stash.packageData?.environment ?? 'main',
-      shouldCheck: !!stash.packageData?.apiKey,
-    }),
-    afterAction: ({ action }) => ({ apiData: action }),
+    action: {
+      input: ({ stash }) => ({
+        apiKey: stash.packageData?.apiKey,
+        environment: stash.packageData?.environment ?? 'main',
+        shouldCheck: !!stash.packageData?.apiKey,
+      }),
+      run: checkApiConnectivity,
+      stash: ({ result }) => ({ apiData: result }),
+    },
     next: 'review',
   })
 
@@ -145,20 +149,7 @@ export default skill({
   })
 
   .step('report', {
-    prompt: ({ rendered, act }) => [
-      rendered ?? '',
-      act.askUser({
-        type: 'structured',
-        question: 'Would you like help fixing these issues?',
-        options: [
-          { value: 'yes', label: 'Yes, help me fix them' },
-          { value: 'no', label: 'No, the report is enough' },
-        ],
-      }),
-      'Present the Optimization Doctor Report above. Then let the user decide whether to proceed with fixes.',
-    ],
-    output: z.object({ choice: z.enum(['yes', 'no']) }),
-    render: ({ stash, getStep }) => {
+    prompt: ({ stash, getStep, act }) => {
       const explore = getStep<{ explorationSummary: string; concerns: string[] }>('explore');
       const review = getStep<{
         overallStatus: string;
@@ -192,7 +183,7 @@ export default skill({
         const pkgLines: string[] = [];
         const allPkgs = [...pkg.packages.ninetailed, ...pkg.packages.optimization];
         if (allPkgs.length > 0) {
-          pkgLines.push(`SDK packages: ${allPkgs.map((p) => `${p.name}@${p.version}`).join(', ')}`);
+          pkgLines.push(`SDK packages: ${allPkgs.map((p: { name: string; version: string }) => `${p.name}@${p.version}`).join(', ')}`);
         } else {
           pkgLines.push('No personalization SDK packages found');
         }
@@ -204,30 +195,42 @@ export default skill({
 
       const api = stash.apiData;
       if (api) {
-        const apiLines = api.findings.map((f) => `${icon(f.status)} ${f.item}: ${f.detail}`);
+        const apiLines = api.findings.map((f: { status: string; item: string; detail: string }) => `${icon(f.status)} ${f.item}: ${f.detail}`);
         sections.push(render.section('API Connectivity', apiLines.join('\n')));
       }
 
       if (review?.output?.recommendations?.length) {
         const recs = review.output.recommendations
-          .sort((a, b) => {
+          .sort((a: { priority: string }, b: { priority: string }) => {
             const order: Record<string, number> = { critical: 0, warning: 1, info: 2 };
             return (order[a.priority] ?? 3) - (order[b.priority] ?? 3);
           })
-          .map((r, i) => `${i + 1}. **[${r.priority}]** ${r.message}`)
+          .map((r: { priority: string; message: string }, i: number) => `${i + 1}. **[${r.priority}]** ${r.message}`)
           .join('\n');
         sections.push(render.section('Recommendations', recs));
       }
 
-      return `## Optimization Doctor Report\n\n${sections.join('\n\n')}`;
+      return [
+        view(`## Optimization Doctor Report\n\n${sections.join('\n\n')}`),
+        act.askUser({
+          type: 'structured',
+          question: 'Would you like help fixing these issues?',
+          options: [
+            { value: 'yes', label: 'Yes, help me fix them' },
+            { value: 'no', label: 'No, the report is enough' },
+          ],
+        }),
+        'Present the Optimization Doctor Report above. Then let the user decide whether to proceed with fixes.',
+      ];
     },
+    output: z.object({ choice: z.enum(['yes', 'no']) }),
     next: ({ output }) => (output.choice === 'yes' ? 'plan-fix' : 'report-only'),
   })
 
   .step('report-only', {
     prompt: 'The user declined fixes. Acknowledge and wish them well.',
     output: z.object({ message: z.string() }),
-    next: { terminal: true },
+    next: terminal,
   })
 
   .step('plan-fix', {
@@ -315,7 +318,7 @@ export default skill({
       Project path: ${stash.projectPath}
     `,
     output: z.object({ projectPath: z.string() }),
-    action: validateSetup,
+    action: { run: validateSetup },
     next: ({ action, attempts }) => {
       const result = action as { overallStatus: string } | undefined;
       if (result?.overallStatus === 'pass') return 'done';
@@ -343,7 +346,7 @@ export default skill({
       `;
     },
     output: z.object({ summary: z.string() }),
-    next: { terminal: true },
+    next: terminal,
   })
 
   .build();
