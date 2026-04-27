@@ -2,7 +2,7 @@
 name: contentful-personalization
 description: "Unified Contentful personalization skill. Covers readiness assessment, guided setup, diagnostics and debugging, day-to-day development, and reference documentation for SDKs, APIs, and patterns. Trigger keywords: personalization, optimization, ninetailed, A/B test, set up personalization, personalization not working, personalize this component, am I ready for personalization, experience API"
 metadata:
-  version: "1.2.5"
+  version: "1.2.6"
 ---
 
 # contentful-personalization
