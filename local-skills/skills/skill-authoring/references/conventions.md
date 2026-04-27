@@ -54,8 +54,8 @@ Describe how to validate the result.
 
 ## Related Skills
 
-- the contentful-personalization-setup skill — for initial SDK installation
-- the contentful-personalization-doctor skill — for troubleshooting issues
+- the `contentful-personalization` skill — onboarding, development, and diagnostics in one package
+- the `contentful-guide` skill — which API to use and how to pick a skill
 ```
 
 ### Code skill with scripts
@@ -122,11 +122,11 @@ For API details, see [references/api.md](references/api.md).
 
 ```json
 {
-  "name": "@contentful/skill-contentful-personalization-readiness",
+  "name": "@contentful/skill-contentful-personalization",
   "version": "1.0.0",
-  "description": "Assess optimization and personalization readiness for a Contentful project",
+  "description": "Contentful optimization and personalization (onboard, develop, doctor flows)",
   "license": "MIT",
-  "files": ["SKILL.md", "references/**", "scripts/**", "assets/**"]
+  "files": ["SKILL.md", "references/**", "scripts/**", "assets/**", "bin/**"]
 }
 ```
 
@@ -173,7 +173,7 @@ description: >-
   SDK compatibility. Use when asked to check optimization readiness, audit
   personalization setup, or evaluate prerequisites. Also triggers on "am I
   ready for personalization" or "can my app support A/B testing". Not for
-  setting up SDKs — use the contentful-personalization-setup skill for that.
+  unrelated Contentful topics — use the `contentful-guide` skill for API basics.
 ```
 
 ```yaml
@@ -184,7 +184,8 @@ description: >-
   handling, and hydration. Use when asked to set up optimization, configure
   personalization, install Ninetailed SDK, or initialize A/B testing. Also
   triggers on "add personalization to my project", "configure edge rendering",
-  or "set up experiments". Not for diagnosing issues — use the contentful-personalization-doctor skill.
+  or "set up experiments". For broken installs or production debugging, use
+  the doctor flow in the same `contentful-personalization` skill.
 ```
 
 ### Bad Examples
@@ -321,7 +322,7 @@ Document exit codes in `--help` output.
 ### Minimum (documentation-only)
 
 ```
-contentful-personalization-readiness/
+contentful-migration/
   SKILL.md
   package.json
 ```
@@ -329,23 +330,23 @@ contentful-personalization-readiness/
 ### With references
 
 ```
-contentful-personalization-readiness/
+contentful-nextjs/
   SKILL.md
   package.json
   references/
-    checklist.md
-    component-patterns.md
+    draft-mode.md
+    app-router.md
 ```
 
 ### With scripts (simple)
 
 ```
-contentful-personalization-doctor/
+contentful-personalization/
   SKILL.md
   package.json
   scripts/
-    check               Executable (chmod +x)
-    fix                 Executable (chmod +x)
+    run                 Executable (chmod +x) — skill-kit CLI entry
+  bin/                  Optional — compiled bundle
 ```
 
 Use this when scripts are small and self-contained.
@@ -353,13 +354,12 @@ Use this when scripts are small and self-contained.
 ### With scripts (complex — with implementation dir)
 
 ```
-contentful-personalization-doctor/
+my-code-skill/
   SKILL.md
   package.json
   scripts/
-    check               Wrapper (chmod +x) → delegates to src/
-    fix                 Wrapper (chmod +x) → delegates to src/
-  src/                  Implementation (language of your choice)
+    check               Wrapper (chmod +x) → delegates to src/ or bin/
+  src/                  Implementation (e.g. skill-kit TypeScript source)
     ...
   references/
     api.md
@@ -371,22 +371,22 @@ a build step or unit tests.
 ### Full skill with everything
 
 ```
-contentful-personalization-setup/
+contentful-personalization/
   SKILL.md
   package.json
   scripts/
-    setup               Wrapper → delegates to src/
-    validate            Wrapper → delegates to src/
-  src/
-    ...
+    run                 Wrapper to compiled CLI
+  bin/
+    *.mjs
   references/
     edge-setup.md
     middleware-guide.md
-    cookie-handling.md
-  assets/
+  assets/               Optional
     middleware-template.ts
-    config-template.json
 ```
+
+Skill-kit sources live under `src/skills/<name>/` at the repo root (not inside the
+distributed `skills/<name>/` folder).
 
 ## Naming Rules
 
@@ -400,10 +400,9 @@ With additional constraint: no consecutive hyphens (`--`).
 
 ### Valid names
 
-- `contentful-personalization-readiness`
-- `contentful-personalization-setup`
-- `contentful-personalization-dev`
-- `contentful-personalization-doctor`
+- `contentful-personalization`
+- `contentful-guide`
+- `contentful-migration`
 - `content-audit`
 - `a`
 - `my-skill-2`
@@ -420,12 +419,12 @@ With additional constraint: no consecutive hyphens (`--`).
 ### How directory names map to identifiers
 
 ```
-skills/contentful-personalization-readiness/SKILL.md
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+skills/contentful-personalization/SKILL.md
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
        skill directory = name field
 
-name: contentful-personalization-readiness                     (SKILL.md frontmatter)
-"name": "@contentful/skill-contentful-personalization-readiness"  (package.json)
+name: contentful-personalization                            (SKILL.md frontmatter)
+"name": "@contentful/skill-contentful-personalization"      (package.json)
 ```
 
 The skill's identity comes from its immediate parent directory. The agentskills.io
@@ -441,10 +440,7 @@ contentful/skills/
 │   ├── contentful-guide/
 │   ├── contentful-migration/
 │   ├── contentful-nextjs/
-│   ├── contentful-personalization-readiness/
-│   ├── contentful-personalization-setup/
-│   ├── contentful-personalization-dev/
-│   └── contentful-personalization-doctor/
+│   ├── contentful-personalization/
 ├── .agents/skills/            ← INTERNAL (never distributed)
 │   └── skill-authoring/
 ├── .claude/skills             ← Symlink to .agents/skills/

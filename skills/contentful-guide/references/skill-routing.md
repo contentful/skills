@@ -24,7 +24,7 @@ Route when the user asks to:
 - configure Next.js env vars and Contentful client setup.
 - implement alias-aware environment configuration in Next.js.
 
-## Route to personalization skills
+## Route to the `contentful-personalization` skill
 
 Route when the user asks about:
 
@@ -32,7 +32,7 @@ Route when the user asks about:
 - Ninetailed/optimization SDK workflows,
 - troubleshooting optimization behavior.
 
-Use the appropriate contentful-personalization skill for setup, readiness, development, or diagnostics.
+That skill is unified: it covers onboarding (readiness and setup), day-to-day development, and diagnostics (`doctor` flow) in one install.
 
 ## Notes
 

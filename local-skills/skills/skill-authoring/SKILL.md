@@ -41,10 +41,12 @@ determines whether the skill activates. Keep the `SKILL.md` body concise (under
 
 ```
 skills/                         Distributed to customers (distribution boundary)
-  contentful-personalization-readiness/   A skill — name field is "contentful-personalization-readiness"
+  contentful-personalization/   A skill — name field is "contentful-personalization"
     SKILL.md
     package.json
     references/
+    scripts/
+    bin/
 .agents/skills/                 Internal contributor skills (never distributed)
   skill-authoring/
     SKILL.md
@@ -128,8 +130,9 @@ description: >-
   Validates configuration, SDK versions, API connectivity. Use when
   troubleshooting optimization problems, debugging personalization behavior,
   or checking why experiments aren't running. Also triggers on "why isn't
-  personalization working" or "check my config". Not for initial setup —
-  use the contentful-personalization-setup skill for that.
+  personalization working" or "check my config". Not for initial end-to-end
+  setup from scratch — that is covered by the onboard flow in the same
+  `contentful-personalization` skill.
 ```
 
 **Bad:**
@@ -142,7 +145,7 @@ Include:
 - Direct trigger keywords the user would naturally say
 - Indirect keywords (e.g., for a deploy skill, also mention "ship", "release")
 - Negative scope to prevent false activations
-- Cross-references to related skills with explicit phrasing (for example, `the contentful-personalization-setup skill`)
+- Cross-references to related skills with explicit phrasing (for example, `the contentful-guide skill` for general CMS help)
 
 ## Directory Structure
 
@@ -211,9 +214,9 @@ frontmatter should mirror `package.json` version.
 
 | Context | Pattern | Example |
 |---------|---------|---------|
-| Directory name | `<domain>-<subdomain>-<skill>`, lowercase-hyphen | `contentful-personalization-readiness` |
-| `name` field | must match directory | `contentful-personalization-readiness` |
-| npm package | `@contentful/skill-<skill-name>` | `@contentful/skill-contentful-personalization-readiness` |
+| Directory name | `<domain>-<product-or-topic>`, lowercase-hyphen | `contentful-personalization` |
+| `name` field | must match directory | `contentful-personalization` |
+| npm package | `@contentful/skill-<skill-name>` | `@contentful/skill-contentful-personalization` |
 
 Name validation rules: 1-64 chars, `[a-z0-9-]` only, no leading/trailing/consecutive
 hyphens, must match parent directory name exactly.
@@ -236,22 +239,21 @@ the design rules below.
 **Simple skills** — executables directly in `scripts/`:
 
 ```
-contentful-personalization-doctor/
+contentful-personalization/
   scripts/
-    check                 Bash script, Python script, etc. (chmod +x)
-    fix
+    run                 Entry script (chmod +x) or thin wrapper
 ```
 
 **Complex skills** — wrappers in `scripts/` delegate to an implementation
-directory (e.g., `src/`):
+directory (e.g., `src/`, `bin/`):
 
 ```
-contentful-personalization-doctor/
+my-code-skill/
   scripts/
-    check                 Thin wrapper → delegates to src/
-    fix                   Thin wrapper → delegates to src/
-  src/                    Implementation (any language/structure)
+    check                 Thin wrapper → delegates to src/ or bin/
+  src/                    Optional — TypeScript source for skill-kit builds
     ...
+  bin/                    Optional — compiled output
 ```
 
 The wrapper decouples the skill's contract from its implementation. You can
@@ -303,8 +305,9 @@ For output patterns, exit code conventions, and `--help` templates, see
 Use explicit phrasing in SKILL.md body to reference related skills:
 
 ```markdown
-Before running this, ensure the contentful-personalization-readiness skill checks pass.
-For initial SDK installation, use the contentful-personalization-setup skill instead.
+For personalization, use the contentful-personalization skill. Its onboard
+flow covers readiness and SDK install; the doctor flow covers troubleshooting.
+For "which API should I use", use the contentful-guide skill.
 ```
 
 This is a documentation convention for the agent — no runtime enforcement.
@@ -321,7 +324,7 @@ This is a documentation convention for the agent — no runtime enforcement.
 ### Checklist
 
 1. Choose the right location:
-   - Customer-facing skill → `skills/<domain>/<skill-name>/`
+   - Customer-facing skill → `skills/<skill-name>/` (flat, one directory per skill)
    - Internal contributor skill → `.agents/skills/<skill-name>/`
 
 2. Create the directory with the skill name as directory name

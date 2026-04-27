@@ -5,7 +5,7 @@ How to set up a skill with TypeScript scripts running on Node.js.
 ## Directory layout
 
 ```
-contentful-personalization-doctor/
+my-code-skill/
   SKILL.md
   package.json
   package-lock.json         Committed — pins dependency versions
@@ -26,6 +26,10 @@ contentful-personalization-doctor/
   references/
     api.md
 ```
+
+The live `contentful-personalization` skill is built with skill-kit at the monorepo
+level (`src/skills/contentful-personalization/`); this layout is a generic TypeScript
+skill pattern.
 
 ## Shell wrappers
 
@@ -50,7 +54,7 @@ public interface) to `src/` (the implementation).
 
 ```json
 {
-  "name": "@contentful/skill-contentful-personalization-doctor",
+  "name": "@contentful/skill-contentful-personalization",
   "version": "1.0.0",
   "description": "Diagnose and fix Contentful optimization issues",
   "license": "MIT",
