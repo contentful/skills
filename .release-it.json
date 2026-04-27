@@ -43,6 +43,7 @@
     "@release-it/bumper": {
       "out": [
         { "file": "skills/*/package.json", "path": "version" },
+        { "file": "src/skills/*/version.ts", "type": "text/plain" },
         { "file": ".claude-plugin/plugin.json", "path": "version" },
         { "file": ".cursor-plugin/plugin.json", "path": "version" },
         { "file": ".claude-plugin/marketplace.json", "path": "metadata.version" },

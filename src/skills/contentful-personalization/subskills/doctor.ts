@@ -1,4 +1,4 @@
-import { skill, z, prompt, render, askUser } from '@contentful/skill-kit';
+import { skill, z, prompt, render, act } from '@contentful/skill-kit';
 import { checkPackagesAndEnv } from '../actions/check-packages-env.js';
 import { checkApiConnectivity } from '../actions/check-api.js';
 import { validateSetup } from '../actions/validate-setup.js';
@@ -7,10 +7,11 @@ import {
   ApiCheckResult,
   Recommendation,
 } from '../schemas.js';
+import { VERSION } from '../version.js';
 
 export default skill({
   name: 'doctor',
-  version: '1.0.0',
+  version: VERSION,
   description:
     'Diagnose and fix Contentful personalization issues. ' +
     'Explores the codebase, checks packages and env vars, tests API connectivity, ' +
@@ -234,7 +235,7 @@ export default skill({
   })
 
   .step('ask-fix', {
-    ask: askUser({
+    act: act.askUser({
       type: 'structured',
       question: 'Would you like help fixing these issues?',
       options: [

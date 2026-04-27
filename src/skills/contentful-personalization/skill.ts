@@ -1,11 +1,12 @@
-import { skill, z, prompt, askUser } from '@contentful/skill-kit';
+import { skill, z, prompt, act } from '@contentful/skill-kit';
 import onboardSkill from './subskills/onboard.js';
 import doctorSkill from './subskills/doctor.js';
 import developSkill from './subskills/develop.js';
+import { VERSION } from './version.js';
 
 export default skill({
   name: 'contentful-personalization',
-  version: '1.0.0',
+  version: VERSION,
   description:
     'Unified Contentful personalization skill. Covers readiness assessment, ' +
     'guided setup, diagnostics and debugging, day-to-day development, ' +
@@ -22,6 +23,13 @@ export default skill({
     'experience API',
   ],
   entry: 'classify',
+
+  package: {
+    name: '@contentful/skill-contentful-personalization',
+    description: 'Unified Contentful personalization skill covering readiness, setup, diagnostics, development, and reference documentation',
+    license: 'MIT',
+    files: ['SKILL.md', 'scripts/**', 'bin/**', 'references/**'],
+  },
 
   stash: z.object({
     userQuery: z.string(),
@@ -108,7 +116,7 @@ export default skill({
   })
 
   .step('pick-topic', {
-    ask: askUser({
+    act: act.askUser({
       type: 'structured',
       question: 'What would you like to know about?',
       options: [

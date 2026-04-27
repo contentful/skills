@@ -1,8 +1,9 @@
 import { skill, z, prompt } from '@contentful/skill-kit';
+import { VERSION } from '../version.js';
 
 export default skill({
   name: 'develop',
-  version: '1.0.0',
+  version: VERSION,
   description:
     'Day-to-day development companion for building with Contentful personalization. ' +
     'Helps add personalization to components, create experiments, and wire analytics.',

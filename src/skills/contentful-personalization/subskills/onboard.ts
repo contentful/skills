@@ -1,13 +1,14 @@
-import { skill, z, prompt, render, askUser } from '@contentful/skill-kit';
+import { skill, z, prompt, render, act } from '@contentful/skill-kit';
 import { checkPackagesAndEnv } from '../actions/check-packages-env.js';
 import { validateSetup } from '../actions/validate-setup.js';
 import { installPackages } from '../actions/install-packages.js';
 import { writeEnvFile } from '../actions/write-env-file.js';
 import { PackagesAndEnvResult, ReadinessStatus } from '../schemas.js';
+import { VERSION } from '../version.js';
 
 export default skill({
   name: 'onboard',
-  version: '1.0.0',
+  version: VERSION,
   description:
     'Assess readiness and guide Contentful personalization setup end-to-end. ' +
     'Explores the codebase, checks readiness, helps choose SDK and architecture, ' +
@@ -228,7 +229,7 @@ export default skill({
       Present a clear, numbered checklist. Ask the user to confirm
       when they've completed the Contentful side of setup.
     `,
-    ask: askUser({
+    act: act.askUser({
       type: 'structured',
       question: 'Have you completed the Contentful app setup (installed the app, selected data bucket, extended content types)?',
       options: [

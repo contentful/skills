@@ -64,10 +64,28 @@ skills/<skill-name>/         # Build output (distributed)
 
 ### package.json for skill-kit skills
 
-`skill-kit build` generates a minimal `package.json`. After building, update it to match the repo convention:
+`skill-kit build` merges into existing `package.json` (or creates one). Use the `package` field in the skill definition to set repo-convention fields:
 
-- `name`: `@contentful/skill-<skill-name>`
-- `version`: must match the repo version in the root `package.json` (release-it bumps `skills/*/package.json` automatically)
-- Include `description`, `license: "MIT"`, and `files` array
+```typescript
+export default skill({
+  name: 'contentful-my-skill',
+  version: VERSION,
+  package: {
+    name: '@contentful/skill-contentful-my-skill',
+    description: '...',
+    license: 'MIT',
+    files: ['SKILL.md', 'scripts/**', 'bin/**', 'references/**'],
+  },
+})
+```
+
+Version is managed via a shared `version.ts` file per skill:
+
+```typescript
+// src/skills/<skill-name>/version.ts
+export const VERSION = '1.2.5';
+```
+
+`release-it` bumps `version.ts` automatically via text search-and-replace (`src/skills/*/version.ts` in `.release-it.json`). The build then picks up the bumped version.
 
 If you add a new skill-kit skill, always check its `package.json` version matches the repo version before committing.
