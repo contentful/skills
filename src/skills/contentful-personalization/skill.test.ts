@@ -13,19 +13,11 @@ test('classify routes to onboard for setup requests', async () => {
       classify: { intent: 'onboard', confidence: 0.95, reasoning: 'User wants to set up personalization' },
       'onboard/explore': {
         framework: 'nextjs-app', routerType: 'app', projectPath: '.', frameworkVersion: '14.0.0',
-        explorationSummary: 'Next.js project', personalizableCandidates: [], existingSetup: 'none', readinessOnly: false,
+        explorationSummary: 'Next.js project', personalizableCandidates: [], existingSetup: 'none',
+        readinessOnly: true,
       },
-      'onboard/assess': { readinessStatus: 'ready', report: 'All good', prerequisites: [], readinessOnly: false },
-      'onboard/recommend': { sdkChoice: 'ninetailed', architecture: 'client-only', reasoning: 'Simple setup' },
-      'onboard/confirm-choice': { approved: true },
-      'onboard/cms-setup': { choice: 'done' },
-      'onboard/plan': { approved: true, packagesToInstall: ['@ninetailed/experience.js'], envVars: {}, plan: 'Install SDK' },
-      'onboard/install': { projectPath: '.', packages: ['@ninetailed/experience.js'], packageManager: 'npm' },
-      'onboard/write-env': { projectPath: '.', variables: {}, fileName: '.env.local' },
-      'onboard/implement': { filesModified: [], summary: 'Done' },
-      'onboard/verify': { projectPath: '.' },
-      'onboard/fix': { fixesMade: ['fixed issue'] },
-      'onboard/report': { summary: 'Setup complete' },
+      'onboard/assess': { readinessStatus: 'ready', report: 'All good', prerequisites: [], readinessOnly: true },
+      'onboard/gate': { message: 'Readiness check complete' },
     }),
   });
 
