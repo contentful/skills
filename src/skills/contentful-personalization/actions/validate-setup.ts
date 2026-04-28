@@ -13,12 +13,12 @@ export const validateSetup = action({
       signal,
     });
 
-    const hasSpaceId = !!packages.contentfulSpaceId;
     const api = await checkApiConnectivity.run({
       input: {
+        apiKey: packages.apiKey,
+        ninetailedEnvironment: packages.environment ?? 'main',
         contentfulSpaceId: packages.contentfulSpaceId,
         contentfulEnvironment: packages.contentfulEnvironment ?? 'master',
-        shouldCheck: hasSpaceId,
       },
       signal,
     });
