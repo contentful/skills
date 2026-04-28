@@ -1,4 +1,4 @@
-import { skill, z, prompt, render, act } from '@contentful/skill-kit';
+import { skill, z, prompt, render, act, view, terminal } from '@contentful/skill-kit';
 import { checkPackagesAndEnv } from '../actions/check-packages-env.js';
 import { validateSetup } from '../actions/validate-setup.js';
 import { installPackages } from '../actions/install-packages.js';
@@ -29,48 +29,49 @@ export default skill({
     readinessOnly: z.boolean(),
     sdkChoice: z.enum(['ninetailed', 'optimization']).optional(),
     architecture: z.enum(['client-only', 'hybrid-ssr', 'server-only']).optional(),
+    packagesToInstall: z.array(z.string()).optional(),
+    envVars: z.record(z.string(), z.string()).optional(),
   }),
 })
   .step('explore', {
     prompt: ({ context, refs }) => prompt`
-      Explore this project to build a thorough understanding of its structure,
-      how it uses Contentful, and what personalization would look like here.
+        Investigate this project to understand its structure, Contentful integration,
+        and what personalization would look like here. You are gathering facts —
+        do NOT make recommendations, produce a readiness verdict, or ask the user
+        questions. That happens in later steps.
 
-      ${refs.load('how-personalization-works.md')}
+        ## What to investigate (in priority order)
 
-      ${refs.load('component-patterns.md')}
+        1. **Framework & version** — Read package.json. Check for app/ vs pages/ directories,
+           next.config, gatsby-config, remix.config. Identify the framework and router type.
 
-      ${refs.load('framework-notes.md')}
+        2. **Contentful integration** — Find the Contentful client. How is content fetched?
+           What include depth? Where are env vars configured? Is there a preview client?
 
-      Investigate:
+        3. **Component architecture** — Find the component mapper (ContentTypeMap, BlockRenderer,
+           ComponentRenderer). Are components isolated (props in, JSX out) or do they fetch data?
 
-      1. **Framework & version**: Read package.json, check for app/ vs pages/
-         directories, next.config, gatsby-config, remix.config, etc.
+        4. **Rendering pipeline** — Page-level or component-level fetching? SSR, SSG, ISR, client?
+           Any existing middleware?
 
-      2. **Contentful integration**: Find the Contentful client configuration.
-         How is content fetched? What include depth? Is there a preview client?
-         Where are the env vars configured?
+        5. **Existing personalization** — Any NinetailedProvider, Experience components,
+           ExperienceMapper, or @contentful/optimization code already present?
 
-      3. **Component architecture**: Find the component mapper pattern
-         (ContentTypeMap, BlockRenderer, ComponentRenderer, etc.). Are components
-         isolated (props in, JSX out)? Do they fetch their own data?
+        6. **Env var approach** — .env files? Vercel env? Framework-prefixed vars?
 
-      4. **Rendering pipeline**: Page-level or component-level fetching?
-         SSR, SSG, ISR, or client-only? Is there existing middleware?
+        Spend most time on items 1-4. For each area, note the specific files and patterns you find.
+        Think about which components would be good candidates for personalization.
 
-      5. **Existing personalization**: Any NinetailedProvider, Experience
-         components, ExperienceMapper usage, or @contentful/optimization code?
+        ${context?.userQuery ? `\nUser's request: "${context.userQuery}"` : ''}
+        ${context?.readinessOnly ? '\nNote: The user only asked about readiness — keep that in mind but still explore fully.' : ''}
 
-      6. **Credentials approach**: How does the project manage env vars
-         and secrets? .env files? Vercel env? Other?
+        ## Reference Material
+        ${refs.load('how-personalization-works.md')}
 
-      Think about what personalization would look like in THIS project.
-      Which components would benefit? Where would the provider go?
-      What architecture makes sense?
+        ${refs.load('component-patterns.md')}
 
-      ${context?.userQuery ? `The user's request: "${context.userQuery}"` : ''}
-      ${context?.readinessOnly ? 'Note: The user is only asking about readiness, not requesting a full setup.' : ''}
-    `,
+        ${refs.load('framework-notes.md')}
+      `,
     output: z.object({
       framework: z.enum(['nextjs-app', 'nextjs-pages', 'nextjs-hybrid', 'gatsby', 'remix', 'other']),
       frameworkVersion: z.string().optional(),
@@ -87,56 +88,89 @@ export default skill({
       projectPath: output.projectPath,
       readinessOnly: output.readinessOnly,
     }),
-    next: 'check-packages',
-  })
-
-  .step('check-packages', {
-    prompt: ({ stash }) => prompt`
-      Confirm the project path for the package and env var check.
-      Project path: ${stash.projectPath}
-    `,
-    output: z.object({ projectPath: z.string() }),
-    action: checkPackagesAndEnv,
-    afterAction: ({ action }) => ({ packageData: action }),
+    action: {
+      input: ({ output }) => ({ projectPath: output.projectPath }),
+      run: checkPackagesAndEnv,
+      stash: ({ result }) => ({ packageData: result }),
+    },
     next: 'assess',
   })
 
   .step('assess', {
     prompt: ({ stash, getStep, refs }) => {
       const explore = getStep('explore');
+      const exploreOutput = explore?.output as {
+        framework: string; routerType: string; explorationSummary: string;
+        personalizableCandidates: string[]; existingSetup: string;
+      } | undefined;
+
+      const explorationView = exploreOutput
+        ? [
+            render.kv({
+              'Framework': exploreOutput.framework,
+              'Router': exploreOutput.routerType,
+              'Existing setup': exploreOutput.existingSetup,
+            }),
+            '',
+            exploreOutput.explorationSummary,
+            '',
+            exploreOutput.personalizableCandidates.length > 0
+              ? `**Personalization candidates:** ${exploreOutput.personalizableCandidates.join(', ')}`
+              : '*No specific candidates identified yet*',
+          ].join('\n')
+        : 'No exploration data available';
+
+      const pkg = stash.packageData;
+      const packageView = pkg
+        ? [
+            render.table(
+              [...(pkg.packages?.ninetailed ?? []), ...(pkg.packages?.optimization ?? []),
+               ...(pkg.packages?.contentful ?? []), ...(pkg.packages?.framework ?? [])].map(
+                (p: { name: string; version: string }) => ({ Package: p.name, Version: p.version })
+              ),
+              { columns: ['Package', 'Version'] }
+            ) || '*No packages found*',
+            '',
+            render.table(
+              (pkg.envVars ?? []).map((ev: { name: string; status: string; maskedValue?: string }) => ({
+                Variable: ev.name, Status: ev.status, Value: ev.maskedValue ?? '—',
+              })),
+              { columns: ['Variable', 'Status', 'Value'] }
+            ),
+          ].join('\n')
+        : 'No package data available';
 
       return prompt`
-        Combine your exploration findings with the package/env data to produce
-        a readiness assessment.
+          Combine the exploration findings with the deterministic package/env data below
+          to produce a readiness assessment. Assess these five areas:
 
-        ## Readiness Rubric
-        ${refs.load('readiness-criteria.md')}
+          | Area | What to evaluate |
+          |------|-----------------|
+          | **Framework** | Supported framework? Version adequate? |
+          | **Contentful SDK** | Installed? Client configured? Include depth? |
+          | **Personalization SDK** | Current state of Ninetailed/Optimization setup |
+          | **Component architecture** | Mapper present? Components isolated? |
+          | **Rendering pipeline** | Page-level fetching? Include depth adequate? |
 
-        ## Your Exploration Findings
-        ${explore?.output ? JSON.stringify(explore.output, null, 2) : 'No exploration data'}
+          For each area, give a status and explain **why** it matters — not just pass/fail.
+          Be conversational and helpful.
 
-        ## Package & Env Var Data (deterministic)
-        ${JSON.stringify(stash.packageData, null, 2)}
+          Overall status: "ready", "minor-changes", "needs-work", or "not-ready".
 
-        Assess these five areas:
-        A. **Framework**: Supported? Version adequate?
-        B. **Contentful SDK**: Installed? Client configured? Include depth?
-        C. **Existing Ninetailed/Optimization**: What's the current state?
-        D. **Component Architecture**: Mapper present? Components isolated?
-        E. **Rendering Pipeline**: Page-level fetching? Include depth adequate?
+          Do NOT make SDK or architecture recommendations — that happens in the next step.
+          Do NOT ask the user any questions.
 
-        For each area, give a status and explain what you found.
-        Be conversational — explain WHY things matter, not just pass/fail.
+          ${stash.readinessOnly ? 'The user is only asking about readiness, not requesting a full setup. Set readinessOnly to true.' : 'Set readinessOnly to false unless the exploration data suggests the user only wanted a readiness check.'}
 
-        Overall status:
-        - "ready" if all good
-        - "minor-changes" if small fixes needed
-        - "needs-work" if moderate restructuring required
-        - "not-ready" if significant work needed before personalization is viable
+          ## Readiness Rubric
+          ${refs.load('readiness-criteria.md')}
 
-      Also determine: is the user only asking about readiness (not requesting
-      a full setup)? Set readinessOnly accordingly.
-      `;
+          ## Exploration Findings
+          ${explorationView}
+
+          ## Package & Environment Data
+          ${packageView}
+        `;
     },
     output: z.object({
       readinessStatus: ReadinessStatus,
@@ -149,62 +183,89 @@ export default skill({
       const status = output.readinessStatus;
       if (status === 'not-ready' || status === 'needs-work') return 'gate';
       if (output.readinessOnly) return 'gate';
-      return 'choose';
+      return 'recommend';
     },
   })
 
   .step('gate', {
-    prompt: ({ rendered }) => prompt`
-      Present the readiness report to the user exactly as rendered.
-      If the status is positive but they only asked about readiness,
-      mention they can come back when ready to set up.
-      If the status indicates issues, explain what needs fixing first.
-
-      ${rendered ?? ''}
-    `,
-    output: z.object({ message: z.string() }),
-    render: ({ stash, getStep }) => {
+    prompt: ({ stash, getStep }) => {
       const assess = getStep<{ readinessStatus: string; report: string; prerequisites: string[] }>('assess');
-      if (!assess?.output) return '## Readiness Report\n\nNo assessment data available.';
+      if (!assess?.output) {
+        return [
+          'Present a brief message explaining that assessment data was unavailable.',
+          view('⚠️ No assessment data available. Please re-run the readiness check.'),
+        ];
+      }
 
-      const icon = stash.readinessStatus === 'ready' || stash.readinessStatus === 'minor-changes' ? '✅' : '⚠️';
+      const statusConfig: Record<string, { icon: string; label: string; detail: string }> = {
+        'ready': { icon: '✅', label: 'Ready', detail: 'All systems go' },
+        'minor-changes': { icon: '🟡', label: 'Almost Ready', detail: 'A few small things to address' },
+        'needs-work': { icon: '🟠', label: 'Needs Work', detail: 'Moderate changes required before setup' },
+        'not-ready': { icon: '🔴', label: 'Not Ready', detail: 'Significant work needed first' },
+      };
+      const status = statusConfig[stash.readinessStatus ?? 'not-ready'] ?? statusConfig['not-ready'];
+
       const sections: string[] = [];
-      sections.push(`## Readiness Report ${icon}\n`);
+      sections.push(`# ${status.icon} Readiness Report: ${status.label}\n`);
+      sections.push(`*${status.detail}*\n`);
+      sections.push('---\n');
       sections.push(assess.output.report);
 
       if (assess.output.prerequisites.length > 0) {
-        sections.push(render.section('Prerequisites', assess.output.prerequisites.map((p, i) => `${i + 1}. ${p}`).join('\n')));
+        sections.push(render.section('📋 Prerequisites',
+          assess.output.prerequisites.map((p: string, i: number) => `${i + 1}. ${p}`).join('\n')
+        ));
       }
 
       if (stash.readinessStatus === 'ready' || stash.readinessStatus === 'minor-changes') {
-        sections.push('\n---\nYour project is ready for personalization. Run this skill again when you want to start setup.');
+        sections.push('\n---\n\n🎉 Your project is ready for personalization! Run this skill again when you want to start setup.');
+      } else {
+        sections.push('\n---\n\n💡 Address the items above, then run this skill again to re-check readiness.');
       }
 
-      return sections.join('\n\n');
+      return [
+        'Present the readiness report below to the user exactly as rendered. Add a brief, warm closing sentence.',
+        view('Readiness Report', sections.join('\n\n')),
+      ];
     },
-    next: { terminal: true },
+    output: z.object({ message: z.string() }),
+    next: terminal,
   })
 
-  .step('choose', {
+  .step('recommend', {
     prompt: ({ stash, getStep, refs }) => {
       const explore = getStep('explore');
 
       return prompt`
-        Help the user choose their SDK and architecture. Use the reference
-        below for the decision framework, but make a specific recommendation
-        based on what you learned about their project.
+          Recommend a specific SDK and architecture for this project.
+          Explain your reasoning conversationally — help the user understand WHY
+          this choice fits their project, not just WHAT the choice is.
 
-        ${refs.load('sdk-selection.md')}
+          ## Project Context
+          ${render.kv({
+            'Framework': stash.framework,
+            'Router': stash.routerType,
+          })}
+          ${explore?.output ? `\n${(explore.output as { explorationSummary: string }).explorationSummary}` : ''}
 
-        ## Project Context
-        Framework: ${stash.framework}
-        Router: ${stash.routerType}
-        ${explore?.output ? `Exploration: ${(explore.output as { explorationSummary: string }).explorationSummary}` : ''}
+          ## Your two decisions
 
-        Make a recommendation and explain your reasoning. Confirm with the user.
-        For SDK choice: current (@ninetailed/experience.js) or modern (@contentful/optimization).
-        For architecture: client-only, hybrid SSR/edge + client, or server-only.
-      `;
+          **SDK choice:**
+          - \`ninetailed\` — @ninetailed/experience.js (current, battle-tested, more plugins)
+          - \`optimization\` — @contentful/optimization (modern, Contentful-native, simpler API)
+
+          **Architecture:**
+          - \`client-only\` — All personalization runs in the browser
+          - \`hybrid-ssr\` — Server-side preflight + client hydration
+          - \`server-only\` — Full server-side personalization (advanced)
+
+          Present your recommendation clearly but do NOT ask the user to confirm —
+          that happens automatically in the next step.
+          Do NOT start implementing anything or install packages.
+
+          ## SDK Selection Guide
+          ${refs.load('sdk-selection.md')}
+        `;
     },
     output: z.object({
       sdkChoice: z.enum(['ninetailed', 'optimization']),
@@ -215,28 +276,59 @@ export default skill({
       sdkChoice: output.sdkChoice,
       architecture: output.architecture,
     }),
-    next: 'cms-setup',
+    next: 'confirm-choice',
+  })
+
+  .step('confirm-choice', {
+    prompt: ({ stash, act }) => [
+      prompt`
+        Present the SDK and architecture recommendation below, then ask the user
+        to confirm. Keep it brief — the reasoning was already explained.
+
+        ## 📦 Recommendation Summary
+
+        ${render.kv({
+          'SDK': stash.sdkChoice === 'ninetailed'
+            ? '@ninetailed/experience.js (legacy, proven)'
+            : '@contentful/optimization (modern, Contentful-native)',
+          'Architecture': stash.architecture === 'client-only'
+            ? 'Client-only (browser-side personalization)'
+            : stash.architecture === 'hybrid-ssr'
+              ? 'Hybrid SSR (server preflight + client hydration)'
+              : 'Server-only (full server-side)',
+          'Framework': stash.framework,
+        })}
+      `,
+      act.confirm({
+        message: 'Proceed with this SDK and architecture choice?',
+        defaultAnswer: 'yes',
+      }),
+    ],
+    output: z.object({ approved: z.boolean() }),
+    next: ({ output }) => (output.approved ? 'cms-setup' : 'recommend'),
   })
 
   .step('cms-setup', {
-    prompt: ({ refs }) => prompt`
-      Guide the user through the Contentful app installation.
-      You cannot do this yourself — these are steps the user must
-      perform in the Contentful web UI.
+    prompt: ({ refs, act }) => [
+      prompt`
+        Guide the user through the Contentful app installation. These are steps
+        the user must perform in the Contentful web UI — you cannot do them.
 
-      ${refs.load('contentful-app-setup.md')}
+        Present the setup guide below as a clear, friendly walkthrough. Emphasize
+        that this is a one-time setup they do in their browser.
 
-      Present a clear, numbered checklist. Ask the user to confirm
-      when they've completed the Contentful side of setup.
-    `,
-    act: act.askUser({
-      type: 'structured',
-      question: 'Have you completed the Contentful app setup (installed the app, selected data bucket, extended content types)?',
-      options: [
-        { value: 'done', label: 'Yes, Contentful setup is complete' },
-        { value: 'help', label: 'I need more guidance' },
-      ],
-    }),
+        Do NOT skip ahead to coding. Wait for the user's response.
+      `,
+      view('🏗️ Contentful App Setup Guide', refs.load('contentful-app-setup.md')),
+      act.askUser({
+        type: 'structured',
+        question: 'Have you completed the Contentful app setup?',
+        options: [
+          { value: 'done', label: '✅ Yes, setup is complete' },
+          { value: 'help', label: '❓ I need more guidance' },
+        ],
+      }),
+    ],
     output: z.object({ choice: z.enum(['done', 'help']) }),
     next: ({ output, attempts }) => {
       if (output.choice === 'done') return 'plan';
@@ -246,137 +338,154 @@ export default skill({
   })
 
   .step('plan', {
-    prompt: ({ stash, refs }) => {
-      const refSections = [
-        refs.load('env-var-spec.md'),
-        refs.load('provider-patterns.md'),
-        refs.load('rendering-pipeline.md'),
+    prompt: ({ stash, act, refs }) => {
+      const refSections: Array<{ label: string; content: string }> = [
+        { label: 'Environment Variables', content: refs.load('env-var-spec.md') },
+        { label: 'Provider Patterns', content: refs.load('provider-patterns.md') },
+        { label: 'Rendering Pipeline', content: refs.load('rendering-pipeline.md') },
       ];
 
       if (stash.architecture === 'hybrid-ssr') {
-        refSections.push(refs.load('middleware-patterns.md'));
-        refSections.push(refs.load('ssr-guide.md'));
+        refSections.push({ label: 'Middleware Patterns', content: refs.load('middleware-patterns.md') });
+        refSections.push({ label: 'SSR Guide', content: refs.load('ssr-guide.md') });
       }
 
-      refSections.push(refs.load('analytics-and-preview.md'));
-      refSections.push(refs.load('implementation-examples.md'));
+      refSections.push({ label: 'Analytics & Preview', content: refs.load('analytics-and-preview.md') });
+      refSections.push({ label: 'Implementation Examples', content: refs.load('implementation-examples.md') });
 
-      return prompt`
-        Present an implementation plan. Use planning mode to lay out a thorough,
-        step-by-step plan and get the user's approval before proceeding.
+      const steps = [
+        `📦 Install packages: ${stash.sdkChoice === 'ninetailed' ? '@ninetailed/experience.js + plugins' : '@contentful/optimization + plugins'}`,
+        '🔑 Configure environment variables with placeholder values',
+        '🔌 Add provider wrapper to the appropriate layout/app file',
+        '🧩 Wire components with Experience/Personalize wrappers and update component mapper',
+        ...(stash.architecture === 'hybrid-ssr' ? ['⚡ Set up middleware with preflight, cookie management, and matcher config'] : []),
+        ...(stash.architecture !== 'server-only' ? ['📊 Configure analytics/insights plugin'] : []),
+        '✅ Verify setup and fix any issues',
+      ];
 
-        ## Decisions Made
-        SDK: ${stash.sdkChoice}
-        Architecture: ${stash.architecture}
-        Framework: ${stash.framework} (${stash.routerType} router)
+      return [
+        prompt`
+          Review the implementation plan below and present it to the user for approval.
+          Expand each step with specific file paths based on what was found during exploration.
+          Be concrete — name the actual files that will be created or modified.
 
-        ## Reference Material
-        ${refSections.join('\n\n---\n\n')}
+          Do NOT begin implementing. This is the planning step only.
 
-        The plan should specify:
-        1. Exact packages to install
-        2. Environment variables to set (with placeholder values)
-        3. Provider placement (which file, how to structure)
-        4. Component wiring changes
-        ${stash.architecture === 'hybrid-ssr' ? '5. Middleware setup (matcher, cookies, preflight)' : ''}
-        ${stash.architecture !== 'server-only' ? '6. Analytics/insights plugin setup' : ''}
-        7. Verification steps
+          ${render.kv({
+            'SDK': stash.sdkChoice ?? 'TBD',
+            'Architecture': stash.architecture ?? 'TBD',
+            'Framework': `${stash.framework} (${stash.routerType} router)`,
+          })}
 
-        Be specific about file paths based on what you found during exploration.
-      `;
+          ## Reference Material
+          ${refSections.map(r => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
+        `,
+        act.plan({
+          summary: `Implement ${stash.sdkChoice} personalization with ${stash.architecture} architecture`,
+          steps,
+        }),
+      ];
     },
     output: z.object({
+      approved: z.boolean(),
       packagesToInstall: z.array(z.string()),
       envVars: z.record(z.string(), z.string()),
       plan: z.string(),
     }),
-    next: 'install',
+    stash: ({ output }) => ({
+      packagesToInstall: output.packagesToInstall,
+      envVars: output.envVars,
+    }),
+    next: ({ output }) => (output.approved ? 'install' : 'recommend'),
   })
 
   .step('install', {
-    prompt: ({ stash, getStep }) => {
-      const plan = getStep('plan');
-      const packages = (plan?.output as { packagesToInstall: string[] } | undefined)?.packagesToInstall ?? [];
-
-      return prompt`
-        Install packages and write env vars. Return the project path,
-        packages, and package manager for the install action.
-
-        Packages to install: ${JSON.stringify(packages)}
-        Package manager detected: ${stash.packageData?.packageManager ?? 'npm'}
-        Project path: ${stash.projectPath}
-      `;
-    },
+    prompt: 'Installing packages now.',
     output: z.object({
       projectPath: z.string(),
       packages: z.array(z.string()),
       packageManager: z.enum(['npm', 'yarn', 'pnpm', 'bun']),
     }),
-    action: installPackages,
+    action: {
+      input: ({ stash }) => ({
+        projectPath: stash.projectPath,
+        packages: stash.packagesToInstall ?? [],
+        packageManager: stash.packageData?.packageManager ?? 'npm',
+      }),
+      run: installPackages,
+    },
     next: 'write-env',
   })
 
   .step('write-env', {
-    prompt: ({ stash, getStep }) => {
-      const plan = getStep('plan');
-      const envVars = (plan?.output as { envVars: Record<string, string> } | undefined)?.envVars ?? {};
-
-      return prompt`
-        Write environment variables. Return the project path, variables,
-        and target file name for the writeEnvFile action.
-
-        Variables to write: ${JSON.stringify(envVars)}
-        Project path: ${stash.projectPath}
-      `;
-    },
+    prompt: 'Writing environment variables now.',
     output: z.object({
       projectPath: z.string(),
       variables: z.record(z.string(), z.string()),
       fileName: z.string(),
     }),
-    action: writeEnvFile,
+    action: {
+      input: ({ stash }) => ({
+        projectPath: stash.projectPath,
+        variables: stash.envVars ?? {},
+        fileName: '.env.local',
+      }),
+      run: writeEnvFile,
+    },
     next: 'implement',
   })
 
   .step('implement', {
-    prompt: ({ stash, refs }) => {
-      const refSections = [
-        refs.load('provider-patterns.md'),
-        refs.load('rendering-pipeline.md'),
-        refs.load('component-patterns.md'),
+    prompt: ({ stash, act, system, refs }) => {
+      const refSections: Array<{ label: string; content: string }> = [
+        { label: 'Provider Patterns', content: refs.load('provider-patterns.md') },
+        { label: 'Rendering Pipeline', content: refs.load('rendering-pipeline.md') },
+        { label: 'Component Patterns', content: refs.load('component-patterns.md') },
       ];
 
       if (stash.architecture === 'hybrid-ssr') {
-        refSections.push(refs.load('middleware-patterns.md'));
+        refSections.push({ label: 'Middleware Patterns', content: refs.load('middleware-patterns.md') });
       }
 
       if (stash.sdkChoice === 'ninetailed') {
-        refSections.push(refs.load('sdk-legacy-guide.md'));
+        refSections.push({ label: 'SDK Reference (Legacy)', content: refs.load('sdk-legacy-guide.md') });
       } else {
-        refSections.push(refs.load('sdk-next-guide.md'));
+        refSections.push({ label: 'SDK Reference (Modern)', content: refs.load('sdk-next-guide.md') });
       }
 
-      refSections.push(refs.load('implementation-examples.md'));
+      refSections.push({ label: 'Implementation Examples', content: refs.load('implementation-examples.md') });
 
-      return prompt`
-        Implement the personalization setup. Write the code changes needed:
+      return [
+        system`Work through each checklist item methodically. After completing each one, update its status. Adapt all code to match the project's existing style — do not introduce a different coding style.`,
+        prompt`
+          Implement the personalization setup for this project.
 
-        - Provider wrapper (adapt to the project's patterns and conventions)
-        - Component wiring (Experience/Personalize components, ExperienceMapper)
-        ${stash.architecture === 'hybrid-ssr' ? '- Middleware with preflight, cookie management, matcher config' : ''}
-        - Analytics plugin configuration
-        - Any rendering pipeline adjustments (include depth, component mapper)
+          ${render.kv({
+            'SDK': stash.sdkChoice ?? 'unknown',
+            'Architecture': stash.architecture ?? 'unknown',
+            'Framework': `${stash.framework} (${stash.routerType} router)`,
+          })}
 
-        SDK: ${stash.sdkChoice}
-        Architecture: ${stash.architecture}
-        Framework: ${stash.framework} (${stash.routerType} router)
+          Work through the checklist below. For each item, read the relevant
+          reference material, make the code changes, then mark it complete.
 
-        ## Reference
-        ${refSections.join('\n\n---\n\n')}
+          Do NOT ask the user questions during implementation.
+          If you hit an ambiguous decision, use the reference material to make the best choice.
 
-        Adapt to the project's existing patterns. Don't force a different style
-        than what the codebase already uses.
-      `;
+          ## Reference Material
+          ${refSections.map(r => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
+        `,
+        act.checklist({
+          create: [
+            { title: '🔌 Provider wrapper setup', status: 'pending' as const },
+            { title: '🧩 Component wiring (Experience/Personalize wrappers)', status: 'pending' as const },
+            ...(stash.architecture === 'hybrid-ssr'
+              ? [{ title: '⚡ Middleware (preflight, cookies, matcher)', status: 'pending' as const }] : []),
+            { title: '📊 Analytics plugin configuration', status: 'pending' as const },
+            { title: '🔄 Rendering pipeline adjustments', status: 'pending' as const },
+          ],
+        }),
+      ];
     },
     output: z.object({
       filesModified: z.array(z.string()),
@@ -387,21 +496,27 @@ export default skill({
 
   .step('verify', {
     prompt: ({ stash, refs }) => prompt`
-      Verify the setup. Confirm the project path for validation.
-      Project path: ${stash.projectPath}
+        Verify the personalization setup. Confirm the project path so the
+        automated validation can run, then also manually check these items:
 
-      After the deterministic check, also manually verify:
+        ## 🔍 Manual Verification Checklist
 
-      ${refs.load('common-errors.md')}
+        - [ ] Provider wraps the correct subtree (not too broad, not too narrow)
+        - [ ] No hydration mismatch patterns (client/server content divergence)
+        - [ ] Page tracking fires once per navigation (not on re-renders)
+        - [ ] Include depth is adequate for personalization entries
+        - [ ] Middleware matcher excludes static assets (/_next, images, etc.)
 
-      - Provider wraps the correct subtree
-      - No hydration mismatch patterns
-      - Page tracking happens once per navigation
-      - Include depth is adequate
-      - Middleware matcher excludes static assets (if applicable)
-    `,
+        If you find issues, just report them — do NOT fix them here.
+        The fix step handles repairs.
+
+        ## Reference: Common Errors
+        ${refs.load('common-errors.md')}
+
+        Project path: ${stash.projectPath}
+      `,
     output: z.object({ projectPath: z.string() }),
-    action: validateSetup,
+    action: { run: validateSetup },
     next: ({ action, attempts }) => {
       const result = action as { overallStatus: string } | undefined;
       if (result?.overallStatus === 'pass') return 'report';
@@ -412,16 +527,26 @@ export default skill({
 
   .step('fix', {
     prompt: ({ stash, refs }) => prompt`
-      Fix the issues found during verification. For package/env issues,
-      use the installPackages or writeEnvFile actions. For code issues,
-      make the changes directly.
+        Fix the issues found during verification. Work through them systematically:
 
-      ## Reference
-      ${refs.load('common-errors.md')}
+        ## Fix Strategy
 
-      Framework: ${stash.framework}
-      Project: ${stash.projectPath}
-    `,
+        - **Package issues** → Use the installPackages action
+        - **Env var issues** → Use the writeEnvFile action
+        - **Code issues** (provider, components, middleware) → Edit files directly
+        - **Configuration issues** (include depth, matcher) → Edit config files
+
+        For each fix, explain briefly what was wrong and what you changed.
+        After all fixes, the setup will be re-verified automatically.
+
+        ${render.kv({
+          'Framework': stash.framework,
+          'Project': stash.projectPath,
+        })}
+
+        ## Reference: Common Errors & Fixes
+        ${refs.load('common-errors.md')}
+      `,
     output: z.object({
       fixesMade: z.array(z.string()),
     }),
@@ -429,47 +554,55 @@ export default skill({
   })
 
   .step('report', {
-    prompt: ({ rendered }) => prompt`
-      Present the setup completion report to the user.
-
-      ${rendered ?? ''}
-    `,
-    output: z.object({ summary: z.string() }),
-    render: ({ stash, getStep }) => {
+    prompt: ({ stash, getStep }) => {
       const impl = getStep<{ filesModified: string[]; summary: string }>('implement');
       const verify = getStep('verify');
 
       const sections: string[] = [];
-      sections.push('## Setup Complete ✅\n');
+      sections.push('# 🎉 Personalization Setup Complete\n');
 
       if (impl?.output) {
-        sections.push(render.section('What was done', impl.output.summary));
+        sections.push(render.section('📝 What Was Done', impl.output.summary));
         if (impl.output.filesModified.length > 0) {
-          sections.push(render.section('Files modified', impl.output.filesModified.map((f) => `- ${f}`).join('\n')));
+          sections.push(render.section('📁 Files Modified',
+            render.table(
+              impl.output.filesModified.map((f: string) => ({ File: f })),
+              { columns: ['File'] }
+            )
+          ));
         }
       }
 
-      sections.push(render.section('Configuration', [
-        `SDK: ${stash.sdkChoice}`,
-        `Architecture: ${stash.architecture}`,
-        `Framework: ${stash.framework} (${stash.routerType})`,
-      ].join('\n')));
+      sections.push(render.section('⚙️ Configuration',
+        render.kv({
+          'SDK': stash.sdkChoice === 'ninetailed'
+            ? '@ninetailed/experience.js'
+            : '@contentful/optimization',
+          'Architecture': stash.architecture ?? 'unknown',
+          'Framework': `${stash.framework} (${stash.routerType})`,
+        })
+      ));
 
       if (verify?.action) {
         const v = verify.action as { overallStatus: string; summary: string };
-        sections.push(render.section('Verification', `Status: ${v.overallStatus}\n${v.summary}`));
+        const statusIcon = v.overallStatus === 'pass' ? '✅' : v.overallStatus === 'warn' ? '⚠️' : '❌';
+        sections.push(render.section(`🔍 Verification: ${statusIcon} ${v.overallStatus.toUpperCase()}`, v.summary));
       }
 
-      sections.push(render.section('Next Steps', [
-        '1. Create experiences and audiences in the Contentful Personalization app',
-        '2. Publish your content with personalization variants',
-        '3. Test in preview mode before going live',
-        '4. Monitor analytics and experiment results',
+      sections.push(render.section('🚀 Next Steps', [
+        '1. **Create experiences** — Open the Personalization app in Contentful and create your first audience + experience',
+        '2. **Publish content** — Add personalization variants to your content entries',
+        '3. **Test in preview** — Use preview mode to verify experiences render correctly',
+        '4. **Go live & monitor** — Publish and watch analytics for experiment results',
       ].join('\n')));
 
-      return sections.join('\n\n');
+      return [
+        'Present the setup completion report below to the user exactly as rendered. Add a brief, celebratory closing message.',
+        view('Setup Report', sections.join('\n\n')),
+      ];
     },
-    next: { terminal: true },
+    output: z.object({ summary: z.string() }),
+    next: terminal,
   })
 
   .build();

@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@contentful/skill-kit':
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: ^0.8.0
+        version: 0.8.0
       '@release-it/bumper':
         specifier: ^7.0.5
         version: 7.0.5(release-it@19.2.4(@types/node@25.6.0))
@@ -32,8 +32,8 @@ importers:
 
 packages:
 
-  '@contentful/skill-kit@0.6.0':
-    resolution: {integrity: sha512-VSMOWLITnbEsN6OEr0xGKZWSoA7i1ivyZK6qN85WIPJIYk2/E6/wtgSKrGEeZB6XXpoVrnNWCuEXgZFSAy3Rrg==, tarball: https://npm.pkg.github.com/download/@contentful/skill-kit/0.6.0/098d862d2989105f6bb22fe0e0c85ee76487ae4f}
+  '@contentful/skill-kit@0.8.0':
+    resolution: {integrity: sha512-TpFT11Iyn9IKiBrNsO0z6dxX9psRbI2525WHIHzxqUseUMp+CUXm4UIxxZpmpcC7oWqFELxz8xPsPrzBB6y+ng==, tarball: https://npm.pkg.github.com/download/@contentful/skill-kit/0.8.0/dfc14220b9645d92e617c1f89700dfccd57dc4ce}
     engines: {node: '>=24'}
     hasBin: true
 
@@ -1505,7 +1505,7 @@ packages:
 
 snapshots:
 
-  '@contentful/skill-kit@0.6.0':
+  '@contentful/skill-kit@0.8.0':
     dependencies:
       esbuild: 0.28.0
       tsx: 4.21.0

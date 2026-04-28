@@ -38,33 +38,26 @@ export default skill({
 })
   .step('classify', {
     prompt: prompt`
-      Classify the user's request to determine which personalization capability
-      they need. You have these options:
+      Classify the user's request into one of the categories below.
+      Read only the user's message — do NOT explore files, ask questions, or take any action.
+      Your only job is to pick the right category and set your confidence level.
 
-      **onboard** — The user wants to:
-      - Set up personalization for the first time
-      - Check if their project is ready for personalization
-      - Install and configure the SDK
-      - "Get started", "set up", "install", "am I ready?"
+      ## Categories
 
-      **doctor** — The user has an existing setup that's broken:
-      - Personalization not working
-      - Debug, diagnose, fix issues
-      - "Not working", "broken", "check my setup"
+      🚀 **onboard** — First-time setup
+      "Set up personalization", "install the SDK", "am I ready?", "get started"
 
-      **develop** — The user has a working setup and wants to build:
-      - Add personalization to a specific component
-      - Create an A/B test or experiment
-      - Wire up analytics or tracking
-      - "Personalize this", "add A/B test", "create experiment"
+      🩺 **doctor** — Broken or misconfigured setup
+      "Not working", "broken", "debug", "check my setup", "fix my personalization"
 
-      **reference** — The user wants to look something up:
-      - How does personalization/the SDK/the API work?
-      - Show me a pattern or code example
-      - Explain a concept
-      - "How does X work?", "what's the API for Y?"
+      🛠️ **develop** — Build on a working setup
+      "Personalize this component", "add A/B test", "create experiment", "wire analytics"
 
-      If you're not sure, set confidence low and we'll explore further.
+      📖 **reference** — Look something up
+      "How does X work?", "show me a pattern", "what's the API for Y?"
+      If you can identify the specific topic, set the \`topic\` field.
+
+      If the request is ambiguous, set intent to "unclear" and confidence below 0.6.
     `,
     output: z.object({
       intent: z.enum(['onboard', 'doctor', 'develop', 'reference', 'unclear']),
@@ -86,22 +79,25 @@ export default skill({
 
   .step('gather-context', {
     prompt: prompt`
-      You're not sure what the user needs yet. Before asking, try to
-      learn more by exploring the project:
+      You were not confident enough to classify the user's request.
+      Silently explore the project to gather evidence — do NOT ask the user anything.
 
-      1. Check package.json — is @ninetailed/experience.js or
-         @contentful/optimization installed?
-      2. Look for a NinetailedProvider or OptimizationProvider in the source.
-      3. Check the general project structure (framework, router).
+      Investigate these signals:
 
-      Based on what you find:
-      - If personalization is NOT set up → likely **onboard**
-      - If personalization IS set up but something seems off → likely **doctor**
-      - If personalization IS set up and working → likely **develop**
+      1. **package.json** — Is @ninetailed/experience.js or @contentful/optimization installed?
+      2. **Provider** — Search for NinetailedProvider or OptimizationProvider in source files.
+      3. **Project structure** — What framework? (Next.js app/ vs pages/, Gatsby, Remix)
 
-      If still ambiguous after exploring, ask the user conversationally
-      what they're trying to accomplish. Don't present a menu — have a
-      conversation.
+      ## Decision logic
+
+      - SDK **not installed** → likely **onboard**
+      - SDK **installed** but provider missing or broken config → likely **doctor**
+      - SDK **installed** and working (provider present, components wired) → likely **develop**
+      - User asking conceptual/reference questions → likely **reference**
+
+      Base your classification on what you find in the code. If evidence is still thin,
+      make your best guess — do NOT default to asking the user. Every request fits
+      one of these four categories.
     `,
     output: z.object({
       intent: z.enum(['onboard', 'doctor', 'develop', 'reference']),
@@ -116,26 +112,35 @@ export default skill({
   })
 
   .step('pick-topic', {
-    act: act.askUser({
-      type: 'structured',
-      question: 'What would you like to know about?',
-      options: [
-        { value: 'how-personalization-works', label: 'How personalization works', description: 'Core concepts, content model, rendering flow' },
-        { value: 'sdk-selection', label: 'Which SDK to use', description: 'Decision framework for legacy vs modern SDK' },
-        { value: 'provider-patterns', label: 'Provider setup', description: 'Placement, Pages/App Router, hydration' },
-        { value: 'middleware-patterns', label: 'Middleware & SSR', description: 'Preflight, cookies, edge personalization' },
-        { value: 'component-patterns', label: 'Component patterns', description: 'ContentTypeMap, BlockRenderer, isolation' },
-        { value: 'rendering-pipeline', label: 'Rendering pipeline', description: 'Data fetching, include depth, merge tags' },
-        { value: 'environment-variables', label: 'Environment variables', description: 'Variable names, runtime matrix, common mistakes' },
-        { value: 'analytics-and-preview', label: 'Analytics & preview', description: 'Insights plugin, event tracking, preview' },
-        { value: 'common-errors', label: 'Common errors', description: 'Failure modes and fixes' },
-        { value: 'ssr-guide', label: 'SSR/edge guide', description: 'Server-side patterns and anti-patterns' },
-        { value: 'sdk-legacy-guide', label: 'Legacy SDK reference', description: '@ninetailed/experience.js API' },
-        { value: 'sdk-next-guide', label: 'Next-gen SDK reference', description: '@contentful/optimization API' },
-        { value: 'contentful-integration-guide', label: 'CMS integration', description: 'Content types, ExperienceMapper, publishing' },
-        { value: 'implementation-examples', label: 'Code examples', description: 'Real implementation patterns' },
-      ],
-    }),
+    prompt: [
+      prompt`
+        The user wants to look something up about Contentful personalization.
+        Ask them what they'd like to know, then match their answer to the closest
+        topic key from the list below. Return the exact key string.
+
+        If their answer is ambiguous, pick the closest match — do not ask follow-up questions.
+
+        ## 📖 Available Topics
+
+        | Key | Description |
+        |-----|-------------|
+        | how-personalization-works | Core concepts, content model, rendering flow |
+        | sdk-selection | Decision framework: legacy vs modern SDK |
+        | provider-patterns | Provider placement, Pages/App Router, hydration |
+        | middleware-patterns | Preflight, cookies, edge personalization |
+        | component-patterns | ContentTypeMap, BlockRenderer, component isolation |
+        | rendering-pipeline | Data fetching, include depth, merge tags |
+        | environment-variables | Variable names, runtime matrix, common mistakes |
+        | analytics-and-preview | Insights plugin, event tracking, preview mode |
+        | common-errors | Failure modes and fixes |
+        | ssr-guide | Server-side patterns and anti-patterns |
+        | sdk-legacy-guide | @ninetailed/experience.js API reference |
+        | sdk-next-guide | @contentful/optimization API reference |
+        | contentful-integration-guide | Content types, ExperienceMapper, publishing |
+        | implementation-examples | Real implementation patterns and code |
+      `,
+      act.askUser({ type: 'open', question: 'What would you like to know about Contentful personalization?' }),
+    ],
     output: z.object({ choice: z.string() }),
     next: ({ output }) => `topic:${output.choice}`,
   })

@@ -15,11 +15,11 @@ test('classify routes to onboard for setup requests', async () => {
         framework: 'nextjs-app', routerType: 'app', projectPath: '.', frameworkVersion: '14.0.0',
         explorationSummary: 'Next.js project', personalizableCandidates: [], existingSetup: 'none', readinessOnly: false,
       },
-      'onboard/check-packages': { projectPath: '.' },
       'onboard/assess': { readinessStatus: 'ready', report: 'All good', prerequisites: [], readinessOnly: false },
-      'onboard/choose': { sdkChoice: 'ninetailed', architecture: 'client-only', reasoning: 'Simple setup' },
+      'onboard/recommend': { sdkChoice: 'ninetailed', architecture: 'client-only', reasoning: 'Simple setup' },
+      'onboard/confirm-choice': { approved: true },
       'onboard/cms-setup': { choice: 'done' },
-      'onboard/plan': { packagesToInstall: ['@ninetailed/experience.js'], envVars: {}, plan: 'Install SDK' },
+      'onboard/plan': { approved: true, packagesToInstall: ['@ninetailed/experience.js'], envVars: {}, plan: 'Install SDK' },
       'onboard/install': { projectPath: '.', packages: ['@ninetailed/experience.js'], packageManager: 'npm' },
       'onboard/write-env': { projectPath: '.', variables: {}, fileName: '.env.local' },
       'onboard/implement': { filesModified: [], summary: 'Done' },
@@ -41,11 +41,9 @@ test('classify routes to doctor for debugging requests', async () => {
       'doctor/explore': {
         framework: 'nextjs-app', projectPath: '.', explorationSummary: 'Broken setup', concerns: ['No provider'],
       },
-      'doctor/check-facts': { projectPath: '.' },
       'doctor/check-api': { shouldCheck: false, environment: 'main' },
       'doctor/review': { overallStatus: 'fail', recommendations: [], summary: 'Needs fixes' },
-      'doctor/report': { report: 'Report' },
-      'doctor/ask-fix': { choice: 'no' },
+      'doctor/report': { choice: 'no' },
       'doctor/report-only': { message: 'Ok' },
     }),
   });
@@ -62,7 +60,7 @@ test('classify routes to develop for component tasks', async () => {
         taskType: 'personalize-component', sdkInUse: 'ninetailed', framework: 'nextjs-app',
         targetFiles: ['Hero.tsx'], analysis: 'Wrap Hero',
       },
-      'develop/plan': { plan: 'Add Experience wrapper', filesToModify: ['Hero.tsx'] },
+      'develop/plan': { approved: true, plan: 'Add Experience wrapper', filesToModify: ['Hero.tsx'] },
       'develop/implement': { filesModified: ['Hero.tsx'], summary: 'Done' },
     }),
   });
@@ -90,11 +88,9 @@ test('low confidence routes to gather-context', async () => {
       'doctor/explore': {
         framework: 'nextjs-app', projectPath: '.', explorationSummary: 'Broken', concerns: [],
       },
-      'doctor/check-facts': { projectPath: '.' },
       'doctor/check-api': { shouldCheck: false, environment: 'main' },
       'doctor/review': { overallStatus: 'warn', recommendations: [], summary: 'Issues found' },
-      'doctor/report': { report: 'Report' },
-      'doctor/ask-fix': { choice: 'no' },
+      'doctor/report': { choice: 'no' },
       'doctor/report-only': { message: 'Ok' },
     }),
   });
@@ -119,7 +115,7 @@ test('reference without topic routes to pick-topic', async () => {
 
 // --- Doctor sub-skill tests ---
 
-test('doctor explore → check-facts → check-api → review → report path', async () => {
+test('doctor explore → check-api → review → report path', async () => {
   const result = await runSkill(doctorSkill, {
     model: mockModel({
       explore: {
@@ -129,7 +125,6 @@ test('doctor explore → check-facts → check-api → review → report path', 
         explorationSummary: 'Next.js 14 App Router project with partial Ninetailed setup',
         concerns: ['Provider not found', 'Missing middleware'],
       },
-      'check-facts': { projectPath: '.' },
       'check-api': { apiKey: 'nt_prod_test123', environment: 'main', shouldCheck: true },
       review: {
         overallStatus: 'warn',
@@ -138,14 +133,12 @@ test('doctor explore → check-facts → check-api → review → report path', 
         ],
         summary: 'Partial setup detected.',
       },
-      report: { report: 'Doctor report rendered' },
-      'ask-fix': { choice: 'no' },
+      report: { choice: 'no' },
       'report-only': { message: 'Good luck!' },
     }),
   });
 
   assert.ok(result.path.includes('explore'));
-  assert.ok(result.path.includes('check-facts'));
   assert.ok(result.path.includes('check-api'));
   assert.ok(result.path.includes('review'));
   assert.ok(result.path.includes('report'));
@@ -165,6 +158,7 @@ test('develop analyze → plan → implement path', async () => {
         analysis: 'Hero component needs Experience wrapper',
       },
       plan: {
+        approved: true,
         plan: 'Wrap Hero in Experience component, add to ContentTypeMap',
         filesToModify: ['components/Hero.tsx', 'components/BlockRenderer.tsx'],
       },

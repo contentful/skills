@@ -118,10 +118,10 @@ contains the skill's result. Present it to the user.
 
 ## Steps in this skill
 
-- **classify**: Classify the user's request to determine which personalization capability
-they need. You have the...
-- **gather-context**: You're not sure what the user needs yet. Before asking, try to
-learn more by exploring the projec...
+- **classify**: Classify the user's request into one of the categories below.
+Read only the user's message — do N...
+- **gather-context**: You were not confident enough to classify the user's request.
+Silently explore the project to gat...
 - **pick-topic**: (dynamic)
 
 
