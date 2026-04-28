@@ -74,10 +74,10 @@ test('detects entry not found in CDA but present in CPA (unpublished entry)', as
     });
 
     assert.equal(result.status, 'fail');
-    assert.ok(result.entry.comparison?.hasUnpublishedChanges);
-    const publishingFinding = result.findings.find((f) => f.item.includes('Publishing state'));
-    assert.ok(publishingFinding);
-    assert.equal(publishingFinding.status, 'fail');
+    const finding = result.findings.find((f) => f.item.includes('publishing'));
+    assert.ok(finding);
+    assert.equal(finding.status, 'fail');
+    assert.ok(finding.detail.includes('draft'));
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -113,13 +113,15 @@ test('detects unpublished nt_experiences changes (CPA has experiences, CDA does 
 
     assert.equal(result.status, 'fail');
     assert.ok(result.entry.comparison?.hasUnpublishedChanges);
-    assert.ok(result.entry.comparison?.detail.includes('republish'));
+    const finding = result.findings.find((f) => f.item.includes('Unpublished'));
+    assert.ok(finding);
+    assert.ok(finding.detail.includes('republish'));
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-test('detects unresolved experience links (include depth too shallow or not published)', async () => {
+test('detects unpublished experience entries (unresolved links)', async () => {
   const entry = makeEntry({
     title: 'Test',
     nt_experiences: [unresolvedLink('exp1'), unresolvedLink('exp2')],
@@ -144,16 +146,16 @@ test('detects unresolved experience links (include depth too shallow or not publ
     });
 
     assert.equal(result.status, 'fail');
-    const expFinding = result.findings.find((f) => f.item.includes('Experience resolution'));
-    assert.ok(expFinding);
-    assert.equal(expFinding.status, 'fail');
-    assert.ok(expFinding.detail.includes('unresolved'));
+    const finding = result.findings.find((f) => f.item.includes('Experience entries'));
+    assert.ok(finding);
+    assert.equal(finding.status, 'fail');
+    assert.ok(finding.detail.includes('not published'));
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-test('detects unresolved variant links within resolved experiences', async () => {
+test('detects unpublished variant entries', async () => {
   const entry = makeEntry({
     title: 'Test',
     nt_experiences: [makeExperience('exp1', [unresolvedLink('var1'), unresolvedLink('var2')])],
@@ -178,10 +180,10 @@ test('detects unresolved variant links within resolved experiences', async () =>
     });
 
     assert.equal(result.status, 'fail');
-    const varFinding = result.findings.find((f) => f.item.includes('Variant resolution'));
-    assert.ok(varFinding);
-    assert.equal(varFinding.status, 'fail');
-    assert.ok(varFinding.detail.includes('unresolved'));
+    const finding = result.findings.find((f) => f.item.includes('Variant entries'));
+    assert.ok(finding);
+    assert.equal(finding.status, 'fail');
+    assert.ok(finding.detail.includes('not published'));
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -231,15 +233,15 @@ test('handles invalid CDA token (401)', async () => {
     });
 
     assert.equal(result.status, 'fail');
-    const authFinding = result.findings.find((f) => f.item.includes('Authentication'));
-    assert.ok(authFinding);
-    assert.equal(authFinding.status, 'fail');
+    const finding = result.findings.find((f) => f.item.includes('authentication'));
+    assert.ok(finding);
+    assert.equal(finding.status, 'fail');
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-test('detects content type not extended (no nt_experiences field)', async () => {
+test('detects content type not extended (no nt_experiences field anywhere)', async () => {
   const entry = makeEntry({ title: 'Test', description: 'No experiences field' });
   const originalFetch = globalThis.fetch;
 
@@ -257,9 +259,10 @@ test('detects content type not extended (no nt_experiences field)', async () => 
     });
 
     assert.equal(result.status, 'fail');
-    const fieldFinding = result.findings.find((f) => f.detail.includes('content type'));
-    assert.ok(fieldFinding);
-    assert.equal(fieldFinding.status, 'fail');
+    const finding = result.findings.find((f) => f.item.includes('Content type'));
+    assert.ok(finding);
+    assert.equal(finding.status, 'fail');
+    assert.ok(finding.detail.includes('not been extended'));
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -283,9 +286,9 @@ test('warns when nt_experiences exists but is empty', async () => {
     });
 
     assert.equal(result.status, 'warn');
-    const emptyFinding = result.findings.find((f) => f.detail.includes('empty'));
-    assert.ok(emptyFinding);
-    assert.equal(emptyFinding.status, 'warn');
+    const finding = result.findings.find((f) => f.item.includes('Experience attachment'));
+    assert.ok(finding);
+    assert.equal(finding.status, 'warn');
   } finally {
     globalThis.fetch = originalFetch;
   }

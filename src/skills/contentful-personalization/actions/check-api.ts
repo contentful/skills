@@ -53,8 +53,8 @@ export const checkApiConnectivity = action({
         return {
           status: 'fail' as const,
           findings: [
-            { item: 'API Reachability', status: 'pass' as const, detail: `API reachable (${elapsed}ms)` },
-            { item: 'API Key', status: 'fail' as const, detail: `Key rejected (HTTP ${res.status})` },
+            { item: 'Ninetailed API Reachability', status: 'pass' as const, detail: `Experience API reachable (${elapsed}ms)` },
+            { item: 'Ninetailed API Key', status: 'fail' as const, detail: `Key rejected (HTTP ${res.status}) — verify the API key in Contentful under Organization settings > Optimization > SDK keys` },
           ],
           reachable: true,
           responseTimeMs: elapsed,
@@ -62,10 +62,22 @@ export const checkApiConnectivity = action({
         };
       }
 
+      if (res.status === 404) {
+        return {
+          status: 'fail' as const,
+          findings: [
+            { item: 'Ninetailed API', status: 'fail' as const, detail: `Experience API returned 404 for environment "${input.environment}" — the environment may not exist, or the API key may be incorrect. Check the key and environment in Contentful under Organization settings > Optimization > SDK keys.` },
+          ],
+          reachable: true,
+          responseTimeMs: elapsed,
+          error: `HTTP 404 — environment "${input.environment}" not found`,
+        };
+      }
+
       return {
         status: 'fail' as const,
         findings: [
-          { item: 'API Reachability', status: 'fail' as const, detail: `Unexpected response: HTTP ${res.status}` },
+          { item: 'Ninetailed API', status: 'fail' as const, detail: `Experience API (experience.ninetailed.co) returned unexpected HTTP ${res.status}` },
         ],
         reachable: false,
         responseTimeMs: elapsed,
