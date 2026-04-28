@@ -155,7 +155,7 @@ Sub-skill step names are prefixed: `<subskill>/<step>` (e.g., `doctor/diagnose`)
 ### Available sub-skills
 
 - **onboard**: Assess readiness and guide Contentful personalization setup end-to-end. Explores the codebase, checks readiness, helps choose SDK and architecture, installs packages, and guides implementation.
-- **doctor**: Diagnose and fix Contentful personalization issues. Explores the codebase, checks packages and env vars, tests API connectivity, and helps fix problems.
+- **doctor**: Diagnose and fix Contentful personalization issues. Explores the codebase, checks packages and env vars, tests API connectivity, inspects Contentful content state, and helps fix problems.
 - **develop**: Day-to-day development companion for building with Contentful personalization. Helps add personalization to components, create experiments, and wire analytics.
 
 ## Reference topics

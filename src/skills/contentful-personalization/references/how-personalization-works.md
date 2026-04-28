@@ -179,6 +179,31 @@ shows the baseline.
 **Recommendation**: `include: 3` or higher for reliable experience resolution.
 At minimum `include: 2` with `.withoutUnresolvableLinks`.
 
+## Why Publishing State Matters
+
+The Contentful Delivery API (CDA) only returns published content. The
+Preview API (CPA) returns both draft and published content.
+
+When an editor attaches an experience to a baseline entry:
+
+1. The `nt_experiences` field is updated on the entry
+2. This is a **draft change** until the entry is re-published
+3. The CDA response for this entry will NOT include the new experience
+4. The CPA response WILL include it
+
+This means personalization can appear to work in preview mode but fail
+in production. The same applies to experience entries and variant entries:
+all must be published for the CDA to resolve the complete chain.
+
+**Publishing order matters**: publish variant entries first, then
+experience entries, then the baseline entry. If you publish the baseline
+before its experiences are published, the CDA will see `nt_experiences`
+as unresolved links.
+
+**Diagnostic approach**: Compare the same entry fetched from CDA vs CPA.
+If the CPA has `nt_experiences` data that the CDA lacks, the entry needs
+to be republished. The doctor's content inspection automates this check.
+
 ## Client-Side vs Server-Side Personalization
 
 ### Client-side (default)

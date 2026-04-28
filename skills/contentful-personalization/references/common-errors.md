@@ -129,3 +129,49 @@ Symptoms:
 Fix:
 
 - Replace Node-only APIs with edge-compatible web APIs.
+
+## Entry Has Unpublished Changes (nt_experiences not in CDA)
+
+Symptoms:
+
+- Personalization is set up correctly in code.
+- Experiences are wired to an entry in Contentful.
+- Variants never show; the baseline always renders.
+- Preview mode may work correctly while production does not.
+
+Root cause:
+
+- When an experience is attached to a baseline entry via the `nt_experiences` field, the entry must be re-published for the CDA (Content Delivery API) to include the updated data.
+- If the entry is saved but not published, the CPA (Content Preview API) has the experience data but the CDA does not.
+- The CDA only returns published content. Code using `.withoutUnresolvableLinks` silently strips unpublished references.
+
+Fix:
+
+- Open the baseline entry in Contentful.
+- Check if it shows "Changed" status (indicating unpublished changes).
+- Publish the entry.
+- Also verify that the referenced experience entries and variant entries are published.
+- Publishing order: publish variants first, then experiences, then the baseline entry.
+- Use the doctor's content inspection (CDA vs CPA comparison) to verify.
+
+## Experience or Variant Entries Not Published
+
+Symptoms:
+
+- The `nt_experiences` field is set on the baseline entry and published.
+- But the CDA response shows `nt_experiences` as unresolved links.
+- Or experiences resolve but `nt_variants` within them are unresolved links.
+- `ExperienceMapper.isExperienceEntry()` filters out the unresolved entries, so personalization silently does nothing.
+
+Root cause:
+
+- The `nt_experience` entries referenced by `nt_experiences` are in draft state.
+- Or the variant entries referenced by `nt_variants` within the experience are in draft state.
+- The CDA only returns published content; unpublished references become unresolved links or are removed by `.withoutUnresolvableLinks`.
+
+Fix:
+
+- Publish all `nt_experience` entries referenced by the baseline.
+- Publish all variant entries referenced by those experiences.
+- Publishing order matters: publish variants first, then experiences, then the baseline entry.
+- After publishing, verify by fetching the entry from the CDA with `include: 3` or higher and checking that `nt_experiences` contains fully resolved entries with `fields` objects.

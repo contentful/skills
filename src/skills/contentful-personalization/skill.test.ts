@@ -34,6 +34,7 @@ test('classify routes to doctor for debugging requests', async () => {
         framework: 'nextjs-app', projectPath: '.', explorationSummary: 'Broken setup', concerns: ['No provider'],
       },
       'doctor/check-api': { shouldCheck: false, environment: 'main' },
+      'doctor/triage': { choice: 'skip', hasAutoTokens: false, problemDescription: 'Not working' },
       'doctor/review': { overallStatus: 'fail', recommendations: [], summary: 'Needs fixes' },
       'doctor/report': { choice: 'no' },
       'doctor/report-only': { message: 'Ok' },
@@ -81,6 +82,7 @@ test('low confidence routes to gather-context', async () => {
         framework: 'nextjs-app', projectPath: '.', explorationSummary: 'Broken', concerns: [],
       },
       'doctor/check-api': { shouldCheck: false, environment: 'main' },
+      'doctor/triage': { choice: 'skip', hasAutoTokens: false, problemDescription: 'Unclear issue' },
       'doctor/review': { overallStatus: 'warn', recommendations: [], summary: 'Issues found' },
       'doctor/report': { choice: 'no' },
       'doctor/report-only': { message: 'Ok' },
@@ -107,7 +109,7 @@ test('reference without topic routes to pick-topic', async () => {
 
 // --- Doctor sub-skill tests ---
 
-test('doctor explore → check-api → review → report path', async () => {
+test('doctor explore → check-api → triage (skip) → review → report path', async () => {
   const result = await runSkill(doctorSkill, {
     model: mockModel({
       explore: {
@@ -118,6 +120,7 @@ test('doctor explore → check-api → review → report path', async () => {
         concerns: ['Provider not found', 'Missing middleware'],
       },
       'check-api': { apiKey: 'nt_prod_test123', environment: 'main', shouldCheck: true },
+      triage: { choice: 'skip', hasAutoTokens: false, problemDescription: 'Variants not showing' },
       review: {
         overallStatus: 'warn',
         recommendations: [
@@ -132,8 +135,99 @@ test('doctor explore → check-api → review → report path', async () => {
 
   assert.ok(result.path.includes('explore'));
   assert.ok(result.path.includes('check-api'));
+  assert.ok(result.path.includes('triage'));
   assert.ok(result.path.includes('review'));
   assert.ok(result.path.includes('report'));
+});
+
+test('doctor triage → collect-credentials → get-entry-id → run-inspection → review (content inspection)', async () => {
+  const result = await runSkill(doctorSkill, {
+    model: mockModel({
+      explore: {
+        framework: 'nextjs-app',
+        frameworkVersion: '14.1.0',
+        projectPath: '.',
+        explorationSummary: 'Setup looks correct',
+        concerns: [],
+      },
+      'check-api': { shouldCheck: false, environment: 'main' },
+      triage: { choice: 'inspect-entry', hasAutoTokens: false, problemDescription: 'Variants not showing on production' },
+      'collect-credentials': { hasCredentials: true, spaceId: 'space1', accessToken: 'token1' },
+      'get-entry-id': { entryId: 'abc123' },
+      'run-inspection': { confirmed: true },
+      review: {
+        overallStatus: 'fail',
+        recommendations: [
+          { priority: 'critical', message: 'Entry has unpublished changes — republish the baseline entry', category: 'content' },
+        ],
+        summary: 'Unpublished changes detected.',
+      },
+      report: { choice: 'no' },
+      'report-only': { message: 'Ok' },
+    }),
+  });
+
+  assert.ok(result.path.includes('triage'));
+  assert.ok(result.path.includes('collect-credentials'));
+  assert.ok(result.path.includes('get-entry-id'));
+  assert.ok(result.path.includes('run-inspection'));
+  assert.ok(result.path.includes('review'));
+});
+
+test('doctor triage → help-find-entry → review (user skips entry search)', async () => {
+  const result = await runSkill(doctorSkill, {
+    model: mockModel({
+      explore: {
+        framework: 'nextjs-app',
+        frameworkVersion: '14.1.0',
+        projectPath: '.',
+        explorationSummary: 'Setup looks correct',
+        concerns: [],
+      },
+      'check-api': { shouldCheck: false, environment: 'main' },
+      triage: { choice: 'need-help-finding', hasAutoTokens: false, problemDescription: 'Not sure what is wrong' },
+      'help-find-entry': { skip: true, hasAutoTokens: false },
+      review: {
+        overallStatus: 'pass',
+        recommendations: [],
+        summary: 'Everything looks good from code side.',
+      },
+      report: { choice: 'no' },
+      'report-only': { message: 'All clear' },
+    }),
+  });
+
+  assert.ok(result.path.includes('triage'));
+  assert.ok(result.path.includes('help-find-entry'));
+  assert.ok(result.path.includes('review'));
+});
+
+test('doctor triage → collect-credentials → review (user cannot provide tokens)', async () => {
+  const result = await runSkill(doctorSkill, {
+    model: mockModel({
+      explore: {
+        framework: 'nextjs-app',
+        frameworkVersion: '14.1.0',
+        projectPath: '.',
+        explorationSummary: 'Setup looks correct',
+        concerns: [],
+      },
+      'check-api': { shouldCheck: false, environment: 'main' },
+      triage: { choice: 'inspect-entry', hasAutoTokens: false, problemDescription: 'Variants not showing' },
+      'collect-credentials': { hasCredentials: false },
+      review: {
+        overallStatus: 'pass',
+        recommendations: [],
+        summary: 'Code looks fine, could not inspect content.',
+      },
+      report: { choice: 'no' },
+      'report-only': { message: 'Ok' },
+    }),
+  });
+
+  assert.ok(result.path.includes('triage'));
+  assert.ok(result.path.includes('collect-credentials'));
+  assert.ok(result.path.includes('review'));
 });
 
 // --- Develop sub-skill tests ---
