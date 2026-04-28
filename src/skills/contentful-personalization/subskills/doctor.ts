@@ -117,9 +117,7 @@ export default skill({
       const explore = getStep<{
         explorationSummary: string; concerns: string[];
       }>('explore');
-
       const codeHealthy = (explore?.output?.concerns?.length ?? 0) === 0;
-      const apiHealthy = stash.apiData?.status === 'pass' || stash.apiData?.status === 'skip';
       const hasAutoTokens = !!(stash.packageData?.contentfulSpaceId && (
         stash.packageData?.contentfulAccessToken || stash.packageData?.contentfulPreviewToken
       ));

@@ -315,19 +315,19 @@ ${i.content}`).join(`
 
         ## Reference: How Personalization Works
         ${e.load("how-personalization-works.md")}
-      `,output:l.object({framework:l.enum(["nextjs-app","nextjs-pages","nextjs-hybrid","gatsby","remix","other"]),frameworkVersion:l.string().optional(),projectPath:l.string(),explorationSummary:l.string(),concerns:l.array(l.string())}),stash:({output:e})=>({framework:e.framework,projectPath:e.projectPath}),action:{input:({output:e})=>({projectPath:e.projectPath}),run:pt,stash:({result:e})=>({packageData:e})},next:"check-api"}).step("check-api",{prompt:"Confirming API connectivity check parameters.",output:l.object({apiKey:l.string().optional(),environment:l.string().default("main"),shouldCheck:l.boolean()}),action:{input:({stash:e})=>({apiKey:e.packageData?.apiKey,environment:e.packageData?.environment??"main",shouldCheck:!!e.packageData?.apiKey}),run:Hr,stash:({result:e})=>({apiData:e})},next:"triage"}).step("triage",{prompt:({stash:e,getStep:n,act:r})=>{let o=n("explore"),t=(o?.output?.concerns?.length??0)===0,i=e.apiData?.status==="pass"||e.apiData?.status==="skip",a=!!(e.packageData?.contentfulSpaceId&&(e.packageData?.contentfulAccessToken||e.packageData?.contentfulPreviewToken)),s=t?"The code-level exploration found **no concerns** \u2014 the setup looks correct.":`The code-level exploration found **${o?.output?.concerns?.length??0} concern(s)**:
-${(o?.output?.concerns??[]).map((d,m)=>`${m+1}. ${d}`).join(`
-`)}`,c=e.apiData?.status==="pass"?"Ninetailed API connectivity is **healthy**.":e.apiData?.status==="skip"?"Ninetailed API check was **skipped** (no API key found).":"Ninetailed API connectivity check **failed**.";return[P`
+      `,output:l.object({framework:l.enum(["nextjs-app","nextjs-pages","nextjs-hybrid","gatsby","remix","other"]),frameworkVersion:l.string().optional(),projectPath:l.string(),explorationSummary:l.string(),concerns:l.array(l.string())}),stash:({output:e})=>({framework:e.framework,projectPath:e.projectPath}),action:{input:({output:e})=>({projectPath:e.projectPath}),run:pt,stash:({result:e})=>({packageData:e})},next:"check-api"}).step("check-api",{prompt:"Confirming API connectivity check parameters.",output:l.object({apiKey:l.string().optional(),environment:l.string().default("main"),shouldCheck:l.boolean()}),action:{input:({stash:e})=>({apiKey:e.packageData?.apiKey,environment:e.packageData?.environment??"main",shouldCheck:!!e.packageData?.apiKey}),run:Hr,stash:({result:e})=>({apiData:e})},next:"triage"}).step("triage",{prompt:({stash:e,getStep:n,act:r})=>{let o=n("explore"),t=(o?.output?.concerns?.length??0)===0,i=!!(e.packageData?.contentfulSpaceId&&(e.packageData?.contentfulAccessToken||e.packageData?.contentfulPreviewToken)),a=t?"The code-level exploration found **no concerns** \u2014 the setup looks correct.":`The code-level exploration found **${o?.output?.concerns?.length??0} concern(s)**:
+${(o?.output?.concerns??[]).map((u,d)=>`${d+1}. ${u}`).join(`
+`)}`,s=e.apiData?.status==="pass"?"Ninetailed API connectivity is **healthy**.":e.apiData?.status==="skip"?"Ninetailed API check was **skipped** (no API key found).":"Ninetailed API connectivity check **failed**.";return[P`
           You have completed the code-level exploration and API connectivity check.
           Now you need to help the user decide what to investigate next.
 
           ## Findings So Far
 
+          ${a}
+
           ${s}
 
-          ${c}
-
-          ${a?"We found Contentful API tokens in the project environment files, so we can inspect entry content directly.":"We did not find Contentful API tokens in the project, but the user can provide them manually so we can inspect entry content."}
+          ${i?"We found Contentful API tokens in the project environment files, so we can inspect entry content directly.":"We did not find Contentful API tokens in the project, but the user can provide them manually so we can inspect entry content."}
 
           ## Your Task
 
@@ -345,7 +345,7 @@ ${(o?.output?.concerns??[]).map((d,m)=>`${m+1}. ${d}`).join(`
           - Experience or variant entries still in draft
           - Include depth too shallow in the API response
 
-          ${a?"Mention that we already have Contentful API tokens from the project. Set hasAutoTokens to true.":"Explain that we need Contentful API tokens (CDA and optionally CPA/Preview) to do this check, and the user can provide them if they have access to Contentful Settings > API keys. Set hasAutoTokens to false."}
+          ${i?"Mention that we already have Contentful API tokens from the project. Set hasAutoTokens to true.":"Explain that we need Contentful API tokens (CDA and optionally CPA/Preview) to do this check, and the user can provide them if they have access to Contentful Settings > API keys. Set hasAutoTokens to false."}
 
           Let the user choose how to proceed.
         `,r.askUser({type:"structured",question:"Would you like to inspect a specific Contentful entry?",options:[{value:"inspect-entry",label:"\u{1F50D} Yes, I have an entry ID to check"},{value:"need-help-finding",label:"\u{1F914} I'm not sure which entry \u2014 help me find it"},{value:"skip",label:"\u23ED\uFE0F Skip content inspection \u2014 focus on code issues"}]})]},output:l.object({choice:l.enum(["inspect-entry","need-help-finding","skip"]),hasAutoTokens:l.boolean(),problemDescription:l.string()}),next:({output:e})=>e.choice==="skip"?"review":e.choice==="need-help-finding"?"help-find-entry":e.hasAutoTokens?"get-entry-id":"collect-credentials"}).step("help-find-entry",{prompt:({stash:e,getStep:n,act:r})=>{let t=n("explore")?.output?.personalizableCandidates??[],i=!!(e.packageData?.contentfulSpaceId&&(e.packageData?.contentfulAccessToken||e.packageData?.contentfulPreviewToken));return[P`
