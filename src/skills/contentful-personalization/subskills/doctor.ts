@@ -1,10 +1,12 @@
 import { skill, z, prompt, render, act, view, terminal } from '@contentful/skill-kit';
 import { checkPackagesAndEnv } from '../actions/check-packages-env.js';
 import { checkApiConnectivity } from '../actions/check-api.js';
+import { inspectContent } from '../actions/inspect-content.js';
 import { validateSetup } from '../actions/validate-setup.js';
 import {
   PackagesAndEnvResult,
   ApiCheckResult,
+  ContentInspectionResult,
   Recommendation,
 } from '../schemas.js';
 import { VERSION } from '../version.js';
@@ -15,7 +17,7 @@ export default skill({
   description:
     'Diagnose and fix Contentful personalization issues. ' +
     'Explores the codebase, checks packages and env vars, tests API connectivity, ' +
-    'and helps fix problems.',
+    'inspects Contentful content state, and helps fix problems.',
   entry: 'explore',
 
   stash: z.object({
@@ -23,8 +25,14 @@ export default skill({
     projectPath: z.string(),
     packageData: PackagesAndEnvResult.optional(),
     apiData: ApiCheckResult.optional(),
+    contentInspection: ContentInspectionResult.optional(),
     recommendations: z.array(Recommendation).optional(),
     overallStatus: z.enum(['pass', 'warn', 'fail']).optional(),
+    entryId: z.string().optional(),
+    userProvidedSpaceId: z.string().optional(),
+    userProvidedAccessToken: z.string().optional(),
+    userProvidedPreviewToken: z.string().optional(),
+    userProvidedEnvironment: z.string().optional(),
   }),
 })
   .step('explore', {
@@ -95,11 +103,232 @@ export default skill({
     action: {
       input: ({ stash }) => ({
         apiKey: stash.packageData?.apiKey,
-        environment: stash.packageData?.environment ?? 'main',
-        shouldCheck: !!stash.packageData?.apiKey,
+        ninetailedEnvironment: stash.packageData?.environment ?? 'main',
+        contentfulSpaceId: stash.packageData?.contentfulSpaceId,
+        contentfulEnvironment: stash.packageData?.contentfulEnvironment ?? 'master',
       }),
       run: checkApiConnectivity,
       stash: ({ result }) => ({ apiData: result }),
+    },
+    next: 'triage',
+  })
+
+  .step('triage', {
+    prompt: ({ stash, getStep, act }) => {
+      const explore = getStep<{
+        explorationSummary: string; concerns: string[];
+      }>('explore');
+      const codeHealthy = (explore?.output?.concerns?.length ?? 0) === 0;
+      const hasAutoTokens = !!(stash.packageData?.contentfulSpaceId && (
+        stash.packageData?.contentfulAccessToken || stash.packageData?.contentfulPreviewToken
+      ));
+
+      const codeStatusNote = codeHealthy
+        ? 'The code-level exploration found **no concerns** — the setup looks correct.'
+        : `The code-level exploration found **${explore?.output?.concerns?.length ?? 0} concern(s)**:\n${(explore?.output?.concerns ?? []).map((c: string, i: number) => `${i + 1}. ${c}`).join('\n')}`;
+
+      const apiStatusNote = stash.apiData?.status === 'pass'
+        ? 'Ninetailed API connectivity is **healthy**.'
+        : stash.apiData?.status === 'skip'
+          ? 'Ninetailed API check was **skipped** (no API key found).'
+          : 'Ninetailed API connectivity check **failed**.';
+
+      const tokenNote = hasAutoTokens
+        ? 'We found Contentful API tokens in the project environment files, so we can inspect entry content directly.'
+        : 'We did not find Contentful API tokens in the project, but the user can provide them manually so we can inspect entry content.';
+
+      return [
+        prompt`
+          You have completed the code-level exploration and API connectivity check.
+          Now you need to help the user decide what to investigate next.
+
+          ## Findings So Far
+
+          ${codeStatusNote}
+
+          ${apiStatusNote}
+
+          ${tokenNote}
+
+          ## Your Task
+
+          Present a brief summary of the findings so far. Cover ALL three areas:
+          1. Code-level setup (what was found or missing)
+          2. Ninetailed API connectivity result (passed, failed, or skipped — say which)
+          3. Environment variables status
+
+          Keep it concise (3-5 sentences) but don't omit any area.
+
+          Then explain that we can also **inspect a specific Contentful entry** to check
+          whether personalization content is correctly published. This catches problems like:
+          - Content type not extended with the nt_experiences field
+          - Experiences attached but the entry not re-published
+          - Experience or variant entries still in draft
+          - Include depth too shallow in the API response
+
+          ${hasAutoTokens
+            ? 'Mention that we already have Contentful API tokens from the project. Set hasAutoTokens to true.'
+            : 'Explain that we need Contentful API tokens (CDA and optionally CPA/Preview) to do this check, and the user can provide them if they have access to Contentful Settings > API keys. Set hasAutoTokens to false.'}
+
+          Let the user choose how to proceed.
+        `,
+        act.askUser({
+          type: 'structured',
+          question: 'Would you like to inspect a specific Contentful entry?',
+          options: [
+            { value: 'inspect-entry', label: '🔍 Yes, I have an entry ID to check' },
+            { value: 'need-help-finding', label: '🤔 I\'m not sure which entry — help me find it' },
+            { value: 'skip', label: '⏭️ Skip content inspection — focus on code issues' },
+          ],
+        }),
+      ];
+    },
+    output: z.object({
+      choice: z.enum(['inspect-entry', 'need-help-finding', 'skip']),
+      hasAutoTokens: z.boolean(),
+      problemDescription: z.string(),
+    }),
+    next: ({ output }) => {
+      if (output.choice === 'skip') return 'review';
+      if (output.choice === 'need-help-finding') return 'help-find-entry';
+      return output.hasAutoTokens ? 'get-entry-id' : 'collect-credentials';
+    },
+  })
+
+  .step('help-find-entry', {
+    prompt: ({ stash, getStep, act }) => {
+      const explore = getStep<{ explorationSummary: string; personalizableCandidates?: string[] }>('explore');
+      const candidates = (explore?.output as { personalizableCandidates?: string[] })?.personalizableCandidates ?? [];
+      const hasAutoTokens = !!(stash.packageData?.contentfulSpaceId && (
+        stash.packageData?.contentfulAccessToken || stash.packageData?.contentfulPreviewToken
+      ));
+
+      return [
+        prompt`
+          Help the user identify which Contentful entry to inspect.
+
+          ${candidates.length > 0
+            ? `During exploration, we found these components that appear to be personalization candidates:\n${candidates.map((c: string) => `- ${c}`).join('\n')}\n\nThe user should look for the Contentful entry that provides data to one of these components.`
+            : 'We did not identify specific personalization candidates during exploration.'}
+
+          Guide the user with these tips:
+          - In Contentful, look for entries of content types that have the \`nt_experiences\` field
+          - The entry ID (sys.id) is shown in the entry sidebar or in the URL when editing an entry
+          - If they're debugging a specific page, look at the page entry or the section entries within it
+          - They can also check the Contentful Personalization app to see which entries have experiences attached
+
+          Ask them to provide an entry ID once they find one, or let them skip.
+
+          Set hasAutoTokens to ${hasAutoTokens}.
+        `,
+        act.askUser({
+          type: 'open',
+          question: 'Paste the Contentful entry ID here (sys.id from the URL or sidebar), or type "skip" to continue without content inspection:',
+        }),
+      ];
+    },
+    output: z.object({
+      entryId: z.string().optional(),
+      skip: z.boolean(),
+      hasAutoTokens: z.boolean(),
+    }),
+    stash: ({ output }) => output.entryId ? { entryId: output.entryId } : {},
+    next: ({ output }) => {
+      if (output.skip || !output.entryId) return 'review';
+      return output.hasAutoTokens ? 'get-entry-id' : 'collect-credentials';
+    },
+  })
+
+  .step('collect-credentials', {
+    prompt: ({ stash, act }) => {
+      const hasAutoTokens = !!(stash.packageData?.contentfulSpaceId && (
+        stash.packageData?.contentfulAccessToken || stash.packageData?.contentfulPreviewToken
+      ));
+
+      if (hasAutoTokens) {
+        return prompt`
+          We already have Contentful API tokens from the project's environment files.
+          Confirm that we should use these to inspect the entry.
+          Set hasCredentials to true and leave the credential fields empty — we'll use the auto-detected ones.
+        `;
+      }
+
+      return prompt`
+        We need Contentful API credentials to inspect the entry but they were not
+        auto-detected from the project's .env files.
+
+        Before asking the user, quickly check if there are .env, .env.local, or similar
+        files in the project that might contain Contentful tokens under non-standard names
+        (e.g., GATSBY_CONTENTFUL_SPACE_ID, REACT_APP_CONTENTFUL_TOKEN, VITE_CONTENTFUL_*,
+        or custom names). If you find credentials there, extract them and set hasCredentials
+        to true without bothering the user.
+
+        If you cannot find credentials in the project files, explain to the user what we need:
+        - **Space ID** — Found in Contentful under Settings > General settings
+        - **CDA Token** (Content Delivery API) — Found under Settings > API keys. This accesses published content.
+        - **CPA Token** (Content Preview API) — Same location. This accesses draft + published content.
+          The CPA token is optional but highly recommended — comparing CDA vs CPA is how we detect unpublished changes.
+        - **Environment** — Usually "master" (the default). Only needed if they use a non-default environment.
+
+        Ask them to paste their credentials, or let them skip if they don't have access.
+        If they skip or can't provide credentials, set hasCredentials to false.
+      `;
+    },
+    output: z.object({
+      spaceId: z.string().optional(),
+      accessToken: z.string().optional(),
+      previewToken: z.string().optional(),
+      environment: z.string().optional(),
+      hasCredentials: z.boolean(),
+    }),
+    stash: ({ output }) => ({
+      userProvidedSpaceId: output.spaceId,
+      userProvidedAccessToken: output.accessToken,
+      userProvidedPreviewToken: output.previewToken,
+      userProvidedEnvironment: output.environment,
+    }),
+    next: ({ output }) => output.hasCredentials ? 'get-entry-id' : 'review',
+  })
+
+  .step('get-entry-id', {
+    prompt: ({ stash }) => {
+      if (stash.entryId) {
+        return prompt`
+          We already have the entry ID: ${stash.entryId}
+          Confirm this entry ID to proceed with the content inspection.
+        `;
+      }
+      return prompt`
+        Ask the user for the Contentful entry ID (sys.id) they want to inspect.
+        They can find it in the entry URL (the last segment after /entries/) or
+        in the sidebar when editing an entry in Contentful.
+
+        If the user provides a URL like https://app.contentful.com/spaces/.../entries/ENTRY_ID,
+        extract the entry ID from it.
+      `;
+    },
+    output: z.object({ entryId: z.string() }),
+    stash: ({ output }) => ({ entryId: output.entryId }),
+    next: 'run-inspection',
+  })
+
+  .step('run-inspection', {
+    prompt: ({ stash }) => prompt`
+      Running content inspection for entry ${stash.entryId ?? 'unknown'}.
+      Confirm the inspection parameters.
+    `,
+    output: z.object({ confirmed: z.boolean().default(true) }),
+    action: {
+      input: ({ stash }) => ({
+        spaceId: stash.userProvidedSpaceId ?? stash.packageData?.contentfulSpaceId ?? '',
+        environment: stash.userProvidedEnvironment ?? stash.packageData?.contentfulEnvironment ?? 'master',
+        accessToken: stash.userProvidedAccessToken ?? stash.packageData?.contentfulAccessToken,
+        previewToken: stash.userProvidedPreviewToken ?? stash.packageData?.contentfulPreviewToken,
+        entryId: stash.entryId ?? '',
+        includeDepth: 3,
+      }),
+      run: inspectContent,
+      stash: ({ result }) => ({ contentInspection: result }),
     },
     next: 'review',
   })
@@ -152,13 +381,29 @@ export default skill({
           )
         : 'No API data available';
 
+      const content = stash.contentInspection;
+      const contentView = content
+        ? [
+            render.table(
+              (content.findings ?? []).map((f: { status: string; item: string; detail: string }) => ({
+                Check: f.item, Status: f.status, Detail: f.detail,
+              })),
+              { columns: ['Check', 'Status', 'Detail'] }
+            ),
+            '',
+            content.entry?.comparison?.hasUnpublishedChanges
+              ? '🔴 **UNPUBLISHED CHANGES DETECTED** — The entry has changes in preview (CPA) that are not in the published (CDA) content. This is a common cause of personalization appearing broken.'
+              : '',
+          ].join('\n')
+        : 'No content inspection performed';
+
       return prompt`
           Synthesize ALL diagnostic findings below into prioritized recommendations.
 
           For each issue found, create a recommendation:
           - **priority**: "critical" (core functionality broken), "warning" (suboptimal), "info" (suggestion)
           - **message**: specific, actionable advice
-          - **category**: packages, env, provider, middleware, components, analytics, or api
+          - **category**: packages, env, provider, middleware, components, analytics, api, or content
 
           Overall status:
           - "pass" — everything looks good
@@ -168,6 +413,10 @@ export default skill({
           Be conversational — explain WHY things are wrong, not just WHAT is wrong.
           Do NOT attempt fixes or modify any files. Diagnosis only.
 
+          When content inspection reveals unpublished changes, make that a critical recommendation
+          with specific guidance: which entry to republish, and the correct publishing order
+          (variants first, then experiences, then the baseline entry).
+
           ## Exploration Findings
           ${explorationView}
 
@@ -176,6 +425,9 @@ export default skill({
 
           ## API Connectivity Results
           ${apiView}
+
+          ## Content Inspection Results
+          ${contentView}
 
           ## Reference: Environment Variables
           ${refs.load('env-var-spec.md')}
@@ -269,6 +521,20 @@ export default skill({
         sections.push(render.section('🌐 API Connectivity', apiTable));
       }
 
+      const content = stash.contentInspection;
+      if (content) {
+        const contentTable = render.table(
+          (content.findings ?? []).map((f: { status: string; item: string; detail: string }) => ({
+            Check: f.item, Status: f.status, Detail: f.detail,
+          })),
+          { columns: ['Check', 'Status', 'Detail'] }
+        );
+        const comparisonNote = content.entry?.comparison?.hasUnpublishedChanges
+          ? '\n\n🔴 **Unpublished changes detected** — see recommendations below.'
+          : '';
+        sections.push(render.section('📄 Content Inspection', `${contentTable}${comparisonNote}`));
+      }
+
       if (review?.output?.recommendations?.length) {
         const priorityIcon: Record<string, string> = { critical: '🔴', warning: '🟡', info: '💡' };
         const recs = review.output.recommendations
@@ -329,6 +595,10 @@ export default skill({
           For each fix, explain what file(s) you'll change and why.
           Be specific about your approach.
 
+          For **content** category issues (unpublished entries, missing nt_experiences field, etc.),
+          these cannot be fixed in code — provide step-by-step instructions for what the user
+          needs to do in the Contentful web UI, including publishing order.
+
           Do NOT start implementing — this is the planning step only.
 
           ${render.kv({
@@ -371,13 +641,14 @@ export default skill({
         refSections.push({ label: 'Component Patterns', content: refs.load('component-patterns.md') });
 
       return [
-        system`Apply each fix methodically. Update the checklist status as you complete each one. Match the project's existing code style.`,
+        system`Apply each fix methodically. Update the checklist status as you complete each one. Match the project's existing code style. For content-category issues, provide clear step-by-step instructions for the user to follow in the Contentful UI rather than attempting code changes.`,
         prompt`
           Implement the fixes from the approved plan. For each fix:
 
           - **Package issues** → use the installPackages action
           - **Env var issues** → use the writeEnvFile action
           - **Code issues** → edit files directly
+          - **Content issues** (unpublished entries, missing fields) → provide Contentful UI instructions
 
           After all fixes, the setup will be re-verified automatically.
 

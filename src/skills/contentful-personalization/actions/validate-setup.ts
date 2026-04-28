@@ -13,12 +13,12 @@ export const validateSetup = action({
       signal,
     });
 
-    const hasApiKey = !!packages.apiKey;
     const api = await checkApiConnectivity.run({
       input: {
         apiKey: packages.apiKey,
-        environment: packages.environment ?? 'main',
-        shouldCheck: hasApiKey,
+        ninetailedEnvironment: packages.environment ?? 'main',
+        contentfulSpaceId: packages.contentfulSpaceId,
+        contentfulEnvironment: packages.contentfulEnvironment ?? 'master',
       },
       signal,
     });

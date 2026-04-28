@@ -41,6 +41,10 @@ export const PackagesAndEnvResult = z.object({
   packageManager: z.enum(['npm', 'yarn', 'pnpm', 'bun', 'unknown']),
   apiKey: z.string().optional(),
   environment: z.string().optional(),
+  contentfulSpaceId: z.string().optional(),
+  contentfulAccessToken: z.string().optional(),
+  contentfulPreviewToken: z.string().optional(),
+  contentfulEnvironment: z.string().optional(),
 });
 export type PackagesAndEnvResult = z.infer<typeof PackagesAndEnvResult>;
 
@@ -91,3 +95,30 @@ export const Recommendation = z.object({
   category: z.string(),
 });
 export type Recommendation = z.infer<typeof Recommendation>;
+
+// --- inspectContent action ---
+
+const EntryApiState = z.object({
+  found: z.boolean(),
+  hasNtExperiences: z.boolean(),
+  ntExperiencesCount: z.number(),
+  experiencesResolved: z.boolean(),
+  variantsResolved: z.boolean(),
+});
+
+export const ContentInspectionResult = z.object({
+  status: CheckStatus,
+  findings: z.array(Finding),
+  entry: z.object({
+    id: z.string(),
+    contentTypeId: z.string().optional(),
+    cda: EntryApiState.optional(),
+    cpa: EntryApiState.optional(),
+    comparison: z.object({
+      hasUnpublishedChanges: z.boolean(),
+      detail: z.string(),
+    }).optional(),
+  }),
+  error: z.string().optional(),
+});
+export type ContentInspectionResult = z.infer<typeof ContentInspectionResult>;

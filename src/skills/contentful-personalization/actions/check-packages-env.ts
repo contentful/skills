@@ -39,33 +39,42 @@ const CONTENTFUL_PACKAGES = [
 
 const FRAMEWORK_PACKAGES = ['next', 'gatsby', 'remix', '@remix-run/react', 'react', 'react-dom'];
 
+const FW_PREFIX = '(?:NEXT_PUBLIC_|GATSBY_|REACT_APP_|VITE_)?';
+
 const KNOWN_ENV_VARS: Array<{ name: string; patterns: RegExp[]; }> = [
   {
     name: 'NINETAILED_API_KEY',
-    patterns: [/^(NEXT_PUBLIC_)?NINETAILED_API_KEY\s*=\s*(.+)/m, /^(NEXT_PUBLIC_)?NINETAILED_CLIENT_ID\s*=\s*(.+)/m],
+    patterns: [
+      new RegExp(`^${FW_PREFIX}NINETAILED_API_KEY\\s*=[^\\S\\n]*(.+)`, 'm'),
+      new RegExp(`^${FW_PREFIX}NINETAILED_CLIENT_ID\\s*=[^\\S\\n]*(.+)`, 'm'),
+    ],
   },
   {
     name: 'NINETAILED_ENVIRONMENT',
-    patterns: [/^(NEXT_PUBLIC_)?NINETAILED_ENVIRONMENT\s*=\s*(.+)/m],
+    patterns: [new RegExp(`^${FW_PREFIX}NINETAILED_ENVIRONMENT\\s*=[^\\S\\n]*(.+)`, 'm')],
   },
   {
     name: 'CONTENTFUL_SPACE_ID',
-    patterns: [/^(NEXT_PUBLIC_)?CONTENTFUL_SPACE_ID\s*=\s*(.+)/m],
+    patterns: [new RegExp(`^${FW_PREFIX}CONTENTFUL_SPACE_ID\\s*=[^\\S\\n]*(.+)`, 'm')],
   },
   {
     name: 'CONTENTFUL_ACCESS_TOKEN',
     patterns: [
-      /^(NEXT_PUBLIC_)?CONTENTFUL_ACCESS_TOKEN\s*=\s*(.+)/m,
-      /^(NEXT_PUBLIC_)?CONTENTFUL_TOKEN\s*=\s*(.+)/m,
-      /^(NEXT_PUBLIC_)?CONTENTFUL_DELIVERY_TOKEN\s*=\s*(.+)/m,
+      new RegExp(`^${FW_PREFIX}CONTENTFUL_ACCESS_TOKEN\\s*=[^\\S\\n]*(.+)`, 'm'),
+      new RegExp(`^${FW_PREFIX}CONTENTFUL_TOKEN\\s*=[^\\S\\n]*(.+)`, 'm'),
+      new RegExp(`^${FW_PREFIX}CONTENTFUL_DELIVERY_TOKEN\\s*=[^\\S\\n]*(.+)`, 'm'),
     ],
   },
   {
     name: 'CONTENTFUL_PREVIEW_TOKEN',
     patterns: [
-      /^(NEXT_PUBLIC_)?CONTENTFUL_PREVIEW_TOKEN\s*=\s*(.+)/m,
-      /^(NEXT_PUBLIC_)?CONTENTFUL_PREVIEW_ACCESS_TOKEN\s*=\s*(.+)/m,
+      new RegExp(`^${FW_PREFIX}CONTENTFUL_PREVIEW_TOKEN\\s*=[^\\S\\n]*(.+)`, 'm'),
+      new RegExp(`^${FW_PREFIX}CONTENTFUL_PREVIEW_ACCESS_TOKEN\\s*=[^\\S\\n]*(.+)`, 'm'),
     ],
+  },
+  {
+    name: 'CONTENTFUL_ENVIRONMENT',
+    patterns: [new RegExp(`^${FW_PREFIX}CONTENTFUL_ENVIRONMENT\\s*=[^\\S\\n]*(.+)`, 'm')],
   },
 ];
 
@@ -136,19 +145,27 @@ export const checkPackagesAndEnv = action({
     const envVars: EnvVarInfo[] = [];
     let apiKey: string | undefined;
     let environment: string | undefined;
+    let contentfulSpaceId: string | undefined;
+    let contentfulAccessToken: string | undefined;
+    let contentfulPreviewToken: string | undefined;
+    let contentfulEnvironment: string | undefined;
 
     for (const { name, patterns } of KNOWN_ENV_VARS) {
       let found = false;
       for (const pattern of patterns) {
         const match = combinedEnv.match(pattern);
         if (match) {
-          const value = match[2].trim().replace(/^["']|["']$/g, '');
+          const value = match[1].trim().replace(/^["']|["']$/g, '');
           if (!value) {
             envVars.push({ name, status: 'empty' });
           } else {
             envVars.push({ name, status: 'set', maskedValue: maskValue(value) });
             if (name === 'NINETAILED_API_KEY') apiKey = value;
             if (name === 'NINETAILED_ENVIRONMENT') environment = value;
+            if (name === 'CONTENTFUL_SPACE_ID') contentfulSpaceId = value;
+            if (name === 'CONTENTFUL_ACCESS_TOKEN') contentfulAccessToken = value;
+            if (name === 'CONTENTFUL_PREVIEW_TOKEN') contentfulPreviewToken = value;
+            if (name === 'CONTENTFUL_ENVIRONMENT') contentfulEnvironment = value;
           }
           found = true;
           break;
@@ -172,6 +189,10 @@ export const checkPackagesAndEnv = action({
       packageManager,
       apiKey,
       environment,
+      contentfulSpaceId,
+      contentfulAccessToken,
+      contentfulPreviewToken,
+      contentfulEnvironment,
     };
   },
 });
