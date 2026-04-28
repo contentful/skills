@@ -6,30 +6,21 @@ const API_TIMEOUT_MS = 10_000;
 export const checkApiConnectivity = action({
   name: 'check-api',
   input: z.object({
-    apiKey: z.string().optional(),
-    environment: z.string().default('main'),
     contentfulSpaceId: z.string().optional(),
+    contentfulEnvironment: z.string().default('master'),
     shouldCheck: z.boolean(),
   }),
   output: ApiCheckResult,
   run: async ({ input, signal }) => {
-    if (!input.shouldCheck || !input.apiKey) {
+    if (!input.shouldCheck || !input.contentfulSpaceId) {
       return {
         status: 'skip' as const,
-        findings: [{ item: 'Ninetailed API', status: 'skip' as const, detail: 'No API key available — skipped connectivity check' }],
+        findings: [{ item: 'Ninetailed API', status: 'skip' as const, detail: 'No Contentful Space ID available — skipped Experience API connectivity check' }],
         reachable: false,
       };
     }
 
-    if (!input.contentfulSpaceId) {
-      return {
-        status: 'skip' as const,
-        findings: [{ item: 'Ninetailed API', status: 'skip' as const, detail: 'No Contentful Space ID available — skipped connectivity check' }],
-        reachable: false,
-      };
-    }
-
-    const url = `https://experience.ninetailed.co/v3/spaces/${input.contentfulSpaceId}/environments/${input.environment}/profiles`;
+    const url = `https://experience.ninetailed.co/v3/spaces/${input.contentfulSpaceId}/environments/${input.contentfulEnvironment}/profiles`;
     const start = Date.now();
 
     try {
@@ -40,9 +31,7 @@ export const checkApiConnectivity = action({
       const res = await fetch(url, {
         method: 'POST',
         signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           events: [{
             type: 'track',
@@ -64,22 +53,10 @@ export const checkApiConnectivity = action({
         return {
           status: 'pass' as const,
           findings: [
-            { item: 'Ninetailed Experience API', status: 'pass' as const, detail: `Reachable, key accepted (${elapsed}ms)` },
+            { item: 'Ninetailed Experience API', status: 'pass' as const, detail: `Reachable, space and environment accepted (${elapsed}ms)` },
           ],
           reachable: true,
           responseTimeMs: elapsed,
-        };
-      }
-
-      if (res.status === 401 || res.status === 403) {
-        return {
-          status: 'fail' as const,
-          findings: [
-            { item: 'Ninetailed Experience API', status: 'fail' as const, detail: `API key rejected (HTTP ${res.status}) — verify the key in Contentful under Organization settings > Optimization > SDK keys` },
-          ],
-          reachable: true,
-          responseTimeMs: elapsed,
-          error: `API key rejected (HTTP ${res.status})`,
         };
       }
 
@@ -87,7 +64,7 @@ export const checkApiConnectivity = action({
         return {
           status: 'fail' as const,
           findings: [
-            { item: 'Ninetailed Experience API', status: 'fail' as const, detail: `Space or environment not found (HTTP 404) — check the Contentful Space ID and environment slug` },
+            { item: 'Ninetailed Experience API', status: 'fail' as const, detail: `Space "${input.contentfulSpaceId}" or environment "${input.contentfulEnvironment}" not found (HTTP 404) — verify the Contentful Space ID and environment are correct, and that the Personalization app is installed in the space` },
           ],
           reachable: true,
           responseTimeMs: elapsed,
