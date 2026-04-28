@@ -15,12 +15,12 @@ export const checkApiConnectivity = action({
     if (!input.shouldCheck || !input.apiKey) {
       return {
         status: 'skip' as const,
-        findings: [{ item: 'API Connectivity', status: 'skip' as const, detail: 'No API key available for testing' }],
+        findings: [{ item: 'Ninetailed API', status: 'skip' as const, detail: 'No API key available — skipped connectivity check' }],
         reachable: false,
       };
     }
 
-    const url = `https://experience.ninetailed.co/v2/organizations/${input.apiKey}/environments/${input.environment}`;
+    const url = `https://experience.ninetailed.co/v2/organizations/${input.apiKey}/environments/${input.environment}/profiles`;
     const start = Date.now();
 
     try {
@@ -29,9 +29,15 @@ export const checkApiConnectivity = action({
       signal.addEventListener('abort', () => controller.abort());
 
       const res = await fetch(url, {
-        method: 'GET',
+        method: 'POST',
         signal: controller.signal,
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          events: [{
+            type: 'page',
+            ctx: { url: 'https://doctor-check.local', referrer: '', locale: 'en-US', userAgent: 'skill-kit-doctor' },
+          }],
+        }),
       });
       clearTimeout(timeout);
 
@@ -41,8 +47,7 @@ export const checkApiConnectivity = action({
         return {
           status: 'pass' as const,
           findings: [
-            { item: 'API Reachability', status: 'pass' as const, detail: `API reachable (${elapsed}ms)` },
-            { item: 'API Key', status: 'pass' as const, detail: 'Key accepted' },
+            { item: 'Ninetailed Experience API', status: 'pass' as const, detail: `Reachable, key accepted (${elapsed}ms)` },
           ],
           reachable: true,
           responseTimeMs: elapsed,
@@ -53,12 +58,11 @@ export const checkApiConnectivity = action({
         return {
           status: 'fail' as const,
           findings: [
-            { item: 'Ninetailed API Reachability', status: 'pass' as const, detail: `Experience API reachable (${elapsed}ms)` },
-            { item: 'Ninetailed API Key', status: 'fail' as const, detail: `Key rejected (HTTP ${res.status}) — verify the API key in Contentful under Organization settings > Optimization > SDK keys` },
+            { item: 'Ninetailed Experience API', status: 'fail' as const, detail: `API key rejected (HTTP ${res.status}) — verify the key in Contentful under Organization settings > Optimization > SDK keys` },
           ],
           reachable: true,
           responseTimeMs: elapsed,
-          error: `API key invalid (HTTP ${res.status})`,
+          error: `API key rejected (HTTP ${res.status})`,
         };
       }
 
@@ -66,18 +70,18 @@ export const checkApiConnectivity = action({
         return {
           status: 'fail' as const,
           findings: [
-            { item: 'Ninetailed API', status: 'fail' as const, detail: `Experience API returned 404 for environment "${input.environment}" — the environment may not exist, or the API key may be incorrect. Check the key and environment in Contentful under Organization settings > Optimization > SDK keys.` },
+            { item: 'Ninetailed Experience API', status: 'fail' as const, detail: `Environment "${input.environment}" not found (HTTP 404) — check the environment slug in Contentful under Organization settings > Optimization > SDK keys` },
           ],
           reachable: true,
           responseTimeMs: elapsed,
-          error: `HTTP 404 — environment "${input.environment}" not found`,
+          error: `Environment "${input.environment}" not found`,
         };
       }
 
       return {
         status: 'fail' as const,
         findings: [
-          { item: 'Ninetailed API', status: 'fail' as const, detail: `Experience API (experience.ninetailed.co) returned unexpected HTTP ${res.status}` },
+          { item: 'Ninetailed Experience API', status: 'fail' as const, detail: `Unexpected HTTP ${res.status} from experience.ninetailed.co` },
         ],
         reachable: false,
         responseTimeMs: elapsed,
@@ -89,7 +93,7 @@ export const checkApiConnectivity = action({
       return {
         status: 'fail' as const,
         findings: [
-          { item: 'API Reachability', status: 'fail' as const, detail: `Network error: ${message}` },
+          { item: 'Ninetailed Experience API', status: 'fail' as const, detail: `Network error: ${message}` },
         ],
         reachable: false,
         responseTimeMs: elapsed,
