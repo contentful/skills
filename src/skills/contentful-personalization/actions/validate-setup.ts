@@ -18,6 +18,7 @@ export const validateSetup = action({
       input: {
         apiKey: packages.apiKey,
         environment: packages.environment ?? 'main',
+        contentfulSpaceId: packages.contentfulSpaceId,
         shouldCheck: hasApiKey,
       },
       signal,

@@ -8,6 +8,7 @@ export const checkApiConnectivity = action({
   input: z.object({
     apiKey: z.string().optional(),
     environment: z.string().default('main'),
+    contentfulSpaceId: z.string().optional(),
     shouldCheck: z.boolean(),
   }),
   output: ApiCheckResult,
@@ -20,7 +21,15 @@ export const checkApiConnectivity = action({
       };
     }
 
-    const url = `https://experience.ninetailed.co/v2/organizations/${input.apiKey}/environments/${input.environment}/profiles`;
+    if (!input.contentfulSpaceId) {
+      return {
+        status: 'skip' as const,
+        findings: [{ item: 'Ninetailed API', status: 'skip' as const, detail: 'No Contentful Space ID available — skipped connectivity check' }],
+        reachable: false,
+      };
+    }
+
+    const url = `https://experience.ninetailed.co/v3/spaces/${input.contentfulSpaceId}/environments/${input.environment}/profiles`;
     const start = Date.now();
 
     try {
@@ -31,11 +40,19 @@ export const checkApiConnectivity = action({
       const res = await fetch(url, {
         method: 'POST',
         signal: controller.signal,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           events: [{
-            type: 'page',
-            ctx: { url: 'https://doctor-check.local', referrer: '', locale: 'en-US', userAgent: 'skill-kit-doctor' },
+            type: 'track',
+            channel: 'web',
+            messageId: 'doctor-connectivity-check',
+            event: 'doctor-check',
+            properties: {},
+            context: {
+              library: { name: 'skill-kit-doctor', version: '1.0.0' },
+            },
           }],
         }),
       });
@@ -70,11 +87,11 @@ export const checkApiConnectivity = action({
         return {
           status: 'fail' as const,
           findings: [
-            { item: 'Ninetailed Experience API', status: 'fail' as const, detail: `Environment "${input.environment}" not found (HTTP 404) — check the environment slug in Contentful under Organization settings > Optimization > SDK keys` },
+            { item: 'Ninetailed Experience API', status: 'fail' as const, detail: `Space or environment not found (HTTP 404) — check the Contentful Space ID and environment slug` },
           ],
           reachable: true,
           responseTimeMs: elapsed,
-          error: `Environment "${input.environment}" not found`,
+          error: `Space or environment not found`,
         };
       }
 

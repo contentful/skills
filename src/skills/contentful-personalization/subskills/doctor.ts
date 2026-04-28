@@ -104,6 +104,7 @@ export default skill({
       input: ({ stash }) => ({
         apiKey: stash.packageData?.apiKey,
         environment: stash.packageData?.environment ?? 'main',
+        contentfulSpaceId: stash.packageData?.contentfulSpaceId,
         shouldCheck: !!stash.packageData?.apiKey,
       }),
       run: checkApiConnectivity,
