@@ -27,9 +27,6 @@ npx skills add contentful/skills
 # All platforms (auto-detects)
 npx skills add contentful/skills
 
-# Claude Code
-claude /install-skill contentful/skills
-
 # Cursor (Plugin Marketplace)
 /plugin marketplace add contentful/skills
 
