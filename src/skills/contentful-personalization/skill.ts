@@ -65,15 +65,15 @@ export default skill({
       topic: z.string().optional(),
       reasoning: z.string(),
     }),
-    stash: ({ output }) => ({
+    updateStash: ({ stepOutput }) => ({
       userQuery: '',
-      intent: output.intent,
+      intent: stepOutput.intent,
     }),
-    next: ({ output }) => {
-      if (output.confidence < 0.6 || output.intent === 'unclear') return 'gather-context';
-      if (output.intent === 'reference' && output.topic) return `topic:${output.topic}`;
-      if (output.intent === 'reference') return 'pick-topic';
-      return `subskill:${output.intent}`;
+    next: ({ stepOutput }) => {
+      if (stepOutput.confidence < 0.6 || stepOutput.intent === 'unclear') return 'gather-context';
+      if (stepOutput.intent === 'reference' && stepOutput.topic) return `topic:${stepOutput.topic}`;
+      if (stepOutput.intent === 'reference') return 'pick-topic';
+      return `subskill:${stepOutput.intent}`;
     },
   })
 
@@ -104,10 +104,10 @@ export default skill({
       topic: z.string().optional(),
       reasoning: z.string(),
     }),
-    next: ({ output }) => {
-      if (output.intent === 'reference' && output.topic) return `topic:${output.topic}`;
-      if (output.intent === 'reference') return 'pick-topic';
-      return `subskill:${output.intent}`;
+    next: ({ stepOutput }) => {
+      if (stepOutput.intent === 'reference' && stepOutput.topic) return `topic:${stepOutput.topic}`;
+      if (stepOutput.intent === 'reference') return 'pick-topic';
+      return `subskill:${stepOutput.intent}`;
     },
   })
 
@@ -142,7 +142,7 @@ export default skill({
       act.askUser({ type: 'open', question: 'What would you like to know about Contentful personalization?' }),
     ],
     output: z.object({ choice: z.string() }),
-    next: ({ output }) => `topic:${output.choice}`,
+    next: ({ stepOutput }) => `topic:${stepOutput.choice}`,
   })
 
   // --- Topics ---
@@ -207,7 +207,7 @@ export default skill({
   // --- Sub-skills ---
 
   .subskill('onboard', onboardSkill, {
-    context: (output, stash) => ({
+    params: (output, stash) => ({
       userQuery: (stash as { userQuery: string }).userQuery,
       readinessOnly: (output as { intent?: string })?.intent === 'onboard' &&
         /ready|readiness|can.*support|prerequisite|pre-check/i.test(
@@ -216,12 +216,12 @@ export default skill({
     }),
   })
   .subskill('doctor', doctorSkill, {
-    context: (_output, stash) => ({
+    params: (_output, stash) => ({
       userQuery: (stash as { userQuery: string }).userQuery,
     }),
   })
   .subskill('develop', developSkill, {
-    context: (_output, stash) => ({
+    params: (_output, stash) => ({
       userQuery: (stash as { userQuery: string }).userQuery,
     }),
   })

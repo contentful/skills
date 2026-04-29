@@ -234,7 +234,7 @@ test('doctor triage → collect-credentials → review (user cannot provide toke
 
 test('develop analyze → plan → implement path', async () => {
   const result = await runSkill(developSkill, {
-    context: { userQuery: 'Personalize the Hero component' },
+    params: { userQuery: 'Personalize the Hero component' },
     model: mockModel({
       analyze: {
         taskType: 'personalize-component',

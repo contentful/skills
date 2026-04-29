@@ -82,10 +82,14 @@ reported tools are a genuine subset — the skill will not merge them with the h
 Without `--subagent`, the skill assumes you are a top-level agent and merges your tools
 with the registry (since top-level agents often under-report their tools).
 
+## Parameters
+
+This skill takes no parameters. Pass `--params '{}'`.
+
 ### Step 1: Start with a session
 
 ```bash
-<skill>/scripts/run --context '{}' --host claude-code --tools <your-tools> --session new 2>/dev/null
+<skill>/scripts/run --params '{}' --host claude-code --tools <your-tools> --session new 2>/dev/null
 ```
 
 This returns a JSON pointer with `sessionId`, `file`, and `line`. The `line` field tells you
@@ -148,15 +152,15 @@ Sub-skill step names are prefixed: `<subskill>/<step>` (e.g., `doctor/diagnose`)
 ### Direct sub-skill access
 
 ```bash
-<skill>/scripts/run <subskill> --context '{}' --session new
+<skill>/scripts/run <subskill> --params '<json>' --session new
 <skill>/scripts/run <subskill> advance --session <id>
 ```
 
 ### Available sub-skills
 
-- **onboard**: Assess readiness and guide Contentful personalization setup end-to-end. Explores the codebase, checks readiness, helps choose SDK and architecture, installs packages, and guides implementation.
+- **onboard**: Assess readiness and guide Contentful personalization setup end-to-end. Explores the codebase, checks readiness, helps choose SDK and architecture, installs packages, and guides implementation. — params: `userQuery` (string), `readinessOnly` (boolean)
 - **doctor**: Diagnose and fix Contentful personalization issues. Explores the codebase, checks packages and env vars, tests API connectivity, inspects Contentful content state, and helps fix problems.
-- **develop**: Day-to-day development companion for building with Contentful personalization. Helps add personalization to components, create experiments, and wire analytics.
+- **develop**: Day-to-day development companion for building with Contentful personalization. Helps add personalization to components, create experiments, and wire analytics. — params: `userQuery` (string)
 
 ## Reference topics
 

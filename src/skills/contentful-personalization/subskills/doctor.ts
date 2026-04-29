@@ -33,6 +33,14 @@ export default skill({
     userProvidedAccessToken: z.string().optional(),
     userProvidedPreviewToken: z.string().optional(),
     userProvidedEnvironment: z.string().optional(),
+    explorationSummary: z.string().optional(),
+    concerns: z.array(z.string()).optional(),
+    personalizableCandidates: z.array(z.string()).optional(),
+    reviewSummary: z.string().optional(),
+    fixPlan: z.string().optional(),
+    fixFilesToModify: z.array(z.string()).optional(),
+    reVerifyOverallStatus: z.string().optional(),
+    reVerifySummary: z.string().optional(),
   }),
 })
   .step('explore', {
@@ -80,26 +88,24 @@ export default skill({
       projectPath: z.string(),
       explorationSummary: z.string(),
       concerns: z.array(z.string()),
+      personalizableCandidates: z.array(z.string()).optional(),
     }),
-    stash: ({ output }) => ({
-      framework: output.framework,
-      projectPath: output.projectPath,
+    updateStash: ({ stepOutput }) => ({
+      framework: stepOutput.framework,
+      projectPath: stepOutput.projectPath,
+      explorationSummary: stepOutput.explorationSummary,
+      concerns: stepOutput.concerns,
+      personalizableCandidates: stepOutput.personalizableCandidates,
     }),
     action: {
-      input: ({ output }) => ({ projectPath: output.projectPath }),
+      input: ({ stepOutput }) => ({ projectPath: stepOutput.projectPath }),
       run: checkPackagesAndEnv,
-      stash: ({ result }) => ({ packageData: result }),
+      updateStash: ({ actionOutput }) => ({ packageData: actionOutput }),
     },
     next: 'check-api',
   })
 
   .step('check-api', {
-    prompt: 'Confirming API connectivity check parameters.',
-    output: z.object({
-      apiKey: z.string().optional(),
-      environment: z.string().default('main'),
-      shouldCheck: z.boolean(),
-    }),
     action: {
       input: ({ stash }) => ({
         apiKey: stash.packageData?.apiKey,
@@ -108,24 +114,21 @@ export default skill({
         contentfulEnvironment: stash.packageData?.contentfulEnvironment ?? 'master',
       }),
       run: checkApiConnectivity,
-      stash: ({ result }) => ({ apiData: result }),
+      updateStash: ({ actionOutput }) => ({ apiData: actionOutput }),
     },
     next: 'triage',
   })
 
   .step('triage', {
-    prompt: ({ stash, getStep, act }) => {
-      const explore = getStep<{
-        explorationSummary: string; concerns: string[];
-      }>('explore');
-      const codeHealthy = (explore?.output?.concerns?.length ?? 0) === 0;
+    prompt: ({ stash, act }) => {
+      const codeHealthy = (stash.concerns?.length ?? 0) === 0;
       const hasAutoTokens = !!(stash.packageData?.contentfulSpaceId && (
         stash.packageData?.contentfulAccessToken || stash.packageData?.contentfulPreviewToken
       ));
 
       const codeStatusNote = codeHealthy
         ? 'The code-level exploration found **no concerns** — the setup looks correct.'
-        : `The code-level exploration found **${explore?.output?.concerns?.length ?? 0} concern(s)**:\n${(explore?.output?.concerns ?? []).map((c: string, i: number) => `${i + 1}. ${c}`).join('\n')}`;
+        : `The code-level exploration found **${stash.concerns?.length ?? 0} concern(s)**:\n${(stash.concerns ?? []).map((c: string, i: number) => `${i + 1}. ${c}`).join('\n')}`;
 
       const apiStatusNote = stash.apiData?.status === 'pass'
         ? 'Ninetailed API connectivity is **healthy**.'
@@ -188,17 +191,16 @@ export default skill({
       hasAutoTokens: z.boolean(),
       problemDescription: z.string(),
     }),
-    next: ({ output }) => {
-      if (output.choice === 'skip') return 'review';
-      if (output.choice === 'need-help-finding') return 'help-find-entry';
-      return output.hasAutoTokens ? 'get-entry-id' : 'collect-credentials';
+    next: ({ stepOutput }) => {
+      if (stepOutput.choice === 'skip') return 'review';
+      if (stepOutput.choice === 'need-help-finding') return 'help-find-entry';
+      return stepOutput.hasAutoTokens ? 'get-entry-id' : 'collect-credentials';
     },
   })
 
   .step('help-find-entry', {
-    prompt: ({ stash, getStep, act }) => {
-      const explore = getStep<{ explorationSummary: string; personalizableCandidates?: string[] }>('explore');
-      const candidates = (explore?.output as { personalizableCandidates?: string[] })?.personalizableCandidates ?? [];
+    prompt: ({ stash, act }) => {
+      const candidates = stash.personalizableCandidates ?? [];
       const hasAutoTokens = !!(stash.packageData?.contentfulSpaceId && (
         stash.packageData?.contentfulAccessToken || stash.packageData?.contentfulPreviewToken
       ));
@@ -232,10 +234,10 @@ export default skill({
       skip: z.boolean(),
       hasAutoTokens: z.boolean(),
     }),
-    stash: ({ output }) => output.entryId ? { entryId: output.entryId } : {},
-    next: ({ output }) => {
-      if (output.skip || !output.entryId) return 'review';
-      return output.hasAutoTokens ? 'get-entry-id' : 'collect-credentials';
+    updateStash: ({ stepOutput }) => stepOutput.entryId ? { entryId: stepOutput.entryId } : {},
+    next: ({ stepOutput }) => {
+      if (stepOutput.skip || !stepOutput.entryId) return 'review';
+      return stepOutput.hasAutoTokens ? 'get-entry-id' : 'collect-credentials';
     },
   })
 
@@ -281,13 +283,13 @@ export default skill({
       environment: z.string().optional(),
       hasCredentials: z.boolean(),
     }),
-    stash: ({ output }) => ({
-      userProvidedSpaceId: output.spaceId,
-      userProvidedAccessToken: output.accessToken,
-      userProvidedPreviewToken: output.previewToken,
-      userProvidedEnvironment: output.environment,
+    updateStash: ({ stepOutput }) => ({
+      userProvidedSpaceId: stepOutput.spaceId,
+      userProvidedAccessToken: stepOutput.accessToken,
+      userProvidedPreviewToken: stepOutput.previewToken,
+      userProvidedEnvironment: stepOutput.environment,
     }),
-    next: ({ output }) => output.hasCredentials ? 'get-entry-id' : 'review',
+    next: ({ stepOutput }) => stepOutput.hasCredentials ? 'get-entry-id' : 'review',
   })
 
   .step('get-entry-id', {
@@ -308,16 +310,11 @@ export default skill({
       `;
     },
     output: z.object({ entryId: z.string() }),
-    stash: ({ output }) => ({ entryId: output.entryId }),
+    updateStash: ({ stepOutput }) => ({ entryId: stepOutput.entryId }),
     next: 'run-inspection',
   })
 
   .step('run-inspection', {
-    prompt: ({ stash }) => prompt`
-      Running content inspection for entry ${stash.entryId ?? 'unknown'}.
-      Confirm the inspection parameters.
-    `,
-    output: z.object({ confirmed: z.boolean().default(true) }),
     action: {
       input: ({ stash }) => ({
         spaceId: stash.userProvidedSpaceId ?? stash.packageData?.contentfulSpaceId ?? '',
@@ -328,26 +325,22 @@ export default skill({
         includeDepth: 3,
       }),
       run: inspectContent,
-      stash: ({ result }) => ({ contentInspection: result }),
+      updateStash: ({ actionOutput }) => ({ contentInspection: actionOutput }),
     },
     next: 'review',
   })
 
   .step('review', {
-    prompt: ({ stash, getStep, refs }) => {
-      const explore = getStep<{
-        framework: string; explorationSummary: string; concerns: string[];
-      }>('explore');
-
-      const explorationView = explore?.output
+    prompt: ({ stash, refs }) => {
+      const explorationView = stash.explorationSummary
         ? [
-            `**Framework:** ${explore.output.framework}`,
+            `**Framework:** ${stash.framework}`,
             '',
-            explore.output.explorationSummary,
+            stash.explorationSummary,
             '',
-            explore.output.concerns.length > 0
+            (stash.concerns?.length ?? 0) > 0
               ? render.section('⚠️ Concerns from Exploration',
-                  explore.output.concerns.map((c: string, i: number) => `${i + 1}. ${c}`).join('\n'))
+                  (stash.concerns ?? []).map((c: string, i: number) => `${i + 1}. ${c}`).join('\n'))
               : '✅ No concerns noted during exploration',
           ].join('\n')
         : 'No exploration data available';
@@ -444,22 +437,16 @@ export default skill({
       recommendations: z.array(Recommendation),
       summary: z.string(),
     }),
-    stash: ({ output }) => ({
-      overallStatus: output.overallStatus,
-      recommendations: output.recommendations,
+    updateStash: ({ stepOutput }) => ({
+      overallStatus: stepOutput.overallStatus,
+      recommendations: stepOutput.recommendations,
+      reviewSummary: stepOutput.summary,
     }),
     next: 'report',
   })
 
   .step('report', {
-    prompt: ({ stash, getStep, act }) => {
-      const explore = getStep<{ explorationSummary: string; concerns: string[] }>('explore');
-      const review = getStep<{
-        overallStatus: string;
-        recommendations: Array<{ priority: string; message: string; category: string }>;
-        summary: string;
-      }>('review');
-
+    prompt: ({ stash, act }) => {
       const icon = (status: string) => {
         switch (status) {
           case 'pass': return '✅';
@@ -479,16 +466,16 @@ export default skill({
         }
       };
 
-      const overallStatus = review?.output?.overallStatus ?? 'fail';
+      const overallStatusVal = stash.overallStatus ?? 'fail';
       const sections: string[] = [];
 
       sections.push(`# 🩺 Optimization Doctor Report\n`);
-      sections.push(`## ${icon(overallStatus)} Overall: ${statusLabel(overallStatus)}\n`);
-      sections.push(review?.output?.summary ?? 'No summary available');
+      sections.push(`## ${icon(overallStatusVal)} Overall: ${statusLabel(overallStatusVal)}\n`);
+      sections.push(stash.reviewSummary ?? 'No summary available');
       sections.push('---');
 
-      if (explore?.output?.explorationSummary) {
-        sections.push(render.section('🔍 Exploration Summary', explore.output.explorationSummary));
+      if (stash.explorationSummary) {
+        sections.push(render.section('🔍 Exploration Summary', stash.explorationSummary));
       }
 
       const pkg = stash.packageData;
@@ -535,9 +522,9 @@ export default skill({
         sections.push(render.section('📄 Content Inspection', `${contentTable}${comparisonNote}`));
       }
 
-      if (review?.output?.recommendations?.length) {
+      if (stash.recommendations?.length) {
         const priorityIcon: Record<string, string> = { critical: '🔴', warning: '🟡', info: '💡' };
-        const recs = review.output.recommendations
+        const recs = stash.recommendations
           .sort((a: { priority: string }, b: { priority: string }) => {
             const order: Record<string, number> = { critical: 0, warning: 1, info: 2 };
             return (order[a.priority] ?? 3) - (order[b.priority] ?? 3);
@@ -562,7 +549,7 @@ export default skill({
       ];
     },
     output: z.object({ choice: z.enum(['yes', 'no']) }),
-    next: ({ output }) => (output.choice === 'yes' ? 'plan-fix' : 'report-only'),
+    next: ({ stepOutput }) => (stepOutput.choice === 'yes' ? 'plan-fix' : 'report-only'),
   })
 
   .step('report-only', {
@@ -572,7 +559,6 @@ export default skill({
       come up later. Keep it to 2-3 sentences — brief and friendly.
       Do NOT repeat the report findings.
     `,
-    output: z.object({ message: z.string() }),
     next: terminal,
   })
 
@@ -620,12 +606,15 @@ export default skill({
       plan: z.string(),
       filesToModify: z.array(z.string()),
     }),
-    next: ({ output }) => (output.approved ? 'fix' : 'done'),
+    updateStash: ({ stepOutput }) => ({
+      fixPlan: stepOutput.plan,
+      fixFilesToModify: stepOutput.filesToModify,
+    }),
+    next: ({ stepOutput }) => (stepOutput.approved ? 'fix' : 'done'),
   })
 
   .step('fix', {
-    prompt: ({ stash, act, system, getStep, refs }) => {
-      const plan = getStep<{ plan: string; filesToModify: string[] }>('plan-fix');
+    prompt: ({ stash, act, system, refs }) => {
       const recs = stash.recommendations ?? [];
       const priorityIcon: Record<string, string> = { critical: '🔴', warning: '🟡', info: '💡' };
 
@@ -652,8 +641,8 @@ export default skill({
 
           After all fixes, the setup will be re-verified automatically.
 
-          ${plan?.output?.plan ? `**Plan:** ${plan.output.plan}` : ''}
-          ${plan?.output?.filesToModify?.length ? `**Files to modify:** ${plan.output.filesToModify.join(', ')}` : ''}
+          ${stash.fixPlan ? `**Plan:** ${stash.fixPlan}` : ''}
+          ${stash.fixFilesToModify?.length ? `**Files to modify:** ${stash.fixFilesToModify.join(', ')}` : ''}
 
           ## Reference Material
           ${refSections.map((r: { label: string; content: string }) => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
@@ -666,22 +655,20 @@ export default skill({
         }),
       ];
     },
-    output: z.object({
-      fixesMade: z.array(z.string()),
-      filesModified: z.array(z.string()),
-    }),
     next: 're-verify',
   })
 
   .step('re-verify', {
-    prompt: 'Re-running validation to verify the fixes.',
-    output: z.object({ projectPath: z.string() }),
     action: {
       input: ({ stash }) => ({ projectPath: stash.projectPath }),
       run: validateSetup,
+      updateStash: ({ actionOutput }) => ({
+        reVerifyOverallStatus: (actionOutput as { overallStatus: string }).overallStatus,
+        reVerifySummary: (actionOutput as { summary: string }).summary,
+      }),
     },
-    next: ({ action, attempts }) => {
-      const result = action as { overallStatus: string } | undefined;
+    next: ({ actionOutput, attempts }) => {
+      const result = actionOutput as { overallStatus: string } | undefined;
       if (result?.overallStatus === 'pass') return 'done';
       if (attempts >= 3) return 'done';
       return 'fix';
@@ -689,22 +676,20 @@ export default skill({
   })
 
   .step('done', {
-    prompt: ({ stash, getStep }) => {
-      const reVerify = getStep('re-verify');
-      const reVerifyAction = reVerify?.action as { overallStatus?: string; summary?: string } | undefined;
+    prompt: ({ stash }) => {
       const recs = stash.recommendations ?? [];
 
-      const statusIcon = reVerifyAction?.overallStatus === 'pass' ? '✅'
-        : reVerifyAction?.overallStatus === 'warn' ? '⚠️' : '❌';
+      const statusIcon = stash.reVerifyOverallStatus === 'pass' ? '✅'
+        : stash.reVerifyOverallStatus === 'warn' ? '⚠️' : '❌';
 
       const sections: string[] = [];
       sections.push(`# 🩺 Doctor Summary\n`);
       sections.push(render.section('Before', `Status: ${stash.overallStatus ?? 'unknown'}`));
 
-      if (reVerifyAction) {
+      if (stash.reVerifyOverallStatus) {
         sections.push(render.section(
-          `After: ${statusIcon} ${(reVerifyAction.overallStatus ?? 'unknown').toUpperCase()}`,
-          reVerifyAction.summary ?? 'No verification summary',
+          `After: ${statusIcon} ${stash.reVerifyOverallStatus.toUpperCase()}`,
+          stash.reVerifySummary ?? 'No verification summary',
         ));
       }
 
@@ -714,7 +699,7 @@ export default skill({
         ));
       }
 
-      if (reVerifyAction?.overallStatus !== 'pass') {
+      if (stash.reVerifyOverallStatus !== 'pass') {
         sections.push(render.section('💡 Remaining Issues',
           'Some issues may remain. Consider running the doctor again after addressing any manual steps above.'
         ));
@@ -725,7 +710,6 @@ export default skill({
         view('Doctor Summary', sections.join('\n\n')),
       ];
     },
-    output: z.object({ summary: z.string() }),
     next: terminal,
   })
 
