@@ -559,7 +559,6 @@ export default skill({
       come up later. Keep it to 2-3 sentences — brief and friendly.
       Do NOT repeat the report findings.
     `,
-    output: z.object({ message: z.string() }),
     next: terminal,
   })
 
@@ -656,10 +655,6 @@ export default skill({
         }),
       ];
     },
-    output: z.object({
-      fixesMade: z.array(z.string()),
-      filesModified: z.array(z.string()),
-    }),
     next: 're-verify',
   })
 
@@ -715,7 +710,6 @@ export default skill({
         view('Doctor Summary', sections.join('\n\n')),
       ];
     },
-    output: z.object({ summary: z.string() }),
     next: terminal,
   })
 

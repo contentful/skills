@@ -125,7 +125,6 @@ export default skill({
       they can re-run this skill anytime or adjust the approach. Keep it to
       2-3 sentences — friendly but concise. Do NOT re-explain the plan.
     `,
-    output: z.object({ message: z.string() }),
     next: terminal,
   })
 
@@ -159,10 +158,6 @@ export default skill({
         ${refSections.map((r: { label: string; content: string }) => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
       `;
     },
-    output: z.object({
-      filesModified: z.array(z.string()),
-      summary: z.string(),
-    }),
     next: terminal,
   })
 

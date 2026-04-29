@@ -237,7 +237,6 @@ export default skill({
         view('Readiness Report', sections.join('\n\n')),
       ];
     },
-    output: z.object({ message: z.string() }),
     next: terminal,
   })
 
@@ -514,7 +513,6 @@ export default skill({
 
         Project path: ${stash.projectPath}
       `,
-    output: z.object({ projectPath: z.string() }),
     action: {
       run: validateSetup,
       updateStash: ({ actionOutput }) => ({
@@ -552,9 +550,6 @@ export default skill({
         ## Reference: Common Errors & Fixes
         ${refs.load('common-errors.md')}
       `,
-    output: z.object({
-      fixesMade: z.array(z.string()),
-    }),
     next: 'verify',
   })
 
@@ -602,7 +597,6 @@ export default skill({
         view('Setup Report', sections.join('\n\n')),
       ];
     },
-    output: z.object({ summary: z.string() }),
     next: terminal,
   })
 
