@@ -15,7 +15,7 @@ description: >-
   Experiences SDK setup (contentful-personalization). Not for non-Next.js
   frameworks (contentful-guide can route to platform docs).
 argument-hint: "[what to set up]"
-allowed-tools: Bash(npm install contentful) Bash(npm install @contentful/rich-text-*)
+allowed-tools: Bash(npm install contentful) Bash(npm install @contentful/rich-text-*) mcp__contentful-mcp__* mcp__plugin_contentful-skills_contentful-mcp__*
 ---
 
 # Contentful Next.js

@@ -42,6 +42,11 @@ export default skill({
     'run an experiment',
   ],
   argumentHint: '[question or topic]',
+  allowedTools: [
+    'mcp__contentful-mcp__*',
+    'mcp__plugin_contentful-skills_contentful-mcp__*',
+    'mcp__plugin_contentful-skills_contentful-personalization__*',
+  ],
   license: 'MIT',
   entry: 'classify',
 
