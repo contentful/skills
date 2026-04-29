@@ -1,6 +1,6 @@
 {
   "name": "@contentful/skill-contentful-personalization",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Unified Contentful personalization skill covering readiness, setup, diagnostics, development, and reference documentation",
   "license": "MIT",
   "files": [
