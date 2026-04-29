@@ -50,6 +50,22 @@ If you want to interact with Contentful more easily through AI agents, use the C
 - Docs: `https://www.contentful.com/developers/docs/tools/mcp-server/`
 - It provides a simpler conversational interface to work with Contentful content and models.
 
+## Local Plugin Testing (Claude Code)
+
+To test the full plugin locally — including skills, MCP servers, and hooks — without publishing:
+
+```bash
+claude --plugin-dir /path/to/contentful/skills
+```
+
+This loads everything defined in `.claude-plugin/plugin.json` for that session: skills, the Contentful MCP server, and the personalization MCP server. Use `/reload-plugins` inside the session to pick up changes without restarting.
+
+You can also combine multiple plugin directories:
+
+```bash
+claude --plugin-dir ./skills --plugin-dir ./other-plugin
+```
+
 ## Contributing
 
 See [AGENTS.md](AGENTS.md) & [CONTRIBUTING.md](CONTRIBUTING.md) for project conventions. Use the internal `skill-authoring` skill for guidance on creating new skills.
