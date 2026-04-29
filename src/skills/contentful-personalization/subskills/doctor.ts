@@ -109,7 +109,7 @@ export default skill({
 
   .step('triage', {
     prompt: ({ stash, getStep, act }) => {
-      const explore = getStep('explore') as { stepOutput: { explorationSummary: string; concerns: string[] }; actionOutput: unknown } | undefined;
+      const explore = getStep('explore');
       const codeHealthy = (explore?.stepOutput?.concerns?.length ?? 0) === 0;
       const hasAutoTokens = !!(stash.packageData?.contentfulSpaceId && (
         stash.packageData?.contentfulAccessToken || stash.packageData?.contentfulPreviewToken
@@ -189,7 +189,7 @@ export default skill({
 
   .step('help-find-entry', {
     prompt: ({ stash, getStep, act }) => {
-      const explore = getStep('explore') as { stepOutput: { explorationSummary: string; personalizableCandidates?: string[] }; actionOutput: unknown } | undefined;
+      const explore = getStep('explore');
       const candidates = (explore?.stepOutput as { personalizableCandidates?: string[] })?.personalizableCandidates ?? [];
       const hasAutoTokens = !!(stash.packageData?.contentfulSpaceId && (
         stash.packageData?.contentfulAccessToken || stash.packageData?.contentfulPreviewToken
@@ -322,7 +322,7 @@ export default skill({
 
   .step('review', {
     prompt: ({ stash, getStep, refs }) => {
-      const explore = getStep('explore') as { stepOutput: { framework: string; explorationSummary: string; concerns: string[] }; actionOutput: unknown } | undefined;
+      const explore = getStep('explore');
 
       const explorationView = explore?.stepOutput
         ? [
@@ -438,12 +438,8 @@ export default skill({
 
   .step('report', {
     prompt: ({ stash, getStep, act }) => {
-      const explore = getStep('explore') as { stepOutput: { explorationSummary: string; concerns: string[] }; actionOutput: unknown } | undefined;
-      const review = getStep('review') as { stepOutput: {
-        overallStatus: string;
-        recommendations: Array<{ priority: string; message: string; category: string }>;
-        summary: string;
-      }; actionOutput: unknown } | undefined;
+      const explore = getStep('explore');
+      const review = getStep('review');
 
       const icon = (status: string) => {
         switch (status) {
@@ -610,7 +606,7 @@ export default skill({
 
   .step('fix', {
     prompt: ({ stash, act, system, getStep, refs }) => {
-      const plan = getStep('plan-fix') as { stepOutput: { plan: string; filesToModify: string[] }; actionOutput: unknown } | undefined;
+      const plan = getStep('plan-fix');
       const recs = stash.recommendations ?? [];
       const priorityIcon: Record<string, string> = { critical: '🔴', warning: '🟡', info: '💡' };
 

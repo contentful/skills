@@ -189,7 +189,7 @@ export default skill({
 
   .step('gate', {
     prompt: ({ stash, getStep }) => {
-      const assess = getStep('assess') as { stepOutput: { readinessStatus: string; report: string; prerequisites: string[] }; actionOutput: unknown } | undefined;
+      const assess = getStep('assess');
       if (!assess?.stepOutput) {
         return [
           'Present a brief message explaining that assessment data was unavailable.',
@@ -543,7 +543,7 @@ export default skill({
 
   .step('report', {
     prompt: ({ stash, getStep }) => {
-      const impl = getStep('implement') as { stepOutput: { filesModified: string[]; summary: string }; actionOutput: unknown } | undefined;
+      const impl = getStep('implement');
       const verify = getStep('verify');
 
       const sections: string[] = [];

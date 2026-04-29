@@ -125,7 +125,7 @@ export default skill({
 
   .step('implement', {
     prompt: ({ stash, getStep, refs }) => {
-      const plan = getStep('plan') as { stepOutput: { plan: string; filesToModify: string[] }; actionOutput: unknown } | undefined;
+      const plan = getStep('plan');
 
       const refSections: Array<{ label: string; content: string }> = [
         { label: 'Implementation Examples', content: refs.load('implementation-examples.md') },
