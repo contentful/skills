@@ -17,7 +17,7 @@ description: >-
   terminology or API routing (contentful-guide).
 license: MIT
 argument-hint: "[task description]"
-allowed-tools: Bash(npx contentful-migration *) Bash(npx contentful space migration *)
+allowed-tools: Bash(npx contentful-migration *) Bash(npx contentful space migration *) mcp__contentful-mcp__* mcp__plugin_contentful-skills_contentful-mcp__*
 paths: "migrations/**"
 ---
 

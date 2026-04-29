@@ -15,6 +15,7 @@ description: >-
   implementation (contentful-nextjs), migrations (contentful-migration),
   or personalization (contentful-personalization).
 argument-hint: "[concept or API name]"
+allowed-tools: mcp__contentful-mcp__* mcp__plugin_contentful-skills_contentful-mcp__*
 ---
 
 # Contentful Guide
