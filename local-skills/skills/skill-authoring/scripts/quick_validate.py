@@ -85,7 +85,7 @@ def validate_skill(skill_path):
         return False, f"Invalid frontmatter: {e}"
 
     # Define allowed properties
-    ALLOWED_PROPERTIES = {'name', 'description', 'license', 'allowed-tools', 'metadata', 'compatibility'}
+    ALLOWED_PROPERTIES = {'name', 'description', 'license', 'allowed-tools', 'metadata', 'compatibility', 'argument-hint', 'arguments', 'paths'}
 
     # Check for unexpected properties
     unexpected_keys = set(frontmatter.keys()) - ALLOWED_PROPERTIES
