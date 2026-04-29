@@ -1,6 +1,6 @@
 {
   "name": "contentful-skills",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "Agent skills for Contentful optimization",
   "author": {
     "name": "Contentful",
@@ -25,7 +25,11 @@
     "contentful-personalization": {
       "type": "stdio",
       "command": "${CLAUDE_PLUGIN_ROOT}/skills/contentful-personalization/scripts/run",
-      "args": ["mcp", "--host", "claude-code"]
+      "args": [
+        "mcp",
+        "--host",
+        "claude-code"
+      ]
     }
   }
 }
