@@ -2,7 +2,7 @@
 name: contentful-personalization
 description: "Set up, debug, and develop with Contentful personalization and optimization. Covers readiness assessment, guided SDK installation, diagnostics and debugging, day-to-day development, and reference documentation for personalization SDKs, APIs, and patterns. Use when asked about personalization, optimization, ninetailed, A/B testing, experiments, multivariate tests, audience targeting, segments, content variants, Contentful Experiences, Experiences SDK, Studio Experiences, or the experience API. Trigger keywords: personalization, optimization, ninetailed, A/B test, experiment, multivariate test, targeting, audience targeting, segments, variants, content variants, set up personalization, personalization not working, personalization broken, personalize this component, am I ready for personalization, experience API, Contentful Experiences, Experiences SDK, Studio Experiences, personalization in Next.js, @contentful/optimization, @ninetailed/experience.js, run an experiment"
 metadata:
-  version: "1.4.1"
+  version: "1.4.2"
 argument-hint: "[question or topic]"
 allowed-tools: "Bash(*/scripts/run *)"
 license: "MIT"
