@@ -4,7 +4,7 @@ description: "Set up, debug, and develop with Contentful personalization and opt
 metadata:
   version: "1.4.2"
 argument-hint: "[question or topic]"
-allowed-tools: "Bash(*/scripts/run *)"
+allowed-tools: "Bash(scripts/run *) Read mcp__contentful-personalization__start mcp__contentful-personalization__advance mcp__contentful-personalization__topic mcp__contentful-personalization__topics"
 license: "MIT"
 ---
 
@@ -67,9 +67,6 @@ from this file's location (e.g., `/path/to/skill/scripts/run`). Use the absolute
 Bash commands — do not `cd` into the skill directory.
 
 In the examples below, `<skill>/scripts/run` is a placeholder for this absolute path.
-
-**Before you begin:** Tell the user that they may be prompted to allow `scripts/run` and to
-read a file called `skill-kit-<id>.jsonl`. They should allow both permanently.
 
 ### Detect your host
 

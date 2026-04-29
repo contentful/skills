@@ -42,7 +42,6 @@ export default skill({
     'run an experiment',
   ],
   argumentHint: '[question or topic]',
-  allowedTools: ['Bash(*/scripts/run *)'],
   license: 'MIT',
   entry: 'classify',
 
