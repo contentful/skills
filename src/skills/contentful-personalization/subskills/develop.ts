@@ -9,7 +9,7 @@ export default skill({
     'Helps add personalization to components, create experiments, and wire analytics.',
   entry: 'analyze',
 
-  context: z.object({
+  params: z.object({
     userQuery: z.string().optional(),
   }),
 
@@ -21,7 +21,7 @@ export default skill({
   }),
 })
   .step('analyze', {
-    prompt: ({ context, refs }) => prompt`
+    prompt: ({ params, refs }) => prompt`
       Analyze the codebase to understand the existing personalization setup
       and determine what the user wants to accomplish.
 
@@ -41,7 +41,7 @@ export default skill({
       Do NOT start making changes or create a plan. Do NOT ask the user questions.
       Just analyze and report what you find.
 
-      ${context?.userQuery ? `\nUser's request: "${context.userQuery}"` : ''}
+      ${params?.userQuery ? `\nUser's request: "${params.userQuery}"` : ''}
 
       ## Reference: Component Patterns
       ${refs.load('component-patterns.md')}
@@ -56,11 +56,11 @@ export default skill({
       targetFiles: z.array(z.string()),
       analysis: z.string(),
     }),
-    stash: ({ output }) => ({
-      taskType: output.taskType,
-      sdkInUse: output.sdkInUse,
-      framework: output.framework,
-      targetFiles: output.targetFiles,
+    updateStash: ({ stepOutput }) => ({
+      taskType: stepOutput.taskType,
+      sdkInUse: stepOutput.sdkInUse,
+      framework: stepOutput.framework,
+      targetFiles: stepOutput.targetFiles,
     }),
     next: 'plan',
   })
@@ -110,7 +110,7 @@ export default skill({
       plan: z.string(),
       filesToModify: z.array(z.string()),
     }),
-    next: ({ output }) => (output.approved ? 'implement' : 'declined'),
+    next: ({ stepOutput }) => (stepOutput.approved ? 'implement' : 'declined'),
   })
 
   .step('declined', {
@@ -125,7 +125,7 @@ export default skill({
 
   .step('implement', {
     prompt: ({ stash, getStep, refs }) => {
-      const plan = getStep<{ plan: string; filesToModify: string[] }>('plan');
+      const plan = getStep('plan') as { stepOutput: { plan: string; filesToModify: string[] }; actionOutput: unknown } | undefined;
 
       const refSections: Array<{ label: string; content: string }> = [
         { label: 'Implementation Examples', content: refs.load('implementation-examples.md') },
@@ -147,7 +147,7 @@ export default skill({
           'Files': stash.targetFiles.join(', '),
         })}
 
-        ${plan?.output ? `\n**Plan:** ${plan.output.plan}` : ''}
+        ${plan?.stepOutput ? `\n**Plan:** ${plan.stepOutput.plan}` : ''}
 
         After making changes, briefly summarize what you did and list all modified files.
 
