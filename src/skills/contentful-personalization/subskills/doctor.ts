@@ -33,6 +33,14 @@ export default skill({
     userProvidedAccessToken: z.string().optional(),
     userProvidedPreviewToken: z.string().optional(),
     userProvidedEnvironment: z.string().optional(),
+    explorationSummary: z.string().optional(),
+    concerns: z.array(z.string()).optional(),
+    personalizableCandidates: z.array(z.string()).optional(),
+    reviewSummary: z.string().optional(),
+    fixPlan: z.string().optional(),
+    fixFilesToModify: z.array(z.string()).optional(),
+    reVerifyOverallStatus: z.string().optional(),
+    reVerifySummary: z.string().optional(),
   }),
 })
   .step('explore', {
@@ -80,10 +88,14 @@ export default skill({
       projectPath: z.string(),
       explorationSummary: z.string(),
       concerns: z.array(z.string()),
+      personalizableCandidates: z.array(z.string()).optional(),
     }),
     updateStash: ({ stepOutput }) => ({
       framework: stepOutput.framework,
       projectPath: stepOutput.projectPath,
+      explorationSummary: stepOutput.explorationSummary,
+      concerns: stepOutput.concerns,
+      personalizableCandidates: stepOutput.personalizableCandidates,
     }),
     action: {
       input: ({ stepOutput }) => ({ projectPath: stepOutput.projectPath }),
@@ -108,16 +120,15 @@ export default skill({
   })
 
   .step('triage', {
-    prompt: ({ stash, getStep, act }) => {
-      const explore = getStep('explore');
-      const codeHealthy = (explore?.stepOutput?.concerns?.length ?? 0) === 0;
+    prompt: ({ stash, act }) => {
+      const codeHealthy = (stash.concerns?.length ?? 0) === 0;
       const hasAutoTokens = !!(stash.packageData?.contentfulSpaceId && (
         stash.packageData?.contentfulAccessToken || stash.packageData?.contentfulPreviewToken
       ));
 
       const codeStatusNote = codeHealthy
         ? 'The code-level exploration found **no concerns** — the setup looks correct.'
-        : `The code-level exploration found **${explore?.stepOutput?.concerns?.length ?? 0} concern(s)**:\n${(explore?.stepOutput?.concerns ?? []).map((c: string, i: number) => `${i + 1}. ${c}`).join('\n')}`;
+        : `The code-level exploration found **${stash.concerns?.length ?? 0} concern(s)**:\n${(stash.concerns ?? []).map((c: string, i: number) => `${i + 1}. ${c}`).join('\n')}`;
 
       const apiStatusNote = stash.apiData?.status === 'pass'
         ? 'Ninetailed API connectivity is **healthy**.'
@@ -188,9 +199,8 @@ export default skill({
   })
 
   .step('help-find-entry', {
-    prompt: ({ stash, getStep, act }) => {
-      const explore = getStep('explore');
-      const candidates = (explore?.stepOutput as { personalizableCandidates?: string[] })?.personalizableCandidates ?? [];
+    prompt: ({ stash, act }) => {
+      const candidates = stash.personalizableCandidates ?? [];
       const hasAutoTokens = !!(stash.packageData?.contentfulSpaceId && (
         stash.packageData?.contentfulAccessToken || stash.packageData?.contentfulPreviewToken
       ));
@@ -321,18 +331,16 @@ export default skill({
   })
 
   .step('review', {
-    prompt: ({ stash, getStep, refs }) => {
-      const explore = getStep('explore');
-
-      const explorationView = explore?.stepOutput
+    prompt: ({ stash, refs }) => {
+      const explorationView = stash.explorationSummary
         ? [
-            `**Framework:** ${explore.stepOutput.framework}`,
+            `**Framework:** ${stash.framework}`,
             '',
-            explore.stepOutput.explorationSummary,
+            stash.explorationSummary,
             '',
-            explore.stepOutput.concerns.length > 0
+            (stash.concerns?.length ?? 0) > 0
               ? render.section('⚠️ Concerns from Exploration',
-                  explore.stepOutput.concerns.map((c: string, i: number) => `${i + 1}. ${c}`).join('\n'))
+                  (stash.concerns ?? []).map((c: string, i: number) => `${i + 1}. ${c}`).join('\n'))
               : '✅ No concerns noted during exploration',
           ].join('\n')
         : 'No exploration data available';
@@ -432,15 +440,13 @@ export default skill({
     updateStash: ({ stepOutput }) => ({
       overallStatus: stepOutput.overallStatus,
       recommendations: stepOutput.recommendations,
+      reviewSummary: stepOutput.summary,
     }),
     next: 'report',
   })
 
   .step('report', {
-    prompt: ({ stash, getStep, act }) => {
-      const explore = getStep('explore');
-      const review = getStep('review');
-
+    prompt: ({ stash, act }) => {
       const icon = (status: string) => {
         switch (status) {
           case 'pass': return '✅';
@@ -460,16 +466,16 @@ export default skill({
         }
       };
 
-      const overallStatus = review?.stepOutput?.overallStatus ?? 'fail';
+      const overallStatusVal = stash.overallStatus ?? 'fail';
       const sections: string[] = [];
 
       sections.push(`# 🩺 Optimization Doctor Report\n`);
-      sections.push(`## ${icon(overallStatus)} Overall: ${statusLabel(overallStatus)}\n`);
-      sections.push(review?.stepOutput?.summary ?? 'No summary available');
+      sections.push(`## ${icon(overallStatusVal)} Overall: ${statusLabel(overallStatusVal)}\n`);
+      sections.push(stash.reviewSummary ?? 'No summary available');
       sections.push('---');
 
-      if (explore?.stepOutput?.explorationSummary) {
-        sections.push(render.section('🔍 Exploration Summary', explore.stepOutput.explorationSummary));
+      if (stash.explorationSummary) {
+        sections.push(render.section('🔍 Exploration Summary', stash.explorationSummary));
       }
 
       const pkg = stash.packageData;
@@ -516,9 +522,9 @@ export default skill({
         sections.push(render.section('📄 Content Inspection', `${contentTable}${comparisonNote}`));
       }
 
-      if (review?.stepOutput?.recommendations?.length) {
+      if (stash.recommendations?.length) {
         const priorityIcon: Record<string, string> = { critical: '🔴', warning: '🟡', info: '💡' };
-        const recs = review.stepOutput.recommendations
+        const recs = stash.recommendations
           .sort((a: { priority: string }, b: { priority: string }) => {
             const order: Record<string, number> = { critical: 0, warning: 1, info: 2 };
             return (order[a.priority] ?? 3) - (order[b.priority] ?? 3);
@@ -601,12 +607,15 @@ export default skill({
       plan: z.string(),
       filesToModify: z.array(z.string()),
     }),
+    updateStash: ({ stepOutput }) => ({
+      fixPlan: stepOutput.plan,
+      fixFilesToModify: stepOutput.filesToModify,
+    }),
     next: ({ stepOutput }) => (stepOutput.approved ? 'fix' : 'done'),
   })
 
   .step('fix', {
-    prompt: ({ stash, act, system, getStep, refs }) => {
-      const plan = getStep('plan-fix');
+    prompt: ({ stash, act, system, refs }) => {
       const recs = stash.recommendations ?? [];
       const priorityIcon: Record<string, string> = { critical: '🔴', warning: '🟡', info: '💡' };
 
@@ -633,8 +642,8 @@ export default skill({
 
           After all fixes, the setup will be re-verified automatically.
 
-          ${plan?.stepOutput?.plan ? `**Plan:** ${plan.stepOutput.plan}` : ''}
-          ${plan?.stepOutput?.filesToModify?.length ? `**Files to modify:** ${plan.stepOutput.filesToModify.join(', ')}` : ''}
+          ${stash.fixPlan ? `**Plan:** ${stash.fixPlan}` : ''}
+          ${stash.fixFilesToModify?.length ? `**Files to modify:** ${stash.fixFilesToModify.join(', ')}` : ''}
 
           ## Reference Material
           ${refSections.map((r: { label: string; content: string }) => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
@@ -658,6 +667,10 @@ export default skill({
     action: {
       input: ({ stash }) => ({ projectPath: stash.projectPath }),
       run: validateSetup,
+      updateStash: ({ actionOutput }) => ({
+        reVerifyOverallStatus: (actionOutput as { overallStatus: string }).overallStatus,
+        reVerifySummary: (actionOutput as { summary: string }).summary,
+      }),
     },
     next: ({ actionOutput, attempts }) => {
       const result = actionOutput as { overallStatus: string } | undefined;
@@ -668,22 +681,20 @@ export default skill({
   })
 
   .step('done', {
-    prompt: ({ stash, getStep }) => {
-      const reVerify = getStep('re-verify');
-      const reVerifyAction = reVerify?.actionOutput as { overallStatus?: string; summary?: string } | undefined;
+    prompt: ({ stash }) => {
       const recs = stash.recommendations ?? [];
 
-      const statusIcon = reVerifyAction?.overallStatus === 'pass' ? '✅'
-        : reVerifyAction?.overallStatus === 'warn' ? '⚠️' : '❌';
+      const statusIcon = stash.reVerifyOverallStatus === 'pass' ? '✅'
+        : stash.reVerifyOverallStatus === 'warn' ? '⚠️' : '❌';
 
       const sections: string[] = [];
       sections.push(`# 🩺 Doctor Summary\n`);
       sections.push(render.section('Before', `Status: ${stash.overallStatus ?? 'unknown'}`));
 
-      if (reVerifyAction) {
+      if (stash.reVerifyOverallStatus) {
         sections.push(render.section(
-          `After: ${statusIcon} ${(reVerifyAction.overallStatus ?? 'unknown').toUpperCase()}`,
-          reVerifyAction.summary ?? 'No verification summary',
+          `After: ${statusIcon} ${stash.reVerifyOverallStatus.toUpperCase()}`,
+          stash.reVerifySummary ?? 'No verification summary',
         ));
       }
 
@@ -693,7 +704,7 @@ export default skill({
         ));
       }
 
-      if (reVerifyAction?.overallStatus !== 'pass') {
+      if (stash.reVerifyOverallStatus !== 'pass') {
         sections.push(render.section('💡 Remaining Issues',
           'Some issues may remain. Consider running the doctor again after addressing any manual steps above.'
         ));

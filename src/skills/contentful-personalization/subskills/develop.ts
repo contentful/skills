@@ -18,6 +18,8 @@ export default skill({
     sdkInUse: z.enum(['ninetailed', 'optimization', 'unknown']),
     framework: z.string(),
     targetFiles: z.array(z.string()),
+    plan: z.string().optional(),
+    planFilesToModify: z.array(z.string()).optional(),
   }),
 })
   .step('analyze', {
@@ -110,6 +112,10 @@ export default skill({
       plan: z.string(),
       filesToModify: z.array(z.string()),
     }),
+    updateStash: ({ stepOutput }) => ({
+      plan: stepOutput.plan,
+      planFilesToModify: stepOutput.filesToModify,
+    }),
     next: ({ stepOutput }) => (stepOutput.approved ? 'implement' : 'declined'),
   })
 
@@ -124,9 +130,7 @@ export default skill({
   })
 
   .step('implement', {
-    prompt: ({ stash, getStep, refs }) => {
-      const plan = getStep('plan');
-
+    prompt: ({ stash, refs }) => {
       const refSections: Array<{ label: string; content: string }> = [
         { label: 'Implementation Examples', content: refs.load('implementation-examples.md') },
       ];
@@ -147,7 +151,7 @@ export default skill({
           'Files': stash.targetFiles.join(', '),
         })}
 
-        ${plan?.stepOutput ? `\n**Plan:** ${plan.stepOutput.plan}` : ''}
+        ${stash.plan ? `\n**Plan:** ${stash.plan}` : ''}
 
         After making changes, briefly summarize what you did and list all modified files.
 

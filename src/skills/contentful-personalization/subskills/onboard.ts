@@ -31,6 +31,15 @@ export default skill({
     architecture: z.enum(['client-only', 'hybrid-ssr', 'server-only']).optional(),
     packagesToInstall: z.array(z.string()).optional(),
     envVars: z.record(z.string(), z.string()).optional(),
+    explorationSummary: z.string().optional(),
+    personalizableCandidates: z.array(z.string()).optional(),
+    existingSetup: z.enum(['none', 'partial', 'configured']).optional(),
+    assessReport: z.string().optional(),
+    prerequisites: z.array(z.string()).optional(),
+    implementSummary: z.string().optional(),
+    implementFilesModified: z.array(z.string()).optional(),
+    verifyOverallStatus: z.string().optional(),
+    verifySummary: z.string().optional(),
   }),
 })
   .step('explore', {
@@ -87,6 +96,9 @@ export default skill({
       routerType: stepOutput.routerType,
       projectPath: stepOutput.projectPath,
       readinessOnly: stepOutput.readinessOnly,
+      explorationSummary: stepOutput.explorationSummary,
+      personalizableCandidates: stepOutput.personalizableCandidates,
+      existingSetup: stepOutput.existingSetup,
     }),
     action: {
       input: ({ stepOutput }) => ({ projectPath: stepOutput.projectPath }),
@@ -97,25 +109,19 @@ export default skill({
   })
 
   .step('assess', {
-    prompt: ({ stash, getStep, refs }) => {
-      const explore = getStep('explore');
-      const exploreOutput = explore?.stepOutput as {
-        framework: string; routerType: string; explorationSummary: string;
-        personalizableCandidates: string[]; existingSetup: string;
-      } | undefined;
-
-      const explorationView = exploreOutput
+    prompt: ({ stash, refs }) => {
+      const explorationView = stash.explorationSummary
         ? [
             render.kv({
-              'Framework': exploreOutput.framework,
-              'Router': exploreOutput.routerType,
-              'Existing setup': exploreOutput.existingSetup,
+              'Framework': stash.framework,
+              'Router': stash.routerType,
+              'Existing setup': stash.existingSetup ?? 'unknown',
             }),
             '',
-            exploreOutput.explorationSummary,
+            stash.explorationSummary,
             '',
-            exploreOutput.personalizableCandidates.length > 0
-              ? `**Personalization candidates:** ${exploreOutput.personalizableCandidates.join(', ')}`
+            (stash.personalizableCandidates?.length ?? 0) > 0
+              ? `**Personalization candidates:** ${stash.personalizableCandidates!.join(', ')}`
               : '*No specific candidates identified yet*',
           ].join('\n')
         : 'No exploration data available';
@@ -178,7 +184,11 @@ export default skill({
       prerequisites: z.array(z.string()),
       readinessOnly: z.boolean(),
     }),
-    updateStash: ({ stepOutput }) => ({ readinessStatus: stepOutput.readinessStatus }),
+    updateStash: ({ stepOutput }) => ({
+      readinessStatus: stepOutput.readinessStatus,
+      assessReport: stepOutput.report,
+      prerequisites: stepOutput.prerequisites,
+    }),
     next: ({ stepOutput }) => {
       const status = stepOutput.readinessStatus;
       if (status === 'not-ready' || status === 'needs-work') return 'gate';
@@ -188,9 +198,8 @@ export default skill({
   })
 
   .step('gate', {
-    prompt: ({ stash, getStep }) => {
-      const assess = getStep('assess');
-      if (!assess?.stepOutput) {
+    prompt: ({ stash }) => {
+      if (!stash.assessReport) {
         return [
           'Present a brief message explaining that assessment data was unavailable.',
           view('⚠️ No assessment data available. Please re-run the readiness check.'),
@@ -209,11 +218,11 @@ export default skill({
       sections.push(`# ${status.icon} Readiness Report: ${status.label}\n`);
       sections.push(`*${status.detail}*\n`);
       sections.push('---\n');
-      sections.push(assess.stepOutput.report);
+      sections.push(stash.assessReport);
 
-      if (assess.stepOutput.prerequisites.length > 0) {
+      if ((stash.prerequisites?.length ?? 0) > 0) {
         sections.push(render.section('📋 Prerequisites',
-          assess.stepOutput.prerequisites.map((p: string, i: number) => `${i + 1}. ${p}`).join('\n')
+          stash.prerequisites!.map((p: string, i: number) => `${i + 1}. ${p}`).join('\n')
         ));
       }
 
@@ -233,9 +242,7 @@ export default skill({
   })
 
   .step('recommend', {
-    prompt: ({ stash, getStep, refs }) => {
-      const explore = getStep('explore');
-
+    prompt: ({ stash, refs }) => {
       return prompt`
           Recommend a specific SDK and architecture for this project.
           Explain your reasoning conversationally — help the user understand WHY
@@ -246,7 +253,7 @@ export default skill({
             'Framework': stash.framework,
             'Router': stash.routerType,
           })}
-          ${explore?.stepOutput ? `\n${(explore.stepOutput as { explorationSummary: string }).explorationSummary}` : ''}
+          ${stash.explorationSummary ? `\n${stash.explorationSummary}` : ''}
 
           ## Your two decisions
 
@@ -479,6 +486,10 @@ export default skill({
       filesModified: z.array(z.string()),
       summary: z.string(),
     }),
+    updateStash: ({ stepOutput }) => ({
+      implementSummary: stepOutput.summary,
+      implementFilesModified: stepOutput.filesModified,
+    }),
     next: 'verify',
   })
 
@@ -504,7 +515,13 @@ export default skill({
         Project path: ${stash.projectPath}
       `,
     output: z.object({ projectPath: z.string() }),
-    action: { run: validateSetup },
+    action: {
+      run: validateSetup,
+      updateStash: ({ actionOutput }) => ({
+        verifyOverallStatus: (actionOutput as { overallStatus: string }).overallStatus,
+        verifySummary: (actionOutput as { summary: string }).summary,
+      }),
+    },
     next: ({ actionOutput, attempts }) => {
       const result = actionOutput as { overallStatus: string } | undefined;
       if (result?.overallStatus === 'pass') return 'report';
@@ -542,19 +559,16 @@ export default skill({
   })
 
   .step('report', {
-    prompt: ({ stash, getStep }) => {
-      const impl = getStep('implement');
-      const verify = getStep('verify');
-
+    prompt: ({ stash }) => {
       const sections: string[] = [];
       sections.push('# 🎉 Personalization Setup Complete\n');
 
-      if (impl?.stepOutput) {
-        sections.push(render.section('📝 What Was Done', impl.stepOutput.summary));
-        if (impl.stepOutput.filesModified.length > 0) {
+      if (stash.implementSummary) {
+        sections.push(render.section('📝 What Was Done', stash.implementSummary));
+        if ((stash.implementFilesModified?.length ?? 0) > 0) {
           sections.push(render.section('📁 Files Modified',
             render.table(
-              impl.stepOutput.filesModified.map((f: string) => ({ File: f })),
+              stash.implementFilesModified!.map((f: string) => ({ File: f })),
               { columns: ['File'] }
             )
           ));
@@ -571,10 +585,9 @@ export default skill({
         })
       ));
 
-      if (verify?.actionOutput) {
-        const v = verify.actionOutput as { overallStatus: string; summary: string };
-        const statusIcon = v.overallStatus === 'pass' ? '✅' : v.overallStatus === 'warn' ? '⚠️' : '❌';
-        sections.push(render.section(`🔍 Verification: ${statusIcon} ${v.overallStatus.toUpperCase()}`, v.summary));
+      if (stash.verifyOverallStatus) {
+        const statusIcon = stash.verifyOverallStatus === 'pass' ? '✅' : stash.verifyOverallStatus === 'warn' ? '⚠️' : '❌';
+        sections.push(render.section(`🔍 Verification: ${statusIcon} ${stash.verifyOverallStatus.toUpperCase()}`, stash.verifySummary ?? ''));
       }
 
       sections.push(render.section('🚀 Next Steps', [
