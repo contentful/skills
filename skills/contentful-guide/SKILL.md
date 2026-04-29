@@ -1,15 +1,20 @@
 ---
 name: contentful-guide
 description: >-
-  Explain core Contentful concepts and route users to the right implementation skill
-  or documentation. Use when users ask "what is" questions, need Contentful
-  terminology clarified, need help choosing between APIs (CDA/CMA/CPA/GraphQL),
-  ask about the Contentful MCP server, or want easier agent-driven interaction with
-  Contentful,
-  or ask where to find the correct docs for a task. Also triggers on "Contentful
-  101", "which Contentful API should I use", "how do I get started", and
-  "which skill should I use". Not for framework-specific implementation steps;
-  route those to the contentful-nextjs skill or other specialized skills.
+  Explain core Contentful concepts and route users to the right implementation
+  skill or documentation. Use when users ask conceptual questions, need
+  terminology clarified, want help choosing between APIs (CDA/CMA/CPA/GraphQL),
+  or need guidance on the Contentful MCP server. Also triggers on "Contentful
+  101", "which Contentful API", "how do I get started", "which skill should I
+  use", "what does X mean in Contentful", "Contentful glossary", "CDA vs CPA",
+  "CDA vs GraphQL", "how does Contentful work", "Contentful architecture",
+  "explain environments", "what are aliases", "content model design",
+  "headless CMS", "Contentful MCP", "MCP server", "set up MCP",
+  "Remix Contentful", "Astro Contentful", "Gatsby Contentful",
+  "SvelteKit Contentful", "Nuxt Contentful". Not for framework-specific
+  implementation (contentful-nextjs), migrations (contentful-migration),
+  or personalization (contentful-personalization).
+argument-hint: "[concept or API name]"
 ---
 
 # Contentful Guide
