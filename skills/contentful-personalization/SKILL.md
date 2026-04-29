@@ -1,8 +1,11 @@
 ---
 name: contentful-personalization
-description: "Unified Contentful personalization skill. Covers readiness assessment, guided setup, diagnostics and debugging, day-to-day development, and reference documentation for SDKs, APIs, and patterns. Trigger keywords: personalization, optimization, ninetailed, A/B test, set up personalization, personalization not working, personalize this component, am I ready for personalization, experience API"
+description: "Set up, debug, and develop with Contentful personalization and optimization. Covers readiness assessment, guided SDK installation, diagnostics and debugging, day-to-day development, and reference documentation for personalization SDKs, APIs, and patterns. Use when asked about personalization, optimization, ninetailed, A/B testing, experiments, multivariate tests, audience targeting, segments, content variants, Contentful Experiences, Experiences SDK, Studio Experiences, or the experience API. Trigger keywords: personalization, optimization, ninetailed, A/B test, experiment, multivariate test, targeting, audience targeting, segments, variants, content variants, set up personalization, personalization not working, personalization broken, personalize this component, am I ready for personalization, experience API, Contentful Experiences, Experiences SDK, Studio Experiences, personalization in Next.js, @contentful/optimization, @ninetailed/experience.js, run an experiment"
 metadata:
-  version: "1.4.2"
+  version: "1.4.1"
+argument-hint: "[question or topic]"
+allowed-tools: "Bash(*/scripts/run *)"
+license: "MIT"
 ---
 
 # contentful-personalization
@@ -39,6 +42,25 @@ The **preamble** (sent on the first step) contains a table mapping each tag to t
 specific tool available in your environment. Refer to it throughout the workflow.
 
 ## How to run this skill
+
+### MCP mode (preferred)
+
+If you have MCP tools for this skill (e.g., `mcp__contentful-personalization__start` and
+`mcp__contentful-personalization__advance`), use them instead of the CLI:
+
+1. Call the `start` tool (with `params` if the skill requires them).
+2. Read the `preamble` field (first call only). It maps XML tags to your available tools.
+3. Follow the `prompt` instructions. Produce a JSON object matching the `schema`.
+4. Call the `advance` tool with the `session`, `step`, and `output`.
+5. Repeat steps 3-4 until `status` is `"done"`.
+
+If you get `status: "error"` with `retry: true`, fix your output and resubmit.
+**Do not show raw JSON, session IDs, or MCP tool calls to the user.**
+
+Skip the rest of this section — the CLI instructions below are only needed when
+MCP tools are not available.
+
+### CLI mode (fallback)
 
 This SKILL.md file is inside the skill directory. Resolve the **absolute path** to `scripts/run`
 from this file's location (e.g., `/path/to/skill/scripts/run`). Use the absolute path in all

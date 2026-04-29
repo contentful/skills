@@ -2,11 +2,16 @@
 name: skill-authoring
 description: >-
   Create, modify, review, and fix Agent Skills in the contentful/skills repository.
-  Use when creating a new skill from scratch, editing an existing SKILL.md or package.json,
-  reviewing skill structure for correctness, fixing skill formatting or naming issues,
-  or looking up skill conventions. Triggers on "create a skill", "add a skill",
-  "skill template", "review this skill", "fix skill structure", "SKILL.md format",
-  "naming convention", "how do I make a skill". Not for general development or non-skill work.
+  Use when creating a new skill from scratch, editing an existing SKILL.md or
+  package.json, reviewing skill structure for correctness, fixing skill formatting
+  or naming issues, or looking up skill conventions. Also triggers on "create a
+  skill", "add a skill", "skill template", "review this skill", "fix skill
+  structure", "SKILL.md format", "naming convention", "how do I make a skill",
+  "how do skills work", "what is an Agent Skill", "skill description", "write a
+  description", "improve description", "skill frontmatter", "skill-kit",
+  "build a skill", "validate skill", "check my skill". Not for general
+  development or non-skill work.
+argument-hint: "[create | review | fix]"
 ---
 
 # Skill Authoring

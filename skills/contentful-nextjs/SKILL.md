@@ -5,10 +5,17 @@ description: >-
   the JavaScript SDK, configuring environment variables, creating production and
   preview-aware clients, fetching content in App Router or Pages Router, and
   wiring Draft Mode preview flows. Use when users ask to integrate Contentful
-  with Next.js, fetch entries in Next.js, or set up preview/draft content.
-  Triggers on "add Contentful to Next.js", "Next.js Contentful setup", "Draft
-  Mode Contentful", and "Contentful App Router". Not for personalization or
-  Experiences SDK setup.
+  with Next.js, fetch entries, set up preview or draft content, or configure
+  the Contentful client. Also triggers on "Contentful SDK Next.js",
+  "contentful.js", "fetch Contentful entries", "get content from Contentful",
+  "Contentful preview", "preview mode", "Contentful environment variables",
+  "Contentful client setup", "create Contentful client", "Pages Router
+  Contentful", "getStaticProps Contentful", "Server Components Contentful",
+  "revalidate Contentful", "ISR Contentful". Not for personalization or
+  Experiences SDK setup (contentful-personalization). Not for non-Next.js
+  frameworks (contentful-guide can route to platform docs).
+argument-hint: "[what to set up]"
+allowed-tools: Bash(npm install contentful) Bash(npm install @contentful/rich-text-*)
 ---
 
 # Contentful Next.js
@@ -35,6 +42,16 @@ Contentful is a headless, API-first CMS (composable content platform) that lets 
 
 - If the user wants easier agent-driven interaction with Contentful during setup, suggest the Contentful MCP server docs: `https://www.contentful.com/developers/docs/tools/mcp-server/`.
 - Keep this skill focused on Next.js implementation. MCP guidance complements setup but does not replace app-side client wiring.
+
+## Project state
+
+```!
+echo "=== Contentful packages ===" && node -e "try{const p=require('./package.json');const d={...p.dependencies,...p.devDependencies};const c=Object.entries(d).filter(([k])=>k.includes('contentful'));console.log(c.length?c.map(([k,v])=>k+'@'+v).join('\n'):'(Contentful SDK not installed)')}catch{console.log('(no package.json)')}" 2>/dev/null
+echo ""
+echo "=== Contentful env vars ===" && grep -h CONTENTFUL .env.local .env 2>/dev/null | sed 's/=.*/=<set>/' || echo "(no Contentful env vars found in .env.local or .env)"
+echo ""
+echo "=== Router type ===" && ([ -d "app" ] && echo "App Router detected (app/ directory exists)" || ([ -d "pages" ] && echo "Pages Router detected (pages/ directory exists)" || echo "(could not detect router type)"))
+```
 
 ## Workflow
 

@@ -16,5 +16,16 @@
     "analytics",
     "ninetailed"
   ],
-  "skills": "./skills"
+  "skills": "./skills",
+  "mcpServers": {
+    "contentful-mcp": {
+      "type": "http",
+      "url": "https://mcp.contentful.com/mcp"
+    },
+    "contentful-personalization": {
+      "type": "stdio",
+      "command": "${CLAUDE_PLUGIN_ROOT}/skills/contentful-personalization/scripts/run",
+      "args": ["mcp", "--host", "claude-code"]
+    }
+  }
 }

@@ -2,20 +2,23 @@
 name: contentful-migration
 description: >-
   Write and run Contentful content model migration scripts using the
-  contentful-migration library and the Contentful CLI migration command. Covers
-  creating, editing, and deleting
-  content types and fields, field types and validations, editor interface
+  contentful-migration library and the Contentful CLI. Covers creating,
+  editing, and deleting content types and fields, validations, editor interface
   configuration, editor layouts, sidebar widgets, entry transformations, tags,
   annotations, and the migration context object. Use when asked to write a
-  migration, create a content type, add or modify fields, change a content model,
-  transform entries, derive linked entries, configure editor controls, or run a
-  migration script. Triggers on "contentful-migration", "schema migration",
-  "space migration", "content model migration", "field validation", "editor
-  interface", "field control", "moveField", "changeFieldId", "write a migration",
-  "create content type", "add field to content type". Not for SDK client setup
-  or Next.js integration — use the contentful-nextjs skill. Not for Contentful terminology
-  or API routing — use the contentful-guide skill.
+  migration, create or add a content type, add, rename, or delete fields,
+  change or update a content model, transform entries, derive linked entries,
+  configure editor controls, or run a migration script. Also triggers on
+  "migration script", "contentful-migration", "schema migration",
+  "content model migration", "field validation", "editor interface",
+  "editor layout", "sidebar widget", "moveField", "changeFieldId",
+  "rich text field", "reference field", "link field". Not for SDK client
+  setup or Next.js integration (contentful-nextjs). Not for Contentful
+  terminology or API routing (contentful-guide).
 license: MIT
+argument-hint: "[task description]"
+allowed-tools: Bash(npx contentful-migration *) Bash(npx contentful space migration *)
+paths: "migrations/**"
 ---
 
 # Contentful Migration
@@ -73,6 +76,14 @@ export = migration
 ```
 
 The function also receives a `context` object as its second parameter, providing `makeRequest` (direct CMA access), `spaceId`, and `accessToken`. Use `makeRequest` when you need data not available through the migration API.
+
+## Project state
+
+```!
+echo "=== Existing migrations ===" && ls migrations/ 2>/dev/null || echo "(no migrations/ directory found)"
+echo ""
+echo "=== Contentful env vars ===" && grep -h CONTENTFUL .env .env.local 2>/dev/null | sed 's/=.*/=<set>/' || echo "(no Contentful env vars found in .env or .env.local)"
+```
 
 ## Workflow
 
