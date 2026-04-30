@@ -180,12 +180,60 @@ Built with [@contentful/skill-kit](https://github.com/contentful/skill-kit) — 
 
 ---
 
-## Contentful MCP Server
+## MCP Server Setup
 
-These skills work best alongside the [Contentful MCP server](https://www.contentful.com/developers/docs/tools/mcp-server/), which gives your agent conversational access to your Contentful spaces. Plugin installs configure the MCP connection automatically. For skills-only installs, set up the MCP server separately:
+Plugin installs configure MCP connections automatically. If you installed via `npx skills add` or another non-plugin path, set up the MCP servers manually to get the full experience.
+
+### Contentful MCP (CMS operations)
+
+Connects your agent to your Contentful spaces for reading and writing content, content types, and assets.
+
+**Claude Code:**
+
+```
+/mcp add-http contentful-mcp https://mcp.contentful.com/mcp
+```
+
+**Other platforms** — add to your MCP config:
+
+```json
+{
+  "mcpServers": {
+    "contentful-mcp": {
+      "type": "http",
+      "url": "https://mcp.contentful.com/mcp"
+    }
+  }
+}
+```
 
 - **Documentation:** [contentful.com/developers/docs/tools/mcp-server](https://www.contentful.com/developers/docs/tools/mcp-server/)
-- **Endpoint:** `https://mcp.contentful.com/mcp`
+
+### Personalization MCP (structured workflows)
+
+The `contentful-personalization` skill includes a local MCP server that powers its interactive workflows. Point your agent at the skill's run script:
+
+**Claude Code:**
+
+```
+/mcp add -- /path/to/skills/contentful-personalization/scripts/run mcp --host claude-code
+```
+
+**Other platforms** — add to your MCP config:
+
+```json
+{
+  "mcpServers": {
+    "contentful-personalization": {
+      "command": "/path/to/skills/contentful-personalization/scripts/run",
+      "args": ["mcp", "--host", "claude-code"]
+    }
+  }
+}
+```
+
+> [!NOTE]
+> Replace `/path/to/skills/` with the actual path where skills were installed (typically `.agents/skills/` in your project).
 
 ---
 
