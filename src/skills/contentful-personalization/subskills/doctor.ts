@@ -142,61 +142,115 @@ export default skill({
         { columns: ['Variable', 'Status', 'Value'] },
       );
 
-      const detectedSummary: string[] = [];
-      if (hasPersonalization) {
-        detectedSummary.push(
-          `- **Ninetailed API key**: detected (${scanned?.personalization?.apiKey ? '****' + scanned.personalization.apiKey.slice(-4) : 'unknown'})`,
-        );
-        if (scanned?.personalization?.environment) {
-          detectedSummary.push(`- **Ninetailed environment**: ${scanned.personalization.environment}`);
-        }
-      }
-      if (hasContentful) {
-        detectedSummary.push(`- **Contentful Space ID**: ${scanned?.contentful?.spaceId ?? 'unknown'}`);
-        if (scanned?.contentful?.accessToken)
-          detectedSummary.push(`- **CDA token**: detected (****${scanned.contentful.accessToken.slice(-4)})`);
-        if (scanned?.contentful?.previewToken)
-          detectedSummary.push(`- **CPA token**: detected (****${scanned.contentful.previewToken.slice(-4)})`);
-        if (scanned?.contentful?.environment)
-          detectedSummary.push(`- **Contentful environment**: ${scanned.contentful.environment}`);
-      }
-
       const hasAnyCreds = hasPersonalization || hasContentful;
+
+      if (hasAnyCreds) {
+        const credRows: Array<{ Credential: string; Value: string }> = [];
+        if (scanned?.personalization?.apiKey) {
+          credRows.push({
+            Credential: 'Ninetailed API key',
+            Value: `****${scanned.personalization.apiKey.slice(-4)}`,
+          });
+        }
+        if (scanned?.personalization?.environment) {
+          credRows.push({ Credential: 'Ninetailed environment', Value: scanned.personalization.environment });
+        }
+        if (scanned?.contentful?.spaceId) {
+          credRows.push({ Credential: 'Contentful Space ID', Value: scanned.contentful.spaceId });
+        }
+        if (scanned?.contentful?.accessToken) {
+          credRows.push({
+            Credential: 'CDA token',
+            Value: `****${scanned.contentful.accessToken.slice(-4)}`,
+          });
+        }
+        if (scanned?.contentful?.previewToken) {
+          credRows.push({
+            Credential: 'CPA token',
+            Value: `****${scanned.contentful.previewToken.slice(-4)}`,
+          });
+        }
+        if (scanned?.contentful?.environment) {
+          credRows.push({ Credential: 'Contentful environment', Value: scanned.contentful.environment });
+        }
+
+        const credTable = render.table(credRows, { columns: ['Credential', 'Value'] });
+
+        return [
+          prompt`
+            Present the credential scan results below to the user. Show the environment
+            variable table and the detected credentials table exactly as rendered.
+            Then let the user confirm, correct, or skip.
+
+            If the user confirms, set hasCredentials to true and populate the personalization
+            and contentful fields with the auto-detected values.
+            If the user wants to correct values, set hasCredentials to true and use their
+            corrected values instead.
+            If the user skips, set hasCredentials to false.
+          `,
+          view(
+            '🔑 Credential Scan Results',
+            [
+              render.section('Environment Variables', envTable),
+              render.section('Auto-Detected Credentials', credTable),
+            ].join('\n\n'),
+          ),
+          act.askUser({
+            type: 'structured',
+            question: 'Are these credentials correct?',
+            options: [
+              {
+                value: 'confirm',
+                label: '✅ Yes, these look correct',
+                description: 'Confirm the auto-detected credentials and proceed with API checks',
+              },
+              {
+                value: 'correct',
+                label: '✏️ I need to correct some values',
+                description: 'Provide updated credentials before proceeding',
+              },
+              {
+                value: 'decline',
+                label: '⏭️ Skip API checks',
+                description: 'Proceed without testing API connectivity',
+              },
+            ],
+          }),
+        ];
+      }
 
       return [
         prompt`
-          We scanned the project's environment files for API credentials.
+          Present the environment variable scan results below to the user. No API
+          credentials were found automatically.
 
-          ## Environment Variables Found
-          ${envTable}
+          Explain that we can run deeper diagnostics (API connectivity, content inspection)
+          if they provide credentials. Tell them where to find each value:
+          - **Ninetailed API Key** — Ninetailed dashboard or Contentful Organization settings > Optimization > SDK keys
+          - **Contentful Space ID** — Contentful Settings > General settings
+          - **CDA Token** (Content Delivery API) — Contentful Settings > API keys
+          - **CPA Token** (Content Preview API) — Same location, optional but recommended
+          - **Environment** — Usually "master" for Contentful, "main" for Ninetailed
 
-          ${
-            hasAnyCreds
-              ? `## Auto-Detected Credentials\n${detectedSummary.join('\n')}\n\nPlease confirm these are correct, or provide corrections. If any are wrong or missing, include the corrected values in your response.`
-              : `## No Credentials Detected\nWe did not find Contentful or Ninetailed API credentials in the project's environment files.\n\nThe user can provide them manually if available:\n- **Ninetailed API Key** — Found in the Ninetailed dashboard\n- **Contentful Space ID** — Found in Contentful under Settings > General settings\n- **CDA Token** (Content Delivery API) — Found under Settings > API keys\n- **CPA Token** (Content Preview API) — Same location, optional but recommended\n- **Environment** — Usually "master" for Contentful, "main" for Ninetailed\n\nAsk the user if they can provide credentials, or if they'd like to proceed with a code-only diagnostic.`
-          }
-
-          Set hasCredentials to true if the user confirms or provides credentials.
-          Set hasCredentials to false if they decline or cannot provide credentials.
-
-          If the user provides or confirms credentials, populate the personalization and contentful
-          fields with whatever values are available (auto-detected or user-provided).
+          If the user provides credentials, set hasCredentials to true and populate the fields.
+          If the user skips, set hasCredentials to false.
         `,
+        view('🔍 Environment Variable Scan', envTable),
         act.askUser({
           type: 'structured',
-          question: hasAnyCreds
-            ? 'Are these credentials correct?'
-            : 'Can you provide API credentials for a full diagnostic?',
-          options: hasAnyCreds
-            ? [
-                { value: 'confirm', label: '✅ Yes, these look correct' },
-                { value: 'correct', label: '✏️ I need to correct some values' },
-                { value: 'decline', label: '⏭️ Skip — proceed without API checks' },
-              ]
-            : [
-                { value: 'provide', label: '🔑 Yes, I can provide credentials' },
-                { value: 'decline', label: '⏭️ Skip — code-only diagnostic' },
-              ],
+          question: 'Can you provide API credentials for a full diagnostic?',
+          options: [
+            {
+              value: 'provide',
+              label: '🔑 Yes, I can provide credentials',
+              description: 'Paste your Contentful and/or Ninetailed credentials',
+            },
+            {
+              value: 'decline',
+              label: '⏭️ Skip — code-only diagnostic',
+              description: 'Proceed without API connectivity or content checks',
+            },
+          ],
         }),
       ];
     },
