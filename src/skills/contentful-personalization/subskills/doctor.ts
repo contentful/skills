@@ -1,9 +1,16 @@
 import { skill, type, prompt, render, act, view, terminal } from '@contentful/skill-kit';
-import { checkPackagesAndEnv } from '../actions/check-packages-env.js';
+import { checkPackages } from '../actions/check-packages.js';
+import { scanCredentials } from '../actions/scan-credentials.js';
 import { checkApiConnectivity } from '../actions/check-api.js';
 import { inspectContent } from '../actions/inspect-content.js';
 import { validateSetup } from '../actions/validate-setup.js';
-import { PackagesAndEnvResult, ApiCheckResult, ContentInspectionResult, Recommendation } from '../schemas.js';
+import {
+  PackagesResult,
+  CredentialsScanResult,
+  ApiCheckResult,
+  ContentInspectionResult,
+  Recommendation,
+} from '../schemas.js';
 import { VERSION } from '../version.js';
 
 export default skill({
@@ -22,19 +29,24 @@ export default skill({
       'explorationSummary?': 'string',
       'concerns?': 'string[]',
       'personalizableCandidates?': 'string[]',
-      'packageData?': PackagesAndEnvResult,
+      packages: PackagesResult,
     }),
     credentials: type({
-      'spaceId?': 'string',
-      'accessToken?': 'string',
-      'previewToken?': 'string',
-      'environment?': 'string',
-      'entryId?': 'string',
+      personalization: {
+        apiKey: 'string',
+        environment: 'string',
+      },
+      contentful: {
+        spaceId: 'string',
+        accessToken: 'string',
+        'previewToken?': 'string',
+        environment: 'string',
+      },
     }),
     diagnosis: type({
-      'overallStatus?': "'pass' | 'warn' | 'fail'",
-      'recommendations?': Recommendation.array(),
-      'summary?': 'string',
+      overallStatus: "'pass' | 'warn' | 'fail'",
+      recommendations: Recommendation.array(),
+      summary: 'string',
     }),
   },
 })
@@ -93,12 +105,142 @@ export default skill({
         explorationSummary: response.explorationSummary,
         concerns: response.concerns,
         personalizableCandidates: response.personalizableCandidates,
-        packageData: actionResult,
+        packages: actionResult,
       },
     }),
     action: {
       input: ({ response }) => ({ projectPath: response.projectPath }),
-      run: checkPackagesAndEnv,
+      run: checkPackages,
+    },
+    next: 'scan-credentials',
+  })
+
+  .step('scan-credentials', {
+    action: {
+      input: ({ store }) => ({ projectPath: store.project?.projectPath ?? '.' }),
+      run: scanCredentials,
+    },
+    next: 'confirm-credentials',
+  })
+
+  .step('confirm-credentials', {
+    prompt: ({ store }) => {
+      const scanned = store.steps['scan-credentials'] as CredentialsScanResult | undefined;
+      const envVars = scanned?.envVars ?? [];
+      const hasPersonalization = !!scanned?.personalization?.apiKey;
+      const hasContentful = !!(
+        scanned?.contentful?.spaceId &&
+        (scanned?.contentful?.accessToken || scanned?.contentful?.previewToken)
+      );
+
+      const envTable = render.table(
+        envVars.map((ev: { name: string; status: string; maskedValue?: string }) => ({
+          Variable: ev.name,
+          Status: ev.status,
+          Value: ev.maskedValue ?? '—',
+        })),
+        { columns: ['Variable', 'Status', 'Value'] },
+      );
+
+      const detectedSummary: string[] = [];
+      if (hasPersonalization) {
+        detectedSummary.push(
+          `- **Ninetailed API key**: detected (${scanned?.personalization?.apiKey ? '****' + scanned.personalization.apiKey.slice(-4) : 'unknown'})`,
+        );
+        if (scanned?.personalization?.environment) {
+          detectedSummary.push(`- **Ninetailed environment**: ${scanned.personalization.environment}`);
+        }
+      }
+      if (hasContentful) {
+        detectedSummary.push(`- **Contentful Space ID**: ${scanned?.contentful?.spaceId ?? 'unknown'}`);
+        if (scanned?.contentful?.accessToken)
+          detectedSummary.push(`- **CDA token**: detected (****${scanned.contentful.accessToken.slice(-4)})`);
+        if (scanned?.contentful?.previewToken)
+          detectedSummary.push(`- **CPA token**: detected (****${scanned.contentful.previewToken.slice(-4)})`);
+        if (scanned?.contentful?.environment)
+          detectedSummary.push(`- **Contentful environment**: ${scanned.contentful.environment}`);
+      }
+
+      const hasAnyCreds = hasPersonalization || hasContentful;
+
+      return [
+        prompt`
+          We scanned the project's environment files for API credentials.
+
+          ## Environment Variables Found
+          ${envTable}
+
+          ${
+            hasAnyCreds
+              ? `## Auto-Detected Credentials\n${detectedSummary.join('\n')}\n\nPlease confirm these are correct, or provide corrections. If any are wrong or missing, include the corrected values in your response.`
+              : `## No Credentials Detected\nWe did not find Contentful or Ninetailed API credentials in the project's environment files.\n\nThe user can provide them manually if available:\n- **Ninetailed API Key** — Found in the Ninetailed dashboard\n- **Contentful Space ID** — Found in Contentful under Settings > General settings\n- **CDA Token** (Content Delivery API) — Found under Settings > API keys\n- **CPA Token** (Content Preview API) — Same location, optional but recommended\n- **Environment** — Usually "master" for Contentful, "main" for Ninetailed\n\nAsk the user if they can provide credentials, or if they'd like to proceed with a code-only diagnostic.`
+          }
+
+          Set hasCredentials to true if the user confirms or provides credentials.
+          Set hasCredentials to false if they decline or cannot provide credentials.
+
+          If the user provides or confirms credentials, populate the personalization and contentful
+          fields with whatever values are available (auto-detected or user-provided).
+        `,
+        act.askUser({
+          type: 'structured',
+          question: hasAnyCreds
+            ? 'Are these credentials correct?'
+            : 'Can you provide API credentials for a full diagnostic?',
+          options: hasAnyCreds
+            ? [
+                { value: 'confirm', label: '✅ Yes, these look correct' },
+                { value: 'correct', label: '✏️ I need to correct some values' },
+                { value: 'decline', label: '⏭️ Skip — proceed without API checks' },
+              ]
+            : [
+                { value: 'provide', label: '🔑 Yes, I can provide credentials' },
+                { value: 'decline', label: '⏭️ Skip — code-only diagnostic' },
+              ],
+        }),
+      ];
+    },
+    response: type({
+      hasCredentials: 'boolean',
+      'personalization?': {
+        'apiKey?': 'string',
+        'environment?': 'string',
+      },
+      'contentful?': {
+        'spaceId?': 'string',
+        'accessToken?': 'string',
+        'previewToken?': 'string',
+        'environment?': 'string',
+      },
+    }),
+    next: ({ response }) => (response.hasCredentials ? 'apply-credentials' : 'review'),
+  })
+
+  .step('apply-credentials', {
+    save: ({ store }) => {
+      const confirmed = store.steps['confirm-credentials'] as
+        | {
+            personalization?: { apiKey?: string; environment?: string };
+            contentful?: { spaceId?: string; accessToken?: string; previewToken?: string; environment?: string };
+          }
+        | undefined;
+      const scanned = store.steps['scan-credentials'] as CredentialsScanResult | undefined;
+      return {
+        credentials: {
+          personalization: {
+            apiKey: confirmed?.personalization?.apiKey ?? scanned?.personalization?.apiKey ?? '',
+            environment: confirmed?.personalization?.environment ?? scanned?.personalization?.environment ?? 'main',
+          },
+          contentful: {
+            spaceId: confirmed?.contentful?.spaceId ?? scanned?.contentful?.spaceId ?? '',
+            accessToken: confirmed?.contentful?.accessToken ?? scanned?.contentful?.accessToken ?? '',
+            ...((confirmed?.contentful?.previewToken ?? scanned?.contentful?.previewToken)
+              ? { previewToken: confirmed?.contentful?.previewToken ?? scanned?.contentful?.previewToken }
+              : {}),
+            environment: confirmed?.contentful?.environment ?? scanned?.contentful?.environment ?? 'master',
+          },
+        },
+      };
     },
     next: 'check-api',
   })
@@ -106,12 +248,12 @@ export default skill({
   .step('check-api', {
     action: {
       input: ({ store }) => {
-        const pkg = store.project?.packageData;
+        const creds = store.credentials;
         return {
-          ...(pkg?.apiKey ? { apiKey: pkg.apiKey } : {}),
-          ninetailedEnvironment: pkg?.environment ?? 'main',
-          ...(pkg?.contentfulSpaceId ? { contentfulSpaceId: pkg.contentfulSpaceId } : {}),
-          contentfulEnvironment: pkg?.contentfulEnvironment ?? 'master',
+          ...(creds?.personalization?.apiKey ? { apiKey: creds.personalization.apiKey } : {}),
+          ninetailedEnvironment: creds?.personalization?.environment ?? 'main',
+          ...(creds?.contentful?.spaceId ? { contentfulSpaceId: creds.contentful.spaceId } : {}),
+          contentfulEnvironment: creds?.contentful?.environment ?? 'master',
         };
       },
       run: checkApiConnectivity,
@@ -123,10 +265,8 @@ export default skill({
     prompt: ({ store }) => {
       const concerns = store.project.concerns;
       const codeHealthy = (concerns?.length ?? 0) === 0;
-      const pkg = store.project.packageData;
-      const hasAutoTokens = !!(pkg?.contentfulSpaceId && (pkg?.contentfulAccessToken || pkg?.contentfulPreviewToken));
 
-      const apiData = store.steps['check-api'];
+      const apiData = store.steps['check-api'] as ApiCheckResult | undefined;
       const codeStatusNote = codeHealthy
         ? 'The code-level exploration found **no concerns** — the setup looks correct.'
         : `The code-level exploration found **${concerns?.length ?? 0} concern(s)**:\n${(concerns ?? []).map((c: string, i: number) => `${i + 1}. ${c}`).join('\n')}`;
@@ -138,9 +278,14 @@ export default skill({
             ? 'Ninetailed API check was **skipped** (no API key found).'
             : 'Ninetailed API connectivity check **failed**.';
 
-      const tokenNote = hasAutoTokens
-        ? 'We found Contentful API tokens in the project environment files, so we can inspect entry content directly.'
-        : 'We did not find Contentful API tokens in the project, but the user can provide them manually so we can inspect entry content.';
+      const hasContentfulTokens = !!(
+        store.credentials?.contentful?.spaceId &&
+        (store.credentials?.contentful?.accessToken || store.credentials?.contentful?.previewToken)
+      );
+
+      const tokenNote = hasContentfulTokens
+        ? 'We have Contentful API tokens available, so we can inspect entry content directly.'
+        : 'We do not have Contentful API tokens, so we cannot inspect entry content.';
 
       return [
         prompt`
@@ -171,12 +316,6 @@ export default skill({
           - Experience or variant entries still in draft
           - Include depth too shallow in the API response
 
-          ${
-            hasAutoTokens
-              ? 'Mention that we already have Contentful API tokens from the project. Set hasAutoTokens to true.'
-              : 'Explain that we need Contentful API tokens (CDA and optionally CPA/Preview) to do this check, and the user can provide them if they have access to Contentful Settings > API keys. Set hasAutoTokens to false.'
-          }
-
           Let the user choose how to proceed.
         `,
         act.askUser({
@@ -201,41 +340,54 @@ export default skill({
     },
     response: type({
       choice: "'inspect-entry' | 'need-help-finding' | 'skip'",
-      hasAutoTokens: 'boolean',
       problemDescription: 'string',
     }),
     next: ({ response }) => {
       if (response.choice === 'skip') return 'review';
-      if (response.choice === 'need-help-finding') return 'help-find-entry';
-      return response.hasAutoTokens ? 'get-entry-id' : 'collect-credentials';
+      return 'choose-entry';
     },
   })
 
-  .step('help-find-entry', {
+  .step('choose-entry', {
     prompt: ({ store }) => {
       const candidates = store.project.personalizableCandidates ?? [];
-      const pkg = store.project.packageData;
-      const hasAutoTokens = !!(pkg?.contentfulSpaceId && (pkg?.contentfulAccessToken || pkg?.contentfulPreviewToken));
+      const cameFromHelp = store.steps['triage']?.choice === 'need-help-finding';
+
+      if (cameFromHelp) {
+        return [
+          prompt`
+            Help the user identify which Contentful entry to inspect.
+
+            ${
+              candidates.length > 0
+                ? `During exploration, we found these components that appear to be personalization candidates:\n${candidates.map((c: string) => `- ${c}`).join('\n')}\n\nThe user should look for the Contentful entry that provides data to one of these components.`
+                : 'We did not identify specific personalization candidates during exploration.'
+            }
+
+            Guide the user with these tips:
+            - In Contentful, look for entries of content types that have the \`nt_experiences\` field
+            - The entry ID (sys.id) is shown in the entry sidebar or in the URL when editing an entry
+            - If they're debugging a specific page, look at the page entry or the section entries within it
+            - They can also check the Contentful Personalization app to see which entries have experiences attached
+
+            Ask them to provide an entry ID once they find one, or let them skip.
+          `,
+          act.askUser({
+            type: 'open',
+            question:
+              'Paste the Contentful entry ID here (sys.id from the URL or sidebar), or type "skip" to continue without content inspection:',
+          }),
+        ];
+      }
 
       return [
         prompt`
-          Help the user identify which Contentful entry to inspect.
+          Ask the user for the Contentful entry ID (sys.id) they want to inspect.
+          They can find it in the entry URL (the last segment after /entries/) or
+          in the sidebar when editing an entry in Contentful.
 
-          ${
-            candidates.length > 0
-              ? `During exploration, we found these components that appear to be personalization candidates:\n${candidates.map((c: string) => `- ${c}`).join('\n')}\n\nThe user should look for the Contentful entry that provides data to one of these components.`
-              : 'We did not identify specific personalization candidates during exploration.'
-          }
-
-          Guide the user with these tips:
-          - In Contentful, look for entries of content types that have the \`nt_experiences\` field
-          - The entry ID (sys.id) is shown in the entry sidebar or in the URL when editing an entry
-          - If they're debugging a specific page, look at the page entry or the section entries within it
-          - They can also check the Contentful Personalization app to see which entries have experiences attached
-
-          Ask them to provide an entry ID once they find one, or let them skip.
-
-          Set hasAutoTokens to ${hasAutoTokens}.
+          If the user provides a URL like https://app.contentful.com/spaces/.../entries/ENTRY_ID,
+          extract the entry ID from it.
         `,
         act.askUser({
           type: 'open',
@@ -247,105 +399,24 @@ export default skill({
     response: type({
       'entryId?': 'string',
       skip: 'boolean',
-      hasAutoTokens: 'boolean',
     }),
-    save: ({ response }) => (response.entryId ? { credentials: { entryId: response.entryId } } : undefined),
     next: ({ response }) => {
       if (response.skip || !response.entryId) return 'review';
-      return response.hasAutoTokens ? 'get-entry-id' : 'collect-credentials';
+      return 'run-inspection';
     },
-  })
-
-  .step('collect-credentials', {
-    prompt: ({ store }) => {
-      const pkg = store.project.packageData;
-      const hasAutoTokens = !!(pkg?.contentfulSpaceId && (pkg?.contentfulAccessToken || pkg?.contentfulPreviewToken));
-
-      if (hasAutoTokens) {
-        return prompt`
-          We already have Contentful API tokens from the project's environment files.
-          Confirm that we should use these to inspect the entry.
-          Set hasCredentials to true and leave the credential fields empty — we'll use the auto-detected ones.
-        `;
-      }
-
-      return prompt`
-        We need Contentful API credentials to inspect the entry but they were not
-        auto-detected from the project's .env files.
-
-        Before asking the user, quickly check if there are .env, .env.local, or similar
-        files in the project that might contain Contentful tokens under non-standard names
-        (e.g., GATSBY_CONTENTFUL_SPACE_ID, REACT_APP_CONTENTFUL_TOKEN, VITE_CONTENTFUL_*,
-        or custom names). If you find credentials there, extract them and set hasCredentials
-        to true without bothering the user.
-
-        If you cannot find credentials in the project files, explain to the user what we need:
-        - **Space ID** — Found in Contentful under Settings > General settings
-        - **CDA Token** (Content Delivery API) — Found under Settings > API keys. This accesses published content.
-        - **CPA Token** (Content Preview API) — Same location. This accesses draft + published content.
-          The CPA token is optional but highly recommended — comparing CDA vs CPA is how we detect unpublished changes.
-        - **Environment** — Usually "master" (the default). Only needed if they use a non-default environment.
-
-        Ask them to paste their credentials, or let them skip if they don't have access.
-        If they skip or can't provide credentials, set hasCredentials to false.
-      `;
-    },
-    response: type({
-      'spaceId?': 'string',
-      'accessToken?': 'string',
-      'previewToken?': 'string',
-      'environment?': 'string',
-      hasCredentials: 'boolean',
-    }),
-    save: ({ response }) => ({
-      credentials: {
-        spaceId: response.spaceId,
-        accessToken: response.accessToken,
-        previewToken: response.previewToken,
-        environment: response.environment,
-      },
-    }),
-    next: ({ response }) => (response.hasCredentials ? 'get-entry-id' : 'review'),
-  })
-
-  .step('get-entry-id', {
-    prompt: ({ store }) => {
-      const entryId = store.credentials?.entryId;
-      if (entryId) {
-        return prompt`
-          We already have the entry ID: ${entryId}
-          Confirm this entry ID to proceed with the content inspection.
-        `;
-      }
-      return prompt`
-        Ask the user for the Contentful entry ID (sys.id) they want to inspect.
-        They can find it in the entry URL (the last segment after /entries/) or
-        in the sidebar when editing an entry in Contentful.
-
-        If the user provides a URL like https://app.contentful.com/spaces/.../entries/ENTRY_ID,
-        extract the entry ID from it.
-      `;
-    },
-    response: type({ entryId: 'string' }),
-    save: ({ response }) => ({
-      credentials: { entryId: response.entryId },
-    }),
-    next: 'run-inspection',
   })
 
   .step('run-inspection', {
     action: {
       input: ({ store }) => {
         const creds = store.credentials;
-        const pkg = store.project?.packageData;
-        const accessToken = creds?.accessToken ?? pkg?.contentfulAccessToken;
-        const previewToken = creds?.previewToken ?? pkg?.contentfulPreviewToken;
+        const entryId = (store.steps['choose-entry'] as { entryId?: string } | undefined)?.entryId ?? '';
         return {
-          spaceId: creds?.spaceId ?? pkg?.contentfulSpaceId ?? '',
-          environment: creds?.environment ?? pkg?.contentfulEnvironment ?? 'master',
-          ...(accessToken ? { accessToken } : {}),
-          ...(previewToken ? { previewToken } : {}),
-          entryId: creds?.entryId ?? '',
+          spaceId: creds?.contentful?.spaceId ?? '',
+          environment: creds?.contentful?.environment ?? 'master',
+          ...(creds?.contentful?.accessToken ? { accessToken: creds.contentful.accessToken } : {}),
+          ...(creds?.contentful?.previewToken ? { previewToken: creds.contentful.previewToken } : {}),
+          entryId,
           includeDepth: 3,
         };
       },
@@ -371,7 +442,7 @@ export default skill({
           ].join('\n')
         : 'No exploration data available';
 
-      const pkg = store.project.packageData;
+      const pkg = store.project.packages;
       const packageView = pkg
         ? [
             render.table(
@@ -383,19 +454,22 @@ export default skill({
               ),
               { columns: ['Package', 'Version'] },
             ) || '*No personalization SDK packages found*',
-            '',
-            render.table(
-              (pkg.envVars ?? []).map((ev: { name: string; status: string; maskedValue?: string }) => ({
-                Variable: ev.name,
-                Status: ev.status,
-                Value: ev.maskedValue ?? '—',
-              })),
-              { columns: ['Variable', 'Status', 'Value'] },
-            ),
           ].join('\n')
         : 'No package data available';
 
-      const apiData = store.steps['check-api'];
+      const scanned = store.steps['scan-credentials'] as CredentialsScanResult | undefined;
+      const envView = scanned
+        ? render.table(
+            (scanned.envVars ?? []).map((ev: { name: string; status: string; maskedValue?: string }) => ({
+              Variable: ev.name,
+              Status: ev.status,
+              Value: ev.maskedValue ?? '—',
+            })),
+            { columns: ['Variable', 'Status', 'Value'] },
+          )
+        : 'No environment variable data available';
+
+      const apiData = store.steps['check-api'] as ApiCheckResult | undefined;
       const apiView = apiData
         ? render.table(
             (apiData.findings ?? []).map((f: { status: string; item: string; detail: string }) => ({
@@ -448,8 +522,11 @@ export default skill({
           ## Exploration Findings
           ${explorationView}
 
-          ## Package & Environment Data
+          ## Package Data
           ${packageView}
+
+          ## Environment Variables
+          ${envView}
 
           ## API Connectivity Results
           ${apiView}
@@ -512,19 +589,20 @@ export default skill({
         }
       };
 
-      const overallStatusVal = store.diagnosis?.overallStatus ?? 'fail';
+      const diagnosis = store.diagnosis!;
+      const overallStatusVal = diagnosis.overallStatus!;
       const sections: string[] = [];
 
       sections.push(`# 🩺 Optimization Doctor Report\n`);
       sections.push(`## ${icon(overallStatusVal)} Overall: ${statusLabel(overallStatusVal)}\n`);
-      sections.push(store.diagnosis?.summary ?? 'No summary available');
+      sections.push(diagnosis.summary!);
       sections.push('---');
 
       if (store.project.explorationSummary) {
         sections.push(render.section('🔍 Exploration Summary', store.project.explorationSummary));
       }
 
-      const pkg = store.project.packageData;
+      const pkg = store.project.packages;
       if (pkg) {
         const allPkgs = [...(pkg.packages?.ninetailed ?? []), ...(pkg.packages?.optimization ?? [])];
         const pkgTable =
@@ -538,14 +616,17 @@ export default skill({
               )
             : '*No personalization SDK packages found*';
 
-        const envTable = render.table(
-          (pkg.envVars ?? []).map((ev: { name: string; status: string; maskedValue?: string }) => ({
-            Variable: ev.name,
-            Status: ev.status,
-            Value: ev.maskedValue ?? '—',
-          })),
-          { columns: ['Variable', 'Status', 'Value'] },
-        );
+        const scanned = store.steps['scan-credentials'] as CredentialsScanResult | undefined;
+        const envTable = scanned
+          ? render.table(
+              (scanned.envVars ?? []).map((ev: { name: string; status: string; maskedValue?: string }) => ({
+                Variable: ev.name,
+                Status: ev.status,
+                Value: ev.maskedValue ?? '—',
+              })),
+              { columns: ['Variable', 'Status', 'Value'] },
+            )
+          : '';
 
         sections.push(render.section('📦 Packages & Environment', `${pkgTable}\n\n${envTable}`));
       }
@@ -579,9 +660,8 @@ export default skill({
         sections.push(render.section('📄 Content Inspection', `${contentTable}${comparisonNote}`));
       }
 
-      const rawRecs = store.diagnosis?.recommendations;
-      if (rawRecs?.length) {
-        const recommendations = rawRecs.filter((r): r is Recommendation => !!r);
+      const recommendations = diagnosis.recommendations!.filter((r): r is Recommendation => !!r);
+      if (recommendations.length) {
         const priorityIcon: Record<string, string> = {
           critical: '🔴',
           warning: '🟡',
@@ -617,22 +697,13 @@ export default skill({
       ];
     },
     response: type({ choice: "'yes' | 'no'" }),
-    next: ({ response }) => (response.choice === 'yes' ? 'plan-fix' : 'report-only'),
-  })
-
-  .step('report-only', {
-    prompt: prompt`
-      The user has the diagnostic report and chose not to proceed with fixes.
-      Thank them warmly and mention they can re-run the doctor anytime if issues
-      come up later. Keep it to 2-3 sentences — brief and friendly.
-      Do NOT repeat the report findings.
-    `,
-    next: terminal,
+    next: ({ response }) => (response.choice === 'yes' ? 'plan-fix' : 'done'),
   })
 
   .step('plan-fix', {
     prompt: ({ store, refs }) => {
-      const recs = (store.diagnosis?.recommendations ?? []).filter((r): r is Recommendation => !!r);
+      const diagnosis = store.diagnosis!;
+      const recs = diagnosis.recommendations!.filter((r): r is Recommendation => !!r);
       const priorityIcon: Record<string, string> = {
         critical: '🔴',
         warning: '🟡',
@@ -703,7 +774,8 @@ export default skill({
 
   .step('fix', {
     prompt: ({ store, system, refs }) => {
-      const recs = (store.diagnosis?.recommendations ?? []).filter((r): r is Recommendation => !!r);
+      const diagnosis = store.diagnosis!;
+      const recs = diagnosis.recommendations!.filter((r): r is Recommendation => !!r);
       const priorityIcon: Record<string, string> = {
         critical: '🔴',
         warning: '🟡',
@@ -782,17 +854,44 @@ export default skill({
 
   .step('done', {
     prompt: ({ store }) => {
-      const recs = (store.diagnosis?.recommendations ?? []).filter((r): r is Recommendation => !!r);
+      const diagnosis = store.diagnosis!;
+      const recs = diagnosis.recommendations!.filter((r): r is Recommendation => !!r);
 
       const reVerifyResult = store.steps['re-verify'];
       const reVerifyStatus = (reVerifyResult as { overallStatus?: string } | undefined)?.overallStatus;
       const reVerifySummary = (reVerifyResult as { summary?: string } | undefined)?.summary;
 
+      const cameFromReport = !store.steps['plan-fix'] && !reVerifyResult;
+      const cameFromPlanFix =
+        store.steps['plan-fix'] && !(store.steps['plan-fix'] as { approved?: boolean })?.approved && !reVerifyResult;
+      const cameFromReVerify = !!reVerifyResult;
+
+      if (cameFromReport) {
+        // No fixes requested — user said "the report is enough"
+        return prompt`
+          The user has the diagnostic report and chose not to proceed with fixes.
+          Thank them warmly and mention they can re-run the doctor anytime if issues
+          come up later. Keep it to 2-3 sentences — brief and friendly.
+          Do NOT repeat the report findings.
+        `;
+      }
+
+      if (cameFromPlanFix) {
+        // Fixes declined at plan-fix stage
+        return prompt`
+          The user reviewed the fix plan but chose not to proceed with implementation.
+          Acknowledge their choice, remind them the diagnostic report is still available,
+          and mention they can re-run the doctor anytime. Keep it to 2-3 sentences.
+          Do NOT repeat the report findings.
+        `;
+      }
+
+      // Fixes applied — show before/after
       const statusIcon = reVerifyStatus === 'pass' ? '✅' : reVerifyStatus === 'warn' ? '⚠️' : '❌';
 
       const sections: string[] = [];
       sections.push(`# 🩺 Doctor Summary\n`);
-      sections.push(render.section('Before', `Status: ${store.diagnosis?.overallStatus ?? 'unknown'}`));
+      sections.push(render.section('Before', `Status: ${diagnosis.overallStatus}`));
 
       if (reVerifyStatus) {
         sections.push(

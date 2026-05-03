@@ -1,9 +1,9 @@
 import { skill, type, prompt, render, act, view, terminal } from '@contentful/skill-kit';
-import { checkPackagesAndEnv } from '../actions/check-packages-env.js';
+import { checkPackages } from '../actions/check-packages.js';
 import { validateSetup } from '../actions/validate-setup.js';
 import { installPackages } from '../actions/install-packages.js';
 import { writeEnvFile } from '../actions/write-env-file.js';
-import { PackagesAndEnvResult, ReadinessStatus } from '../schemas.js';
+import { PackagesResult, ReadinessStatus } from '../schemas.js';
 import { VERSION } from '../version.js';
 
 export default skill({
@@ -28,7 +28,7 @@ export default skill({
       'explorationSummary?': 'string',
       'personalizableCandidates?': 'string[]',
       'existingSetup?': "'none' | 'partial' | 'configured'",
-      'packageData?': PackagesAndEnvResult,
+      'packages?': PackagesResult,
     }),
     setup: type({
       'sdkChoice?': "'ninetailed' | 'optimization'",
@@ -96,12 +96,12 @@ export default skill({
         explorationSummary: response.explorationSummary,
         personalizableCandidates: response.personalizableCandidates,
         existingSetup: response.existingSetup,
-        packageData: actionResult,
+        packages: actionResult,
       },
     }),
     action: {
       input: ({ response }) => ({ projectPath: response.projectPath }),
-      run: checkPackagesAndEnv,
+      run: checkPackages,
     },
     next: 'assess',
   })
@@ -124,31 +124,20 @@ export default skill({
           ].join('\n')
         : 'No exploration data available';
 
-      const pkg = store.project.packageData;
+      const pkg = store.project.packages;
       const packageView = pkg
-        ? [
-            render.table(
-              [
-                ...(pkg.packages?.ninetailed ?? []),
-                ...(pkg.packages?.optimization ?? []),
-                ...(pkg.packages?.contentful ?? []),
-                ...(pkg.packages?.framework ?? []),
-              ].map((p: { name: string; version: string }) => ({
-                Package: p.name,
-                Version: p.version,
-              })),
-              { columns: ['Package', 'Version'] },
-            ) || '*No packages found*',
-            '',
-            render.table(
-              (pkg.envVars ?? []).map((ev: { name: string; status: string; maskedValue?: string }) => ({
-                Variable: ev.name,
-                Status: ev.status,
-                Value: ev.maskedValue ?? '—',
-              })),
-              { columns: ['Variable', 'Status', 'Value'] },
-            ),
-          ].join('\n')
+        ? render.table(
+            [
+              ...(pkg.packages?.ninetailed ?? []),
+              ...(pkg.packages?.optimization ?? []),
+              ...(pkg.packages?.contentful ?? []),
+              ...(pkg.packages?.framework ?? []),
+            ].map((p: { name: string; version: string }) => ({
+              Package: p.name,
+              Version: p.version,
+            })),
+            { columns: ['Package', 'Version'] },
+          ) || '*No packages found*'
         : 'No package data available';
 
       const readinessOnly = store.steps.explore.readinessOnly;
@@ -458,7 +447,7 @@ export default skill({
       input: ({ store }) => ({
         projectPath: store.project?.projectPath ?? '.',
         packages: store.setup?.packagesToInstall ?? [],
-        packageManager: store.project?.packageData?.packageManager ?? 'npm',
+        packageManager: store.project?.packages?.packageManager ?? 'npm',
       }),
       run: installPackages,
     },

@@ -15,7 +15,7 @@ export type Finding = typeof Finding.infer;
 export const ReadinessStatus = type("'ready' | 'minor-changes' | 'needs-work' | 'not-ready'");
 export type ReadinessStatus = typeof ReadinessStatus.infer;
 
-// --- checkPackagesAndEnv action ---
+// --- Shared field types ---
 
 export const PackageInfo = type({
   name: 'string',
@@ -30,23 +30,35 @@ export const EnvVarInfo = type({
 });
 export type EnvVarInfo = typeof EnvVarInfo.infer;
 
-export const PackagesAndEnvResult = type({
+// --- checkPackages action ---
+
+export const PackagesResult = type({
   packages: {
     ninetailed: PackageInfo.array(),
     optimization: PackageInfo.array(),
     contentful: PackageInfo.array(),
     framework: PackageInfo.array(),
   },
-  envVars: EnvVarInfo.array(),
   packageManager: "'npm' | 'yarn' | 'pnpm' | 'bun' | 'unknown'",
-  'apiKey?': 'string',
-  'environment?': 'string',
-  'contentfulSpaceId?': 'string',
-  'contentfulAccessToken?': 'string',
-  'contentfulPreviewToken?': 'string',
-  'contentfulEnvironment?': 'string',
 });
-export type PackagesAndEnvResult = typeof PackagesAndEnvResult.infer;
+export type PackagesResult = typeof PackagesResult.infer;
+
+// --- scanCredentials action ---
+
+export const CredentialsScanResult = type({
+  envVars: EnvVarInfo.array(),
+  'personalization?': {
+    'apiKey?': 'string',
+    'environment?': 'string',
+  },
+  'contentful?': {
+    'spaceId?': 'string',
+    'accessToken?': 'string',
+    'previewToken?': 'string',
+    'environment?': 'string',
+  },
+});
+export type CredentialsScanResult = typeof CredentialsScanResult.infer;
 
 // --- checkApiConnectivity action ---
 
@@ -62,7 +74,8 @@ export type ApiCheckResult = typeof ApiCheckResult.infer;
 // --- validateSetup action ---
 
 export const ValidationResult = type({
-  packages: PackagesAndEnvResult,
+  packages: PackagesResult,
+  credentials: CredentialsScanResult,
   api: ApiCheckResult,
   overallStatus: CheckStatus,
   summary: 'string',
