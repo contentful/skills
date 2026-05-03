@@ -100,7 +100,7 @@ export default skill({
       },
     }),
     action: {
-      input: ({ response }) => ({ projectPath: response.projectPath }),
+      mapInput: ({ response }) => ({ projectPath: response.projectPath }),
       run: checkPackages,
     },
     next: 'assess',
@@ -444,7 +444,7 @@ export default skill({
 
   .step('install', {
     action: {
-      input: ({ store }) => ({
+      mapInput: ({ store }) => ({
         projectPath: store.project?.projectPath ?? '.',
         packages: store.setup?.packagesToInstall ?? [],
         packageManager: store.project?.packages?.packageManager ?? 'npm',
@@ -456,7 +456,7 @@ export default skill({
 
   .step('write-env', {
     action: {
-      input: ({ store }) => ({
+      mapInput: ({ store }) => ({
         projectPath: store.project?.projectPath ?? '.',
         variables: store.setup?.envVars ?? {},
         fileName: '.env.local',

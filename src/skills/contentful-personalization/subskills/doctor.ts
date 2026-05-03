@@ -109,7 +109,7 @@ export default skill({
       },
     }),
     action: {
-      input: ({ response }) => ({ projectPath: response.projectPath }),
+      mapInput: ({ response }) => ({ projectPath: response.projectPath }),
       run: checkPackages,
     },
     next: 'scan-credentials',
@@ -117,7 +117,7 @@ export default skill({
 
   .step('scan-credentials', {
     action: {
-      input: ({ store }) => ({ projectPath: store.project?.projectPath ?? '.' }),
+      mapInput: ({ store }) => ({ projectPath: store.project?.projectPath ?? '.' }),
       run: scanCredentials,
     },
     next: 'confirm-credentials',
@@ -293,7 +293,7 @@ export default skill({
 
   .step('check-api', {
     action: {
-      input: ({ store }) => {
+      mapInput: ({ store }) => {
         const creds = store.credentials;
         return {
           ...(creds?.personalization?.apiKey ? { apiKey: creds.personalization.apiKey } : {}),
@@ -454,7 +454,7 @@ export default skill({
 
   .step('run-inspection', {
     action: {
-      input: ({ store }) => {
+      mapInput: ({ store }) => {
         const creds = store.credentials;
         const entryId = (store.steps['choose-entry'] as { entryId?: string } | undefined)?.entryId ?? '';
         return {
@@ -885,7 +885,7 @@ export default skill({
 
   .step('re-verify', {
     action: {
-      input: ({ store }) => ({
+      mapInput: ({ store }) => ({
         projectPath: store.project?.projectPath ?? '.',
       }),
       run: validateSetup,
