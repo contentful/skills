@@ -145,12 +145,10 @@ export default skill({
       const hasAnyCreds = hasPersonalization || hasContentful;
 
       if (hasAnyCreds) {
+        const mask = (v: string) => (v.length <= 8 ? '****' : v.slice(0, 8) + '****');
         const credRows: Array<{ Credential: string; Value: string }> = [];
         if (scanned?.personalization?.apiKey) {
-          credRows.push({
-            Credential: 'Ninetailed API key',
-            Value: `****${scanned.personalization.apiKey.slice(-4)}`,
-          });
+          credRows.push({ Credential: 'Ninetailed API key', Value: mask(scanned.personalization.apiKey) });
         }
         if (scanned?.personalization?.environment) {
           credRows.push({ Credential: 'Ninetailed environment', Value: scanned.personalization.environment });
@@ -159,16 +157,10 @@ export default skill({
           credRows.push({ Credential: 'Contentful Space ID', Value: scanned.contentful.spaceId });
         }
         if (scanned?.contentful?.accessToken) {
-          credRows.push({
-            Credential: 'CDA token',
-            Value: `****${scanned.contentful.accessToken.slice(-4)}`,
-          });
+          credRows.push({ Credential: 'CDA token', Value: mask(scanned.contentful.accessToken) });
         }
         if (scanned?.contentful?.previewToken) {
-          credRows.push({
-            Credential: 'CPA token',
-            Value: `****${scanned.contentful.previewToken.slice(-4)}`,
-          });
+          credRows.push({ Credential: 'CPA token', Value: mask(scanned.contentful.previewToken) });
         }
         if (scanned?.contentful?.environment) {
           credRows.push({ Credential: 'Contentful environment', Value: scanned.contentful.environment });

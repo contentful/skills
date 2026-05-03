@@ -5,9 +5,10 @@ import { CredentialsScanResult, type EnvVarInfo } from '../schemas.js';
 
 const FW_PREFIX = '(?:NEXT_PUBLIC_|GATSBY_|REACT_APP_|VITE_)?';
 
-const KNOWN_ENV_VARS: Array<{ name: string; patterns: RegExp[] }> = [
+const KNOWN_ENV_VARS: Array<{ name: string; secret: boolean; patterns: RegExp[] }> = [
   {
     name: 'NINETAILED_API_KEY',
+    secret: true,
     patterns: [
       new RegExp(`^${FW_PREFIX}NINETAILED_API_KEY\\s*=[^\\S\\n]*(.+)`, 'm'),
       new RegExp(`^${FW_PREFIX}NINETAILED_CLIENT_ID\\s*=[^\\S\\n]*(.+)`, 'm'),
@@ -15,14 +16,17 @@ const KNOWN_ENV_VARS: Array<{ name: string; patterns: RegExp[] }> = [
   },
   {
     name: 'NINETAILED_ENVIRONMENT',
+    secret: false,
     patterns: [new RegExp(`^${FW_PREFIX}NINETAILED_ENVIRONMENT\\s*=[^\\S\\n]*(.+)`, 'm')],
   },
   {
     name: 'CONTENTFUL_SPACE_ID',
+    secret: false,
     patterns: [new RegExp(`^${FW_PREFIX}CONTENTFUL_SPACE_ID\\s*=[^\\S\\n]*(.+)`, 'm')],
   },
   {
     name: 'CONTENTFUL_ACCESS_TOKEN',
+    secret: true,
     patterns: [
       new RegExp(`^${FW_PREFIX}CONTENTFUL_ACCESS_TOKEN\\s*=[^\\S\\n]*(.+)`, 'm'),
       new RegExp(`^${FW_PREFIX}CONTENTFUL_TOKEN\\s*=[^\\S\\n]*(.+)`, 'm'),
@@ -31,6 +35,7 @@ const KNOWN_ENV_VARS: Array<{ name: string; patterns: RegExp[] }> = [
   },
   {
     name: 'CONTENTFUL_PREVIEW_TOKEN',
+    secret: true,
     patterns: [
       new RegExp(`^${FW_PREFIX}CONTENTFUL_PREVIEW_TOKEN\\s*=[^\\S\\n]*(.+)`, 'm'),
       new RegExp(`^${FW_PREFIX}CONTENTFUL_PREVIEW_ACCESS_TOKEN\\s*=[^\\S\\n]*(.+)`, 'm'),
@@ -38,6 +43,7 @@ const KNOWN_ENV_VARS: Array<{ name: string; patterns: RegExp[] }> = [
   },
   {
     name: 'CONTENTFUL_ENVIRONMENT',
+    secret: false,
     patterns: [new RegExp(`^${FW_PREFIX}CONTENTFUL_ENVIRONMENT\\s*=[^\\S\\n]*(.+)`, 'm')],
   },
 ];
@@ -79,7 +85,7 @@ export const scanCredentials = action({
     const envVars: EnvVarInfo[] = [];
     const detected: Record<string, string> = {};
 
-    for (const { name, patterns } of KNOWN_ENV_VARS) {
+    for (const { name, secret, patterns } of KNOWN_ENV_VARS) {
       let found = false;
       for (const pattern of patterns) {
         const match = combinedEnv.match(pattern);
@@ -88,7 +94,7 @@ export const scanCredentials = action({
           if (!value) {
             envVars.push({ name, status: 'empty' });
           } else {
-            envVars.push({ name, status: 'set', maskedValue: maskValue(value) });
+            envVars.push({ name, status: 'set', maskedValue: secret ? maskValue(value) : value });
             detected[name] = value;
           }
           found = true;
