@@ -1,52 +1,44 @@
-import {
-  skill,
-  type,
-  prompt,
-  render,
-  act,
-  view,
-  terminal,
-} from "@contentful/skill-kit";
-import { checkPackagesAndEnv } from "../actions/check-packages-env.js";
-import { validateSetup } from "../actions/validate-setup.js";
-import { installPackages } from "../actions/install-packages.js";
-import { writeEnvFile } from "../actions/write-env-file.js";
-import { PackagesAndEnvResult, ReadinessStatus } from "../schemas.js";
-import { VERSION } from "../version.js";
+import { skill, type, prompt, render, act, view, terminal } from '@contentful/skill-kit';
+import { checkPackagesAndEnv } from '../actions/check-packages-env.js';
+import { validateSetup } from '../actions/validate-setup.js';
+import { installPackages } from '../actions/install-packages.js';
+import { writeEnvFile } from '../actions/write-env-file.js';
+import { PackagesAndEnvResult, ReadinessStatus } from '../schemas.js';
+import { VERSION } from '../version.js';
 
 export default skill({
-  name: "onboard",
+  name: 'onboard',
   version: VERSION,
   description:
-    "Assess readiness and guide Contentful personalization setup end-to-end. " +
-    "Explores the codebase, checks readiness, helps choose SDK and architecture, " +
-    "installs packages, and guides implementation.",
-  entry: "explore",
+    'Assess readiness and guide Contentful personalization setup end-to-end. ' +
+    'Explores the codebase, checks readiness, helps choose SDK and architecture, ' +
+    'installs packages, and guides implementation.',
+  entry: 'explore',
 
   params: type({
-    "userQuery?": "string",
-    "readinessOnly?": "boolean",
+    'userQuery?': 'string',
+    'readinessOnly?': 'boolean',
   }),
 
   stores: {
     project: type({
-      framework: "string",
+      framework: 'string',
       routerType: "'app' | 'pages' | 'hybrid' | 'none'",
-      projectPath: "string",
-      "explorationSummary?": "string",
-      "personalizableCandidates?": "string[]",
-      "existingSetup?": "'none' | 'partial' | 'configured'",
-      "packageData?": PackagesAndEnvResult,
+      projectPath: 'string',
+      'explorationSummary?': 'string',
+      'personalizableCandidates?': 'string[]',
+      'existingSetup?': "'none' | 'partial' | 'configured'",
+      'packageData?': PackagesAndEnvResult,
     }),
     setup: type({
-      "sdkChoice?": "'ninetailed' | 'optimization'",
-      "architecture?": "'client-only' | 'hybrid-ssr' | 'server-only'",
-      "packagesToInstall?": "string[]",
-      "envVars?": "Record<string, string>",
+      'sdkChoice?': "'ninetailed' | 'optimization'",
+      'architecture?': "'client-only' | 'hybrid-ssr' | 'server-only'",
+      'packagesToInstall?': 'string[]',
+      'envVars?': 'Record<string, string>',
     }),
   },
 })
-  .step("explore", {
+  .step('explore', {
     prompt: ({ params, refs }) => prompt`
         Investigate this project to understand its structure, Contentful integration,
         and what personalization would look like here. You are gathering facts —
@@ -75,26 +67,25 @@ export default skill({
         Spend most time on items 1-4. For each area, note the specific files and patterns you find.
         Think about which components would be good candidates for personalization.
 
-        ${params?.userQuery ? `\nUser's request: "${params.userQuery}"` : ""}
-        ${params?.readinessOnly ? "\nNote: The user only asked about readiness — keep that in mind but still explore fully." : ""}
+        ${params?.userQuery ? `\nUser's request: "${params.userQuery}"` : ''}
+        ${params?.readinessOnly ? '\nNote: The user only asked about readiness — keep that in mind but still explore fully.' : ''}
 
         ## Reference Material
-        ${refs.load("how-personalization-works.md")}
+        ${refs.load('how-personalization-works.md')}
 
-        ${refs.load("component-patterns.md")}
+        ${refs.load('component-patterns.md')}
 
-        ${refs.load("framework-notes.md")}
+        ${refs.load('framework-notes.md')}
       `,
     response: type({
-      framework:
-        "'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'other'",
-      "frameworkVersion?": "string",
+      framework: "'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'other'",
+      'frameworkVersion?': 'string',
       routerType: "'app' | 'pages' | 'hybrid' | 'none'",
-      projectPath: "string",
-      explorationSummary: "string",
-      personalizableCandidates: "string[]",
+      projectPath: 'string',
+      explorationSummary: 'string',
+      personalizableCandidates: 'string[]',
       existingSetup: "'none' | 'partial' | 'configured'",
-      readinessOnly: "boolean",
+      readinessOnly: 'boolean',
     }),
     save: ({ response, actionResult }) => ({
       step: response,
@@ -112,26 +103,26 @@ export default skill({
       input: ({ response }) => ({ projectPath: response.projectPath }),
       run: checkPackagesAndEnv,
     },
-    next: "assess",
+    next: 'assess',
   })
 
-  .step("assess", {
+  .step('assess', {
     prompt: ({ store, refs }) => {
       const explorationView = store.project.explorationSummary
         ? [
             render.kv({
               Framework: store.project.framework,
               Router: store.project.routerType,
-              "Existing setup": store.project.existingSetup ?? "unknown",
+              'Existing setup': store.project.existingSetup ?? 'unknown',
             }),
-            "",
+            '',
             store.project.explorationSummary,
-            "",
+            '',
             (store.project.personalizableCandidates?.length ?? 0) > 0
-              ? `**Personalization candidates:** ${store.project.personalizableCandidates!.join(", ")}`
-              : "*No specific candidates identified yet*",
-          ].join("\n")
-        : "No exploration data available";
+              ? `**Personalization candidates:** ${store.project.personalizableCandidates!.join(', ')}`
+              : '*No specific candidates identified yet*',
+          ].join('\n')
+        : 'No exploration data available';
 
       const pkg = store.project.packageData;
       const packageView = pkg
@@ -146,25 +137,19 @@ export default skill({
                 Package: p.name,
                 Version: p.version,
               })),
-              { columns: ["Package", "Version"] },
-            ) || "*No packages found*",
-            "",
+              { columns: ['Package', 'Version'] },
+            ) || '*No packages found*',
+            '',
             render.table(
-              (pkg.envVars ?? []).map(
-                (ev: {
-                  name: string;
-                  status: string;
-                  maskedValue?: string;
-                }) => ({
-                  Variable: ev.name,
-                  Status: ev.status,
-                  Value: ev.maskedValue ?? "—",
-                }),
-              ),
-              { columns: ["Variable", "Status", "Value"] },
+              (pkg.envVars ?? []).map((ev: { name: string; status: string; maskedValue?: string }) => ({
+                Variable: ev.name,
+                Status: ev.status,
+                Value: ev.maskedValue ?? '—',
+              })),
+              { columns: ['Variable', 'Status', 'Value'] },
             ),
-          ].join("\n")
-        : "No package data available";
+          ].join('\n')
+        : 'No package data available';
 
       const readinessOnly = store.steps.explore.readinessOnly;
 
@@ -188,10 +173,10 @@ export default skill({
           Do NOT make SDK or architecture recommendations — that happens in the next step.
           Do NOT ask the user any questions.
 
-          ${readinessOnly ? "The user is only asking about readiness, not requesting a full setup. Set readinessOnly to true." : "Set readinessOnly to false unless the exploration data suggests the user only wanted a readiness check."}
+          ${readinessOnly ? 'The user is only asking about readiness, not requesting a full setup. Set readinessOnly to true.' : 'Set readinessOnly to false unless the exploration data suggests the user only wanted a readiness check.'}
 
           ## Readiness Rubric
-          ${refs.load("readiness-criteria.md")}
+          ${refs.load('readiness-criteria.md')}
 
           ## Exploration Findings
           ${explorationView}
@@ -202,93 +187,79 @@ export default skill({
     },
     response: type({
       readinessStatus: ReadinessStatus,
-      report: "string",
-      prerequisites: "string[]",
-      readinessOnly: "boolean",
+      report: 'string',
+      prerequisites: 'string[]',
+      readinessOnly: 'boolean',
     }),
     next: ({ response }) => {
       const status = response.readinessStatus;
-      if (status === "not-ready" || status === "needs-work") return "gate";
-      if (response.readinessOnly) return "gate";
-      return "recommend";
+      if (status === 'not-ready' || status === 'needs-work') return 'gate';
+      if (response.readinessOnly) return 'gate';
+      return 'recommend';
     },
   })
 
-  .step("gate", {
+  .step('gate', {
     prompt: ({ store }) => {
       const assessReport = store.steps.assess.report;
       if (!assessReport) {
         return [
-          "Present a brief message explaining that assessment data was unavailable.",
-          view(
-            "⚠️ No assessment data available. Please re-run the readiness check.",
-          ),
+          'Present a brief message explaining that assessment data was unavailable.',
+          view('⚠️ No assessment data available. Please re-run the readiness check.'),
         ];
       }
 
       const readinessStatus = store.steps.assess.readinessStatus;
-      const statusConfig: Record<
-        string,
-        { icon: string; label: string; detail: string }
-      > = {
-        ready: { icon: "✅", label: "Ready", detail: "All systems go" },
-        "minor-changes": {
-          icon: "🟡",
-          label: "Almost Ready",
-          detail: "A few small things to address",
+      const statusConfig: Record<string, { icon: string; label: string; detail: string }> = {
+        ready: { icon: '✅', label: 'Ready', detail: 'All systems go' },
+        'minor-changes': {
+          icon: '🟡',
+          label: 'Almost Ready',
+          detail: 'A few small things to address',
         },
-        "needs-work": {
-          icon: "🟠",
-          label: "Needs Work",
-          detail: "Moderate changes required before setup",
+        'needs-work': {
+          icon: '🟠',
+          label: 'Needs Work',
+          detail: 'Moderate changes required before setup',
         },
-        "not-ready": {
-          icon: "🔴",
-          label: "Not Ready",
-          detail: "Significant work needed first",
+        'not-ready': {
+          icon: '🔴',
+          label: 'Not Ready',
+          detail: 'Significant work needed first',
         },
       };
-      const status =
-        statusConfig[readinessStatus ?? "not-ready"] ??
-        statusConfig["not-ready"];
+      const status = statusConfig[readinessStatus ?? 'not-ready'] ?? statusConfig['not-ready'];
 
       const sections: string[] = [];
       sections.push(`# ${status.icon} Readiness Report: ${status.label}\n`);
       sections.push(`*${status.detail}*\n`);
-      sections.push("---\n");
+      sections.push('---\n');
       sections.push(assessReport);
 
       const prerequisites = store.steps.assess.prerequisites;
       if ((prerequisites?.length ?? 0) > 0) {
         sections.push(
-          render.section(
-            "📋 Prerequisites",
-            prerequisites
-              .map((p: string, i: number) => `${i + 1}. ${p}`)
-              .join("\n"),
-          ),
+          render.section('📋 Prerequisites', prerequisites.map((p: string, i: number) => `${i + 1}. ${p}`).join('\n')),
         );
       }
 
-      if (readinessStatus === "ready" || readinessStatus === "minor-changes") {
+      if (readinessStatus === 'ready' || readinessStatus === 'minor-changes') {
         sections.push(
-          "\n---\n\n🎉 Your project is ready for personalization! Run this skill again when you want to start setup.",
+          '\n---\n\n🎉 Your project is ready for personalization! Run this skill again when you want to start setup.',
         );
       } else {
-        sections.push(
-          "\n---\n\n💡 Address the items above, then run this skill again to re-check readiness.",
-        );
+        sections.push('\n---\n\n💡 Address the items above, then run this skill again to re-check readiness.');
       }
 
       return [
-        "Present the readiness report below to the user exactly as rendered. Add a brief, warm closing sentence.",
-        view("Readiness Report", sections.join("\n\n")),
+        'Present the readiness report below to the user exactly as rendered. Add a brief, warm closing sentence.',
+        view('Readiness Report', sections.join('\n\n')),
       ];
     },
     next: terminal,
   })
 
-  .step("recommend", {
+  .step('recommend', {
     prompt: ({ store, refs }) => {
       return prompt`
           Recommend a specific SDK and architecture for this project.
@@ -300,7 +271,7 @@ export default skill({
             Framework: store.project.framework,
             Router: store.project.routerType,
           })}
-          ${store.project.explorationSummary ? `\n${store.project.explorationSummary}` : ""}
+          ${store.project.explorationSummary ? `\n${store.project.explorationSummary}` : ''}
 
           ## Your two decisions
 
@@ -318,13 +289,13 @@ export default skill({
           Do NOT start implementing anything or install packages.
 
           ## SDK Selection Guide
-          ${refs.load("sdk-selection.md")}
+          ${refs.load('sdk-selection.md')}
         `;
     },
     response: type({
       sdkChoice: "'ninetailed' | 'optimization'",
       architecture: "'client-only' | 'hybrid-ssr' | 'server-only'",
-      reasoning: "string",
+      reasoning: 'string',
     }),
     save: ({ response }) => ({
       setup: {
@@ -332,10 +303,10 @@ export default skill({
         architecture: response.architecture,
       },
     }),
-    next: "confirm-choice",
+    next: 'confirm-choice',
   })
 
-  .step("confirm-choice", {
+  .step('confirm-choice', {
     prompt: ({ store }) => [
       prompt`
         Present the SDK and architecture recommendation below, then ask the user
@@ -345,28 +316,28 @@ export default skill({
 
         ${render.kv({
           SDK:
-            store.setup?.sdkChoice === "ninetailed"
-              ? "@ninetailed/experience.js (legacy, proven)"
-              : "@contentful/optimization (modern, Contentful-native)",
+            store.setup?.sdkChoice === 'ninetailed'
+              ? '@ninetailed/experience.js (legacy, proven)'
+              : '@contentful/optimization (modern, Contentful-native)',
           Architecture:
-            store.setup?.architecture === "client-only"
-              ? "Client-only (browser-side personalization)"
-              : store.setup?.architecture === "hybrid-ssr"
-                ? "Hybrid SSR (server preflight + client hydration)"
-                : "Server-only (full server-side)",
+            store.setup?.architecture === 'client-only'
+              ? 'Client-only (browser-side personalization)'
+              : store.setup?.architecture === 'hybrid-ssr'
+                ? 'Hybrid SSR (server preflight + client hydration)'
+                : 'Server-only (full server-side)',
           Framework: store.project.framework,
         })}
       `,
       act.confirm({
-        message: "Proceed with this SDK and architecture choice?",
-        defaultAnswer: "yes",
+        message: 'Proceed with this SDK and architecture choice?',
+        defaultAnswer: 'yes',
       }),
     ],
-    response: type({ approved: "boolean" }),
-    next: ({ response }) => (response.approved ? "cms-setup" : "recommend"),
+    response: type({ approved: 'boolean' }),
+    next: ({ response }) => (response.approved ? 'cms-setup' : 'recommend'),
   })
 
-  .step("cms-setup", {
+  .step('cms-setup', {
     prompt: ({ refs }) => [
       prompt`
         Guide the user through the Contentful app installation. These are steps
@@ -377,78 +348,71 @@ export default skill({
 
         Do NOT skip ahead to coding. Wait for the user's response.
       `,
-      view(
-        "🏗️ Contentful App Setup Guide",
-        refs.load("contentful-app-setup.md"),
-      ),
+      view('🏗️ Contentful App Setup Guide', refs.load('contentful-app-setup.md')),
       act.askUser({
-        type: "structured",
-        question: "Have you completed the Contentful app setup?",
+        type: 'structured',
+        question: 'Have you completed the Contentful app setup?',
         options: [
-          { value: "done", label: "✅ Yes, setup is complete" },
-          { value: "help", label: "❓ I need more guidance" },
+          { value: 'done', label: '✅ Yes, setup is complete' },
+          { value: 'help', label: '❓ I need more guidance' },
         ],
       }),
     ],
     response: type({ choice: "'done' | 'help'" }),
     next: ({ response, attempts }) => {
-      if (response.choice === "done") return "plan";
-      if (attempts >= 3) return "plan";
-      return "cms-setup";
+      if (response.choice === 'done') return 'plan';
+      if (attempts >= 3) return 'plan';
+      return 'cms-setup';
     },
   })
 
-  .step("plan", {
+  .step('plan', {
     prompt: ({ store, refs }) => {
       const refSections: Array<{ label: string; content: string }> = [
         {
-          label: "Environment Variables",
-          content: refs.load("env-var-spec.md"),
+          label: 'Environment Variables',
+          content: refs.load('env-var-spec.md'),
         },
         {
-          label: "Provider Patterns",
-          content: refs.load("provider-patterns.md"),
+          label: 'Provider Patterns',
+          content: refs.load('provider-patterns.md'),
         },
         {
-          label: "Rendering Pipeline",
-          content: refs.load("rendering-pipeline.md"),
+          label: 'Rendering Pipeline',
+          content: refs.load('rendering-pipeline.md'),
         },
       ];
 
-      if (store.setup?.architecture === "hybrid-ssr") {
+      if (store.setup?.architecture === 'hybrid-ssr') {
         refSections.push({
-          label: "Middleware Patterns",
-          content: refs.load("middleware-patterns.md"),
+          label: 'Middleware Patterns',
+          content: refs.load('middleware-patterns.md'),
         });
         refSections.push({
-          label: "SSR Guide",
-          content: refs.load("ssr-guide.md"),
+          label: 'SSR Guide',
+          content: refs.load('ssr-guide.md'),
         });
       }
 
       refSections.push({
-        label: "Analytics & Preview",
-        content: refs.load("analytics-and-preview.md"),
+        label: 'Analytics & Preview',
+        content: refs.load('analytics-and-preview.md'),
       });
       refSections.push({
-        label: "Implementation Examples",
-        content: refs.load("implementation-examples.md"),
+        label: 'Implementation Examples',
+        content: refs.load('implementation-examples.md'),
       });
 
       const steps = [
-        `📦 Install packages: ${store.setup?.sdkChoice === "ninetailed" ? "@ninetailed/experience.js + plugins" : "@contentful/optimization + plugins"}`,
-        "🔑 Configure environment variables with placeholder values",
-        "🔌 Add provider wrapper to the appropriate layout/app file",
-        "🧩 Wire components with Experience/Personalize wrappers and update component mapper",
-        ...(store.setup?.architecture === "hybrid-ssr"
-          ? [
-              "⚡ Set up middleware with preflight, cookie management, and matcher config",
-            ]
+        `📦 Install packages: ${store.setup?.sdkChoice === 'ninetailed' ? '@ninetailed/experience.js + plugins' : '@contentful/optimization + plugins'}`,
+        '🔑 Configure environment variables with placeholder values',
+        '🔌 Add provider wrapper to the appropriate layout/app file',
+        '🧩 Wire components with Experience/Personalize wrappers and update component mapper',
+        ...(store.setup?.architecture === 'hybrid-ssr'
+          ? ['⚡ Set up middleware with preflight, cookie management, and matcher config']
           : []),
-        ...(store.setup?.architecture !== "server-only"
-          ? ["📊 Configure analytics/insights plugin"]
-          : []),
-        "✅ Verify setup and fix any issues",
+        ...(store.setup?.architecture !== 'server-only' ? ['📊 Configure analytics/insights plugin'] : []),
+        '✅ Verify setup and fix any issues',
       ];
 
       return [
@@ -460,13 +424,13 @@ export default skill({
           Do NOT begin implementing. This is the planning step only.
 
           ${render.kv({
-            SDK: store.setup?.sdkChoice ?? "TBD",
-            Architecture: store.setup?.architecture ?? "TBD",
+            SDK: store.setup?.sdkChoice ?? 'TBD',
+            Architecture: store.setup?.architecture ?? 'TBD',
             Framework: `${store.project.framework} (${store.project.routerType} router)`,
           })}
 
           ## Reference Material
-          ${refSections.map((r) => `### ${r.label}\n${r.content}`).join("\n\n---\n\n")}
+          ${refSections.map((r) => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
         `,
         act.plan({
           summary: `Implement ${store.setup?.sdkChoice} personalization with ${store.setup?.architecture} architecture`,
@@ -475,10 +439,10 @@ export default skill({
       ];
     },
     response: type({
-      approved: "boolean",
-      packagesToInstall: "string[]",
-      envVars: "Record<string, string>",
-      plan: "string",
+      approved: 'boolean',
+      packagesToInstall: 'string[]',
+      envVars: 'Record<string, string>',
+      plan: 'string',
     }),
     save: ({ response }) => ({
       setup: {
@@ -486,72 +450,72 @@ export default skill({
         envVars: response.envVars,
       },
     }),
-    next: ({ response }) => (response.approved ? "install" : "recommend"),
+    next: ({ response }) => (response.approved ? 'install' : 'recommend'),
   })
 
-  .step("install", {
+  .step('install', {
     action: {
       input: ({ store }) => ({
-        projectPath: store.project?.projectPath ?? ".",
+        projectPath: store.project?.projectPath ?? '.',
         packages: store.setup?.packagesToInstall ?? [],
-        packageManager: store.project?.packageData?.packageManager ?? "npm",
+        packageManager: store.project?.packageData?.packageManager ?? 'npm',
       }),
       run: installPackages,
     },
-    next: "write-env",
+    next: 'write-env',
   })
 
-  .step("write-env", {
+  .step('write-env', {
     action: {
       input: ({ store }) => ({
-        projectPath: store.project?.projectPath ?? ".",
+        projectPath: store.project?.projectPath ?? '.',
         variables: store.setup?.envVars ?? {},
-        fileName: ".env.local",
+        fileName: '.env.local',
       }),
       run: writeEnvFile,
     },
-    next: "implement",
+    next: 'implement',
   })
 
-  .step("implement", {
+  .step('implement', {
     prompt: ({ store, system, refs }) => {
       const refSections: Array<{ label: string; content: string }> = [
         {
-          label: "Provider Patterns",
-          content: refs.load("provider-patterns.md"),
+          label: 'Provider Patterns',
+          content: refs.load('provider-patterns.md'),
         },
         {
-          label: "Rendering Pipeline",
-          content: refs.load("rendering-pipeline.md"),
+          label: 'Rendering Pipeline',
+          content: refs.load('rendering-pipeline.md'),
         },
         {
-          label: "Component Patterns",
-          content: refs.load("component-patterns.md"),
+          label: 'Component Patterns',
+          content: refs.load('component-patterns.md'),
         },
       ];
 
-      if (store.setup?.architecture === "hybrid-ssr") {
+      if (store.setup?.architecture === 'hybrid-ssr') {
         refSections.push({
-          label: "Middleware Patterns",
-          content: refs.load("middleware-patterns.md"),
+          label: 'Middleware Patterns',
+          content: refs.load('middleware-patterns.md'),
         });
       }
 
-      if (store.setup?.sdkChoice === "ninetailed") {
+      if (store.setup?.sdkChoice === 'ninetailed') {
         refSections.push({
-          label: "SDK Reference (Legacy)",
-          content: refs.load("sdk-legacy-guide.md"),
+          label: 'SDK Reference (Legacy)',
+          content: refs.load('sdk-legacy-guide.md'),
         });
       } else {
         refSections.push({
-          label: "SDK Reference (Modern)",
-          content: refs.load("sdk-next-guide.md"),
+          label: 'SDK Reference (Modern)',
+          content: refs.load('sdk-next-guide.md'),
         });
       }
 
       refSections.push({
-        label: "Implementation Examples",
-        content: refs.load("implementation-examples.md"),
+        label: 'Implementation Examples',
+        content: refs.load('implementation-examples.md'),
       });
 
       return [
@@ -560,8 +524,8 @@ export default skill({
           Implement the personalization setup for this project.
 
           ${render.kv({
-            SDK: store.setup?.sdkChoice ?? "unknown",
-            Architecture: store.setup?.architecture ?? "unknown",
+            SDK: store.setup?.sdkChoice ?? 'unknown',
+            Architecture: store.setup?.architecture ?? 'unknown',
             Framework: `${store.project.framework} (${store.project.routerType} router)`,
           })}
 
@@ -572,43 +536,43 @@ export default skill({
           If you hit an ambiguous decision, use the reference material to make the best choice.
 
           ## Reference Material
-          ${refSections.map((r) => `### ${r.label}\n${r.content}`).join("\n\n---\n\n")}
+          ${refSections.map((r) => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
         `,
         act.checklist({
           create: [
-            { title: "🔌 Provider wrapper setup", status: "pending" as const },
+            { title: '🔌 Provider wrapper setup', status: 'pending' as const },
             {
-              title: "🧩 Component wiring (Experience/Personalize wrappers)",
-              status: "pending" as const,
+              title: '🧩 Component wiring (Experience/Personalize wrappers)',
+              status: 'pending' as const,
             },
-            ...(store.setup?.architecture === "hybrid-ssr"
+            ...(store.setup?.architecture === 'hybrid-ssr'
               ? [
                   {
-                    title: "⚡ Middleware (preflight, cookies, matcher)",
-                    status: "pending" as const,
+                    title: '⚡ Middleware (preflight, cookies, matcher)',
+                    status: 'pending' as const,
                   },
                 ]
               : []),
             {
-              title: "📊 Analytics plugin configuration",
-              status: "pending" as const,
+              title: '📊 Analytics plugin configuration',
+              status: 'pending' as const,
             },
             {
-              title: "🔄 Rendering pipeline adjustments",
-              status: "pending" as const,
+              title: '🔄 Rendering pipeline adjustments',
+              status: 'pending' as const,
             },
           ],
         }),
       ];
     },
     response: type({
-      filesModified: "string[]",
-      summary: "string",
+      filesModified: 'string[]',
+      summary: 'string',
     }),
-    next: "verify",
+    next: 'verify',
   })
 
-  .step("verify", {
+  .step('verify', {
     prompt: ({ store, refs }) => prompt`
         Verify the personalization setup. Confirm the project path so the
         automated validation can run, then also manually check these items:
@@ -625,7 +589,7 @@ export default skill({
         The fix step handles repairs.
 
         ## Reference: Common Errors
-        ${refs.load("common-errors.md")}
+        ${refs.load('common-errors.md')}
 
         Project path: ${store.project.projectPath}
       `,
@@ -637,13 +601,13 @@ export default skill({
     }),
     next: ({ actionResult, attempts }) => {
       const result = actionResult as { overallStatus: string } | undefined;
-      if (result?.overallStatus === "pass") return "report";
-      if (attempts >= 3) return "report";
-      return "fix";
+      if (result?.overallStatus === 'pass') return 'report';
+      if (attempts >= 3) return 'report';
+      return 'fix';
     },
   })
 
-  .step("fix", {
+  .step('fix', {
     prompt: ({ store, refs }) => prompt`
         Fix the issues found during verification. Work through them systematically:
 
@@ -663,28 +627,26 @@ export default skill({
         })}
 
         ## Reference: Common Errors & Fixes
-        ${refs.load("common-errors.md")}
+        ${refs.load('common-errors.md')}
       `,
-    next: "verify",
+    next: 'verify',
   })
 
-  .step("report", {
+  .step('report', {
     prompt: ({ store }) => {
       const sections: string[] = [];
-      sections.push("# 🎉 Personalization Setup Complete\n");
+      sections.push('# 🎉 Personalization Setup Complete\n');
 
       const implementResult = store.steps.implement;
       if (implementResult?.summary) {
-        sections.push(
-          render.section("📝 What Was Done", implementResult.summary),
-        );
+        sections.push(render.section('📝 What Was Done', implementResult.summary));
         if ((implementResult.filesModified?.length ?? 0) > 0) {
           sections.push(
             render.section(
-              "📁 Files Modified",
+              '📁 Files Modified',
               render.table(
                 implementResult.filesModified.map((f: string) => ({ File: f })),
-                { columns: ["File"] },
+                { columns: ['File'] },
               ),
             ),
           );
@@ -693,13 +655,10 @@ export default skill({
 
       sections.push(
         render.section(
-          "⚙️ Configuration",
+          '⚙️ Configuration',
           render.kv({
-            SDK:
-              store.setup?.sdkChoice === "ninetailed"
-                ? "@ninetailed/experience.js"
-                : "@contentful/optimization",
-            Architecture: store.setup?.architecture ?? "unknown",
+            SDK: store.setup?.sdkChoice === 'ninetailed' ? '@ninetailed/experience.js' : '@contentful/optimization',
+            Architecture: store.setup?.architecture ?? 'unknown',
             Framework: `${store.project.framework} (${store.project.routerType})`,
           }),
         ),
@@ -708,34 +667,30 @@ export default skill({
       const verifyResult = store.steps.verify;
       if (verifyResult?.overallStatus) {
         const statusIcon =
-          verifyResult.overallStatus === "pass"
-            ? "✅"
-            : verifyResult.overallStatus === "warn"
-              ? "⚠️"
-              : "❌";
+          verifyResult.overallStatus === 'pass' ? '✅' : verifyResult.overallStatus === 'warn' ? '⚠️' : '❌';
         sections.push(
           render.section(
             `🔍 Verification: ${statusIcon} ${verifyResult.overallStatus.toUpperCase()}`,
-            verifyResult.summary ?? "",
+            verifyResult.summary ?? '',
           ),
         );
       }
 
       sections.push(
         render.section(
-          "🚀 Next Steps",
+          '🚀 Next Steps',
           [
-            "1. **Create experiences** — Open the Personalization app in Contentful and create your first audience + experience",
-            "2. **Publish content** — Add personalization variants to your content entries",
-            "3. **Test in preview** — Use preview mode to verify experiences render correctly",
-            "4. **Go live & monitor** — Publish and watch analytics for experiment results",
-          ].join("\n"),
+            '1. **Create experiences** — Open the Personalization app in Contentful and create your first audience + experience',
+            '2. **Publish content** — Add personalization variants to your content entries',
+            '3. **Test in preview** — Use preview mode to verify experiences render correctly',
+            '4. **Go live & monitor** — Publish and watch analytics for experiment results',
+          ].join('\n'),
         ),
       );
 
       return [
-        "Present the setup completion report below to the user exactly as rendered. Add a brief, celebratory closing message.",
-        view("Setup Report", sections.join("\n\n")),
+        'Present the setup completion report below to the user exactly as rendered. Add a brief, celebratory closing message.',
+        view('Setup Report', sections.join('\n\n')),
       ];
     },
     next: terminal,

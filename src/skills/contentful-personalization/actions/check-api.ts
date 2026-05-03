@@ -1,23 +1,23 @@
-import { type, action } from "@contentful/skill-kit";
-import { ApiCheckResult, type Finding } from "../schemas.js";
+import { type, action } from '@contentful/skill-kit';
+import { ApiCheckResult, type Finding } from '../schemas.js';
 
 const API_TIMEOUT_MS = 10_000;
 
 const PROBE_EVENT = {
   events: [
     {
-      type: "track" as const,
-      channel: "web" as const,
-      messageId: "doctor-connectivity-check",
-      event: "doctor-check",
+      type: 'track' as const,
+      channel: 'web' as const,
+      messageId: 'doctor-connectivity-check',
+      event: 'doctor-check',
       properties: {},
-      context: { library: { name: "skill-kit-doctor", version: "1.0.0" } },
+      context: { library: { name: 'skill-kit-doctor', version: '1.0.0' } },
     },
   ],
 };
 
 interface Endpoint {
-  version: "v2" | "v3";
+  version: 'v2' | 'v3';
   url: string;
   label: string;
 }
@@ -32,7 +32,7 @@ function buildEndpoints(input: {
 
   if (input.apiKey) {
     endpoints.push({
-      version: "v2",
+      version: 'v2',
       url: `https://experience.ninetailed.co/v2/organizations/${input.apiKey}/environments/${input.ninetailedEnvironment}/profiles`,
       label: `v2 (API key ${input.apiKey.substring(0, 8)}…, env "${input.ninetailedEnvironment}")`,
     });
@@ -40,7 +40,7 @@ function buildEndpoints(input: {
 
   if (input.contentfulSpaceId) {
     endpoints.push({
-      version: "v3",
+      version: 'v3',
       url: `https://experience.ninetailed.co/v3/spaces/${input.contentfulSpaceId}/environments/${input.contentfulEnvironment}/profiles`,
       label: `v3 (space ${input.contentfulSpaceId}, env "${input.contentfulEnvironment}")`,
     });
@@ -55,14 +55,14 @@ async function probeEndpoint(
 ): Promise<{ finding: Finding; reachable: boolean; responseTimeMs: number }> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
-  parentSignal.addEventListener("abort", () => controller.abort());
+  parentSignal.addEventListener('abort', () => controller.abort());
   const start = Date.now();
 
   try {
     const res = await fetch(endpoint.url, {
-      method: "POST",
+      method: 'POST',
       signal: controller.signal,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(PROBE_EVENT),
     });
     clearTimeout(timeout);
@@ -72,7 +72,7 @@ async function probeEndpoint(
       return {
         finding: {
           item: `Experience API ${endpoint.label}`,
-          status: "pass" as const,
+          status: 'pass' as const,
           detail: `Reachable (${elapsed}ms)`,
         },
         reachable: true,
@@ -82,13 +82,13 @@ async function probeEndpoint(
 
     if (res.status === 404) {
       const hint =
-        endpoint.version === "v2"
-          ? "check the API key and environment in Contentful under Organization settings > Optimization > SDK keys"
-          : "check the Contentful Space ID and environment, and verify the Personalization app is installed";
+        endpoint.version === 'v2'
+          ? 'check the API key and environment in Contentful under Organization settings > Optimization > SDK keys'
+          : 'check the Contentful Space ID and environment, and verify the Personalization app is installed';
       return {
         finding: {
           item: `Experience API ${endpoint.label}`,
-          status: "fail" as const,
+          status: 'fail' as const,
           detail: `Not found (HTTP 404) — ${hint}`,
         },
         reachable: true,
@@ -100,7 +100,7 @@ async function probeEndpoint(
       return {
         finding: {
           item: `Experience API ${endpoint.label}`,
-          status: "fail" as const,
+          status: 'fail' as const,
           detail: `Rejected (HTTP ${res.status}) — verify credentials in Contentful under Organization settings > Optimization > SDK keys`,
         },
         reachable: true,
@@ -111,7 +111,7 @@ async function probeEndpoint(
     return {
       finding: {
         item: `Experience API ${endpoint.label}`,
-        status: "fail" as const,
+        status: 'fail' as const,
         detail: `Unexpected HTTP ${res.status}`,
       },
       reachable: false,
@@ -123,7 +123,7 @@ async function probeEndpoint(
     return {
       finding: {
         item: `Experience API ${endpoint.label}`,
-        status: "fail" as const,
+        status: 'fail' as const,
         detail: `Network error: ${err instanceof Error ? err.message : String(err)}`,
       },
       reachable: false,
@@ -133,11 +133,11 @@ async function probeEndpoint(
 }
 
 export const checkApiConnectivity = action({
-  name: "check-api",
+  name: 'check-api',
   input: type({
-    "apiKey?": "string",
+    'apiKey?': 'string',
     ninetailedEnvironment: "string = 'main'",
-    "contentfulSpaceId?": "string",
+    'contentfulSpaceId?': 'string',
     contentfulEnvironment: "string = 'master'",
   }),
   output: ApiCheckResult,
@@ -146,34 +146,32 @@ export const checkApiConnectivity = action({
 
     if (endpoints.length === 0) {
       return {
-        status: "skip" as const,
+        status: 'skip' as const,
         findings: [
           {
-            item: "Ninetailed API",
-            status: "skip" as const,
+            item: 'Ninetailed API',
+            status: 'skip' as const,
             detail:
-              "No credentials available — need either a Ninetailed API key (v2) or Contentful Space ID (v3) to check connectivity",
+              'No credentials available — need either a Ninetailed API key (v2) or Contentful Space ID (v3) to check connectivity',
           },
         ],
         reachable: false,
       };
     }
 
-    const results = await Promise.all(
-      endpoints.map((ep) => probeEndpoint(ep, signal)),
-    );
+    const results = await Promise.all(endpoints.map((ep) => probeEndpoint(ep, signal)));
 
     const findings = results.map((r) => r.finding);
-    const anyPass = results.some((r) => r.finding.status === "pass");
+    const anyPass = results.some((r) => r.finding.status === 'pass');
     const anyReachable = results.some((r) => r.reachable);
     const bestTime = Math.min(...results.map((r) => r.responseTimeMs));
 
     return {
-      status: anyPass ? ("pass" as const) : ("fail" as const),
+      status: anyPass ? ('pass' as const) : ('fail' as const),
       findings,
       reachable: anyReachable,
       responseTimeMs: bestTime,
-      ...(anyPass ? {} : { error: findings.map((f) => f.detail).join("; ") }),
+      ...(anyPass ? {} : { error: findings.map((f) => f.detail).join('; ') }),
     };
   },
 });

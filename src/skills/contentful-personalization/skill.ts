@@ -1,64 +1,64 @@
-import { skill, type, prompt, act } from "@contentful/skill-kit";
-import onboardSkill from "./subskills/onboard.js";
-import doctorSkill from "./subskills/doctor.js";
-import developSkill from "./subskills/develop.js";
-import { VERSION } from "./version.js";
+import { skill, type, prompt, act } from '@contentful/skill-kit';
+import onboardSkill from './subskills/onboard.js';
+import doctorSkill from './subskills/doctor.js';
+import developSkill from './subskills/develop.js';
+import { VERSION } from './version.js';
 
 export default skill({
-  name: "contentful-personalization",
+  name: 'contentful-personalization',
   version: VERSION,
   description:
-    "Set up, debug, and develop with Contentful personalization and optimization. " +
-    "Covers readiness assessment, guided SDK installation, diagnostics and debugging, " +
-    "day-to-day development, and reference documentation for personalization SDKs, " +
-    "APIs, and patterns. Use when asked about personalization, optimization, ninetailed, " +
-    "A/B testing, experiments, multivariate tests, audience targeting, segments, " +
-    "content variants, Contentful Experiences, Experiences SDK, Studio Experiences, " +
-    "or the experience API.",
+    'Set up, debug, and develop with Contentful personalization and optimization. ' +
+    'Covers readiness assessment, guided SDK installation, diagnostics and debugging, ' +
+    'day-to-day development, and reference documentation for personalization SDKs, ' +
+    'APIs, and patterns. Use when asked about personalization, optimization, ninetailed, ' +
+    'A/B testing, experiments, multivariate tests, audience targeting, segments, ' +
+    'content variants, Contentful Experiences, Experiences SDK, Studio Experiences, ' +
+    'or the experience API.',
   triggers: [
-    "personalization",
-    "optimization",
-    "ninetailed",
-    "A/B test",
-    "experiment",
-    "multivariate test",
-    "targeting",
-    "audience targeting",
-    "segments",
-    "variants",
-    "content variants",
-    "set up personalization",
-    "personalization not working",
-    "personalization broken",
-    "personalize this component",
-    "am I ready for personalization",
-    "experience API",
-    "Contentful Experiences",
-    "Experiences SDK",
-    "Studio Experiences",
-    "personalization in Next.js",
-    "@contentful/optimization",
-    "@ninetailed/experience.js",
-    "run an experiment",
+    'personalization',
+    'optimization',
+    'ninetailed',
+    'A/B test',
+    'experiment',
+    'multivariate test',
+    'targeting',
+    'audience targeting',
+    'segments',
+    'variants',
+    'content variants',
+    'set up personalization',
+    'personalization not working',
+    'personalization broken',
+    'personalize this component',
+    'am I ready for personalization',
+    'experience API',
+    'Contentful Experiences',
+    'Experiences SDK',
+    'Studio Experiences',
+    'personalization in Next.js',
+    '@contentful/optimization',
+    '@ninetailed/experience.js',
+    'run an experiment',
   ],
-  argumentHint: "[question or topic]",
+  argumentHint: '[question or topic]',
   allowedTools: [
-    "mcp__contentful-mcp__*",
-    "mcp__plugin_contentful-skills_contentful-mcp__*",
-    "mcp__plugin_contentful-skills_contentful-personalization__*",
+    'mcp__contentful-mcp__*',
+    'mcp__plugin_contentful-skills_contentful-mcp__*',
+    'mcp__plugin_contentful-skills_contentful-personalization__*',
   ],
-  license: "MIT",
-  entry: "classify",
+  license: 'MIT',
+  entry: 'classify',
 
   package: {
-    name: "@contentful/skill-contentful-personalization",
+    name: '@contentful/skill-contentful-personalization',
     description:
-      "Unified Contentful personalization skill covering readiness, setup, diagnostics, development, and reference documentation",
-    license: "MIT",
-    files: ["SKILL.md", "scripts/**", "bin/**", "references/**"],
+      'Unified Contentful personalization skill covering readiness, setup, diagnostics, development, and reference documentation',
+    license: 'MIT',
+    files: ['SKILL.md', 'scripts/**', 'bin/**', 'references/**'],
   },
 })
-  .step("classify", {
+  .step('classify', {
     prompt: prompt`
       Classify the user's request into one of the categories below.
       Read only the user's message — do NOT explore files, ask questions, or take any action.
@@ -83,21 +83,19 @@ export default skill({
     `,
     response: type({
       intent: "'onboard' | 'doctor' | 'develop' | 'reference' | 'unclear'",
-      confidence: "number",
-      "topic?": "string",
-      reasoning: "string",
+      confidence: 'number',
+      'topic?': 'string',
+      reasoning: 'string',
     }),
     next: ({ response }) => {
-      if (response.confidence < 0.6 || response.intent === "unclear")
-        return "gather-context";
-      if (response.intent === "reference" && response.topic)
-        return `topic:${response.topic}`;
-      if (response.intent === "reference") return "pick-topic";
+      if (response.confidence < 0.6 || response.intent === 'unclear') return 'gather-context';
+      if (response.intent === 'reference' && response.topic) return `topic:${response.topic}`;
+      if (response.intent === 'reference') return 'pick-topic';
       return `subskill:${response.intent}`;
     },
   })
 
-  .step("gather-context", {
+  .step('gather-context', {
     prompt: prompt`
       You were not confident enough to classify the user's request.
       Silently explore the project to gather evidence — do NOT ask the user anything.
@@ -121,18 +119,17 @@ export default skill({
     `,
     response: type({
       intent: "'onboard' | 'doctor' | 'develop' | 'reference'",
-      "topic?": "string",
-      reasoning: "string",
+      'topic?': 'string',
+      reasoning: 'string',
     }),
     next: ({ response }) => {
-      if (response.intent === "reference" && response.topic)
-        return `topic:${response.topic}`;
-      if (response.intent === "reference") return "pick-topic";
+      if (response.intent === 'reference' && response.topic) return `topic:${response.topic}`;
+      if (response.intent === 'reference') return 'pick-topic';
       return `subskill:${response.intent}`;
     },
   })
 
-  .step("pick-topic", {
+  .step('pick-topic', {
     prompt: [
       prompt`
         The user wants to look something up about Contentful personalization.
@@ -161,99 +158,88 @@ export default skill({
         | implementation-examples | Real implementation patterns and code |
       `,
       act.askUser({
-        type: "open",
-        question:
-          "What would you like to know about Contentful personalization?",
+        type: 'open',
+        question: 'What would you like to know about Contentful personalization?',
       }),
     ],
-    response: type({ choice: "string" }),
+    response: type({ choice: 'string' }),
     next: ({ response }) => `topic:${response.choice}`,
   })
 
   // --- Topics ---
 
-  .topic("how-personalization-works", {
-    label:
-      "Core concepts: content model, rendering flow, and how personalization works",
-    content: ({ refs }) => refs.load("how-personalization-works.md"),
+  .topic('how-personalization-works', {
+    label: 'Core concepts: content model, rendering flow, and how personalization works',
+    content: ({ refs }) => refs.load('how-personalization-works.md'),
   })
-  .topic("sdk-selection", {
-    label:
-      "SDK decision framework: legacy (@ninetailed/experience.js) vs modern (@contentful/optimization)",
-    content: ({ refs }) => refs.load("sdk-selection.md"),
+  .topic('sdk-selection', {
+    label: 'SDK decision framework: legacy (@ninetailed/experience.js) vs modern (@contentful/optimization)',
+    content: ({ refs }) => refs.load('sdk-selection.md'),
   })
-  .topic("provider-patterns", {
-    label:
-      "Provider placement patterns for Pages Router, App Router, and both SDKs",
-    content: ({ refs }) => refs.load("provider-patterns.md"),
+  .topic('provider-patterns', {
+    label: 'Provider placement patterns for Pages Router, App Router, and both SDKs',
+    content: ({ refs }) => refs.load('provider-patterns.md'),
   })
-  .topic("middleware-patterns", {
-    label:
-      "Middleware and SSR/edge patterns: preflight, cookies, matcher config",
-    content: ({ refs }) => refs.load("middleware-patterns.md"),
+  .topic('middleware-patterns', {
+    label: 'Middleware and SSR/edge patterns: preflight, cookies, matcher config',
+    content: ({ refs }) => refs.load('middleware-patterns.md'),
   })
-  .topic("component-patterns", {
-    label:
-      "Component architecture patterns: ContentTypeMap, BlockRenderer, isolation",
-    content: ({ refs }) => refs.load("component-patterns.md"),
+  .topic('component-patterns', {
+    label: 'Component architecture patterns: ContentTypeMap, BlockRenderer, isolation',
+    content: ({ refs }) => refs.load('component-patterns.md'),
   })
-  .topic("rendering-pipeline", {
-    label:
-      "Rendering pipeline: Contentful client setup, include depth, component mapper",
-    content: ({ refs }) => refs.load("rendering-pipeline.md"),
+  .topic('rendering-pipeline', {
+    label: 'Rendering pipeline: Contentful client setup, include depth, component mapper',
+    content: ({ refs }) => refs.load('rendering-pipeline.md'),
   })
-  .topic("environment-variables", {
-    label: "Environment variables: names, runtime matrix, framework prefixes",
-    content: ({ refs }) => refs.load("env-var-spec.md"),
+  .topic('environment-variables', {
+    label: 'Environment variables: names, runtime matrix, framework prefixes',
+    content: ({ refs }) => refs.load('env-var-spec.md'),
   })
-  .topic("analytics-and-preview", {
-    label:
-      "Analytics plugins (Insights, GTM, Segment) and preview configuration",
-    content: ({ refs }) => refs.load("analytics-and-preview.md"),
+  .topic('analytics-and-preview', {
+    label: 'Analytics plugins (Insights, GTM, Segment) and preview configuration',
+    content: ({ refs }) => refs.load('analytics-and-preview.md'),
   })
-  .topic("common-errors", {
-    label: "Common failure modes with root causes and fixes",
-    content: ({ refs }) => refs.load("common-errors.md"),
+  .topic('common-errors', {
+    label: 'Common failure modes with root causes and fixes',
+    content: ({ refs }) => refs.load('common-errors.md'),
   })
-  .topic("ssr-guide", {
-    label:
-      "SSR and edge-side personalization: patterns, anti-patterns, troubleshooting",
-    content: ({ refs }) => refs.load("ssr-guide.md"),
+  .topic('ssr-guide', {
+    label: 'SSR and edge-side personalization: patterns, anti-patterns, troubleshooting',
+    content: ({ refs }) => refs.load('ssr-guide.md'),
   })
-  .topic("sdk-legacy-guide", {
-    label: "@ninetailed/experience.js complete SDK reference",
-    content: ({ refs }) => refs.load("sdk-legacy-guide.md"),
+  .topic('sdk-legacy-guide', {
+    label: '@ninetailed/experience.js complete SDK reference',
+    content: ({ refs }) => refs.load('sdk-legacy-guide.md'),
   })
-  .topic("sdk-next-guide", {
-    label: "@contentful/optimization next-gen SDK reference",
-    content: ({ refs }) => refs.load("sdk-next-guide.md"),
+  .topic('sdk-next-guide', {
+    label: '@contentful/optimization next-gen SDK reference',
+    content: ({ refs }) => refs.load('sdk-next-guide.md'),
   })
-  .topic("contentful-integration-guide", {
-    label:
-      "Contentful CMS integration: content types, ExperienceMapper, publishing workflow",
-    content: ({ refs }) => refs.load("contentful-integration-guide.md"),
+  .topic('contentful-integration-guide', {
+    label: 'Contentful CMS integration: content types, ExperienceMapper, publishing workflow',
+    content: ({ refs }) => refs.load('contentful-integration-guide.md'),
   })
-  .topic("implementation-examples", {
-    label:
-      "Real code examples: providers, BlockRenderer, Experience component patterns",
-    content: ({ refs }) => refs.load("implementation-examples.md"),
+  .topic('implementation-examples', {
+    label: 'Real code examples: providers, BlockRenderer, Experience component patterns',
+    content: ({ refs }) => refs.load('implementation-examples.md'),
   })
 
   // --- Sub-skills ---
 
-  .subskill("onboard", onboardSkill, {
+  .subskill('onboard', onboardSkill, {
     params: (output) => ({
-      userQuery: "",
+      userQuery: '',
       readinessOnly:
-        (output as { intent?: string })?.intent === "onboard" &&
-        /ready|readiness|can.*support|prerequisite|pre-check/i.test(""),
+        (output as { intent?: string })?.intent === 'onboard' &&
+        /ready|readiness|can.*support|prerequisite|pre-check/i.test(''),
     }),
   })
-  .subskill("doctor", doctorSkill, {
-    params: () => ({ userQuery: "" }),
+  .subskill('doctor', doctorSkill, {
+    params: () => ({ userQuery: '' }),
   })
-  .subskill("develop", developSkill, {
-    params: () => ({ userQuery: "" }),
+  .subskill('develop', developSkill, {
+    params: () => ({ userQuery: '' }),
   })
 
   .build();

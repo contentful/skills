@@ -1,36 +1,32 @@
-import { type } from "@contentful/skill-kit";
+import { type } from '@contentful/skill-kit';
 
 // --- Shared status types ---
 
-export const CheckStatus = type(
-  "'pass' | 'warn' | 'fail' | 'skip' | 'not_found'",
-);
+export const CheckStatus = type("'pass' | 'warn' | 'fail' | 'skip' | 'not_found'");
 export type CheckStatus = typeof CheckStatus.infer;
 
 export const Finding = type({
-  item: "string",
+  item: 'string',
   status: CheckStatus,
-  detail: "string",
+  detail: 'string',
 });
 export type Finding = typeof Finding.infer;
 
-export const ReadinessStatus = type(
-  "'ready' | 'minor-changes' | 'needs-work' | 'not-ready'",
-);
+export const ReadinessStatus = type("'ready' | 'minor-changes' | 'needs-work' | 'not-ready'");
 export type ReadinessStatus = typeof ReadinessStatus.infer;
 
 // --- checkPackagesAndEnv action ---
 
 export const PackageInfo = type({
-  name: "string",
-  version: "string",
+  name: 'string',
+  version: 'string',
 });
 export type PackageInfo = typeof PackageInfo.infer;
 
 export const EnvVarInfo = type({
-  name: "string",
+  name: 'string',
   status: "'set' | 'empty' | 'missing'",
-  "maskedValue?": "string",
+  'maskedValue?': 'string',
 });
 export type EnvVarInfo = typeof EnvVarInfo.infer;
 
@@ -43,12 +39,12 @@ export const PackagesAndEnvResult = type({
   },
   envVars: EnvVarInfo.array(),
   packageManager: "'npm' | 'yarn' | 'pnpm' | 'bun' | 'unknown'",
-  "apiKey?": "string",
-  "environment?": "string",
-  "contentfulSpaceId?": "string",
-  "contentfulAccessToken?": "string",
-  "contentfulPreviewToken?": "string",
-  "contentfulEnvironment?": "string",
+  'apiKey?': 'string',
+  'environment?': 'string',
+  'contentfulSpaceId?': 'string',
+  'contentfulAccessToken?': 'string',
+  'contentfulPreviewToken?': 'string',
+  'contentfulEnvironment?': 'string',
 });
 export type PackagesAndEnvResult = typeof PackagesAndEnvResult.infer;
 
@@ -57,9 +53,9 @@ export type PackagesAndEnvResult = typeof PackagesAndEnvResult.infer;
 export const ApiCheckResult = type({
   status: CheckStatus,
   findings: Finding.array(),
-  reachable: "boolean",
-  "responseTimeMs?": "number",
-  "error?": "string",
+  reachable: 'boolean',
+  'responseTimeMs?': 'number',
+  'error?': 'string',
 });
 export type ApiCheckResult = typeof ApiCheckResult.infer;
 
@@ -69,7 +65,7 @@ export const ValidationResult = type({
   packages: PackagesAndEnvResult,
   api: ApiCheckResult,
   overallStatus: CheckStatus,
-  summary: "string",
+  summary: 'string',
 });
 export type ValidationResult = typeof ValidationResult.infer;
 
@@ -77,17 +73,17 @@ export type ValidationResult = typeof ValidationResult.infer;
 
 export const InstallResult = type({
   installed: PackageInfo.array(),
-  failed: type({ name: "string", error: "string" }).array(),
-  command: "string",
+  failed: type({ name: 'string', error: 'string' }).array(),
+  command: 'string',
 });
 export type InstallResult = typeof InstallResult.infer;
 
 // --- writeEnvFile action ---
 
 export const WriteEnvResult = type({
-  written: type({ name: "string", value: "string" }).array(),
-  skipped: type({ name: "string", reason: "string" }).array(),
-  filePath: "string",
+  written: type({ name: 'string', value: 'string' }).array(),
+  skipped: type({ name: 'string', reason: 'string' }).array(),
+  filePath: 'string',
 });
 export type WriteEnvResult = typeof WriteEnvResult.infer;
 
@@ -95,34 +91,34 @@ export type WriteEnvResult = typeof WriteEnvResult.infer;
 
 export const Recommendation = type({
   priority: "'critical' | 'warning' | 'info'",
-  message: "string",
-  category: "string",
+  message: 'string',
+  category: 'string',
 });
 export type Recommendation = typeof Recommendation.infer;
 
 // --- inspectContent action ---
 
 const EntryApiState = type({
-  found: "boolean",
-  hasNtExperiences: "boolean",
-  ntExperiencesCount: "number",
-  experiencesResolved: "boolean",
-  variantsResolved: "boolean",
+  found: 'boolean',
+  hasNtExperiences: 'boolean',
+  ntExperiencesCount: 'number',
+  experiencesResolved: 'boolean',
+  variantsResolved: 'boolean',
 });
 
 export const ContentInspectionResult = type({
   status: CheckStatus,
   findings: Finding.array(),
   entry: {
-    id: "string",
-    "contentTypeId?": "string",
-    "cda?": EntryApiState,
-    "cpa?": EntryApiState,
-    "comparison?": {
-      hasUnpublishedChanges: "boolean",
-      detail: "string",
+    id: 'string',
+    'contentTypeId?': 'string',
+    'cda?': EntryApiState,
+    'cpa?': EntryApiState,
+    'comparison?': {
+      hasUnpublishedChanges: 'boolean',
+      detail: 'string',
     },
   },
-  "error?": "string",
+  'error?': 'string',
 });
 export type ContentInspectionResult = typeof ContentInspectionResult.infer;
