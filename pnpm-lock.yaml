@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@contentful/skill-kit':
-        specifier: ^1.4.0
-        version: 1.4.0
+        specifier: file:../skill-kit
+        version: file:../skill-kit
       '@release-it/bumper':
         specifier: ^7.0.5
         version: 7.0.5(release-it@19.2.4(@types/node@25.6.0))
@@ -35,8 +35,14 @@ importers:
 
 packages:
 
-  '@contentful/skill-kit@1.4.0':
-    resolution: {integrity: sha512-DUwAoxScetlTki4n7LlN7zoWMMdMkEjmOBb8J7VUlb3FGR0CeoB7qo93gqIqumg99pgpc1JYqA+7dypFF7kB/g==, tarball: https://npm.pkg.github.com/download/@contentful/skill-kit/1.4.0/97d25cb68fb0a4cbcef2aeb84ebe83c145fd12fe}
+  '@ark/schema@0.56.0':
+    resolution: {integrity: sha512-ECg3hox/6Z/nLajxXqNhgPtNdHWC9zNsDyskwO28WinoFEnWow4IsERNz9AnXRhTZJnYIlAJ4uGn3nlLk65vZA==}
+
+  '@ark/util@0.56.0':
+    resolution: {integrity: sha512-BghfRC8b9pNs3vBoDJhcta0/c1J1rsoS1+HgVUreMFPdhz/CRAKReAu57YEllNaSy98rWAdY1gE+gFup7OXpgA==}
+
+  '@contentful/skill-kit@file:../skill-kit':
+    resolution: {directory: ../skill-kit, type: directory}
     engines: {node: '>=24'}
     hasBin: true
 
@@ -772,6 +778,12 @@ packages:
 
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
+
+  arkregex@0.0.5:
+    resolution: {integrity: sha512-ncYjBdLlh5/QnVsAA8De16Tc9EqmYM7y/WU9j+236KcyYNUXogpz3sC4ATIZYzzLxwI+0sEOaQLEmLmRleaEXw==}
+
+  arktype@2.2.0:
+    resolution: {integrity: sha512-t54MZ7ti5BhOEvzEkgKnWvqj+UbDfWig+DHr5I34xatymPusKLS0lQpNJd8M6DzmIto2QGszHfNKoFIT8tMCZQ==}
 
   array-ify@1.0.0:
     resolution: {integrity: sha512-c5AMf34bKdvPhQ7tBGhqkgKNUzMr4WUs+WDtC2ZUGOUncbxKMTvqxYctiseW3+L4bA8ec+GcZ6/A/FW4m8ukng==}
@@ -1937,9 +1949,16 @@ packages:
 
 snapshots:
 
-  '@contentful/skill-kit@1.4.0':
+  '@ark/schema@0.56.0':
+    dependencies:
+      '@ark/util': 0.56.0
+
+  '@ark/util@0.56.0': {}
+
+  '@contentful/skill-kit@file:../skill-kit':
     dependencies:
       '@modelcontextprotocol/sdk': 1.29.0(zod@4.3.6)
+      arktype: 2.2.0
       esbuild: 0.28.0
       tsx: 4.21.0
       zod: 4.3.6
@@ -2476,6 +2495,16 @@ snapshots:
       color-convert: 2.0.1
 
   argparse@2.0.1: {}
+
+  arkregex@0.0.5:
+    dependencies:
+      '@ark/util': 0.56.0
+
+  arktype@2.2.0:
+    dependencies:
+      '@ark/schema': 0.56.0
+      '@ark/util': 0.56.0
+      arkregex: 0.0.5
 
   array-ify@1.0.0: {}
 

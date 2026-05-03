@@ -1,124 +1,128 @@
-import { z } from '@contentful/skill-kit';
+import { type } from "@contentful/skill-kit";
 
 // --- Shared status types ---
 
-export const CheckStatus = z.enum(['pass', 'warn', 'fail', 'skip', 'not_found']);
-export type CheckStatus = z.infer<typeof CheckStatus>;
+export const CheckStatus = type(
+  "'pass' | 'warn' | 'fail' | 'skip' | 'not_found'",
+);
+export type CheckStatus = typeof CheckStatus.infer;
 
-export const Finding = z.object({
-  item: z.string(),
+export const Finding = type({
+  item: "string",
   status: CheckStatus,
-  detail: z.string(),
+  detail: "string",
 });
-export type Finding = z.infer<typeof Finding>;
+export type Finding = typeof Finding.infer;
 
-export const ReadinessStatus = z.enum(['ready', 'minor-changes', 'needs-work', 'not-ready']);
-export type ReadinessStatus = z.infer<typeof ReadinessStatus>;
+export const ReadinessStatus = type(
+  "'ready' | 'minor-changes' | 'needs-work' | 'not-ready'",
+);
+export type ReadinessStatus = typeof ReadinessStatus.infer;
 
 // --- checkPackagesAndEnv action ---
 
-export const PackageInfo = z.object({
-  name: z.string(),
-  version: z.string(),
+export const PackageInfo = type({
+  name: "string",
+  version: "string",
 });
-export type PackageInfo = z.infer<typeof PackageInfo>;
+export type PackageInfo = typeof PackageInfo.infer;
 
-export const EnvVarInfo = z.object({
-  name: z.string(),
-  status: z.enum(['set', 'empty', 'missing']),
-  maskedValue: z.string().optional(),
+export const EnvVarInfo = type({
+  name: "string",
+  status: "'set' | 'empty' | 'missing'",
+  "maskedValue?": "string",
 });
-export type EnvVarInfo = z.infer<typeof EnvVarInfo>;
+export type EnvVarInfo = typeof EnvVarInfo.infer;
 
-export const PackagesAndEnvResult = z.object({
-  packages: z.object({
-    ninetailed: z.array(PackageInfo),
-    optimization: z.array(PackageInfo),
-    contentful: z.array(PackageInfo),
-    framework: z.array(PackageInfo),
-  }),
-  envVars: z.array(EnvVarInfo),
-  packageManager: z.enum(['npm', 'yarn', 'pnpm', 'bun', 'unknown']),
-  apiKey: z.string().optional(),
-  environment: z.string().optional(),
-  contentfulSpaceId: z.string().optional(),
-  contentfulAccessToken: z.string().optional(),
-  contentfulPreviewToken: z.string().optional(),
-  contentfulEnvironment: z.string().optional(),
+export const PackagesAndEnvResult = type({
+  packages: {
+    ninetailed: PackageInfo.array(),
+    optimization: PackageInfo.array(),
+    contentful: PackageInfo.array(),
+    framework: PackageInfo.array(),
+  },
+  envVars: EnvVarInfo.array(),
+  packageManager: "'npm' | 'yarn' | 'pnpm' | 'bun' | 'unknown'",
+  "apiKey?": "string",
+  "environment?": "string",
+  "contentfulSpaceId?": "string",
+  "contentfulAccessToken?": "string",
+  "contentfulPreviewToken?": "string",
+  "contentfulEnvironment?": "string",
 });
-export type PackagesAndEnvResult = z.infer<typeof PackagesAndEnvResult>;
+export type PackagesAndEnvResult = typeof PackagesAndEnvResult.infer;
 
 // --- checkApiConnectivity action ---
 
-export const ApiCheckResult = z.object({
+export const ApiCheckResult = type({
   status: CheckStatus,
-  findings: z.array(Finding),
-  reachable: z.boolean(),
-  responseTimeMs: z.number().optional(),
-  error: z.string().optional(),
+  findings: Finding.array(),
+  reachable: "boolean",
+  "responseTimeMs?": "number",
+  "error?": "string",
 });
-export type ApiCheckResult = z.infer<typeof ApiCheckResult>;
+export type ApiCheckResult = typeof ApiCheckResult.infer;
 
 // --- validateSetup action ---
 
-export const ValidationResult = z.object({
+export const ValidationResult = type({
   packages: PackagesAndEnvResult,
   api: ApiCheckResult,
   overallStatus: CheckStatus,
-  summary: z.string(),
+  summary: "string",
 });
-export type ValidationResult = z.infer<typeof ValidationResult>;
+export type ValidationResult = typeof ValidationResult.infer;
 
 // --- installPackages action ---
 
-export const InstallResult = z.object({
-  installed: z.array(PackageInfo),
-  failed: z.array(z.object({ name: z.string(), error: z.string() })),
-  command: z.string(),
+export const InstallResult = type({
+  installed: PackageInfo.array(),
+  failed: type({ name: "string", error: "string" }).array(),
+  command: "string",
 });
-export type InstallResult = z.infer<typeof InstallResult>;
+export type InstallResult = typeof InstallResult.infer;
 
 // --- writeEnvFile action ---
 
-export const WriteEnvResult = z.object({
-  written: z.array(z.object({ name: z.string(), value: z.string() })),
-  skipped: z.array(z.object({ name: z.string(), reason: z.string() })),
-  filePath: z.string(),
+export const WriteEnvResult = type({
+  written: type({ name: "string", value: "string" }).array(),
+  skipped: type({ name: "string", reason: "string" }).array(),
+  filePath: "string",
 });
-export type WriteEnvResult = z.infer<typeof WriteEnvResult>;
+export type WriteEnvResult = typeof WriteEnvResult.infer;
 
 // --- Recommendation (used by doctor review step) ---
 
-export const Recommendation = z.object({
-  priority: z.enum(['critical', 'warning', 'info']),
-  message: z.string(),
-  category: z.string(),
+export const Recommendation = type({
+  priority: "'critical' | 'warning' | 'info'",
+  message: "string",
+  category: "string",
 });
-export type Recommendation = z.infer<typeof Recommendation>;
+export type Recommendation = typeof Recommendation.infer;
 
 // --- inspectContent action ---
 
-const EntryApiState = z.object({
-  found: z.boolean(),
-  hasNtExperiences: z.boolean(),
-  ntExperiencesCount: z.number(),
-  experiencesResolved: z.boolean(),
-  variantsResolved: z.boolean(),
+const EntryApiState = type({
+  found: "boolean",
+  hasNtExperiences: "boolean",
+  ntExperiencesCount: "number",
+  experiencesResolved: "boolean",
+  variantsResolved: "boolean",
 });
 
-export const ContentInspectionResult = z.object({
+export const ContentInspectionResult = type({
   status: CheckStatus,
-  findings: z.array(Finding),
-  entry: z.object({
-    id: z.string(),
-    contentTypeId: z.string().optional(),
-    cda: EntryApiState.optional(),
-    cpa: EntryApiState.optional(),
-    comparison: z.object({
-      hasUnpublishedChanges: z.boolean(),
-      detail: z.string(),
-    }).optional(),
-  }),
-  error: z.string().optional(),
+  findings: Finding.array(),
+  entry: {
+    id: "string",
+    "contentTypeId?": "string",
+    "cda?": EntryApiState,
+    "cpa?": EntryApiState,
+    "comparison?": {
+      hasUnpublishedChanges: "boolean",
+      detail: "string",
+    },
+  },
+  "error?": "string",
 });
-export type ContentInspectionResult = z.infer<typeof ContentInspectionResult>;
+export type ContentInspectionResult = typeof ContentInspectionResult.infer;

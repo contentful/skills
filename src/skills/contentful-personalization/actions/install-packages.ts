@@ -1,8 +1,8 @@
-import { z, action } from '@contentful/skill-kit';
-import { execFile } from 'node:child_process';
-import { join } from 'node:path';
-import { readFile } from 'node:fs/promises';
-import { InstallResult, type PackageInfo } from '../schemas.js';
+import { type, action } from "@contentful/skill-kit";
+import { execFile } from "node:child_process";
+import { join } from "node:path";
+import { readFile } from "node:fs/promises";
+import { InstallResult, type PackageInfo } from "../schemas.js";
 
 function exec(
   cmd: string,
@@ -10,38 +10,43 @@ function exec(
   opts: { cwd: string; signal: AbortSignal },
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
-    const proc = execFile(cmd, args, { cwd: opts.cwd, timeout: 120_000 }, (err, stdout, stderr) => {
-      if (err) reject(err);
-      else resolve({ stdout, stderr });
-    });
-    opts.signal.addEventListener('abort', () => proc.kill());
+    const proc = execFile(
+      cmd,
+      args,
+      { cwd: opts.cwd, timeout: 120_000 },
+      (err, stdout, stderr) => {
+        if (err) reject(err);
+        else resolve({ stdout, stderr });
+      },
+    );
+    opts.signal.addEventListener("abort", () => proc.kill());
   });
 }
 
 export const installPackages = action({
-  name: 'install-packages',
-  input: z.object({
-    packages: z.array(z.string()),
-    projectPath: z.string(),
-    packageManager: z.enum(['npm', 'yarn', 'pnpm', 'bun']),
+  name: "install-packages",
+  input: type({
+    packages: "string[]",
+    projectPath: "string",
+    packageManager: "'npm' | 'yarn' | 'pnpm' | 'bun'",
   }),
   output: InstallResult,
   run: async ({ input, signal }) => {
     const { packages, projectPath, packageManager } = input;
 
     if (packages.length === 0) {
-      return { installed: [], failed: [], command: '(no packages requested)' };
+      return { installed: [], failed: [], command: "(no packages requested)" };
     }
 
     const installCmd: Record<string, { cmd: string; args: string[] }> = {
-      npm: { cmd: 'npm', args: ['install', ...packages] },
-      yarn: { cmd: 'yarn', args: ['add', ...packages] },
-      pnpm: { cmd: 'pnpm', args: ['add', ...packages] },
-      bun: { cmd: 'bun', args: ['add', ...packages] },
+      npm: { cmd: "npm", args: ["install", ...packages] },
+      yarn: { cmd: "yarn", args: ["add", ...packages] },
+      pnpm: { cmd: "pnpm", args: ["add", ...packages] },
+      bun: { cmd: "bun", args: ["add", ...packages] },
     };
 
     const { cmd, args } = installCmd[packageManager];
-    const command = `${cmd} ${args.join(' ')}`;
+    const command = `${cmd} ${args.join(" ")}`;
 
     try {
       await exec(cmd, args, { cwd: projectPath, signal });
@@ -54,12 +59,14 @@ export const installPackages = action({
       };
     }
 
-    // Read updated package.json to confirm installed versions
     const installed: PackageInfo[] = [];
     const failed: Array<{ name: string; error: string }> = [];
 
     try {
-      const pkgContent = await readFile(join(projectPath, 'package.json'), 'utf-8');
+      const pkgContent = await readFile(
+        join(projectPath, "package.json"),
+        "utf-8",
+      );
       const pkg = JSON.parse(pkgContent);
       const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
 
@@ -67,12 +74,15 @@ export const installPackages = action({
         if (allDeps[name]) {
           installed.push({ name, version: allDeps[name] });
         } else {
-          failed.push({ name, error: 'Not found in package.json after install' });
+          failed.push({
+            name,
+            error: "Not found in package.json after install",
+          });
         }
       }
     } catch {
       for (const name of packages) {
-        installed.push({ name, version: 'unknown' });
+        installed.push({ name, version: "unknown" });
       }
     }
 

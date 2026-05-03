@@ -1,28 +1,19 @@
-import { skill, z, prompt, act, terminal, render } from '@contentful/skill-kit';
-import { VERSION } from '../version.js';
+import { skill, type, prompt, terminal, render } from "@contentful/skill-kit";
+import { VERSION } from "../version.js";
 
 export default skill({
-  name: 'develop',
+  name: "develop",
   version: VERSION,
   description:
-    'Day-to-day development companion for building with Contentful personalization. ' +
-    'Helps add personalization to components, create experiments, and wire analytics.',
-  entry: 'analyze',
+    "Day-to-day development companion for building with Contentful personalization. " +
+    "Helps add personalization to components, create experiments, and wire analytics.",
+  entry: "analyze",
 
-  params: z.object({
-    userQuery: z.string().optional(),
-  }),
-
-  stash: z.object({
-    taskType: z.enum(['personalize-component', 'create-experiment', 'add-analytics', 'add-merge-tag', 'other']),
-    sdkInUse: z.enum(['ninetailed', 'optimization', 'unknown']),
-    framework: z.string(),
-    targetFiles: z.array(z.string()),
-    plan: z.string().optional(),
-    planFilesToModify: z.array(z.string()).optional(),
+  params: type({
+    "userQuery?": "string",
   }),
 })
-  .step('analyze', {
+  .step("analyze", {
     prompt: ({ params, refs }) => prompt`
       Analyze the codebase to understand the existing personalization setup
       and determine what the user wants to accomplish.
@@ -43,44 +34,44 @@ export default skill({
       Do NOT start making changes or create a plan. Do NOT ask the user questions.
       Just analyze and report what you find.
 
-      ${params?.userQuery ? `\nUser's request: "${params.userQuery}"` : ''}
+      ${params?.userQuery ? `\nUser's request: "${params.userQuery}"` : ""}
 
       ## Reference: Component Patterns
-      ${refs.load('component-patterns.md')}
+      ${refs.load("component-patterns.md")}
 
       ## Reference: Implementation Examples
-      ${refs.load('implementation-examples.md')}
+      ${refs.load("implementation-examples.md")}
     `,
-    output: z.object({
-      taskType: z.enum(['personalize-component', 'create-experiment', 'add-analytics', 'add-merge-tag', 'other']),
-      sdkInUse: z.enum(['ninetailed', 'optimization', 'unknown']),
-      framework: z.string(),
-      targetFiles: z.array(z.string()),
-      analysis: z.string(),
+    response: type({
+      taskType:
+        "'personalize-component' | 'create-experiment' | 'add-analytics' | 'add-merge-tag' | 'other'",
+      sdkInUse: "'ninetailed' | 'optimization' | 'unknown'",
+      framework: "string",
+      targetFiles: "string[]",
+      analysis: "string",
     }),
-    updateStash: ({ stepOutput }) => ({
-      taskType: stepOutput.taskType,
-      sdkInUse: stepOutput.sdkInUse,
-      framework: stepOutput.framework,
-      targetFiles: stepOutput.targetFiles,
-    }),
-    next: 'plan',
+    next: "plan",
   })
 
-  .step('plan', {
-    prompt: ({ stash, act, refs }) => {
-      const sdkRef = stash.sdkInUse === 'optimization'
-        ? refs.load('sdk-next-guide.md')
-        : refs.load('sdk-legacy-guide.md');
+  .step("plan", {
+    prompt: ({ store, act, refs }) => {
+      const sdkRef =
+        store.steps.analyze.sdkInUse === "optimization"
+          ? refs.load("sdk-next-guide.md")
+          : refs.load("sdk-legacy-guide.md");
 
       const taskDescriptions: Record<string, string> = {
-        'personalize-component': 'Add Experience/Personalize wrapper and update mapper',
-        'create-experiment': 'Set up A/B test with variant components and tracking',
-        'add-analytics': 'Wire analytics plugin and event tracking',
-        'add-merge-tag': 'Add merge tag support for dynamic content',
-        'other': 'Implement the requested changes',
+        "personalize-component":
+          "Add Experience/Personalize wrapper and update mapper",
+        "create-experiment":
+          "Set up A/B test with variant components and tracking",
+        "add-analytics": "Wire analytics plugin and event tracking",
+        "add-merge-tag": "Add merge tag support for dynamic content",
+        other: "Implement the requested changes",
       };
-      const taskDesc = taskDescriptions[stash.taskType] ?? taskDescriptions['other'];
+      const taskDesc =
+        taskDescriptions[store.steps.analyze.taskType] ??
+        taskDescriptions["other"];
 
       return [
         prompt`
@@ -90,36 +81,34 @@ export default skill({
           Do NOT start implementing. This is the planning step only.
 
           ${render.kv({
-            'Task': stash.taskType.replace(/-/g, ' '),
-            'SDK': stash.sdkInUse,
-            'Framework': stash.framework,
+            Task: store.steps.analyze.taskType.replace(/-/g, " "),
+            SDK: store.steps.analyze.sdkInUse,
+            Framework: store.steps.analyze.framework,
           })}
 
           ## SDK Reference
           ${sdkRef}
 
           ## Contentful Integration
-          ${refs.load('contentful-integration-guide.md')}
+          ${refs.load("contentful-integration-guide.md")}
         `,
         act.plan({
-          summary: `${taskDesc} in ${stash.framework} project`,
-          steps: stash.targetFiles.map((f) => `📝 ${f} — ${taskDesc}`),
+          summary: `${taskDesc} in ${store.steps.analyze.framework} project`,
+          steps: store.steps.analyze.targetFiles.map(
+            (f) => `📝 ${f} — ${taskDesc}`,
+          ),
         }),
       ];
     },
-    output: z.object({
-      approved: z.boolean(),
-      plan: z.string(),
-      filesToModify: z.array(z.string()),
+    response: type({
+      approved: "boolean",
+      plan: "string",
+      filesToModify: "string[]",
     }),
-    updateStash: ({ stepOutput }) => ({
-      plan: stepOutput.plan,
-      planFilesToModify: stepOutput.filesToModify,
-    }),
-    next: ({ stepOutput }) => (stepOutput.approved ? 'implement' : 'declined'),
+    next: ({ response }) => (response.approved ? "implement" : "declined"),
   })
 
-  .step('declined', {
+  .step("declined", {
     prompt: prompt`
       The user declined the implementation plan. Thank them briefly and mention
       they can re-run this skill anytime or adjust the approach. Keep it to
@@ -128,16 +117,25 @@ export default skill({
     next: terminal,
   })
 
-  .step('implement', {
-    prompt: ({ stash, refs }) => {
+  .step("implement", {
+    prompt: ({ store, refs }) => {
       const refSections: Array<{ label: string; content: string }> = [
-        { label: 'Implementation Examples', content: refs.load('implementation-examples.md') },
+        {
+          label: "Implementation Examples",
+          content: refs.load("implementation-examples.md"),
+        },
       ];
-      if (stash.taskType === 'add-analytics') {
-        refSections.push({ label: 'Analytics & Preview', content: refs.load('analytics-and-preview.md') });
+      if (store.steps.analyze.taskType === "add-analytics") {
+        refSections.push({
+          label: "Analytics & Preview",
+          content: refs.load("analytics-and-preview.md"),
+        });
       }
-      if (stash.taskType === 'personalize-component') {
-        refSections.push({ label: 'Component Patterns', content: refs.load('component-patterns.md') });
+      if (store.steps.analyze.taskType === "personalize-component") {
+        refSections.push({
+          label: "Component Patterns",
+          content: refs.load("component-patterns.md"),
+        });
       }
 
       return prompt`
@@ -145,17 +143,17 @@ export default skill({
         and patterns — do not introduce a different convention.
 
         ${render.kv({
-          'Task': stash.taskType.replace(/-/g, ' '),
-          'SDK': stash.sdkInUse,
-          'Files': stash.targetFiles.join(', '),
+          Task: store.steps.analyze.taskType.replace(/-/g, " "),
+          SDK: store.steps.analyze.sdkInUse,
+          Files: store.steps.analyze.targetFiles.join(", "),
         })}
 
-        ${stash.plan ? `\n**Plan:** ${stash.plan}` : ''}
+        ${store.steps.plan?.plan ? `\n**Plan:** ${store.steps.plan.plan}` : ""}
 
         After making changes, briefly summarize what you did and list all modified files.
 
         ## Reference Material
-        ${refSections.map((r: { label: string; content: string }) => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
+        ${refSections.map((r) => `### ${r.label}\n${r.content}`).join("\n\n---\n\n")}
       `;
     },
     next: terminal,
