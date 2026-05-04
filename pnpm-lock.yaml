@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@contentful/skill-kit':
-        specifier: ^1.6.0
-        version: 1.6.0
+        specifier: ^1.6.2
+        version: 1.6.2
       '@release-it/bumper':
         specifier: ^7.0.5
         version: 7.0.5(release-it@19.2.4(@types/node@25.6.0))
@@ -44,8 +44,8 @@ packages:
   '@ark/util@0.56.0':
     resolution: {integrity: sha512-BghfRC8b9pNs3vBoDJhcta0/c1J1rsoS1+HgVUreMFPdhz/CRAKReAu57YEllNaSy98rWAdY1gE+gFup7OXpgA==}
 
-  '@contentful/skill-kit@1.6.0':
-    resolution: {integrity: sha512-FoWw6jYXPHhoHpF8iWYMSNOrROeixIa2qOcCYXBzkyLSorJZca/Ik/zLkI9T/cWp7BOpL4vEy8Uf1yhqeww3yg==, tarball: https://npm.pkg.github.com/download/@contentful/skill-kit/1.6.0/290e663d878ce52e0963c1639cc49f56e2e799bb}
+  '@contentful/skill-kit@1.6.2':
+    resolution: {integrity: sha512-IDoKprBZRALZBM8O/3QwP4Gi38EQc6OI/nmfNhqk4Dpaid3zEgeOUODAR1+B5O5olWILmeKQY2l1zVORd8V09w==, tarball: https://npm.pkg.github.com/download/@contentful/skill-kit/1.6.2/946061f9a5817f31083a4e8dbcbb355c0e7d849c}
     engines: {node: '>=24'}
     hasBin: true
 
@@ -1963,7 +1963,7 @@ snapshots:
 
   '@ark/util@0.56.0': {}
 
-  '@contentful/skill-kit@1.6.0':
+  '@contentful/skill-kit@1.6.2':
     dependencies:
       '@modelcontextprotocol/sdk': 1.29.0(zod@4.3.6)
       arktype: 2.2.0

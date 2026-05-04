@@ -25,7 +25,7 @@
     "update-licenses": "node ./scripts/update-licenses.mjs"
   },
   "devDependencies": {
-    "@contentful/skill-kit": "^1.6.0",
+    "@contentful/skill-kit": "^1.6.2",
     "@release-it/bumper": "^7.0.5",
     "@release-it/conventional-changelog": "^10.0.6",
     "@types/node": "^25.2.3",

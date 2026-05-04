@@ -629,7 +629,7 @@ export default skill({
         }
       };
 
-      const diagnosis = store.diagnosis!;
+      const diagnosis = store.diagnosis;
       const overallStatusVal = diagnosis.overallStatus!;
       const sections: string[] = [];
 
@@ -742,7 +742,7 @@ export default skill({
 
   .step('plan-fix', {
     prompt: ({ store, refs }) => {
-      const diagnosis = store.diagnosis!;
+      const diagnosis = store.diagnosis;
       const recs = diagnosis.recommendations!.filter((r): r is Recommendation => !!r);
       const priorityIcon: Record<string, string> = {
         critical: '🔴',
@@ -814,7 +814,7 @@ export default skill({
 
   .step('fix', {
     prompt: ({ store, system, refs }) => {
-      const diagnosis = store.diagnosis!;
+      const diagnosis = store.diagnosis;
       const recs = diagnosis.recommendations!.filter((r): r is Recommendation => !!r);
       const priorityIcon: Record<string, string> = {
         critical: '🔴',
@@ -893,7 +893,7 @@ export default skill({
 
   .step('done', {
     prompt: ({ store }) => {
-      const diagnosis = store.diagnosis!;
+      const diagnosis = store.diagnosis;
       const recs = diagnosis.recommendations!.filter((r): r is Recommendation => !!r);
 
       const reVerifyResult = store.steps['re-verify'];
