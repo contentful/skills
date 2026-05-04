@@ -4,13 +4,7 @@ import { scanCredentials } from '../actions/scan-credentials.js';
 import { checkApiConnectivity } from '../actions/check-api.js';
 import { inspectContent } from '../actions/inspect-content.js';
 import { validateSetup } from '../actions/validate-setup.js';
-import {
-  PackagesResult,
-  CredentialsScanResult,
-  ApiCheckResult,
-  ContentInspectionResult,
-  Recommendation,
-} from '../schemas.js';
+import { PackagesResult, Recommendation } from '../schemas.js';
 import { VERSION } from '../version.js';
 
 export default skill({
@@ -125,7 +119,7 @@ export default skill({
 
   .step('confirm-credentials', {
     prompt: ({ store }) => {
-      const scanned = store.steps['scan-credentials'] as CredentialsScanResult | undefined;
+      const scanned = store.steps['scan-credentials'];
       const envVars = scanned?.envVars ?? [];
       const hasPersonalization = !!scanned?.personalization?.apiKey;
       const hasContentful = !!(
@@ -270,7 +264,7 @@ export default skill({
             contentful?: { spaceId?: string; accessToken?: string; previewToken?: string; environment?: string };
           }
         | undefined;
-      const scanned = store.steps['scan-credentials'] as CredentialsScanResult | undefined;
+      const scanned = store.steps['scan-credentials'];
       return {
         credentials: {
           personalization: {
@@ -312,7 +306,7 @@ export default skill({
       const concerns = store.project.concerns;
       const codeHealthy = (concerns?.length ?? 0) === 0;
 
-      const apiData = store.steps['check-api'] as ApiCheckResult | undefined;
+      const apiData = store.steps['check-api'];
       const codeStatusNote = codeHealthy
         ? 'The code-level exploration found **no concerns** — the setup looks correct.'
         : `The code-level exploration found **${concerns?.length ?? 0} concern(s)**:\n${(concerns ?? []).map((c: string, i: number) => `${i + 1}. ${c}`).join('\n')}`;
@@ -456,7 +450,7 @@ export default skill({
     action: {
       mapInput: ({ store }) => {
         const creds = store.credentials;
-        const entryId = (store.steps['choose-entry'] as { entryId?: string } | undefined)?.entryId ?? '';
+        const entryId = store.steps['choose-entry']?.entryId ?? '';
         return {
           spaceId: creds?.contentful?.spaceId ?? '',
           environment: creds?.contentful?.environment ?? 'master',
@@ -503,7 +497,7 @@ export default skill({
           ].join('\n')
         : 'No package data available';
 
-      const scanned = store.steps['scan-credentials'] as CredentialsScanResult | undefined;
+      const scanned = store.steps['scan-credentials'];
       const envView = scanned
         ? render.table(
             (scanned.envVars ?? []).map((ev: { name: string; status: string; maskedValue?: string }) => ({
@@ -515,7 +509,7 @@ export default skill({
           )
         : 'No environment variable data available';
 
-      const apiData = store.steps['check-api'] as ApiCheckResult | undefined;
+      const apiData = store.steps['check-api'];
       const apiView = apiData
         ? render.table(
             (apiData.findings ?? []).map((f: { status: string; item: string; detail: string }) => ({
@@ -527,7 +521,7 @@ export default skill({
           )
         : 'No API data available';
 
-      const content = store.steps['run-inspection'] as ContentInspectionResult | undefined;
+      const content = store.steps['run-inspection'];
       const contentView = content
         ? [
             render.table(
@@ -662,7 +656,7 @@ export default skill({
               )
             : '*No personalization SDK packages found*';
 
-        const scanned = store.steps['scan-credentials'] as CredentialsScanResult | undefined;
+        const scanned = store.steps['scan-credentials'];
         const envTable = scanned
           ? render.table(
               (scanned.envVars ?? []).map((ev: { name: string; status: string; maskedValue?: string }) => ({
@@ -677,7 +671,7 @@ export default skill({
         sections.push(render.section('📦 Packages & Environment', `${pkgTable}\n\n${envTable}`));
       }
 
-      const apiData = store.steps['check-api'] as ApiCheckResult | undefined;
+      const apiData = store.steps['check-api'];
       if (apiData) {
         const apiTable = render.table(
           (apiData.findings ?? []).map((f: { status: string; item: string; detail: string }) => ({
@@ -690,7 +684,7 @@ export default skill({
         sections.push(render.section('🌐 API Connectivity', apiTable));
       }
 
-      const content = store.steps['run-inspection'] as ContentInspectionResult | undefined;
+      const content = store.steps['run-inspection'];
       if (content) {
         const contentTable = render.table(
           (content.findings ?? []).map((f: { status: string; item: string; detail: string }) => ({
@@ -891,8 +885,7 @@ export default skill({
       run: validateSetup,
     },
     next: ({ actionResult, attempts }) => {
-      const result = actionResult as { overallStatus: string } | undefined;
-      if (result?.overallStatus === 'pass') return 'done';
+      if (actionResult?.overallStatus === 'pass') return 'done';
       if (attempts >= 3) return 'done';
       return 'fix';
     },
@@ -904,12 +897,11 @@ export default skill({
       const recs = diagnosis.recommendations!.filter((r): r is Recommendation => !!r);
 
       const reVerifyResult = store.steps['re-verify'];
-      const reVerifyStatus = (reVerifyResult as { overallStatus?: string } | undefined)?.overallStatus;
-      const reVerifySummary = (reVerifyResult as { summary?: string } | undefined)?.summary;
+      const reVerifyStatus = reVerifyResult?.overallStatus;
+      const reVerifySummary = reVerifyResult?.summary;
 
       const cameFromReport = !store.steps['plan-fix'] && !reVerifyResult;
-      const cameFromPlanFix =
-        store.steps['plan-fix'] && !(store.steps['plan-fix'] as { approved?: boolean })?.approved && !reVerifyResult;
+      const cameFromPlanFix = store.steps['plan-fix'] && !store.steps['plan-fix']?.approved && !reVerifyResult;
       const cameFromReVerify = !!reVerifyResult;
 
       if (cameFromReport) {

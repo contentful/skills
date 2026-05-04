@@ -589,8 +589,7 @@ export default skill({
       step: actionResult,
     }),
     next: ({ actionResult, attempts }) => {
-      const result = actionResult as { overallStatus: string } | undefined;
-      if (result?.overallStatus === 'pass') return 'report';
+      if (actionResult?.overallStatus === 'pass') return 'report';
       if (attempts >= 3) return 'report';
       return 'fix';
     },
