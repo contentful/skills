@@ -1,4 +1,4 @@
-import { skill, z, prompt, act } from '@contentful/skill-kit';
+import { skill, type, prompt, act } from '@contentful/skill-kit';
 import onboardSkill from './subskills/onboard.js';
 import doctorSkill from './subskills/doctor.js';
 import developSkill from './subskills/develop.js';
@@ -52,15 +52,11 @@ export default skill({
 
   package: {
     name: '@contentful/skill-contentful-personalization',
-    description: 'Unified Contentful personalization skill covering readiness, setup, diagnostics, development, and reference documentation',
+    description:
+      'Unified Contentful personalization skill covering readiness, setup, diagnostics, development, and reference documentation',
     license: 'MIT',
     files: ['SKILL.md', 'scripts/**', 'bin/**', 'references/**'],
   },
-
-  stash: z.object({
-    userQuery: z.string(),
-    intent: z.string(),
-  }),
 })
   .step('classify', {
     prompt: prompt`
@@ -85,21 +81,17 @@ export default skill({
 
       If the request is ambiguous, set intent to "unclear" and confidence below 0.6.
     `,
-    output: z.object({
-      intent: z.enum(['onboard', 'doctor', 'develop', 'reference', 'unclear']),
-      confidence: z.number(),
-      topic: z.string().optional(),
-      reasoning: z.string(),
+    response: type({
+      intent: "'onboard' | 'doctor' | 'develop' | 'reference' | 'unclear'",
+      confidence: 'number',
+      'topic?': 'string',
+      reasoning: 'string',
     }),
-    updateStash: ({ stepOutput }) => ({
-      userQuery: '',
-      intent: stepOutput.intent,
-    }),
-    next: ({ stepOutput }) => {
-      if (stepOutput.confidence < 0.6 || stepOutput.intent === 'unclear') return 'gather-context';
-      if (stepOutput.intent === 'reference' && stepOutput.topic) return `topic:${stepOutput.topic}`;
-      if (stepOutput.intent === 'reference') return 'pick-topic';
-      return `subskill:${stepOutput.intent}`;
+    next: ({ response }) => {
+      if (response.confidence < 0.6 || response.intent === 'unclear') return 'gather-context';
+      if (response.intent === 'reference' && response.topic) return `topic:${response.topic}`;
+      if (response.intent === 'reference') return 'pick-topic';
+      return `subskill:${response.intent}`;
     },
   })
 
@@ -125,15 +117,15 @@ export default skill({
       make your best guess — do NOT default to asking the user. Every request fits
       one of these four categories.
     `,
-    output: z.object({
-      intent: z.enum(['onboard', 'doctor', 'develop', 'reference']),
-      topic: z.string().optional(),
-      reasoning: z.string(),
+    response: type({
+      intent: "'onboard' | 'doctor' | 'develop' | 'reference'",
+      'topic?': 'string',
+      reasoning: 'string',
     }),
-    next: ({ stepOutput }) => {
-      if (stepOutput.intent === 'reference' && stepOutput.topic) return `topic:${stepOutput.topic}`;
-      if (stepOutput.intent === 'reference') return 'pick-topic';
-      return `subskill:${stepOutput.intent}`;
+    next: ({ response }) => {
+      if (response.intent === 'reference' && response.topic) return `topic:${response.topic}`;
+      if (response.intent === 'reference') return 'pick-topic';
+      return `subskill:${response.intent}`;
     },
   })
 
@@ -165,10 +157,13 @@ export default skill({
         | contentful-integration-guide | Content types, ExperienceMapper, publishing |
         | implementation-examples | Real implementation patterns and code |
       `,
-      act.askUser({ type: 'open', question: 'What would you like to know about Contentful personalization?' }),
+      act.askUser({
+        type: 'open',
+        question: 'What would you like to know about Contentful personalization?',
+      }),
     ],
-    output: z.object({ choice: z.string() }),
-    next: ({ stepOutput }) => `topic:${stepOutput.choice}`,
+    response: type({ choice: 'string' }),
+    next: ({ response }) => `topic:${response.choice}`,
   })
 
   // --- Topics ---
@@ -233,23 +228,18 @@ export default skill({
   // --- Sub-skills ---
 
   .subskill('onboard', onboardSkill, {
-    params: (output, stash) => ({
-      userQuery: (stash as { userQuery: string }).userQuery,
-      readinessOnly: (output as { intent?: string })?.intent === 'onboard' &&
-        /ready|readiness|can.*support|prerequisite|pre-check/i.test(
-          (stash as { userQuery: string }).userQuery,
-        ),
+    params: (output) => ({
+      userQuery: '',
+      readinessOnly:
+        (output as { intent?: string })?.intent === 'onboard' &&
+        /ready|readiness|can.*support|prerequisite|pre-check/i.test(''),
     }),
   })
   .subskill('doctor', doctorSkill, {
-    params: (_output, stash) => ({
-      userQuery: (stash as { userQuery: string }).userQuery,
-    }),
+    params: () => ({ userQuery: '' }),
   })
   .subskill('develop', developSkill, {
-    params: (_output, stash) => ({
-      userQuery: (stash as { userQuery: string }).userQuery,
-    }),
+    params: () => ({ userQuery: '' }),
   })
 
   .build();

@@ -1,14 +1,10 @@
-import { skill, z, prompt, render, act, view, terminal } from '@contentful/skill-kit';
-import { checkPackagesAndEnv } from '../actions/check-packages-env.js';
+import { skill, type, prompt, render, act, view, terminal } from '@contentful/skill-kit';
+import { checkPackages } from '../actions/check-packages.js';
+import { scanCredentials } from '../actions/scan-credentials.js';
 import { checkApiConnectivity } from '../actions/check-api.js';
 import { inspectContent } from '../actions/inspect-content.js';
 import { validateSetup } from '../actions/validate-setup.js';
-import {
-  PackagesAndEnvResult,
-  ApiCheckResult,
-  ContentInspectionResult,
-  Recommendation,
-} from '../schemas.js';
+import { PackagesResult, Recommendation } from '../schemas.js';
 import { VERSION } from '../version.js';
 
 export default skill({
@@ -20,28 +16,33 @@ export default skill({
     'inspects Contentful content state, and helps fix problems.',
   entry: 'explore',
 
-  stash: z.object({
-    framework: z.string(),
-    projectPath: z.string(),
-    packageData: PackagesAndEnvResult.optional(),
-    apiData: ApiCheckResult.optional(),
-    contentInspection: ContentInspectionResult.optional(),
-    recommendations: z.array(Recommendation).optional(),
-    overallStatus: z.enum(['pass', 'warn', 'fail']).optional(),
-    entryId: z.string().optional(),
-    userProvidedSpaceId: z.string().optional(),
-    userProvidedAccessToken: z.string().optional(),
-    userProvidedPreviewToken: z.string().optional(),
-    userProvidedEnvironment: z.string().optional(),
-    explorationSummary: z.string().optional(),
-    concerns: z.array(z.string()).optional(),
-    personalizableCandidates: z.array(z.string()).optional(),
-    reviewSummary: z.string().optional(),
-    fixPlan: z.string().optional(),
-    fixFilesToModify: z.array(z.string()).optional(),
-    reVerifyOverallStatus: z.string().optional(),
-    reVerifySummary: z.string().optional(),
-  }),
+  stores: {
+    project: type({
+      framework: 'string',
+      projectPath: 'string',
+      'explorationSummary?': 'string',
+      'concerns?': 'string[]',
+      'personalizableCandidates?': 'string[]',
+      packages: PackagesResult,
+    }),
+    credentials: type({
+      personalization: {
+        apiKey: 'string',
+        environment: 'string',
+      },
+      contentful: {
+        spaceId: 'string',
+        accessToken: 'string',
+        'previewToken?': 'string',
+        environment: 'string',
+      },
+    }),
+    diagnosis: type({
+      overallStatus: "'pass' | 'warn' | 'fail'",
+      recommendations: Recommendation.array(),
+      summary: 'string',
+    }),
+  },
 })
   .step('explore', {
     prompt: ({ refs }) => prompt`
@@ -82,63 +83,249 @@ export default skill({
         ## Reference: How Personalization Works
         ${refs.load('how-personalization-works.md')}
       `,
-    output: z.object({
-      framework: z.enum(['nextjs-app', 'nextjs-pages', 'nextjs-hybrid', 'gatsby', 'remix', 'other']),
-      frameworkVersion: z.string().optional(),
-      projectPath: z.string(),
-      explorationSummary: z.string(),
-      concerns: z.array(z.string()),
-      personalizableCandidates: z.array(z.string()).optional(),
+    response: type({
+      framework: "'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'other'",
+      'frameworkVersion?': 'string',
+      projectPath: 'string',
+      explorationSummary: 'string',
+      concerns: 'string[]',
+      'personalizableCandidates?': 'string[]',
     }),
-    updateStash: ({ stepOutput }) => ({
-      framework: stepOutput.framework,
-      projectPath: stepOutput.projectPath,
-      explorationSummary: stepOutput.explorationSummary,
-      concerns: stepOutput.concerns,
-      personalizableCandidates: stepOutput.personalizableCandidates,
+    save: ({ response, actionResult }) => ({
+      step: response,
+      project: {
+        framework: response.framework,
+        projectPath: response.projectPath,
+        explorationSummary: response.explorationSummary,
+        concerns: response.concerns,
+        personalizableCandidates: response.personalizableCandidates,
+        packages: actionResult,
+      },
     }),
     action: {
-      input: ({ stepOutput }) => ({ projectPath: stepOutput.projectPath }),
-      run: checkPackagesAndEnv,
-      updateStash: ({ actionOutput }) => ({ packageData: actionOutput }),
+      mapInput: ({ response }) => ({ projectPath: response.projectPath }),
+      run: checkPackages,
+    },
+    next: 'scan-credentials',
+  })
+
+  .step('scan-credentials', {
+    action: {
+      mapInput: ({ store }) => ({ projectPath: store.project?.projectPath ?? '.' }),
+      run: scanCredentials,
+    },
+    next: 'confirm-credentials',
+  })
+
+  .step('confirm-credentials', {
+    prompt: ({ store }) => {
+      const scanned = store.steps['scan-credentials'];
+      const envVars = scanned?.envVars ?? [];
+      const hasPersonalization = !!scanned?.personalization?.apiKey;
+      const hasContentful = !!(
+        scanned?.contentful?.spaceId &&
+        (scanned?.contentful?.accessToken || scanned?.contentful?.previewToken)
+      );
+
+      const envTable = render.table(
+        envVars.map((ev: { name: string; status: string; maskedValue?: string }) => ({
+          Variable: ev.name,
+          Status: ev.status,
+          Value: ev.maskedValue ?? '—',
+        })),
+        { columns: ['Variable', 'Status', 'Value'] },
+      );
+
+      const hasAnyCreds = hasPersonalization || hasContentful;
+
+      if (hasAnyCreds) {
+        const mask = (v: string) => (v.length <= 8 ? '****' : v.slice(0, 8) + '****');
+        const credRows: Array<{ Credential: string; Value: string }> = [];
+        if (scanned?.personalization?.apiKey) {
+          credRows.push({ Credential: 'Ninetailed API key', Value: mask(scanned.personalization.apiKey) });
+        }
+        if (scanned?.personalization?.environment) {
+          credRows.push({ Credential: 'Ninetailed environment', Value: scanned.personalization.environment });
+        }
+        if (scanned?.contentful?.spaceId) {
+          credRows.push({ Credential: 'Contentful Space ID', Value: scanned.contentful.spaceId });
+        }
+        if (scanned?.contentful?.accessToken) {
+          credRows.push({ Credential: 'CDA token', Value: mask(scanned.contentful.accessToken) });
+        }
+        if (scanned?.contentful?.previewToken) {
+          credRows.push({ Credential: 'CPA token', Value: mask(scanned.contentful.previewToken) });
+        }
+        if (scanned?.contentful?.environment) {
+          credRows.push({ Credential: 'Contentful environment', Value: scanned.contentful.environment });
+        }
+
+        const credTable = render.table(credRows, { columns: ['Credential', 'Value'] });
+
+        return [
+          prompt`
+            Present the credential scan results below to the user. Show the environment
+            variable table and the detected credentials table exactly as rendered.
+            Then let the user confirm, correct, or skip.
+
+            If the user confirms, set hasCredentials to true and populate the personalization
+            and contentful fields with the auto-detected values.
+            If the user wants to correct values, set hasCredentials to true and use their
+            corrected values instead.
+            If the user skips, set hasCredentials to false.
+          `,
+          view(
+            '🔑 Credential Scan Results',
+            [
+              render.section('Environment Variables', envTable),
+              render.section('Auto-Detected Credentials', credTable),
+            ].join('\n\n'),
+          ),
+          act.askUser({
+            type: 'structured',
+            question: 'Are these credentials correct?',
+            options: [
+              {
+                value: 'confirm',
+                label: '✅ Yes, these look correct',
+                description: 'Confirm the auto-detected credentials and proceed with API checks',
+              },
+              {
+                value: 'correct',
+                label: '✏️ I need to correct some values',
+                description: 'Provide updated credentials before proceeding',
+              },
+              {
+                value: 'decline',
+                label: '⏭️ Skip API checks',
+                description: 'Proceed without testing API connectivity',
+              },
+            ],
+          }),
+        ];
+      }
+
+      return [
+        prompt`
+          Present the environment variable scan results below to the user. No API
+          credentials were found automatically.
+
+          Explain that we can run deeper diagnostics (API connectivity, content inspection)
+          if they provide credentials. Tell them where to find each value:
+          - **Ninetailed API Key** — Ninetailed dashboard or Contentful Organization settings > Optimization > SDK keys
+          - **Contentful Space ID** — Contentful Settings > General settings
+          - **CDA Token** (Content Delivery API) — Contentful Settings > API keys
+          - **CPA Token** (Content Preview API) — Same location, optional but recommended
+          - **Environment** — Usually "master" for Contentful, "main" for Ninetailed
+
+          If the user provides credentials, set hasCredentials to true and populate the fields.
+          If the user skips, set hasCredentials to false.
+        `,
+        view('🔍 Environment Variable Scan', envTable),
+        act.askUser({
+          type: 'structured',
+          question: 'Can you provide API credentials for a full diagnostic?',
+          options: [
+            {
+              value: 'provide',
+              label: '🔑 Yes, I can provide credentials',
+              description: 'Paste your Contentful and/or Ninetailed credentials',
+            },
+            {
+              value: 'decline',
+              label: '⏭️ Skip — code-only diagnostic',
+              description: 'Proceed without API connectivity or content checks',
+            },
+          ],
+        }),
+      ];
+    },
+    response: type({
+      hasCredentials: 'boolean',
+      'personalization?': {
+        'apiKey?': 'string',
+        'environment?': 'string',
+      },
+      'contentful?': {
+        'spaceId?': 'string',
+        'accessToken?': 'string',
+        'previewToken?': 'string',
+        'environment?': 'string',
+      },
+    }),
+    next: ({ response }) => (response.hasCredentials ? 'apply-credentials' : 'review'),
+  })
+
+  .step('apply-credentials', {
+    save: ({ store }) => {
+      const confirmed = store.steps['confirm-credentials'] as
+        | {
+            personalization?: { apiKey?: string; environment?: string };
+            contentful?: { spaceId?: string; accessToken?: string; previewToken?: string; environment?: string };
+          }
+        | undefined;
+      const scanned = store.steps['scan-credentials'];
+      return {
+        credentials: {
+          personalization: {
+            apiKey: confirmed?.personalization?.apiKey ?? scanned?.personalization?.apiKey ?? '',
+            environment: confirmed?.personalization?.environment ?? scanned?.personalization?.environment ?? 'main',
+          },
+          contentful: {
+            spaceId: confirmed?.contentful?.spaceId ?? scanned?.contentful?.spaceId ?? '',
+            accessToken: confirmed?.contentful?.accessToken ?? scanned?.contentful?.accessToken ?? '',
+            ...((confirmed?.contentful?.previewToken ?? scanned?.contentful?.previewToken)
+              ? { previewToken: confirmed?.contentful?.previewToken ?? scanned?.contentful?.previewToken }
+              : {}),
+            environment: confirmed?.contentful?.environment ?? scanned?.contentful?.environment ?? 'master',
+          },
+        },
+      };
     },
     next: 'check-api',
   })
 
   .step('check-api', {
     action: {
-      input: ({ stash }) => ({
-        apiKey: stash.packageData?.apiKey,
-        ninetailedEnvironment: stash.packageData?.environment ?? 'main',
-        contentfulSpaceId: stash.packageData?.contentfulSpaceId,
-        contentfulEnvironment: stash.packageData?.contentfulEnvironment ?? 'master',
-      }),
+      mapInput: ({ store }) => {
+        const creds = store.credentials;
+        return {
+          ...(creds?.personalization?.apiKey ? { apiKey: creds.personalization.apiKey } : {}),
+          ninetailedEnvironment: creds?.personalization?.environment ?? 'main',
+          ...(creds?.contentful?.spaceId ? { contentfulSpaceId: creds.contentful.spaceId } : {}),
+          contentfulEnvironment: creds?.contentful?.environment ?? 'master',
+        };
+      },
       run: checkApiConnectivity,
-      updateStash: ({ actionOutput }) => ({ apiData: actionOutput }),
     },
     next: 'triage',
   })
 
   .step('triage', {
-    prompt: ({ stash, act }) => {
-      const codeHealthy = (stash.concerns?.length ?? 0) === 0;
-      const hasAutoTokens = !!(stash.packageData?.contentfulSpaceId && (
-        stash.packageData?.contentfulAccessToken || stash.packageData?.contentfulPreviewToken
-      ));
+    prompt: ({ store }) => {
+      const concerns = store.project.concerns;
+      const codeHealthy = (concerns?.length ?? 0) === 0;
 
+      const apiData = store.steps['check-api'];
       const codeStatusNote = codeHealthy
         ? 'The code-level exploration found **no concerns** — the setup looks correct.'
-        : `The code-level exploration found **${stash.concerns?.length ?? 0} concern(s)**:\n${(stash.concerns ?? []).map((c: string, i: number) => `${i + 1}. ${c}`).join('\n')}`;
+        : `The code-level exploration found **${concerns?.length ?? 0} concern(s)**:\n${(concerns ?? []).map((c: string, i: number) => `${i + 1}. ${c}`).join('\n')}`;
 
-      const apiStatusNote = stash.apiData?.status === 'pass'
-        ? 'Ninetailed API connectivity is **healthy**.'
-        : stash.apiData?.status === 'skip'
-          ? 'Ninetailed API check was **skipped** (no API key found).'
-          : 'Ninetailed API connectivity check **failed**.';
+      const apiStatusNote =
+        apiData?.status === 'pass'
+          ? 'Ninetailed API connectivity is **healthy**.'
+          : apiData?.status === 'skip'
+            ? 'Ninetailed API check was **skipped** (no API key found).'
+            : 'Ninetailed API connectivity check **failed**.';
 
-      const tokenNote = hasAutoTokens
-        ? 'We found Contentful API tokens in the project environment files, so we can inspect entry content directly.'
-        : 'We did not find Contentful API tokens in the project, but the user can provide them manually so we can inspect entry content.';
+      const hasContentfulTokens = !!(
+        store.credentials?.contentful?.spaceId &&
+        (store.credentials?.contentful?.accessToken || store.credentials?.contentful?.previewToken)
+      );
+
+      const tokenNote = hasContentfulTokens
+        ? 'We have Contentful API tokens available, so we can inspect entry content directly.'
+        : 'We do not have Contentful API tokens, so we cannot inspect entry content.';
 
       return [
         prompt`
@@ -169,219 +356,181 @@ export default skill({
           - Experience or variant entries still in draft
           - Include depth too shallow in the API response
 
-          ${hasAutoTokens
-            ? 'Mention that we already have Contentful API tokens from the project. Set hasAutoTokens to true.'
-            : 'Explain that we need Contentful API tokens (CDA and optionally CPA/Preview) to do this check, and the user can provide them if they have access to Contentful Settings > API keys. Set hasAutoTokens to false.'}
-
           Let the user choose how to proceed.
         `,
         act.askUser({
           type: 'structured',
           question: 'Would you like to inspect a specific Contentful entry?',
           options: [
-            { value: 'inspect-entry', label: '🔍 Yes, I have an entry ID to check' },
-            { value: 'need-help-finding', label: '🤔 I\'m not sure which entry — help me find it' },
-            { value: 'skip', label: '⏭️ Skip content inspection — focus on code issues' },
+            {
+              value: 'inspect-entry',
+              label: '🔍 Yes, I have an entry ID to check',
+            },
+            {
+              value: 'need-help-finding',
+              label: "🤔 I'm not sure which entry — help me find it",
+            },
+            {
+              value: 'skip',
+              label: '⏭️ Skip content inspection — focus on code issues',
+            },
           ],
         }),
       ];
     },
-    output: z.object({
-      choice: z.enum(['inspect-entry', 'need-help-finding', 'skip']),
-      hasAutoTokens: z.boolean(),
-      problemDescription: z.string(),
+    response: type({
+      choice: "'inspect-entry' | 'need-help-finding' | 'skip'",
+      problemDescription: 'string',
     }),
-    next: ({ stepOutput }) => {
-      if (stepOutput.choice === 'skip') return 'review';
-      if (stepOutput.choice === 'need-help-finding') return 'help-find-entry';
-      return stepOutput.hasAutoTokens ? 'get-entry-id' : 'collect-credentials';
+    next: ({ response }) => {
+      if (response.choice === 'skip') return 'review';
+      return 'choose-entry';
     },
   })
 
-  .step('help-find-entry', {
-    prompt: ({ stash, act }) => {
-      const candidates = stash.personalizableCandidates ?? [];
-      const hasAutoTokens = !!(stash.packageData?.contentfulSpaceId && (
-        stash.packageData?.contentfulAccessToken || stash.packageData?.contentfulPreviewToken
-      ));
+  .step('choose-entry', {
+    prompt: ({ store }) => {
+      const candidates = store.project.personalizableCandidates ?? [];
+      const cameFromHelp = store.steps['triage']?.choice === 'need-help-finding';
+
+      if (cameFromHelp) {
+        return [
+          prompt`
+            Help the user identify which Contentful entry to inspect.
+
+            ${
+              candidates.length > 0
+                ? `During exploration, we found these components that appear to be personalization candidates:\n${candidates.map((c: string) => `- ${c}`).join('\n')}\n\nThe user should look for the Contentful entry that provides data to one of these components.`
+                : 'We did not identify specific personalization candidates during exploration.'
+            }
+
+            Guide the user with these tips:
+            - In Contentful, look for entries of content types that have the \`nt_experiences\` field
+            - The entry ID (sys.id) is shown in the entry sidebar or in the URL when editing an entry
+            - If they're debugging a specific page, look at the page entry or the section entries within it
+            - They can also check the Contentful Personalization app to see which entries have experiences attached
+
+            Ask them to provide an entry ID once they find one, or let them skip.
+          `,
+          act.askUser({
+            type: 'open',
+            question:
+              'Paste the Contentful entry ID here (sys.id from the URL or sidebar), or type "skip" to continue without content inspection:',
+          }),
+        ];
+      }
 
       return [
         prompt`
-          Help the user identify which Contentful entry to inspect.
+          Ask the user for the Contentful entry ID (sys.id) they want to inspect.
+          They can find it in the entry URL (the last segment after /entries/) or
+          in the sidebar when editing an entry in Contentful.
 
-          ${candidates.length > 0
-            ? `During exploration, we found these components that appear to be personalization candidates:\n${candidates.map((c: string) => `- ${c}`).join('\n')}\n\nThe user should look for the Contentful entry that provides data to one of these components.`
-            : 'We did not identify specific personalization candidates during exploration.'}
-
-          Guide the user with these tips:
-          - In Contentful, look for entries of content types that have the \`nt_experiences\` field
-          - The entry ID (sys.id) is shown in the entry sidebar or in the URL when editing an entry
-          - If they're debugging a specific page, look at the page entry or the section entries within it
-          - They can also check the Contentful Personalization app to see which entries have experiences attached
-
-          Ask them to provide an entry ID once they find one, or let them skip.
-
-          Set hasAutoTokens to ${hasAutoTokens}.
+          If the user provides a URL like https://app.contentful.com/spaces/.../entries/ENTRY_ID,
+          extract the entry ID from it.
         `,
         act.askUser({
           type: 'open',
-          question: 'Paste the Contentful entry ID here (sys.id from the URL or sidebar), or type "skip" to continue without content inspection:',
+          question:
+            'Paste the Contentful entry ID here (sys.id from the URL or sidebar), or type "skip" to continue without content inspection:',
         }),
       ];
     },
-    output: z.object({
-      entryId: z.string().optional(),
-      skip: z.boolean(),
-      hasAutoTokens: z.boolean(),
+    response: type({
+      'entryId?': 'string',
+      skip: 'boolean',
     }),
-    updateStash: ({ stepOutput }) => stepOutput.entryId ? { entryId: stepOutput.entryId } : {},
-    next: ({ stepOutput }) => {
-      if (stepOutput.skip || !stepOutput.entryId) return 'review';
-      return stepOutput.hasAutoTokens ? 'get-entry-id' : 'collect-credentials';
+    next: ({ response }) => {
+      if (response.skip || !response.entryId) return 'review';
+      return 'run-inspection';
     },
-  })
-
-  .step('collect-credentials', {
-    prompt: ({ stash, act }) => {
-      const hasAutoTokens = !!(stash.packageData?.contentfulSpaceId && (
-        stash.packageData?.contentfulAccessToken || stash.packageData?.contentfulPreviewToken
-      ));
-
-      if (hasAutoTokens) {
-        return prompt`
-          We already have Contentful API tokens from the project's environment files.
-          Confirm that we should use these to inspect the entry.
-          Set hasCredentials to true and leave the credential fields empty — we'll use the auto-detected ones.
-        `;
-      }
-
-      return prompt`
-        We need Contentful API credentials to inspect the entry but they were not
-        auto-detected from the project's .env files.
-
-        Before asking the user, quickly check if there are .env, .env.local, or similar
-        files in the project that might contain Contentful tokens under non-standard names
-        (e.g., GATSBY_CONTENTFUL_SPACE_ID, REACT_APP_CONTENTFUL_TOKEN, VITE_CONTENTFUL_*,
-        or custom names). If you find credentials there, extract them and set hasCredentials
-        to true without bothering the user.
-
-        If you cannot find credentials in the project files, explain to the user what we need:
-        - **Space ID** — Found in Contentful under Settings > General settings
-        - **CDA Token** (Content Delivery API) — Found under Settings > API keys. This accesses published content.
-        - **CPA Token** (Content Preview API) — Same location. This accesses draft + published content.
-          The CPA token is optional but highly recommended — comparing CDA vs CPA is how we detect unpublished changes.
-        - **Environment** — Usually "master" (the default). Only needed if they use a non-default environment.
-
-        Ask them to paste their credentials, or let them skip if they don't have access.
-        If they skip or can't provide credentials, set hasCredentials to false.
-      `;
-    },
-    output: z.object({
-      spaceId: z.string().optional(),
-      accessToken: z.string().optional(),
-      previewToken: z.string().optional(),
-      environment: z.string().optional(),
-      hasCredentials: z.boolean(),
-    }),
-    updateStash: ({ stepOutput }) => ({
-      userProvidedSpaceId: stepOutput.spaceId,
-      userProvidedAccessToken: stepOutput.accessToken,
-      userProvidedPreviewToken: stepOutput.previewToken,
-      userProvidedEnvironment: stepOutput.environment,
-    }),
-    next: ({ stepOutput }) => stepOutput.hasCredentials ? 'get-entry-id' : 'review',
-  })
-
-  .step('get-entry-id', {
-    prompt: ({ stash }) => {
-      if (stash.entryId) {
-        return prompt`
-          We already have the entry ID: ${stash.entryId}
-          Confirm this entry ID to proceed with the content inspection.
-        `;
-      }
-      return prompt`
-        Ask the user for the Contentful entry ID (sys.id) they want to inspect.
-        They can find it in the entry URL (the last segment after /entries/) or
-        in the sidebar when editing an entry in Contentful.
-
-        If the user provides a URL like https://app.contentful.com/spaces/.../entries/ENTRY_ID,
-        extract the entry ID from it.
-      `;
-    },
-    output: z.object({ entryId: z.string() }),
-    updateStash: ({ stepOutput }) => ({ entryId: stepOutput.entryId }),
-    next: 'run-inspection',
   })
 
   .step('run-inspection', {
     action: {
-      input: ({ stash }) => ({
-        spaceId: stash.userProvidedSpaceId ?? stash.packageData?.contentfulSpaceId ?? '',
-        environment: stash.userProvidedEnvironment ?? stash.packageData?.contentfulEnvironment ?? 'master',
-        accessToken: stash.userProvidedAccessToken ?? stash.packageData?.contentfulAccessToken,
-        previewToken: stash.userProvidedPreviewToken ?? stash.packageData?.contentfulPreviewToken,
-        entryId: stash.entryId ?? '',
-        includeDepth: 3,
-      }),
+      mapInput: ({ store }) => {
+        const creds = store.credentials;
+        const entryId = store.steps['choose-entry']?.entryId ?? '';
+        return {
+          spaceId: creds?.contentful?.spaceId ?? '',
+          environment: creds?.contentful?.environment ?? 'master',
+          ...(creds?.contentful?.accessToken ? { accessToken: creds.contentful.accessToken } : {}),
+          ...(creds?.contentful?.previewToken ? { previewToken: creds.contentful.previewToken } : {}),
+          entryId,
+          includeDepth: 3,
+        };
+      },
       run: inspectContent,
-      updateStash: ({ actionOutput }) => ({ contentInspection: actionOutput }),
     },
     next: 'review',
   })
 
   .step('review', {
-    prompt: ({ stash, refs }) => {
-      const explorationView = stash.explorationSummary
+    prompt: ({ store, refs }) => {
+      const explorationView = store.project.explorationSummary
         ? [
-            `**Framework:** ${stash.framework}`,
+            `**Framework:** ${store.project.framework}`,
             '',
-            stash.explorationSummary,
+            store.project.explorationSummary,
             '',
-            (stash.concerns?.length ?? 0) > 0
-              ? render.section('⚠️ Concerns from Exploration',
-                  (stash.concerns ?? []).map((c: string, i: number) => `${i + 1}. ${c}`).join('\n'))
+            (store.project.concerns?.length ?? 0) > 0
+              ? render.section(
+                  '⚠️ Concerns from Exploration',
+                  (store.project.concerns ?? []).map((c: string, i: number) => `${i + 1}. ${c}`).join('\n'),
+                )
               : '✅ No concerns noted during exploration',
           ].join('\n')
         : 'No exploration data available';
 
-      const pkg = stash.packageData;
+      const pkg = store.project.packages;
       const packageView = pkg
         ? [
             render.table(
               [...(pkg.packages?.ninetailed ?? []), ...(pkg.packages?.optimization ?? [])].map(
-                (p: { name: string; version: string }) => ({ Package: p.name, Version: p.version })
+                (p: { name: string; version: string }) => ({
+                  Package: p.name,
+                  Version: p.version,
+                }),
               ),
-              { columns: ['Package', 'Version'] }
+              { columns: ['Package', 'Version'] },
             ) || '*No personalization SDK packages found*',
-            '',
-            render.table(
-              (pkg.envVars ?? []).map((ev: { name: string; status: string; maskedValue?: string }) => ({
-                Variable: ev.name, Status: ev.status, Value: ev.maskedValue ?? '—',
-              })),
-              { columns: ['Variable', 'Status', 'Value'] }
-            ),
           ].join('\n')
         : 'No package data available';
 
-      const api = stash.apiData;
-      const apiView = api
+      const scanned = store.steps['scan-credentials'];
+      const envView = scanned
         ? render.table(
-            (api.findings ?? []).map((f: { status: string; item: string; detail: string }) => ({
-              Check: f.item, Status: f.status, Detail: f.detail,
+            (scanned.envVars ?? []).map((ev: { name: string; status: string; maskedValue?: string }) => ({
+              Variable: ev.name,
+              Status: ev.status,
+              Value: ev.maskedValue ?? '—',
             })),
-            { columns: ['Check', 'Status', 'Detail'] }
+            { columns: ['Variable', 'Status', 'Value'] },
+          )
+        : 'No environment variable data available';
+
+      const apiData = store.steps['check-api'];
+      const apiView = apiData
+        ? render.table(
+            (apiData.findings ?? []).map((f: { status: string; item: string; detail: string }) => ({
+              Check: f.item,
+              Status: f.status,
+              Detail: f.detail,
+            })),
+            { columns: ['Check', 'Status', 'Detail'] },
           )
         : 'No API data available';
 
-      const content = stash.contentInspection;
+      const content = store.steps['run-inspection'];
       const contentView = content
         ? [
             render.table(
               (content.findings ?? []).map((f: { status: string; item: string; detail: string }) => ({
-                Check: f.item, Status: f.status, Detail: f.detail,
+                Check: f.item,
+                Status: f.status,
+                Detail: f.detail,
               })),
-              { columns: ['Check', 'Status', 'Detail'] }
+              { columns: ['Check', 'Status', 'Detail'] },
             ),
             '',
             content.entry?.comparison?.hasUnpublishedChanges
@@ -413,8 +562,11 @@ export default skill({
           ## Exploration Findings
           ${explorationView}
 
-          ## Package & Environment Data
+          ## Package Data
           ${packageView}
+
+          ## Environment Variables
+          ${envView}
 
           ## API Connectivity Results
           ${apiView}
@@ -432,89 +584,115 @@ export default skill({
           ${refs.load('common-errors.md')}
         `;
     },
-    output: z.object({
-      overallStatus: z.enum(['pass', 'warn', 'fail']),
-      recommendations: z.array(Recommendation),
-      summary: z.string(),
+    response: type({
+      overallStatus: "'pass' | 'warn' | 'fail'",
+      recommendations: Recommendation.array(),
+      summary: 'string',
     }),
-    updateStash: ({ stepOutput }) => ({
-      overallStatus: stepOutput.overallStatus,
-      recommendations: stepOutput.recommendations,
-      reviewSummary: stepOutput.summary,
+    save: ({ response }) => ({
+      diagnosis: {
+        overallStatus: response.overallStatus,
+        recommendations: response.recommendations,
+        summary: response.summary,
+      },
     }),
     next: 'report',
   })
 
   .step('report', {
-    prompt: ({ stash, act }) => {
+    prompt: ({ store }) => {
       const icon = (status: string) => {
         switch (status) {
-          case 'pass': return '✅';
-          case 'warn': return '⚠️';
-          case 'fail': return '❌';
-          case 'skip': return '⏭️';
-          default: return '❓';
+          case 'pass':
+            return '✅';
+          case 'warn':
+            return '⚠️';
+          case 'fail':
+            return '❌';
+          case 'skip':
+            return '⏭️';
+          default:
+            return '❓';
         }
       };
 
       const statusLabel = (s: string) => {
         switch (s) {
-          case 'pass': return 'Healthy';
-          case 'warn': return 'Needs Attention';
-          case 'fail': return 'Issues Found';
-          default: return 'Unknown';
+          case 'pass':
+            return 'Healthy';
+          case 'warn':
+            return 'Needs Attention';
+          case 'fail':
+            return 'Issues Found';
+          default:
+            return 'Unknown';
         }
       };
 
-      const overallStatusVal = stash.overallStatus ?? 'fail';
+      const diagnosis = store.diagnosis;
+      const overallStatusVal = diagnosis.overallStatus!;
       const sections: string[] = [];
 
       sections.push(`# 🩺 Optimization Doctor Report\n`);
       sections.push(`## ${icon(overallStatusVal)} Overall: ${statusLabel(overallStatusVal)}\n`);
-      sections.push(stash.reviewSummary ?? 'No summary available');
+      sections.push(diagnosis.summary!);
       sections.push('---');
 
-      if (stash.explorationSummary) {
-        sections.push(render.section('🔍 Exploration Summary', stash.explorationSummary));
+      if (store.project.explorationSummary) {
+        sections.push(render.section('🔍 Exploration Summary', store.project.explorationSummary));
       }
 
-      const pkg = stash.packageData;
+      const pkg = store.project.packages;
       if (pkg) {
         const allPkgs = [...(pkg.packages?.ninetailed ?? []), ...(pkg.packages?.optimization ?? [])];
-        const pkgTable = allPkgs.length > 0
-          ? render.table(allPkgs.map((p: { name: string; version: string }) => ({
-              Package: p.name, Version: p.version
-            })), { columns: ['Package', 'Version'] })
-          : '*No personalization SDK packages found*';
+        const pkgTable =
+          allPkgs.length > 0
+            ? render.table(
+                allPkgs.map((p: { name: string; version: string }) => ({
+                  Package: p.name,
+                  Version: p.version,
+                })),
+                { columns: ['Package', 'Version'] },
+              )
+            : '*No personalization SDK packages found*';
 
-        const envTable = render.table(
-          (pkg.envVars ?? []).map((ev: { name: string; status: string; maskedValue?: string }) => ({
-            Variable: ev.name, Status: ev.status, Value: ev.maskedValue ?? '—'
-          })),
-          { columns: ['Variable', 'Status', 'Value'] }
-        );
+        const scanned = store.steps['scan-credentials'];
+        const envTable = scanned
+          ? render.table(
+              (scanned.envVars ?? []).map((ev: { name: string; status: string; maskedValue?: string }) => ({
+                Variable: ev.name,
+                Status: ev.status,
+                Value: ev.maskedValue ?? '—',
+              })),
+              { columns: ['Variable', 'Status', 'Value'] },
+            )
+          : '';
 
         sections.push(render.section('📦 Packages & Environment', `${pkgTable}\n\n${envTable}`));
       }
 
-      const api = stash.apiData;
-      if (api) {
+      const apiData = store.steps['check-api'];
+      if (apiData) {
         const apiTable = render.table(
-          (api.findings ?? []).map((f: { status: string; item: string; detail: string }) => ({
-            Check: f.item, Status: f.status, Detail: f.detail,
+          (apiData.findings ?? []).map((f: { status: string; item: string; detail: string }) => ({
+            Check: f.item,
+            Status: f.status,
+            Detail: f.detail,
           })),
-          { columns: ['Check', 'Status', 'Detail'] }
+          { columns: ['Check', 'Status', 'Detail'] },
         );
         sections.push(render.section('🌐 API Connectivity', apiTable));
       }
 
-      const content = stash.contentInspection;
+      const content = store.steps['run-inspection'];
       if (content) {
         const contentTable = render.table(
           (content.findings ?? []).map((f: { status: string; item: string; detail: string }) => ({
-            Check: f.item, Status: f.status, Detail: f.detail,
+            Check: f.item,
+            Status: f.status,
+            Detail: f.detail,
           })),
-          { columns: ['Check', 'Status', 'Detail'] }
+          { columns: ['Check', 'Status', 'Detail'] },
         );
         const comparisonNote = content.entry?.comparison?.hasUnpublishedChanges
           ? '\n\n🔴 **Unpublished changes detected** — see recommendations below.'
@@ -522,15 +700,25 @@ export default skill({
         sections.push(render.section('📄 Content Inspection', `${contentTable}${comparisonNote}`));
       }
 
-      if (stash.recommendations?.length) {
-        const priorityIcon: Record<string, string> = { critical: '🔴', warning: '🟡', info: '💡' };
-        const recs = stash.recommendations
-          .sort((a: { priority: string }, b: { priority: string }) => {
-            const order: Record<string, number> = { critical: 0, warning: 1, info: 2 };
+      const recommendations = diagnosis.recommendations!.filter((r): r is Recommendation => !!r);
+      if (recommendations.length) {
+        const priorityIcon: Record<string, string> = {
+          critical: '🔴',
+          warning: '🟡',
+          info: '💡',
+        };
+        const recs = [...recommendations]
+          .sort((a, b) => {
+            const order: Record<string, number> = {
+              critical: 0,
+              warning: 1,
+              info: 2,
+            };
             return (order[a.priority] ?? 3) - (order[b.priority] ?? 3);
           })
-          .map((r: { priority: string; message: string; category: string }, i: number) =>
-            `${i + 1}. ${priorityIcon[r.priority] ?? '•'} **[${r.priority}]** ${r.message} *(${r.category})*`)
+          .map(
+            (r, i) => `${i + 1}. ${priorityIcon[r.priority] ?? '•'} **[${r.priority}]** ${r.message} *(${r.category})*`,
+          )
           .join('\n');
         sections.push(render.section('💊 Recommendations', recs));
       }
@@ -548,32 +736,47 @@ export default skill({
         }),
       ];
     },
-    output: z.object({ choice: z.enum(['yes', 'no']) }),
-    next: ({ stepOutput }) => (stepOutput.choice === 'yes' ? 'plan-fix' : 'report-only'),
-  })
-
-  .step('report-only', {
-    prompt: prompt`
-      The user has the diagnostic report and chose not to proceed with fixes.
-      Thank them warmly and mention they can re-run the doctor anytime if issues
-      come up later. Keep it to 2-3 sentences — brief and friendly.
-      Do NOT repeat the report findings.
-    `,
-    next: terminal,
+    response: type({ choice: "'yes' | 'no'" }),
+    next: ({ response }) => (response.choice === 'yes' ? 'plan-fix' : 'done'),
   })
 
   .step('plan-fix', {
-    prompt: ({ stash, act, refs }) => {
-      const recs = stash.recommendations ?? [];
-      const priorityIcon: Record<string, string> = { critical: '🔴', warning: '🟡', info: '💡' };
+    prompt: ({ store, refs }) => {
+      const diagnosis = store.diagnosis;
+      const recs = diagnosis.recommendations!.filter((r): r is Recommendation => !!r);
+      const priorityIcon: Record<string, string> = {
+        critical: '🔴',
+        warning: '🟡',
+        info: '💡',
+      };
 
       const refSections: Array<{ label: string; content: string }> = [];
       const categories = new Set(recs.map((r) => r.category));
-      if (categories.has('provider')) refSections.push({ label: 'Provider Patterns', content: refs.load('provider-patterns.md') });
-      if (categories.has('middleware')) refSections.push({ label: 'Middleware Patterns', content: refs.load('middleware-patterns.md') });
-      if (categories.has('components')) refSections.push({ label: 'Component Patterns', content: refs.load('component-patterns.md') });
-      if (categories.has('analytics')) refSections.push({ label: 'Analytics Patterns', content: refs.load('analytics-patterns.md') });
-      if (categories.has('middleware')) refSections.push({ label: 'SSR Guide', content: refs.load('ssr-guide.md') });
+      if (categories.has('provider'))
+        refSections.push({
+          label: 'Provider Patterns',
+          content: refs.load('provider-patterns.md'),
+        });
+      if (categories.has('middleware'))
+        refSections.push({
+          label: 'Middleware Patterns',
+          content: refs.load('middleware-patterns.md'),
+        });
+      if (categories.has('components'))
+        refSections.push({
+          label: 'Component Patterns',
+          content: refs.load('component-patterns.md'),
+        });
+      if (categories.has('analytics'))
+        refSections.push({
+          label: 'Analytics Patterns',
+          content: refs.load('analytics-patterns.md'),
+        });
+      if (categories.has('middleware'))
+        refSections.push({
+          label: 'SSR Guide',
+          content: refs.load('ssr-guide.md'),
+        });
 
       return [
         prompt`
@@ -588,46 +791,62 @@ export default skill({
           Do NOT start implementing — this is the planning step only.
 
           ${render.kv({
-            'Framework': stash.framework,
-            'Project': stash.projectPath,
+            Framework: store.project.framework,
+            Project: store.project.projectPath,
           })}
 
           ## Reference Material
-          ${refSections.map(r => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
+          ${refSections.map((r) => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
         `,
         act.plan({
-          summary: `Fix ${recs.length} issue${recs.length !== 1 ? 's' : ''} in ${stash.framework} personalization setup`,
+          summary: `Fix ${recs.length} issue${recs.length !== 1 ? 's' : ''} in ${store.project.framework} personalization setup`,
           steps: recs.map((r) => `${priorityIcon[r.priority] ?? '•'} [${r.priority}] ${r.message}`),
         }),
       ];
     },
-    output: z.object({
-      approved: z.boolean(),
-      plan: z.string(),
-      filesToModify: z.array(z.string()),
+    response: type({
+      approved: 'boolean',
+      plan: 'string',
+      filesToModify: 'string[]',
     }),
-    updateStash: ({ stepOutput }) => ({
-      fixPlan: stepOutput.plan,
-      fixFilesToModify: stepOutput.filesToModify,
-    }),
-    next: ({ stepOutput }) => (stepOutput.approved ? 'fix' : 'done'),
+    next: ({ response }) => (response.approved ? 'fix' : 'done'),
   })
 
   .step('fix', {
-    prompt: ({ stash, act, system, refs }) => {
-      const recs = stash.recommendations ?? [];
-      const priorityIcon: Record<string, string> = { critical: '🔴', warning: '🟡', info: '💡' };
+    prompt: ({ store, system, refs }) => {
+      const diagnosis = store.diagnosis;
+      const recs = diagnosis.recommendations!.filter((r): r is Recommendation => !!r);
+      const priorityIcon: Record<string, string> = {
+        critical: '🔴',
+        warning: '🟡',
+        info: '💡',
+      };
 
       const categories = new Set(recs.map((r) => r.category));
       const refSections: Array<{ label: string; content: string }> = [];
       if (categories.has('packages') || categories.has('env'))
-        refSections.push({ label: 'Env Var Spec', content: refs.load('env-var-spec.md') });
+        refSections.push({
+          label: 'Env Var Spec',
+          content: refs.load('env-var-spec.md'),
+        });
       if (categories.has('provider'))
-        refSections.push({ label: 'Provider Patterns', content: refs.load('provider-patterns.md') });
+        refSections.push({
+          label: 'Provider Patterns',
+          content: refs.load('provider-patterns.md'),
+        });
       if (categories.has('middleware'))
-        refSections.push({ label: 'Middleware Patterns', content: refs.load('middleware-patterns.md') });
+        refSections.push({
+          label: 'Middleware Patterns',
+          content: refs.load('middleware-patterns.md'),
+        });
       if (categories.has('components'))
-        refSections.push({ label: 'Component Patterns', content: refs.load('component-patterns.md') });
+        refSections.push({
+          label: 'Component Patterns',
+          content: refs.load('component-patterns.md'),
+        });
+
+      const fixPlan = store.steps['plan-fix']?.plan;
+      const fixFiles = store.steps['plan-fix']?.filesToModify;
 
       return [
         system`Apply each fix methodically. Update the checklist status as you complete each one. Match the project's existing code style. For content-category issues, provide clear step-by-step instructions for the user to follow in the Contentful UI rather than attempting code changes.`,
@@ -641,11 +860,11 @@ export default skill({
 
           After all fixes, the setup will be re-verified automatically.
 
-          ${stash.fixPlan ? `**Plan:** ${stash.fixPlan}` : ''}
-          ${stash.fixFilesToModify?.length ? `**Files to modify:** ${stash.fixFilesToModify.join(', ')}` : ''}
+          ${fixPlan ? `**Plan:** ${fixPlan}` : ''}
+          ${fixFiles?.length ? `**Files to modify:** ${fixFiles.join(', ')}` : ''}
 
           ## Reference Material
-          ${refSections.map((r: { label: string; content: string }) => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
+          ${refSections.map((r) => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
         `,
         act.checklist({
           create: recs.map((r) => ({
@@ -660,49 +879,78 @@ export default skill({
 
   .step('re-verify', {
     action: {
-      input: ({ stash }) => ({ projectPath: stash.projectPath }),
-      run: validateSetup,
-      updateStash: ({ actionOutput }) => ({
-        reVerifyOverallStatus: (actionOutput as { overallStatus: string }).overallStatus,
-        reVerifySummary: (actionOutput as { summary: string }).summary,
+      mapInput: ({ store }) => ({
+        projectPath: store.project?.projectPath ?? '.',
       }),
+      run: validateSetup,
     },
-    next: ({ actionOutput, attempts }) => {
-      const result = actionOutput as { overallStatus: string } | undefined;
-      if (result?.overallStatus === 'pass') return 'done';
+    next: ({ actionResult, attempts }) => {
+      if (actionResult?.overallStatus === 'pass') return 'done';
       if (attempts >= 3) return 'done';
       return 'fix';
     },
   })
 
   .step('done', {
-    prompt: ({ stash }) => {
-      const recs = stash.recommendations ?? [];
+    prompt: ({ store }) => {
+      const diagnosis = store.diagnosis;
+      const recs = diagnosis.recommendations!.filter((r): r is Recommendation => !!r);
 
-      const statusIcon = stash.reVerifyOverallStatus === 'pass' ? '✅'
-        : stash.reVerifyOverallStatus === 'warn' ? '⚠️' : '❌';
+      const reVerifyResult = store.steps['re-verify'];
+      const reVerifyStatus = reVerifyResult?.overallStatus;
+      const reVerifySummary = reVerifyResult?.summary;
+
+      const cameFromReport = !store.steps['plan-fix'] && !reVerifyResult;
+      const cameFromPlanFix = store.steps['plan-fix'] && !store.steps['plan-fix']?.approved && !reVerifyResult;
+      const cameFromReVerify = !!reVerifyResult;
+
+      if (cameFromReport) {
+        // No fixes requested — user said "the report is enough"
+        return prompt`
+          The user has the diagnostic report and chose not to proceed with fixes.
+          Thank them warmly and mention they can re-run the doctor anytime if issues
+          come up later. Keep it to 2-3 sentences — brief and friendly.
+          Do NOT repeat the report findings.
+        `;
+      }
+
+      if (cameFromPlanFix) {
+        // Fixes declined at plan-fix stage
+        return prompt`
+          The user reviewed the fix plan but chose not to proceed with implementation.
+          Acknowledge their choice, remind them the diagnostic report is still available,
+          and mention they can re-run the doctor anytime. Keep it to 2-3 sentences.
+          Do NOT repeat the report findings.
+        `;
+      }
+
+      // Fixes applied — show before/after
+      const statusIcon = reVerifyStatus === 'pass' ? '✅' : reVerifyStatus === 'warn' ? '⚠️' : '❌';
 
       const sections: string[] = [];
       sections.push(`# 🩺 Doctor Summary\n`);
-      sections.push(render.section('Before', `Status: ${stash.overallStatus ?? 'unknown'}`));
+      sections.push(render.section('Before', `Status: ${diagnosis.overallStatus}`));
 
-      if (stash.reVerifyOverallStatus) {
-        sections.push(render.section(
-          `After: ${statusIcon} ${stash.reVerifyOverallStatus.toUpperCase()}`,
-          stash.reVerifySummary ?? 'No verification summary',
-        ));
+      if (reVerifyStatus) {
+        sections.push(
+          render.section(
+            `After: ${statusIcon} ${reVerifyStatus.toUpperCase()}`,
+            reVerifySummary ?? 'No verification summary',
+          ),
+        );
       }
 
       if (recs.length > 0) {
-        sections.push(render.section('🔧 Fixes Applied',
-          recs.map((r) => `- ${r.message}`).join('\n')
-        ));
+        sections.push(render.section('🔧 Fixes Applied', recs.map((r) => `- ${r.message}`).join('\n')));
       }
 
-      if (stash.reVerifyOverallStatus !== 'pass') {
-        sections.push(render.section('💡 Remaining Issues',
-          'Some issues may remain. Consider running the doctor again after addressing any manual steps above.'
-        ));
+      if (reVerifyStatus !== 'pass') {
+        sections.push(
+          render.section(
+            '💡 Remaining Issues',
+            'Some issues may remain. Consider running the doctor again after addressing any manual steps above.',
+          ),
+        );
       }
 
       return [

@@ -1,4 +1,4 @@
-import { z, action } from '@contentful/skill-kit';
+import { type, action } from '@contentful/skill-kit';
 import { ContentInspectionResult, type Finding } from '../schemas.js';
 
 const API_TIMEOUT_MS = 10_000;
@@ -12,12 +12,7 @@ interface EntryApiState {
 }
 
 function isResolvedEntry(item: unknown): boolean {
-  return (
-    typeof item === 'object' &&
-    item !== null &&
-    'fields' in item &&
-    'sys' in item
-  );
+  return typeof item === 'object' && item !== null && 'fields' in item && 'sys' in item;
 }
 
 function isUnresolvedLink(item: unknown): boolean {
@@ -31,17 +26,27 @@ function analyzeEntry(json: Record<string, unknown>): {
   state: EntryApiState;
   contentTypeId?: string;
   unresolvedExperienceCount: number;
-  unresolvedVariantDetails: Array<{ experienceId: string; unresolved: number; total: number }>;
+  unresolvedVariantDetails: Array<{
+    experienceId: string;
+    unresolved: number;
+    total: number;
+  }>;
 } {
   const sys = json.sys as Record<string, unknown> | undefined;
   const fields = json.fields as Record<string, unknown> | undefined;
   const contentTypeId = (sys?.contentType as Record<string, unknown>)?.sys
-    ? ((sys?.contentType as Record<string, unknown>).sys as Record<string, unknown>).id as string
+    ? (((sys?.contentType as Record<string, unknown>).sys as Record<string, unknown>).id as string)
     : undefined;
 
   if (!fields) {
     return {
-      state: { found: true, hasNtExperiences: false, ntExperiencesCount: 0, experiencesResolved: false, variantsResolved: false },
+      state: {
+        found: true,
+        hasNtExperiences: false,
+        ntExperiencesCount: 0,
+        experiencesResolved: false,
+        variantsResolved: false,
+      },
       contentTypeId,
       unresolvedExperienceCount: 0,
       unresolvedVariantDetails: [],
@@ -55,7 +60,13 @@ function analyzeEntry(json: Record<string, unknown>): {
 
   if (!hasField || !isArray || count === 0) {
     return {
-      state: { found: true, hasNtExperiences: hasField, ntExperiencesCount: 0, experiencesResolved: false, variantsResolved: false },
+      state: {
+        found: true,
+        hasNtExperiences: hasField,
+        ntExperiencesCount: 0,
+        experiencesResolved: false,
+        variantsResolved: false,
+      },
       contentTypeId,
       unresolvedExperienceCount: 0,
       unresolvedVariantDetails: [],
@@ -67,7 +78,11 @@ function analyzeEntry(json: Record<string, unknown>): {
   const experiencesResolved = resolvedExperiences.length > 0 && unresolvedLinks.length === 0;
 
   let variantsResolved = true;
-  const unresolvedVariantDetails: Array<{ experienceId: string; unresolved: number; total: number }> = [];
+  const unresolvedVariantDetails: Array<{
+    experienceId: string;
+    unresolved: number;
+    total: number;
+  }> = [];
   for (const exp of resolvedExperiences) {
     const expFields = (exp as Record<string, unknown>).fields as Record<string, unknown> | undefined;
     const variants = expFields?.nt_variants;
@@ -113,18 +128,17 @@ function synthesizeFindings(
   const cdaFound = cda?.state.found ?? false;
   const cpaFound = cpa?.state.found ?? false;
 
-  // Entry not published at all
   if (hasBothApis && !cdaFound && cpaFound) {
     findings.push({
       item: 'Entry publishing',
       status: 'fail',
-      detail: 'Entry exists in preview (draft) but not in published content — publish the entry to make it available via the Delivery API',
+      detail:
+        'Entry exists in preview (draft) but not in published content — publish the entry to make it available via the Delivery API',
     });
     return findings;
   }
 
-  // Entry not found anywhere
-  if ((cda && !cdaFound) && (cpa && !cpaFound)) {
+  if (cda && !cdaFound && cpa && !cpaFound) {
     findings.push({
       item: 'Entry lookup',
       status: 'fail',
@@ -133,17 +147,16 @@ function synthesizeFindings(
     return findings;
   }
 
-  // CDA only, entry not found
   if (cda && !cdaFound && !cpa) {
     findings.push({
       item: 'Entry lookup',
       status: 'fail',
-      detail: 'Entry not found in published content — it may not be published yet. Provide a Preview API token to check if it exists in draft.',
+      detail:
+        'Entry not found in published content — it may not be published yet. Provide a Preview API token to check if it exists in draft.',
     });
     return findings;
   }
 
-  // Analyze nt_experiences field presence
   const cdaHasField = cda?.state.hasNtExperiences ?? false;
   const cpaHasField = cpa?.state.hasNtExperiences ?? false;
   const cdaCount = cda?.state.ntExperiencesCount ?? 0;
@@ -178,11 +191,11 @@ function synthesizeFindings(
     findings.push({
       item: 'Experience attachment',
       status: 'warn',
-      detail: 'The nt_experiences field exists but is empty — no experiences are attached to this entry. Create an experience in the Contentful Personalization app and link it to this entry.',
+      detail:
+        'The nt_experiences field exists but is empty — no experiences are attached to this entry. Create an experience in the Contentful Personalization app and link it to this entry.',
     });
   }
 
-  // Analyze experience resolution (only meaningful when we have experiences)
   const primaryApi = cda?.state.found ? cda : cpa;
   const primaryLabel = cda?.state.found ? 'published' : 'preview';
   if (primaryApi && primaryApi.state.ntExperiencesCount > 0) {
@@ -201,7 +214,6 @@ function synthesizeFindings(
       });
     }
 
-    // Variant resolution
     const variantDetails = primaryApi === cda ? cda!.unresolvedVariantDetails : cpa!.unresolvedVariantDetails;
     if (!primaryApi.state.variantsResolved && variantDetails.length > 0) {
       for (const v of variantDetails) {
@@ -220,13 +232,13 @@ function synthesizeFindings(
     }
   }
 
-  // Cross-API resolution comparison
   if (hasBothApis && cdaCount > 0 && cpaCount > 0) {
     if (cpa!.state.experiencesResolved && !cda!.state.experiencesResolved) {
       findings.push({
         item: 'Experience publishing',
         status: 'fail',
-        detail: 'Experiences resolve in preview but not in published content — the experience entries need to be published',
+        detail:
+          'Experiences resolve in preview but not in published content — the experience entries need to be published',
       });
     }
     if (cpa!.state.variantsResolved && !cda!.state.variantsResolved && cda!.state.experiencesResolved) {
@@ -237,8 +249,10 @@ function synthesizeFindings(
       });
     }
     if (
-      cda!.state.experiencesResolved && cda!.state.variantsResolved &&
-      cpa!.state.experiencesResolved && cpa!.state.variantsResolved
+      cda!.state.experiencesResolved &&
+      cda!.state.variantsResolved &&
+      cpa!.state.experiencesResolved &&
+      cpa!.state.variantsResolved
     ) {
       findings.push({
         item: 'Publishing state',
@@ -259,7 +273,11 @@ async function fetchEntry(
   token: string,
   includeDepth: number,
   parentSignal: AbortSignal,
-): Promise<{ json?: Record<string, unknown>; httpStatus: number; error?: string }> {
+): Promise<{
+  json?: Record<string, unknown>;
+  httpStatus: number;
+  error?: string;
+}> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
   parentSignal.addEventListener('abort', () => controller.abort());
@@ -276,26 +294,35 @@ async function fetchEntry(
     return { httpStatus: res.status };
   } catch (err) {
     clearTimeout(timeout);
-    return { httpStatus: 0, error: err instanceof Error ? err.message : String(err) };
+    return {
+      httpStatus: 0,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
 }
 
 export const inspectContent = action({
   name: 'inspect-content',
-  input: z.object({
-    spaceId: z.string(),
-    environment: z.string().default('master'),
-    accessToken: z.string().optional(),
-    previewToken: z.string().optional(),
-    entryId: z.string(),
-    includeDepth: z.number().default(3),
+  input: type({
+    spaceId: 'string',
+    environment: "string = 'master'",
+    'accessToken?': 'string',
+    'previewToken?': 'string',
+    entryId: 'string',
+    includeDepth: 'number = 3',
   }),
   output: ContentInspectionResult,
   run: async ({ input, signal }) => {
     if (!input.accessToken && !input.previewToken) {
       return {
         status: 'skip' as const,
-        findings: [{ item: 'Content Inspection', status: 'skip' as const, detail: 'No Contentful API tokens provided' }],
+        findings: [
+          {
+            item: 'Content Inspection',
+            status: 'skip' as const,
+            detail: 'No Contentful API tokens provided',
+          },
+        ],
         entry: { id: input.entryId },
       };
     }
@@ -307,62 +334,111 @@ export const inspectContent = action({
 
     if (input.accessToken) {
       const { json, httpStatus, error } = await fetchEntry(
-        'cdn.contentful.com', input.spaceId, input.environment, input.entryId,
-        input.accessToken, input.includeDepth, signal,
+        'cdn.contentful.com',
+        input.spaceId,
+        input.environment,
+        input.entryId,
+        input.accessToken,
+        input.includeDepth,
+        signal,
       );
 
       if (error) {
-        cdaError = { item: 'Delivery API connectivity', status: 'fail' as const, detail: `Network error: ${error}` };
+        cdaError = {
+          item: 'Delivery API connectivity',
+          status: 'fail' as const,
+          detail: `Network error: ${error}`,
+        };
       } else if (httpStatus === 401 || httpStatus === 403) {
-        cdaError = { item: 'Delivery API authentication', status: 'fail' as const, detail: `CDA token rejected (HTTP ${httpStatus}) — check that the token is a valid Content Delivery API token` };
+        cdaError = {
+          item: 'Delivery API authentication',
+          status: 'fail' as const,
+          detail: `CDA token rejected (HTTP ${httpStatus}) — check that the token is a valid Content Delivery API token`,
+        };
       } else if (httpStatus === 404) {
         cdaAnalysis = {
-          state: { found: false, hasNtExperiences: false, ntExperiencesCount: 0, experiencesResolved: false, variantsResolved: false },
+          state: {
+            found: false,
+            hasNtExperiences: false,
+            ntExperiencesCount: 0,
+            experiencesResolved: false,
+            variantsResolved: false,
+          },
           unresolvedExperienceCount: 0,
           unresolvedVariantDetails: [],
         };
       } else if (json) {
         cdaAnalysis = analyzeEntry(json);
       } else {
-        cdaError = { item: 'Delivery API', status: 'fail' as const, detail: `Unexpected HTTP ${httpStatus}` };
+        cdaError = {
+          item: 'Delivery API',
+          status: 'fail' as const,
+          detail: `Unexpected HTTP ${httpStatus}`,
+        };
       }
     }
 
     if (input.previewToken) {
       const { json, httpStatus, error } = await fetchEntry(
-        'preview.contentful.com', input.spaceId, input.environment, input.entryId,
-        input.previewToken, input.includeDepth, signal,
+        'preview.contentful.com',
+        input.spaceId,
+        input.environment,
+        input.entryId,
+        input.previewToken,
+        input.includeDepth,
+        signal,
       );
 
       if (error) {
-        cpaError = { item: 'Preview API connectivity', status: 'fail' as const, detail: `Network error: ${error}` };
+        cpaError = {
+          item: 'Preview API connectivity',
+          status: 'fail' as const,
+          detail: `Network error: ${error}`,
+        };
       } else if (httpStatus === 401 || httpStatus === 403) {
-        cpaError = { item: 'Preview API authentication', status: 'fail' as const, detail: `CPA token rejected (HTTP ${httpStatus}) — check that the token is a valid Content Preview API token` };
+        cpaError = {
+          item: 'Preview API authentication',
+          status: 'fail' as const,
+          detail: `CPA token rejected (HTTP ${httpStatus}) — check that the token is a valid Content Preview API token`,
+        };
       } else if (httpStatus === 404) {
         cpaAnalysis = {
-          state: { found: false, hasNtExperiences: false, ntExperiencesCount: 0, experiencesResolved: false, variantsResolved: false },
+          state: {
+            found: false,
+            hasNtExperiences: false,
+            ntExperiencesCount: 0,
+            experiencesResolved: false,
+            variantsResolved: false,
+          },
           unresolvedExperienceCount: 0,
           unresolvedVariantDetails: [],
         };
       } else if (json) {
         cpaAnalysis = analyzeEntry(json);
       } else {
-        cpaError = { item: 'Preview API', status: 'fail' as const, detail: `Unexpected HTTP ${httpStatus}` };
+        cpaError = {
+          item: 'Preview API',
+          status: 'fail' as const,
+          detail: `Unexpected HTTP ${httpStatus}`,
+        };
       }
     }
 
     const findings = synthesizeFindings(cdaAnalysis, cpaAnalysis, cdaError, cpaError);
 
-    const comparison = (cdaAnalysis && cpaAnalysis)
-      ? {
-          hasUnpublishedChanges: findings.some((f) => f.item.includes('Unpublished') || f.item.includes('publishing')),
-          detail: findings.find((f) => f.item.includes('Unpublished'))?.detail ?? 'No unpublished changes detected',
-        }
-      : undefined;
+    const comparison =
+      cdaAnalysis && cpaAnalysis
+        ? {
+            hasUnpublishedChanges: findings.some(
+              (f) => f.item.includes('Unpublished') || f.item.includes('publishing'),
+            ),
+            detail: findings.find((f) => f.item.includes('Unpublished'))?.detail ?? 'No unpublished changes detected',
+          }
+        : undefined;
 
     const hasCritical = findings.some((f) => f.status === 'fail');
     const hasWarning = findings.some((f) => f.status === 'warn');
-    const status = hasCritical ? 'fail' as const : hasWarning ? 'warn' as const : 'pass' as const;
+    const status = hasCritical ? ('fail' as const) : hasWarning ? ('warn' as const) : ('pass' as const);
 
     return {
       status,

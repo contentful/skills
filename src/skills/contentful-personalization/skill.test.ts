@@ -10,13 +10,27 @@ import developSkill from './subskills/develop.js';
 test('classify routes to onboard for setup requests', async () => {
   const result = await runComposite(skill, {
     model: mockModel({
-      classify: { intent: 'onboard', confidence: 0.95, reasoning: 'User wants to set up personalization' },
+      classify: {
+        intent: 'onboard',
+        confidence: 0.95,
+        reasoning: 'User wants to set up personalization',
+      },
       'onboard/explore': {
-        framework: 'nextjs-app', routerType: 'app', projectPath: '.', frameworkVersion: '14.0.0',
-        explorationSummary: 'Next.js project', personalizableCandidates: [], existingSetup: 'none',
+        framework: 'nextjs-app',
+        routerType: 'app',
+        projectPath: '.',
+        frameworkVersion: '14.0.0',
+        explorationSummary: 'Next.js project',
+        personalizableCandidates: [],
+        existingSetup: 'none',
         readinessOnly: true,
       },
-      'onboard/assess': { readinessStatus: 'ready', report: 'All good', prerequisites: [], readinessOnly: true },
+      'onboard/assess': {
+        readinessStatus: 'ready',
+        report: 'All good',
+        prerequisites: [],
+        readinessOnly: true,
+      },
       'onboard/gate': { message: 'Readiness check complete' },
     }),
   });
@@ -29,15 +43,24 @@ test('classify routes to onboard for setup requests', async () => {
 test('classify routes to doctor for debugging requests', async () => {
   const result = await runComposite(skill, {
     model: mockModel({
-      classify: { intent: 'doctor', confidence: 0.9, reasoning: 'User says personalization is broken' },
-      'doctor/explore': {
-        framework: 'nextjs-app', projectPath: '.', explorationSummary: 'Broken setup', concerns: ['No provider'],
+      classify: {
+        intent: 'doctor',
+        confidence: 0.9,
+        reasoning: 'User says personalization is broken',
       },
-      'doctor/check-api': { shouldCheck: false, environment: 'main' },
-      'doctor/triage': { choice: 'skip', hasAutoTokens: false, problemDescription: 'Not working' },
+      'doctor/explore': {
+        framework: 'nextjs-app',
+        projectPath: '.',
+        explorationSummary: 'Broken setup',
+        concerns: ['No provider'],
+      },
+      'doctor/scan-credentials': {
+        envVars: [{ name: 'NINETAILED_API_KEY', status: 'missing' }],
+      },
+      'doctor/confirm-credentials': { hasCredentials: false },
       'doctor/review': { overallStatus: 'fail', recommendations: [], summary: 'Needs fixes' },
       'doctor/report': { choice: 'no' },
-      'doctor/report-only': { message: 'Ok' },
+      'doctor/done': { message: 'Ok' },
     }),
   });
 
@@ -48,12 +71,23 @@ test('classify routes to doctor for debugging requests', async () => {
 test('classify routes to develop for component tasks', async () => {
   const result = await runComposite(skill, {
     model: mockModel({
-      classify: { intent: 'develop', confidence: 0.85, reasoning: 'User wants to personalize a component' },
-      'develop/analyze': {
-        taskType: 'personalize-component', sdkInUse: 'ninetailed', framework: 'nextjs-app',
-        targetFiles: ['Hero.tsx'], analysis: 'Wrap Hero',
+      classify: {
+        intent: 'develop',
+        confidence: 0.85,
+        reasoning: 'User wants to personalize a component',
       },
-      'develop/plan': { approved: true, plan: 'Add Experience wrapper', filesToModify: ['Hero.tsx'] },
+      'develop/analyze': {
+        taskType: 'personalize-component',
+        sdkInUse: 'ninetailed',
+        framework: 'nextjs-app',
+        targetFiles: ['Hero.tsx'],
+        analysis: 'Wrap Hero',
+      },
+      'develop/plan': {
+        approved: true,
+        plan: 'Add Experience wrapper',
+        filesToModify: ['Hero.tsx'],
+      },
       'develop/implement': { filesModified: ['Hero.tsx'], summary: 'Done' },
     }),
   });
@@ -65,7 +99,12 @@ test('classify routes to develop for component tasks', async () => {
 test('classify routes to topic for reference questions', async () => {
   const result = await runComposite(skill, {
     model: mockModel({
-      classify: { intent: 'reference', confidence: 0.9, topic: 'sdk-selection', reasoning: 'User asks which SDK to use' },
+      classify: {
+        intent: 'reference',
+        confidence: 0.9,
+        topic: 'sdk-selection',
+        reasoning: 'User asks which SDK to use',
+      },
     }),
   });
 
@@ -79,13 +118,18 @@ test('low confidence routes to gather-context', async () => {
       classify: { intent: 'unclear', confidence: 0.3, reasoning: 'Ambiguous request' },
       'gather-context': { intent: 'doctor', reasoning: 'Found broken setup' },
       'doctor/explore': {
-        framework: 'nextjs-app', projectPath: '.', explorationSummary: 'Broken', concerns: [],
+        framework: 'nextjs-app',
+        projectPath: '.',
+        explorationSummary: 'Broken',
+        concerns: [],
       },
-      'doctor/check-api': { shouldCheck: false, environment: 'main' },
-      'doctor/triage': { choice: 'skip', hasAutoTokens: false, problemDescription: 'Unclear issue' },
+      'doctor/scan-credentials': {
+        envVars: [{ name: 'NINETAILED_API_KEY', status: 'missing' }],
+      },
+      'doctor/confirm-credentials': { hasCredentials: false },
       'doctor/review': { overallStatus: 'warn', recommendations: [], summary: 'Issues found' },
       'doctor/report': { choice: 'no' },
-      'doctor/report-only': { message: 'Ok' },
+      'doctor/done': { message: 'Ok' },
     }),
   });
 
@@ -109,7 +153,7 @@ test('reference without topic routes to pick-topic', async () => {
 
 // --- Doctor sub-skill tests ---
 
-test('doctor explore → check-api → triage (skip) → review → report path', async () => {
+test('doctor: no credentials → code-only review → report → done', async () => {
   const result = await runSkill(doctorSkill, {
     model: mockModel({
       explore: {
@@ -119,28 +163,30 @@ test('doctor explore → check-api → triage (skip) → review → report path'
         explorationSummary: 'Next.js 14 App Router project with partial Ninetailed setup',
         concerns: ['Provider not found', 'Missing middleware'],
       },
-      'check-api': { apiKey: 'nt_prod_test123', environment: 'main', shouldCheck: true },
-      triage: { choice: 'skip', hasAutoTokens: false, problemDescription: 'Variants not showing' },
+      'scan-credentials': {
+        envVars: [{ name: 'NINETAILED_API_KEY', status: 'missing' }],
+      },
+      'confirm-credentials': { hasCredentials: false },
       review: {
         overallStatus: 'warn',
-        recommendations: [
-          { priority: 'warning', message: 'Provider not found in source', category: 'provider' },
-        ],
+        recommendations: [{ priority: 'warning', message: 'Provider not found in source', category: 'provider' }],
         summary: 'Partial setup detected.',
       },
       report: { choice: 'no' },
-      'report-only': { message: 'Good luck!' },
+      done: { message: 'Good luck!' },
     }),
   });
 
   assert.ok(result.path.includes('explore'));
-  assert.ok(result.path.includes('check-api'));
-  assert.ok(result.path.includes('triage'));
+  assert.ok(result.path.includes('scan-credentials'));
+  assert.ok(result.path.includes('confirm-credentials'));
+  assert.ok(!result.path.includes('check-api'));
   assert.ok(result.path.includes('review'));
   assert.ok(result.path.includes('report'));
+  assert.ok(result.path.includes('done'));
 });
 
-test('doctor triage → collect-credentials → get-entry-id → run-inspection → review (content inspection)', async () => {
+test('doctor: with credentials → API check → skip inspection → review', async () => {
   const result = await runSkill(doctorSkill, {
     model: mockModel({
       explore: {
@@ -150,31 +196,84 @@ test('doctor triage → collect-credentials → get-entry-id → run-inspection 
         explorationSummary: 'Setup looks correct',
         concerns: [],
       },
-      'check-api': { shouldCheck: false, environment: 'main' },
-      triage: { choice: 'inspect-entry', hasAutoTokens: false, problemDescription: 'Variants not showing on production' },
-      'collect-credentials': { hasCredentials: true, spaceId: 'space1', accessToken: 'token1' },
-      'get-entry-id': { entryId: 'abc123' },
-      'run-inspection': { confirmed: true },
-      review: {
-        overallStatus: 'fail',
-        recommendations: [
-          { priority: 'critical', message: 'Entry has unpublished changes — republish the baseline entry', category: 'content' },
+      'scan-credentials': {
+        envVars: [
+          { name: 'NINETAILED_API_KEY', status: 'set', maskedValue: 'nt_prod_****' },
+          { name: 'CONTENTFUL_SPACE_ID', status: 'set', maskedValue: 'space123****' },
         ],
-        summary: 'Unpublished changes detected.',
+        personalization: { apiKey: 'nt_prod_test123' },
+        contentful: { spaceId: 'space123' },
       },
+      'confirm-credentials': {
+        hasCredentials: true,
+        personalization: { apiKey: 'nt_prod_test123', environment: 'main' },
+        contentful: { spaceId: 'space123', accessToken: 'token1', environment: 'master' },
+      },
+      'check-api': {
+        status: 'pass',
+        findings: [{ item: 'Experience API v3', status: 'pass', detail: 'Reachable (120ms)' }],
+        reachable: true,
+        responseTimeMs: 120,
+      },
+      triage: { choice: 'skip', problemDescription: 'Just checking' },
+      review: { overallStatus: 'pass', recommendations: [], summary: 'All good.' },
       report: { choice: 'no' },
-      'report-only': { message: 'Ok' },
+      done: { message: 'All clear' },
     }),
   });
 
+  assert.ok(result.path.includes('check-api'));
   assert.ok(result.path.includes('triage'));
-  assert.ok(result.path.includes('collect-credentials'));
-  assert.ok(result.path.includes('get-entry-id'));
+  assert.ok(!result.path.includes('choose-entry'));
+  assert.ok(result.path.includes('review'));
+});
+
+test('doctor: with credentials → inspect entry → review', async () => {
+  const result = await runSkill(doctorSkill, {
+    model: mockModel({
+      explore: {
+        framework: 'nextjs-app',
+        frameworkVersion: '14.1.0',
+        projectPath: '.',
+        explorationSummary: 'Setup looks correct',
+        concerns: [],
+      },
+      'scan-credentials': {
+        envVars: [
+          { name: 'CONTENTFUL_SPACE_ID', status: 'set', maskedValue: 'space123****' },
+          { name: 'CONTENTFUL_ACCESS_TOKEN', status: 'set', maskedValue: 'token12****' },
+        ],
+        contentful: { spaceId: 'space123', accessToken: 'token1' },
+      },
+      'confirm-credentials': {
+        hasCredentials: true,
+        contentful: { spaceId: 'space123', accessToken: 'token1', environment: 'master' },
+        personalization: { apiKey: 'nt_key', environment: 'main' },
+      },
+      'check-api': {
+        status: 'skip',
+        findings: [{ item: 'Ninetailed API', status: 'skip', detail: 'No API key' }],
+        reachable: false,
+      },
+      triage: { choice: 'inspect-entry', problemDescription: 'Variants not showing' },
+      'choose-entry': { entryId: 'abc123', skip: false },
+      'run-inspection': { status: 'pass', findings: [], entry: { id: 'abc123' } },
+      review: {
+        overallStatus: 'fail',
+        recommendations: [{ priority: 'critical', message: 'Entry has unpublished changes', category: 'content' }],
+        summary: 'Unpublished changes detected.',
+      },
+      report: { choice: 'no' },
+      done: { message: 'Ok' },
+    }),
+  });
+
+  assert.ok(result.path.includes('choose-entry'));
   assert.ok(result.path.includes('run-inspection'));
   assert.ok(result.path.includes('review'));
 });
 
-test('doctor triage → help-find-entry → review (user skips entry search)', async () => {
+test('doctor: choose-entry skip → review (no entry provided)', async () => {
   const result = await runSkill(doctorSkill, {
     model: mockModel({
       explore: {
@@ -184,49 +283,30 @@ test('doctor triage → help-find-entry → review (user skips entry search)', a
         explorationSummary: 'Setup looks correct',
         concerns: [],
       },
-      'check-api': { shouldCheck: false, environment: 'main' },
-      triage: { choice: 'need-help-finding', hasAutoTokens: false, problemDescription: 'Not sure what is wrong' },
-      'help-find-entry': { skip: true, hasAutoTokens: false },
-      review: {
-        overallStatus: 'pass',
-        recommendations: [],
-        summary: 'Everything looks good from code side.',
+      'scan-credentials': {
+        envVars: [{ name: 'CONTENTFUL_SPACE_ID', status: 'set', maskedValue: 'space****' }],
+        contentful: { spaceId: 'space1', accessToken: 'token1' },
       },
+      'confirm-credentials': {
+        hasCredentials: true,
+        contentful: { spaceId: 'space1', accessToken: 'token1', environment: 'master' },
+        personalization: { apiKey: 'nt_key', environment: 'main' },
+      },
+      'check-api': {
+        status: 'skip',
+        findings: [{ item: 'Ninetailed API', status: 'skip', detail: 'No credentials' }],
+        reachable: false,
+      },
+      triage: { choice: 'inspect-entry', problemDescription: 'Not sure what is wrong' },
+      'choose-entry': { skip: true },
+      review: { overallStatus: 'pass', recommendations: [], summary: 'Everything looks good.' },
       report: { choice: 'no' },
-      'report-only': { message: 'All clear' },
+      done: { message: 'All clear' },
     }),
   });
 
-  assert.ok(result.path.includes('triage'));
-  assert.ok(result.path.includes('help-find-entry'));
-  assert.ok(result.path.includes('review'));
-});
-
-test('doctor triage → collect-credentials → review (user cannot provide tokens)', async () => {
-  const result = await runSkill(doctorSkill, {
-    model: mockModel({
-      explore: {
-        framework: 'nextjs-app',
-        frameworkVersion: '14.1.0',
-        projectPath: '.',
-        explorationSummary: 'Setup looks correct',
-        concerns: [],
-      },
-      'check-api': { shouldCheck: false, environment: 'main' },
-      triage: { choice: 'inspect-entry', hasAutoTokens: false, problemDescription: 'Variants not showing' },
-      'collect-credentials': { hasCredentials: false },
-      review: {
-        overallStatus: 'pass',
-        recommendations: [],
-        summary: 'Code looks fine, could not inspect content.',
-      },
-      report: { choice: 'no' },
-      'report-only': { message: 'Ok' },
-    }),
-  });
-
-  assert.ok(result.path.includes('triage'));
-  assert.ok(result.path.includes('collect-credentials'));
+  assert.ok(result.path.includes('choose-entry'));
+  assert.ok(!result.path.includes('run-inspection'));
   assert.ok(result.path.includes('review'));
 });
 

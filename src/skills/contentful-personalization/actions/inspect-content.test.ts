@@ -7,7 +7,9 @@ function makeEntry(fields: Record<string, unknown>, sysOverrides?: Record<string
     sys: {
       id: 'entry1',
       type: 'Entry',
-      contentType: { sys: { id: 'hero', type: 'Link', linkType: 'ContentType' } },
+      contentType: {
+        sys: { id: 'hero', type: 'Link', linkType: 'ContentType' },
+      },
       ...sysOverrides,
     },
     fields,
@@ -16,7 +18,13 @@ function makeEntry(fields: Record<string, unknown>, sysOverrides?: Record<string
 
 function makeExperience(id: string, variants: unknown[] = []) {
   return {
-    sys: { id, type: 'Entry', contentType: { sys: { id: 'nt_experience', type: 'Link', linkType: 'ContentType' } } },
+    sys: {
+      id,
+      type: 'Entry',
+      contentType: {
+        sys: { id: 'nt_experience', type: 'Link', linkType: 'ContentType' },
+      },
+    },
     fields: {
       nt_name: `Experience ${id}`,
       nt_type: 'nt_personalization',
@@ -27,7 +35,13 @@ function makeExperience(id: string, variants: unknown[] = []) {
 
 function makeVariant(id: string) {
   return {
-    sys: { id, type: 'Entry', contentType: { sys: { id: 'hero', type: 'Link', linkType: 'ContentType' } } },
+    sys: {
+      id,
+      type: 'Entry',
+      contentType: {
+        sys: { id: 'hero', type: 'Link', linkType: 'ContentType' },
+      },
+    },
     fields: { headline: `Variant ${id}` },
   };
 }
@@ -40,7 +54,12 @@ const controller = new AbortController();
 
 test('skip when no tokens provided', async () => {
   const result = await inspectContent.run({
-    input: { spaceId: 'space1', environment: 'master', entryId: 'entry1', includeDepth: 3 },
+    input: {
+      spaceId: 'space1',
+      environment: 'master',
+      entryId: 'entry1',
+      includeDepth: 3,
+    },
     signal: controller.signal,
   });
 
@@ -59,7 +78,10 @@ test('detects entry not found in CDA but present in CPA (unpublished entry)', as
       return new Response('Not Found', { status: 404 });
     }
     if (url.includes('preview.contentful.com')) {
-      return new Response(JSON.stringify(entry), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify(entry), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
     return new Response('Not Found', { status: 404 });
   };
@@ -67,8 +89,12 @@ test('detects entry not found in CDA but present in CPA (unpublished entry)', as
   try {
     const result = await inspectContent.run({
       input: {
-        spaceId: 'space1', environment: 'master', entryId: 'entry1', includeDepth: 3,
-        accessToken: 'cda-token', previewToken: 'cpa-token',
+        spaceId: 'space1',
+        environment: 'master',
+        entryId: 'entry1',
+        includeDepth: 3,
+        accessToken: 'cda-token',
+        previewToken: 'cpa-token',
       },
       signal: controller.signal,
     });
@@ -94,10 +120,16 @@ test('detects unpublished nt_experiences changes (CPA has experiences, CDA does 
   globalThis.fetch = async (input: string | URL | Request) => {
     const url = typeof input === 'string' ? input : input.toString();
     if (url.includes('cdn.contentful.com')) {
-      return new Response(JSON.stringify(cdaEntry), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify(cdaEntry), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
     if (url.includes('preview.contentful.com')) {
-      return new Response(JSON.stringify(cpaEntry), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify(cpaEntry), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
     return new Response('Not Found', { status: 404 });
   };
@@ -105,8 +137,12 @@ test('detects unpublished nt_experiences changes (CPA has experiences, CDA does 
   try {
     const result = await inspectContent.run({
       input: {
-        spaceId: 'space1', environment: 'master', entryId: 'entry1', includeDepth: 3,
-        accessToken: 'cda-token', previewToken: 'cpa-token',
+        spaceId: 'space1',
+        environment: 'master',
+        entryId: 'entry1',
+        includeDepth: 3,
+        accessToken: 'cda-token',
+        previewToken: 'cpa-token',
       },
       signal: controller.signal,
     });
@@ -131,7 +167,10 @@ test('detects unpublished experience entries (unresolved links)', async () => {
   globalThis.fetch = async (input: string | URL | Request) => {
     const url = typeof input === 'string' ? input : input.toString();
     if (url.includes('cdn.contentful.com')) {
-      return new Response(JSON.stringify(entry), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify(entry), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
     return new Response('Not Found', { status: 404 });
   };
@@ -139,7 +178,10 @@ test('detects unpublished experience entries (unresolved links)', async () => {
   try {
     const result = await inspectContent.run({
       input: {
-        spaceId: 'space1', environment: 'master', entryId: 'entry1', includeDepth: 3,
+        spaceId: 'space1',
+        environment: 'master',
+        entryId: 'entry1',
+        includeDepth: 3,
         accessToken: 'cda-token',
       },
       signal: controller.signal,
@@ -165,7 +207,10 @@ test('detects unpublished variant entries', async () => {
   globalThis.fetch = async (input: string | URL | Request) => {
     const url = typeof input === 'string' ? input : input.toString();
     if (url.includes('cdn.contentful.com')) {
-      return new Response(JSON.stringify(entry), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify(entry), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
     return new Response('Not Found', { status: 404 });
   };
@@ -173,7 +218,10 @@ test('detects unpublished variant entries', async () => {
   try {
     const result = await inspectContent.run({
       input: {
-        spaceId: 'space1', environment: 'master', entryId: 'entry1', includeDepth: 3,
+        spaceId: 'space1',
+        environment: 'master',
+        entryId: 'entry1',
+        includeDepth: 3,
         accessToken: 'cda-token',
       },
       signal: controller.signal,
@@ -197,14 +245,21 @@ test('passes when everything is resolved correctly', async () => {
   const originalFetch = globalThis.fetch;
 
   globalThis.fetch = async () => {
-    return new Response(JSON.stringify(entry), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify(entry), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   };
 
   try {
     const result = await inspectContent.run({
       input: {
-        spaceId: 'space1', environment: 'master', entryId: 'entry1', includeDepth: 3,
-        accessToken: 'cda-token', previewToken: 'cpa-token',
+        spaceId: 'space1',
+        environment: 'master',
+        entryId: 'entry1',
+        includeDepth: 3,
+        accessToken: 'cda-token',
+        previewToken: 'cpa-token',
       },
       signal: controller.signal,
     });
@@ -226,7 +281,10 @@ test('handles invalid CDA token (401)', async () => {
   try {
     const result = await inspectContent.run({
       input: {
-        spaceId: 'space1', environment: 'master', entryId: 'entry1', includeDepth: 3,
+        spaceId: 'space1',
+        environment: 'master',
+        entryId: 'entry1',
+        includeDepth: 3,
         accessToken: 'bad-token',
       },
       signal: controller.signal,
@@ -242,17 +300,26 @@ test('handles invalid CDA token (401)', async () => {
 });
 
 test('detects content type not extended (no nt_experiences field anywhere)', async () => {
-  const entry = makeEntry({ title: 'Test', description: 'No experiences field' });
+  const entry = makeEntry({
+    title: 'Test',
+    description: 'No experiences field',
+  });
   const originalFetch = globalThis.fetch;
 
   globalThis.fetch = async () => {
-    return new Response(JSON.stringify(entry), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify(entry), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   };
 
   try {
     const result = await inspectContent.run({
       input: {
-        spaceId: 'space1', environment: 'master', entryId: 'entry1', includeDepth: 3,
+        spaceId: 'space1',
+        environment: 'master',
+        entryId: 'entry1',
+        includeDepth: 3,
         accessToken: 'cda-token',
       },
       signal: controller.signal,
@@ -273,13 +340,19 @@ test('warns when nt_experiences exists but is empty', async () => {
   const originalFetch = globalThis.fetch;
 
   globalThis.fetch = async () => {
-    return new Response(JSON.stringify(entry), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify(entry), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   };
 
   try {
     const result = await inspectContent.run({
       input: {
-        spaceId: 'space1', environment: 'master', entryId: 'entry1', includeDepth: 3,
+        spaceId: 'space1',
+        environment: 'master',
+        entryId: 'entry1',
+        includeDepth: 3,
         accessToken: 'cda-token',
       },
       signal: controller.signal,

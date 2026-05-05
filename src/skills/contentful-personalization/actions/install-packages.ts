@@ -1,4 +1,4 @@
-import { z, action } from '@contentful/skill-kit';
+import { type, action } from '@contentful/skill-kit';
 import { execFile } from 'node:child_process';
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
@@ -20,10 +20,10 @@ function exec(
 
 export const installPackages = action({
   name: 'install-packages',
-  input: z.object({
-    packages: z.array(z.string()),
-    projectPath: z.string(),
-    packageManager: z.enum(['npm', 'yarn', 'pnpm', 'bun']),
+  input: type({
+    packages: 'string[]',
+    projectPath: 'string',
+    packageManager: "'npm' | 'yarn' | 'pnpm' | 'bun'",
   }),
   output: InstallResult,
   run: async ({ input, signal }) => {
@@ -54,7 +54,6 @@ export const installPackages = action({
       };
     }
 
-    // Read updated package.json to confirm installed versions
     const installed: PackageInfo[] = [];
     const failed: Array<{ name: string; error: string }> = [];
 
@@ -67,7 +66,10 @@ export const installPackages = action({
         if (allDeps[name]) {
           installed.push({ name, version: allDeps[name] });
         } else {
-          failed.push({ name, error: 'Not found in package.json after install' });
+          failed.push({
+            name,
+            error: 'Not found in package.json after install',
+          });
         }
       }
     } catch {

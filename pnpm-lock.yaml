@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@contentful/skill-kit':
-        specifier: ^1.4.0
-        version: 1.4.0
+        specifier: ^1.6.2
+        version: 1.6.2
       '@release-it/bumper':
         specifier: ^7.0.5
         version: 7.0.5(release-it@19.2.4(@types/node@25.6.0))
@@ -23,6 +23,9 @@ importers:
       oxlint:
         specifier: ^1.61.0
         version: 1.61.0
+      prettier:
+        specifier: ^3.8.3
+        version: 3.8.3
       release-it:
         specifier: ^19.0.0
         version: 19.2.4(@types/node@25.6.0)
@@ -35,8 +38,14 @@ importers:
 
 packages:
 
-  '@contentful/skill-kit@1.4.0':
-    resolution: {integrity: sha512-DUwAoxScetlTki4n7LlN7zoWMMdMkEjmOBb8J7VUlb3FGR0CeoB7qo93gqIqumg99pgpc1JYqA+7dypFF7kB/g==, tarball: https://npm.pkg.github.com/download/@contentful/skill-kit/1.4.0/97d25cb68fb0a4cbcef2aeb84ebe83c145fd12fe}
+  '@ark/schema@0.56.0':
+    resolution: {integrity: sha512-ECg3hox/6Z/nLajxXqNhgPtNdHWC9zNsDyskwO28WinoFEnWow4IsERNz9AnXRhTZJnYIlAJ4uGn3nlLk65vZA==}
+
+  '@ark/util@0.56.0':
+    resolution: {integrity: sha512-BghfRC8b9pNs3vBoDJhcta0/c1J1rsoS1+HgVUreMFPdhz/CRAKReAu57YEllNaSy98rWAdY1gE+gFup7OXpgA==}
+
+  '@contentful/skill-kit@1.6.2':
+    resolution: {integrity: sha512-IDoKprBZRALZBM8O/3QwP4Gi38EQc6OI/nmfNhqk4Dpaid3zEgeOUODAR1+B5O5olWILmeKQY2l1zVORd8V09w==, tarball: https://npm.pkg.github.com/download/@contentful/skill-kit/1.6.2/946061f9a5817f31083a4e8dbcbb355c0e7d849c}
     engines: {node: '>=24'}
     hasBin: true
 
@@ -772,6 +781,12 @@ packages:
 
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
+
+  arkregex@0.0.5:
+    resolution: {integrity: sha512-ncYjBdLlh5/QnVsAA8De16Tc9EqmYM7y/WU9j+236KcyYNUXogpz3sC4ATIZYzzLxwI+0sEOaQLEmLmRleaEXw==}
+
+  arktype@2.2.0:
+    resolution: {integrity: sha512-t54MZ7ti5BhOEvzEkgKnWvqj+UbDfWig+DHr5I34xatymPusKLS0lQpNJd8M6DzmIto2QGszHfNKoFIT8tMCZQ==}
 
   array-ify@1.0.0:
     resolution: {integrity: sha512-c5AMf34bKdvPhQ7tBGhqkgKNUzMr4WUs+WDtC2ZUGOUncbxKMTvqxYctiseW3+L4bA8ec+GcZ6/A/FW4m8ukng==}
@@ -1603,6 +1618,11 @@ packages:
   pkg-types@2.3.0:
     resolution: {integrity: sha512-SIqCzDRg0s9npO5XQ3tNZioRY1uK06lA41ynBC1YmFTmnY6FjUjVt6s4LoADmwoig1qqD0oK8h1p/8mlMx8Oig==}
 
+  prettier@3.8.3:
+    resolution: {integrity: sha512-7igPTM53cGHMW8xWuVTydi2KO233VFiTNyF5hLJqpilHfmn8C8gPf+PS7dUT64YcXFbiMGZxS9pCSxL/Dxm/Jw==}
+    engines: {node: '>=14'}
+    hasBin: true
+
   protocols@2.0.2:
     resolution: {integrity: sha512-hHVTzba3wboROl0/aWRRG9dMytgH6ow//STBZh43l/wQgmMhYhOFi0EHWAPtoCz9IAUymsyP0TSBHkhgMEGNnQ==}
 
@@ -1937,9 +1957,16 @@ packages:
 
 snapshots:
 
-  '@contentful/skill-kit@1.4.0':
+  '@ark/schema@0.56.0':
+    dependencies:
+      '@ark/util': 0.56.0
+
+  '@ark/util@0.56.0': {}
+
+  '@contentful/skill-kit@1.6.2':
     dependencies:
       '@modelcontextprotocol/sdk': 1.29.0(zod@4.3.6)
+      arktype: 2.2.0
       esbuild: 0.28.0
       tsx: 4.21.0
       zod: 4.3.6
@@ -2476,6 +2503,16 @@ snapshots:
       color-convert: 2.0.1
 
   argparse@2.0.1: {}
+
+  arkregex@0.0.5:
+    dependencies:
+      '@ark/util': 0.56.0
+
+  arktype@2.2.0:
+    dependencies:
+      '@ark/schema': 0.56.0
+      '@ark/util': 0.56.0
+      arkregex: 0.0.5
 
   array-ify@1.0.0: {}
 
@@ -3378,6 +3415,8 @@ snapshots:
       confbox: 0.2.4
       exsolve: 1.0.8
       pathe: 2.0.3
+
+  prettier@3.8.3: {}
 
   protocols@2.0.2: {}
 

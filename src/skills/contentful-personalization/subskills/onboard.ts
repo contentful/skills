@@ -1,9 +1,9 @@
-import { skill, z, prompt, render, act, view, terminal } from '@contentful/skill-kit';
-import { checkPackagesAndEnv } from '../actions/check-packages-env.js';
+import { skill, type, prompt, render, act, view, terminal } from '@contentful/skill-kit';
+import { checkPackages } from '../actions/check-packages.js';
 import { validateSetup } from '../actions/validate-setup.js';
 import { installPackages } from '../actions/install-packages.js';
 import { writeEnvFile } from '../actions/write-env-file.js';
-import { PackagesAndEnvResult, ReadinessStatus } from '../schemas.js';
+import { PackagesResult, ReadinessStatus } from '../schemas.js';
 import { VERSION } from '../version.js';
 
 export default skill({
@@ -15,32 +15,28 @@ export default skill({
     'installs packages, and guides implementation.',
   entry: 'explore',
 
-  params: z.object({
-    userQuery: z.string().optional(),
-    readinessOnly: z.boolean().optional(),
+  params: type({
+    'userQuery?': 'string',
+    'readinessOnly?': 'boolean',
   }),
 
-  stash: z.object({
-    framework: z.string(),
-    routerType: z.enum(['app', 'pages', 'hybrid', 'none']),
-    projectPath: z.string(),
-    packageData: PackagesAndEnvResult.optional(),
-    readinessStatus: ReadinessStatus.optional(),
-    readinessOnly: z.boolean(),
-    sdkChoice: z.enum(['ninetailed', 'optimization']).optional(),
-    architecture: z.enum(['client-only', 'hybrid-ssr', 'server-only']).optional(),
-    packagesToInstall: z.array(z.string()).optional(),
-    envVars: z.record(z.string(), z.string()).optional(),
-    explorationSummary: z.string().optional(),
-    personalizableCandidates: z.array(z.string()).optional(),
-    existingSetup: z.enum(['none', 'partial', 'configured']).optional(),
-    assessReport: z.string().optional(),
-    prerequisites: z.array(z.string()).optional(),
-    implementSummary: z.string().optional(),
-    implementFilesModified: z.array(z.string()).optional(),
-    verifyOverallStatus: z.string().optional(),
-    verifySummary: z.string().optional(),
-  }),
+  stores: {
+    project: type({
+      framework: 'string',
+      routerType: "'app' | 'pages' | 'hybrid' | 'none'",
+      projectPath: 'string',
+      'explorationSummary?': 'string',
+      'personalizableCandidates?': 'string[]',
+      'existingSetup?': "'none' | 'partial' | 'configured'",
+      'packages?': PackagesResult,
+    }),
+    setup: type({
+      'sdkChoice?': "'ninetailed' | 'optimization'",
+      'architecture?': "'client-only' | 'hybrid-ssr' | 'server-only'",
+      'packagesToInstall?': 'string[]',
+      'envVars?': 'Record<string, string>',
+    }),
+  },
 })
   .step('explore', {
     prompt: ({ params, refs }) => prompt`
@@ -81,70 +77,70 @@ export default skill({
 
         ${refs.load('framework-notes.md')}
       `,
-    output: z.object({
-      framework: z.enum(['nextjs-app', 'nextjs-pages', 'nextjs-hybrid', 'gatsby', 'remix', 'other']),
-      frameworkVersion: z.string().optional(),
-      routerType: z.enum(['app', 'pages', 'hybrid', 'none']),
-      projectPath: z.string(),
-      explorationSummary: z.string(),
-      personalizableCandidates: z.array(z.string()),
-      existingSetup: z.enum(['none', 'partial', 'configured']),
-      readinessOnly: z.boolean(),
+    response: type({
+      framework: "'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'other'",
+      'frameworkVersion?': 'string',
+      routerType: "'app' | 'pages' | 'hybrid' | 'none'",
+      projectPath: 'string',
+      explorationSummary: 'string',
+      personalizableCandidates: 'string[]',
+      existingSetup: "'none' | 'partial' | 'configured'",
+      readinessOnly: 'boolean',
     }),
-    updateStash: ({ stepOutput }) => ({
-      framework: stepOutput.framework,
-      routerType: stepOutput.routerType,
-      projectPath: stepOutput.projectPath,
-      readinessOnly: stepOutput.readinessOnly,
-      explorationSummary: stepOutput.explorationSummary,
-      personalizableCandidates: stepOutput.personalizableCandidates,
-      existingSetup: stepOutput.existingSetup,
+    save: ({ response, actionResult }) => ({
+      step: response,
+      project: {
+        framework: response.framework,
+        routerType: response.routerType,
+        projectPath: response.projectPath,
+        explorationSummary: response.explorationSummary,
+        personalizableCandidates: response.personalizableCandidates,
+        existingSetup: response.existingSetup,
+        packages: actionResult,
+      },
     }),
     action: {
-      input: ({ stepOutput }) => ({ projectPath: stepOutput.projectPath }),
-      run: checkPackagesAndEnv,
-      updateStash: ({ actionOutput }) => ({ packageData: actionOutput }),
+      mapInput: ({ response }) => ({ projectPath: response.projectPath }),
+      run: checkPackages,
     },
     next: 'assess',
   })
 
   .step('assess', {
-    prompt: ({ stash, refs }) => {
-      const explorationView = stash.explorationSummary
+    prompt: ({ store, refs }) => {
+      const explorationView = store.project.explorationSummary
         ? [
             render.kv({
-              'Framework': stash.framework,
-              'Router': stash.routerType,
-              'Existing setup': stash.existingSetup ?? 'unknown',
+              Framework: store.project.framework,
+              Router: store.project.routerType,
+              'Existing setup': store.project.existingSetup ?? 'unknown',
             }),
             '',
-            stash.explorationSummary,
+            store.project.explorationSummary,
             '',
-            (stash.personalizableCandidates?.length ?? 0) > 0
-              ? `**Personalization candidates:** ${stash.personalizableCandidates!.join(', ')}`
+            (store.project.personalizableCandidates?.length ?? 0) > 0
+              ? `**Personalization candidates:** ${store.project.personalizableCandidates!.join(', ')}`
               : '*No specific candidates identified yet*',
           ].join('\n')
         : 'No exploration data available';
 
-      const pkg = stash.packageData;
+      const pkg = store.project.packages;
       const packageView = pkg
-        ? [
-            render.table(
-              [...(pkg.packages?.ninetailed ?? []), ...(pkg.packages?.optimization ?? []),
-               ...(pkg.packages?.contentful ?? []), ...(pkg.packages?.framework ?? [])].map(
-                (p: { name: string; version: string }) => ({ Package: p.name, Version: p.version })
-              ),
-              { columns: ['Package', 'Version'] }
-            ) || '*No packages found*',
-            '',
-            render.table(
-              (pkg.envVars ?? []).map((ev: { name: string; status: string; maskedValue?: string }) => ({
-                Variable: ev.name, Status: ev.status, Value: ev.maskedValue ?? '—',
-              })),
-              { columns: ['Variable', 'Status', 'Value'] }
-            ),
-          ].join('\n')
+        ? render.table(
+            [
+              ...(pkg.packages?.ninetailed ?? []),
+              ...(pkg.packages?.optimization ?? []),
+              ...(pkg.packages?.contentful ?? []),
+              ...(pkg.packages?.framework ?? []),
+            ].map((p: { name: string; version: string }) => ({
+              Package: p.name,
+              Version: p.version,
+            })),
+            { columns: ['Package', 'Version'] },
+          ) || '*No packages found*'
         : 'No package data available';
+
+      const readinessOnly = store.steps.explore.readinessOnly;
 
       return prompt`
           Combine the exploration findings with the deterministic package/env data below
@@ -166,7 +162,7 @@ export default skill({
           Do NOT make SDK or architecture recommendations — that happens in the next step.
           Do NOT ask the user any questions.
 
-          ${stash.readinessOnly ? 'The user is only asking about readiness, not requesting a full setup. Set readinessOnly to true.' : 'Set readinessOnly to false unless the exploration data suggests the user only wanted a readiness check.'}
+          ${readinessOnly ? 'The user is only asking about readiness, not requesting a full setup. Set readinessOnly to true.' : 'Set readinessOnly to false unless the exploration data suggests the user only wanted a readiness check.'}
 
           ## Readiness Rubric
           ${refs.load('readiness-criteria.md')}
@@ -178,56 +174,68 @@ export default skill({
           ${packageView}
         `;
     },
-    output: z.object({
+    response: type({
       readinessStatus: ReadinessStatus,
-      report: z.string(),
-      prerequisites: z.array(z.string()),
-      readinessOnly: z.boolean(),
+      report: 'string',
+      prerequisites: 'string[]',
+      readinessOnly: 'boolean',
     }),
-    updateStash: ({ stepOutput }) => ({
-      readinessStatus: stepOutput.readinessStatus,
-      assessReport: stepOutput.report,
-      prerequisites: stepOutput.prerequisites,
-    }),
-    next: ({ stepOutput }) => {
-      const status = stepOutput.readinessStatus;
+    next: ({ response }) => {
+      const status = response.readinessStatus;
       if (status === 'not-ready' || status === 'needs-work') return 'gate';
-      if (stepOutput.readinessOnly) return 'gate';
+      if (response.readinessOnly) return 'gate';
       return 'recommend';
     },
   })
 
   .step('gate', {
-    prompt: ({ stash }) => {
-      if (!stash.assessReport) {
+    prompt: ({ store }) => {
+      const assessReport = store.steps.assess.report;
+      if (!assessReport) {
         return [
           'Present a brief message explaining that assessment data was unavailable.',
           view('⚠️ No assessment data available. Please re-run the readiness check.'),
         ];
       }
 
+      const readinessStatus = store.steps.assess.readinessStatus;
       const statusConfig: Record<string, { icon: string; label: string; detail: string }> = {
-        'ready': { icon: '✅', label: 'Ready', detail: 'All systems go' },
-        'minor-changes': { icon: '🟡', label: 'Almost Ready', detail: 'A few small things to address' },
-        'needs-work': { icon: '🟠', label: 'Needs Work', detail: 'Moderate changes required before setup' },
-        'not-ready': { icon: '🔴', label: 'Not Ready', detail: 'Significant work needed first' },
+        ready: { icon: '✅', label: 'Ready', detail: 'All systems go' },
+        'minor-changes': {
+          icon: '🟡',
+          label: 'Almost Ready',
+          detail: 'A few small things to address',
+        },
+        'needs-work': {
+          icon: '🟠',
+          label: 'Needs Work',
+          detail: 'Moderate changes required before setup',
+        },
+        'not-ready': {
+          icon: '🔴',
+          label: 'Not Ready',
+          detail: 'Significant work needed first',
+        },
       };
-      const status = statusConfig[stash.readinessStatus ?? 'not-ready'] ?? statusConfig['not-ready'];
+      const status = statusConfig[readinessStatus ?? 'not-ready'] ?? statusConfig['not-ready'];
 
       const sections: string[] = [];
       sections.push(`# ${status.icon} Readiness Report: ${status.label}\n`);
       sections.push(`*${status.detail}*\n`);
       sections.push('---\n');
-      sections.push(stash.assessReport);
+      sections.push(assessReport);
 
-      if ((stash.prerequisites?.length ?? 0) > 0) {
-        sections.push(render.section('📋 Prerequisites',
-          stash.prerequisites!.map((p: string, i: number) => `${i + 1}. ${p}`).join('\n')
-        ));
+      const prerequisites = store.steps.assess.prerequisites;
+      if ((prerequisites?.length ?? 0) > 0) {
+        sections.push(
+          render.section('📋 Prerequisites', prerequisites.map((p: string, i: number) => `${i + 1}. ${p}`).join('\n')),
+        );
       }
 
-      if (stash.readinessStatus === 'ready' || stash.readinessStatus === 'minor-changes') {
-        sections.push('\n---\n\n🎉 Your project is ready for personalization! Run this skill again when you want to start setup.');
+      if (readinessStatus === 'ready' || readinessStatus === 'minor-changes') {
+        sections.push(
+          '\n---\n\n🎉 Your project is ready for personalization! Run this skill again when you want to start setup.',
+        );
       } else {
         sections.push('\n---\n\n💡 Address the items above, then run this skill again to re-check readiness.');
       }
@@ -241,7 +249,7 @@ export default skill({
   })
 
   .step('recommend', {
-    prompt: ({ stash, refs }) => {
+    prompt: ({ store, refs }) => {
       return prompt`
           Recommend a specific SDK and architecture for this project.
           Explain your reasoning conversationally — help the user understand WHY
@@ -249,10 +257,10 @@ export default skill({
 
           ## Project Context
           ${render.kv({
-            'Framework': stash.framework,
-            'Router': stash.routerType,
+            Framework: store.project.framework,
+            Router: store.project.routerType,
           })}
-          ${stash.explorationSummary ? `\n${stash.explorationSummary}` : ''}
+          ${store.project.explorationSummary ? `\n${store.project.explorationSummary}` : ''}
 
           ## Your two decisions
 
@@ -273,20 +281,22 @@ export default skill({
           ${refs.load('sdk-selection.md')}
         `;
     },
-    output: z.object({
-      sdkChoice: z.enum(['ninetailed', 'optimization']),
-      architecture: z.enum(['client-only', 'hybrid-ssr', 'server-only']),
-      reasoning: z.string(),
+    response: type({
+      sdkChoice: "'ninetailed' | 'optimization'",
+      architecture: "'client-only' | 'hybrid-ssr' | 'server-only'",
+      reasoning: 'string',
     }),
-    updateStash: ({ stepOutput }) => ({
-      sdkChoice: stepOutput.sdkChoice,
-      architecture: stepOutput.architecture,
+    save: ({ response }) => ({
+      setup: {
+        sdkChoice: response.sdkChoice,
+        architecture: response.architecture,
+      },
     }),
     next: 'confirm-choice',
   })
 
   .step('confirm-choice', {
-    prompt: ({ stash, act }) => [
+    prompt: ({ store }) => [
       prompt`
         Present the SDK and architecture recommendation below, then ask the user
         to confirm. Keep it brief — the reasoning was already explained.
@@ -294,15 +304,17 @@ export default skill({
         ## 📦 Recommendation Summary
 
         ${render.kv({
-          'SDK': stash.sdkChoice === 'ninetailed'
-            ? '@ninetailed/experience.js (legacy, proven)'
-            : '@contentful/optimization (modern, Contentful-native)',
-          'Architecture': stash.architecture === 'client-only'
-            ? 'Client-only (browser-side personalization)'
-            : stash.architecture === 'hybrid-ssr'
-              ? 'Hybrid SSR (server preflight + client hydration)'
-              : 'Server-only (full server-side)',
-          'Framework': stash.framework,
+          SDK:
+            store.setup?.sdkChoice === 'ninetailed'
+              ? '@ninetailed/experience.js (legacy, proven)'
+              : '@contentful/optimization (modern, Contentful-native)',
+          Architecture:
+            store.setup?.architecture === 'client-only'
+              ? 'Client-only (browser-side personalization)'
+              : store.setup?.architecture === 'hybrid-ssr'
+                ? 'Hybrid SSR (server preflight + client hydration)'
+                : 'Server-only (full server-side)',
+          Framework: store.project.framework,
         })}
       `,
       act.confirm({
@@ -310,12 +322,12 @@ export default skill({
         defaultAnswer: 'yes',
       }),
     ],
-    output: z.object({ approved: z.boolean() }),
-    next: ({ stepOutput }) => (stepOutput.approved ? 'cms-setup' : 'recommend'),
+    response: type({ approved: 'boolean' }),
+    next: ({ response }) => (response.approved ? 'cms-setup' : 'recommend'),
   })
 
   .step('cms-setup', {
-    prompt: ({ refs, act }) => [
+    prompt: ({ refs }) => [
       prompt`
         Guide the user through the Contentful app installation. These are steps
         the user must perform in the Contentful web UI — you cannot do them.
@@ -335,37 +347,60 @@ export default skill({
         ],
       }),
     ],
-    output: z.object({ choice: z.enum(['done', 'help']) }),
-    next: ({ stepOutput, attempts }) => {
-      if (stepOutput.choice === 'done') return 'plan';
+    response: type({ choice: "'done' | 'help'" }),
+    next: ({ response, attempts }) => {
+      if (response.choice === 'done') return 'plan';
       if (attempts >= 3) return 'plan';
       return 'cms-setup';
     },
   })
 
   .step('plan', {
-    prompt: ({ stash, act, refs }) => {
+    prompt: ({ store, refs }) => {
       const refSections: Array<{ label: string; content: string }> = [
-        { label: 'Environment Variables', content: refs.load('env-var-spec.md') },
-        { label: 'Provider Patterns', content: refs.load('provider-patterns.md') },
-        { label: 'Rendering Pipeline', content: refs.load('rendering-pipeline.md') },
+        {
+          label: 'Environment Variables',
+          content: refs.load('env-var-spec.md'),
+        },
+        {
+          label: 'Provider Patterns',
+          content: refs.load('provider-patterns.md'),
+        },
+        {
+          label: 'Rendering Pipeline',
+          content: refs.load('rendering-pipeline.md'),
+        },
       ];
 
-      if (stash.architecture === 'hybrid-ssr') {
-        refSections.push({ label: 'Middleware Patterns', content: refs.load('middleware-patterns.md') });
-        refSections.push({ label: 'SSR Guide', content: refs.load('ssr-guide.md') });
+      if (store.setup?.architecture === 'hybrid-ssr') {
+        refSections.push({
+          label: 'Middleware Patterns',
+          content: refs.load('middleware-patterns.md'),
+        });
+        refSections.push({
+          label: 'SSR Guide',
+          content: refs.load('ssr-guide.md'),
+        });
       }
 
-      refSections.push({ label: 'Analytics & Preview', content: refs.load('analytics-and-preview.md') });
-      refSections.push({ label: 'Implementation Examples', content: refs.load('implementation-examples.md') });
+      refSections.push({
+        label: 'Analytics & Preview',
+        content: refs.load('analytics-and-preview.md'),
+      });
+      refSections.push({
+        label: 'Implementation Examples',
+        content: refs.load('implementation-examples.md'),
+      });
 
       const steps = [
-        `📦 Install packages: ${stash.sdkChoice === 'ninetailed' ? '@ninetailed/experience.js + plugins' : '@contentful/optimization + plugins'}`,
+        `📦 Install packages: ${store.setup?.sdkChoice === 'ninetailed' ? '@ninetailed/experience.js + plugins' : '@contentful/optimization + plugins'}`,
         '🔑 Configure environment variables with placeholder values',
         '🔌 Add provider wrapper to the appropriate layout/app file',
         '🧩 Wire components with Experience/Personalize wrappers and update component mapper',
-        ...(stash.architecture === 'hybrid-ssr' ? ['⚡ Set up middleware with preflight, cookie management, and matcher config'] : []),
-        ...(stash.architecture !== 'server-only' ? ['📊 Configure analytics/insights plugin'] : []),
+        ...(store.setup?.architecture === 'hybrid-ssr'
+          ? ['⚡ Set up middleware with preflight, cookie management, and matcher config']
+          : []),
+        ...(store.setup?.architecture !== 'server-only' ? ['📊 Configure analytics/insights plugin'] : []),
         '✅ Verify setup and fix any issues',
       ];
 
@@ -378,39 +413,41 @@ export default skill({
           Do NOT begin implementing. This is the planning step only.
 
           ${render.kv({
-            'SDK': stash.sdkChoice ?? 'TBD',
-            'Architecture': stash.architecture ?? 'TBD',
-            'Framework': `${stash.framework} (${stash.routerType} router)`,
+            SDK: store.setup?.sdkChoice ?? 'TBD',
+            Architecture: store.setup?.architecture ?? 'TBD',
+            Framework: `${store.project.framework} (${store.project.routerType} router)`,
           })}
 
           ## Reference Material
-          ${refSections.map(r => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
+          ${refSections.map((r) => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
         `,
         act.plan({
-          summary: `Implement ${stash.sdkChoice} personalization with ${stash.architecture} architecture`,
+          summary: `Implement ${store.setup?.sdkChoice} personalization with ${store.setup?.architecture} architecture`,
           steps,
         }),
       ];
     },
-    output: z.object({
-      approved: z.boolean(),
-      packagesToInstall: z.array(z.string()),
-      envVars: z.record(z.string(), z.string()),
-      plan: z.string(),
+    response: type({
+      approved: 'boolean',
+      packagesToInstall: 'string[]',
+      envVars: 'Record<string, string>',
+      plan: 'string',
     }),
-    updateStash: ({ stepOutput }) => ({
-      packagesToInstall: stepOutput.packagesToInstall,
-      envVars: stepOutput.envVars,
+    save: ({ response }) => ({
+      setup: {
+        packagesToInstall: response.packagesToInstall,
+        envVars: response.envVars,
+      },
     }),
-    next: ({ stepOutput }) => (stepOutput.approved ? 'install' : 'recommend'),
+    next: ({ response }) => (response.approved ? 'install' : 'recommend'),
   })
 
   .step('install', {
     action: {
-      input: ({ stash }) => ({
-        projectPath: stash.projectPath,
-        packages: stash.packagesToInstall ?? [],
-        packageManager: stash.packageData?.packageManager ?? 'npm',
+      mapInput: ({ store }) => ({
+        projectPath: store.project?.projectPath ?? '.',
+        packages: store.setup?.packagesToInstall ?? [],
+        packageManager: store.project?.packages?.packageManager ?? 'npm',
       }),
       run: installPackages,
     },
@@ -419,9 +456,9 @@ export default skill({
 
   .step('write-env', {
     action: {
-      input: ({ stash }) => ({
-        projectPath: stash.projectPath,
-        variables: stash.envVars ?? {},
+      mapInput: ({ store }) => ({
+        projectPath: store.project?.projectPath ?? '.',
+        variables: store.setup?.envVars ?? {},
         fileName: '.env.local',
       }),
       run: writeEnvFile,
@@ -430,24 +467,45 @@ export default skill({
   })
 
   .step('implement', {
-    prompt: ({ stash, act, system, refs }) => {
+    prompt: ({ store, system, refs }) => {
       const refSections: Array<{ label: string; content: string }> = [
-        { label: 'Provider Patterns', content: refs.load('provider-patterns.md') },
-        { label: 'Rendering Pipeline', content: refs.load('rendering-pipeline.md') },
-        { label: 'Component Patterns', content: refs.load('component-patterns.md') },
+        {
+          label: 'Provider Patterns',
+          content: refs.load('provider-patterns.md'),
+        },
+        {
+          label: 'Rendering Pipeline',
+          content: refs.load('rendering-pipeline.md'),
+        },
+        {
+          label: 'Component Patterns',
+          content: refs.load('component-patterns.md'),
+        },
       ];
 
-      if (stash.architecture === 'hybrid-ssr') {
-        refSections.push({ label: 'Middleware Patterns', content: refs.load('middleware-patterns.md') });
+      if (store.setup?.architecture === 'hybrid-ssr') {
+        refSections.push({
+          label: 'Middleware Patterns',
+          content: refs.load('middleware-patterns.md'),
+        });
       }
 
-      if (stash.sdkChoice === 'ninetailed') {
-        refSections.push({ label: 'SDK Reference (Legacy)', content: refs.load('sdk-legacy-guide.md') });
+      if (store.setup?.sdkChoice === 'ninetailed') {
+        refSections.push({
+          label: 'SDK Reference (Legacy)',
+          content: refs.load('sdk-legacy-guide.md'),
+        });
       } else {
-        refSections.push({ label: 'SDK Reference (Modern)', content: refs.load('sdk-next-guide.md') });
+        refSections.push({
+          label: 'SDK Reference (Modern)',
+          content: refs.load('sdk-next-guide.md'),
+        });
       }
 
-      refSections.push({ label: 'Implementation Examples', content: refs.load('implementation-examples.md') });
+      refSections.push({
+        label: 'Implementation Examples',
+        content: refs.load('implementation-examples.md'),
+      });
 
       return [
         system`Work through each checklist item methodically. After completing each one, update its status. Adapt all code to match the project's existing style — do not introduce a different coding style.`,
@@ -455,9 +513,9 @@ export default skill({
           Implement the personalization setup for this project.
 
           ${render.kv({
-            'SDK': stash.sdkChoice ?? 'unknown',
-            'Architecture': stash.architecture ?? 'unknown',
-            'Framework': `${stash.framework} (${stash.routerType} router)`,
+            SDK: store.setup?.sdkChoice ?? 'unknown',
+            Architecture: store.setup?.architecture ?? 'unknown',
+            Framework: `${store.project.framework} (${store.project.routerType} router)`,
           })}
 
           Work through the checklist below. For each item, read the relevant
@@ -467,33 +525,44 @@ export default skill({
           If you hit an ambiguous decision, use the reference material to make the best choice.
 
           ## Reference Material
-          ${refSections.map(r => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
+          ${refSections.map((r) => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
         `,
         act.checklist({
           create: [
             { title: '🔌 Provider wrapper setup', status: 'pending' as const },
-            { title: '🧩 Component wiring (Experience/Personalize wrappers)', status: 'pending' as const },
-            ...(stash.architecture === 'hybrid-ssr'
-              ? [{ title: '⚡ Middleware (preflight, cookies, matcher)', status: 'pending' as const }] : []),
-            { title: '📊 Analytics plugin configuration', status: 'pending' as const },
-            { title: '🔄 Rendering pipeline adjustments', status: 'pending' as const },
+            {
+              title: '🧩 Component wiring (Experience/Personalize wrappers)',
+              status: 'pending' as const,
+            },
+            ...(store.setup?.architecture === 'hybrid-ssr'
+              ? [
+                  {
+                    title: '⚡ Middleware (preflight, cookies, matcher)',
+                    status: 'pending' as const,
+                  },
+                ]
+              : []),
+            {
+              title: '📊 Analytics plugin configuration',
+              status: 'pending' as const,
+            },
+            {
+              title: '🔄 Rendering pipeline adjustments',
+              status: 'pending' as const,
+            },
           ],
         }),
       ];
     },
-    output: z.object({
-      filesModified: z.array(z.string()),
-      summary: z.string(),
-    }),
-    updateStash: ({ stepOutput }) => ({
-      implementSummary: stepOutput.summary,
-      implementFilesModified: stepOutput.filesModified,
+    response: type({
+      filesModified: 'string[]',
+      summary: 'string',
     }),
     next: 'verify',
   })
 
   .step('verify', {
-    prompt: ({ stash, refs }) => prompt`
+    prompt: ({ store, refs }) => prompt`
         Verify the personalization setup. Confirm the project path so the
         automated validation can run, then also manually check these items:
 
@@ -511,25 +580,23 @@ export default skill({
         ## Reference: Common Errors
         ${refs.load('common-errors.md')}
 
-        Project path: ${stash.projectPath}
+        Project path: ${store.project.projectPath}
       `,
     action: {
       run: validateSetup,
-      updateStash: ({ actionOutput }) => ({
-        verifyOverallStatus: (actionOutput as { overallStatus: string }).overallStatus,
-        verifySummary: (actionOutput as { summary: string }).summary,
-      }),
     },
-    next: ({ actionOutput, attempts }) => {
-      const result = actionOutput as { overallStatus: string } | undefined;
-      if (result?.overallStatus === 'pass') return 'report';
+    save: ({ actionResult }) => ({
+      step: actionResult,
+    }),
+    next: ({ actionResult, attempts }) => {
+      if (actionResult?.overallStatus === 'pass') return 'report';
       if (attempts >= 3) return 'report';
       return 'fix';
     },
   })
 
   .step('fix', {
-    prompt: ({ stash, refs }) => prompt`
+    prompt: ({ store, refs }) => prompt`
         Fix the issues found during verification. Work through them systematically:
 
         ## Fix Strategy
@@ -543,8 +610,8 @@ export default skill({
         After all fixes, the setup will be re-verified automatically.
 
         ${render.kv({
-          'Framework': stash.framework,
-          'Project': stash.projectPath,
+          Framework: store.project.framework,
+          Project: store.project.projectPath,
         })}
 
         ## Reference: Common Errors & Fixes
@@ -554,43 +621,60 @@ export default skill({
   })
 
   .step('report', {
-    prompt: ({ stash }) => {
+    prompt: ({ store }) => {
       const sections: string[] = [];
       sections.push('# 🎉 Personalization Setup Complete\n');
 
-      if (stash.implementSummary) {
-        sections.push(render.section('📝 What Was Done', stash.implementSummary));
-        if ((stash.implementFilesModified?.length ?? 0) > 0) {
-          sections.push(render.section('📁 Files Modified',
-            render.table(
-              stash.implementFilesModified!.map((f: string) => ({ File: f })),
-              { columns: ['File'] }
-            )
-          ));
+      const implementResult = store.steps.implement;
+      if (implementResult?.summary) {
+        sections.push(render.section('📝 What Was Done', implementResult.summary));
+        if ((implementResult.filesModified?.length ?? 0) > 0) {
+          sections.push(
+            render.section(
+              '📁 Files Modified',
+              render.table(
+                implementResult.filesModified.map((f: string) => ({ File: f })),
+                { columns: ['File'] },
+              ),
+            ),
+          );
         }
       }
 
-      sections.push(render.section('⚙️ Configuration',
-        render.kv({
-          'SDK': stash.sdkChoice === 'ninetailed'
-            ? '@ninetailed/experience.js'
-            : '@contentful/optimization',
-          'Architecture': stash.architecture ?? 'unknown',
-          'Framework': `${stash.framework} (${stash.routerType})`,
-        })
-      ));
+      sections.push(
+        render.section(
+          '⚙️ Configuration',
+          render.kv({
+            SDK: store.setup?.sdkChoice === 'ninetailed' ? '@ninetailed/experience.js' : '@contentful/optimization',
+            Architecture: store.setup?.architecture ?? 'unknown',
+            Framework: `${store.project.framework} (${store.project.routerType})`,
+          }),
+        ),
+      );
 
-      if (stash.verifyOverallStatus) {
-        const statusIcon = stash.verifyOverallStatus === 'pass' ? '✅' : stash.verifyOverallStatus === 'warn' ? '⚠️' : '❌';
-        sections.push(render.section(`🔍 Verification: ${statusIcon} ${stash.verifyOverallStatus.toUpperCase()}`, stash.verifySummary ?? ''));
+      const verifyResult = store.steps.verify;
+      if (verifyResult?.overallStatus) {
+        const statusIcon =
+          verifyResult.overallStatus === 'pass' ? '✅' : verifyResult.overallStatus === 'warn' ? '⚠️' : '❌';
+        sections.push(
+          render.section(
+            `🔍 Verification: ${statusIcon} ${verifyResult.overallStatus.toUpperCase()}`,
+            verifyResult.summary ?? '',
+          ),
+        );
       }
 
-      sections.push(render.section('🚀 Next Steps', [
-        '1. **Create experiences** — Open the Personalization app in Contentful and create your first audience + experience',
-        '2. **Publish content** — Add personalization variants to your content entries',
-        '3. **Test in preview** — Use preview mode to verify experiences render correctly',
-        '4. **Go live & monitor** — Publish and watch analytics for experiment results',
-      ].join('\n')));
+      sections.push(
+        render.section(
+          '🚀 Next Steps',
+          [
+            '1. **Create experiences** — Open the Personalization app in Contentful and create your first audience + experience',
+            '2. **Publish content** — Add personalization variants to your content entries',
+            '3. **Test in preview** — Use preview mode to verify experiences render correctly',
+            '4. **Go live & monitor** — Publish and watch analytics for experiment results',
+          ].join('\n'),
+        ),
+      );
 
       return [
         'Present the setup completion report below to the user exactly as rendered. Add a brief, celebratory closing message.',

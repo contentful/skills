@@ -1,14 +1,14 @@
-import { z, action } from '@contentful/skill-kit';
+import { type, action } from '@contentful/skill-kit';
 import { join } from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
 import { WriteEnvResult } from '../schemas.js';
 
 export const writeEnvFile = action({
   name: 'write-env-file',
-  input: z.object({
-    projectPath: z.string(),
-    variables: z.record(z.string(), z.string()),
-    fileName: z.string().default('.env.local'),
+  input: type({
+    projectPath: 'string',
+    variables: 'Record<string, string>',
+    fileName: "string = '.env.local'",
   }),
   output: WriteEnvResult,
   run: async ({ input }) => {
@@ -17,13 +17,13 @@ export const writeEnvFile = action({
     let existing = '';
     try {
       existing = await readFile(filePath, 'utf-8');
-    } catch { /* file doesn't exist yet */ }
+    } catch {
+      /* file doesn't exist yet */
+    }
 
     const existingLines = existing.split('\n');
     const existingKeys = new Set(
-      existingLines
-        .filter((line) => line.trim() && !line.startsWith('#'))
-        .map((line) => line.split('=')[0].trim()),
+      existingLines.filter((line) => line.trim() && !line.startsWith('#')).map((line) => line.split('=')[0].trim()),
     );
 
     const written: Array<{ name: string; value: string }> = [];
