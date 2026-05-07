@@ -20,7 +20,6 @@ const NINETAILED_EXPERIENCE_JS_FRAMEWORK_PACKAGES: Partial<Record<SupportedFrame
   gatsby: '@ninetailed/experience.js-gatsby',
   remix: '@ninetailed/experience.js-remix',
   react: '@ninetailed/experience.js-react',
-  other: '@ninetailed/experience.js',
 };
 
 const CONTENTFUL_OPTIMIZATION_CORE_PACKAGE = '@contentful/optimization-core';
