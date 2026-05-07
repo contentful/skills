@@ -283,8 +283,15 @@ async function fetchEntry(
   parentSignal.addEventListener('abort', () => controller.abort());
 
   try {
-    const url = `https://${host}/spaces/${spaceId}/environments/${environment}/entries/${entryId}?access_token=${token}&include=${includeDepth}`;
-    const res = await fetch(url, { signal: controller.signal });
+    const url = new URL(`https://${host}/spaces/${spaceId}/environments/${environment}/entries/${entryId}`);
+    url.searchParams.set('include', String(includeDepth));
+
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     clearTimeout(timeout);
 
     if (res.ok) {
