@@ -1,10 +1,44 @@
 import { skill, type, prompt, render, act, view, terminal } from '@contentful/skill-kit';
 import { checkPackages } from '../actions/check-packages.js';
 import { validateSetup } from '../actions/validate-setup.js';
-import { installPackages } from '../actions/install-packages.js';
+import { buildInstallCommand, derivePackagesToInstall, installPackages } from '../actions/install-packages.js';
 import { writeEnvFile } from '../actions/write-env-file.js';
-import { PackagesResult, ReadinessStatus } from '../schemas.js';
+import { PackagesResult, ReadinessStatus, type PackagesResult as PackagesResultData } from '../schemas.js';
 import { VERSION } from '../version.js';
+
+type InstallableFramework = 'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'other';
+
+function getInstallableFramework(framework: string): InstallableFramework {
+  if (
+    framework === 'nextjs-app' ||
+    framework === 'nextjs-pages' ||
+    framework === 'nextjs-hybrid' ||
+    framework === 'gatsby' ||
+    framework === 'remix'
+  ) {
+    return framework;
+  }
+
+  return 'other';
+}
+
+function getInstallPackageManager(packageManager: PackagesResultData['packageManager'] | undefined) {
+  return packageManager === 'unknown' || !packageManager ? 'npm' : packageManager;
+}
+
+function getDerivedPackages(store: {
+  project: { framework: string; packages?: { packageManager?: PackagesResultData['packageManager'] } };
+  setup?: {
+    sdkChoice?: 'ninetailed' | 'optimization';
+    architecture?: 'client-only' | 'hybrid-ssr' | 'server-only';
+  };
+}) {
+  return derivePackagesToInstall({
+    sdkChoice: store.setup?.sdkChoice ?? 'ninetailed',
+    framework: getInstallableFramework(store.project.framework),
+    architecture: store.setup?.architecture ?? 'client-only',
+  });
+}
 
 export default skill({
   name: 'onboard',
@@ -33,7 +67,6 @@ export default skill({
     setup: type({
       'sdkChoice?': "'ninetailed' | 'optimization'",
       'architecture?': "'client-only' | 'hybrid-ssr' | 'server-only'",
-      'packagesToInstall?': 'string[]',
       'envVars?': 'Record<string, string>',
     }),
   },
@@ -410,6 +443,10 @@ export default skill({
           Expand each step with specific file paths based on what was found during exploration.
           Be concrete — name the actual files that will be created or modified.
 
+          Package installation is derived automatically from the selected SDK,
+          framework, and architecture. Do NOT ask to install specific package names
+          and do NOT include package lists in your response.
+
           Do NOT begin implementing. This is the planning step only.
 
           ${render.kv({
@@ -429,25 +466,57 @@ export default skill({
     },
     response: type({
       approved: 'boolean',
-      packagesToInstall: 'string[]',
       envVars: 'Record<string, string>',
       plan: 'string',
     }),
     save: ({ response }) => ({
       setup: {
-        packagesToInstall: response.packagesToInstall,
         envVars: response.envVars,
       },
     }),
-    next: ({ response }) => (response.approved ? 'install' : 'recommend'),
+    next: ({ response }) => (response.approved ? 'confirm-install' : 'recommend'),
+  })
+
+  .step('confirm-install', {
+    prompt: ({ store }) => {
+      const packages = getDerivedPackages(store);
+      const { command } = buildInstallCommand(
+        getInstallPackageManager(store.project?.packages?.packageManager),
+        packages,
+      );
+
+      return [
+        prompt`
+          Present the derived package install set below, then ask the user to approve the
+          exact install command. Do not change the package list.
+
+          ${render.kv({
+            SDK: store.setup?.sdkChoice ?? 'unknown',
+            Architecture: store.setup?.architecture ?? 'unknown',
+            Framework: `${store.project.framework} (${store.project.routerType} router)`,
+            'Package manager': getInstallPackageManager(store.project?.packages?.packageManager),
+          })}
+
+          Packages: ${packages.map((name) => `\`${name}\``).join(', ')}
+
+          Exact command: \`${command}\`
+        `,
+        act.confirm({
+          message: 'Run this exact package install command?',
+          defaultAnswer: 'yes',
+        }),
+      ];
+    },
+    response: type({ approved: 'boolean' }),
+    next: ({ response }) => (response.approved ? 'install' : 'plan'),
   })
 
   .step('install', {
     action: {
       mapInput: ({ store }) => ({
         projectPath: store.project?.projectPath ?? '.',
-        packages: store.setup?.packagesToInstall ?? [],
-        packageManager: store.project?.packages?.packageManager ?? 'npm',
+        packages: getDerivedPackages(store),
+        packageManager: getInstallPackageManager(store.project?.packages?.packageManager),
       }),
       run: installPackages,
     },
