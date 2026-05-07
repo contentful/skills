@@ -24,14 +24,22 @@
     "validate": "python3 .disabled/skills/skill-authoring/scripts/quick_validate.py skills --all",
     "update-licenses": "node ./scripts/update-licenses.mjs"
   },
+  "pnpm": {
+    "overrides": {
+      "basic-ftp": "5.3.1",
+      "express-rate-limit": "8.5.1",
+      "hono": "4.12.18",
+      "ip-address": "10.2.0"
+    }
+  },
   "devDependencies": {
-    "@contentful/skill-kit": "^1.6.2",
+    "@contentful/skill-kit": "^1.6.6",
     "@release-it/bumper": "^7.0.5",
-    "@release-it/conventional-changelog": "^10.0.6",
+    "@release-it/conventional-changelog": "^11.0.0",
     "@types/node": "^25.2.3",
     "oxlint": "^1.61.0",
     "prettier": "^3.8.3",
-    "release-it": "^19.0.0",
+    "release-it": "^20.0.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
