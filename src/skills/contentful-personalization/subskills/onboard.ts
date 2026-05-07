@@ -6,7 +6,7 @@ import { writeEnvFile } from '../actions/write-env-file.js';
 import { PackagesResult, ReadinessStatus, type PackagesResult as PackagesResultData } from '../schemas.js';
 import { VERSION } from '../version.js';
 
-type InstallableFramework = 'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'other';
+type InstallableFramework = 'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'react' | 'other';
 
 function getInstallableFramework(framework: string): InstallableFramework {
   if (
@@ -14,7 +14,8 @@ function getInstallableFramework(framework: string): InstallableFramework {
     framework === 'nextjs-pages' ||
     framework === 'nextjs-hybrid' ||
     framework === 'gatsby' ||
-    framework === 'remix'
+    framework === 'remix' ||
+    framework === 'react'
   ) {
     return framework;
   }
@@ -111,7 +112,7 @@ export default skill({
         ${refs.load('framework-notes.md')}
       `,
     response: type({
-      framework: "'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'other'",
+      framework: "'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'react' | 'other'",
       'frameworkVersion?': 'string',
       routerType: "'app' | 'pages' | 'hybrid' | 'none'",
       projectPath: 'string',

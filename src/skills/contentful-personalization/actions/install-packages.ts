@@ -7,18 +7,31 @@ import { InstallResult, type PackageInfo } from '../schemas.js';
 export type SupportedPackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';
 type SupportedSdkChoice = 'ninetailed' | 'optimization';
 type SupportedArchitecture = 'client-only' | 'hybrid-ssr' | 'server-only';
-type SupportedFramework = 'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'other';
+type SupportedFramework = 'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'react' | 'other';
 
-const LEGACY_FRAMEWORK_PACKAGE: Record<SupportedFramework, string> = {
+const NINETAILED_EXPERIENCE_JS_PACKAGE = '@ninetailed/experience.js';
+const NINETAILED_EXPERIENCE_JS_NODE_PACKAGE = '@ninetailed/experience.js-node';
+const NINETAILED_EXPERIENCE_JS_PLUGIN_INSIGHTS_PACKAGE = '@ninetailed/experience.js-plugin-insights';
+const NINETAILED_EXPERIENCE_JS_PLUGIN_SSR_PACKAGE = '@ninetailed/experience.js-plugin-ssr';
+const NINETAILED_EXPERIENCE_JS_FRAMEWORK_PACKAGES: Partial<Record<SupportedFramework, string>> = {
   'nextjs-app': '@ninetailed/experience.js-next',
   'nextjs-pages': '@ninetailed/experience.js-next',
   'nextjs-hybrid': '@ninetailed/experience.js-next',
   gatsby: '@ninetailed/experience.js-gatsby',
   remix: '@ninetailed/experience.js-remix',
-  other: '@ninetailed/experience.js-react',
+  react: '@ninetailed/experience.js-react',
 };
 
+const CONTENTFUL_OPTIMIZATION_PACKAGE = '@contentful/optimization';
+const CONTENTFUL_OPTIMIZATION_WEB_PACKAGE = '@contentful/optimization-web';
+const CONTENTFUL_OPTIMIZATION_REACT_WEB_PACKAGE = '@contentful/optimization-react-web';
+const CONTENTFUL_OPTIMIZATION_NODE_PACKAGE = '@contentful/optimization-node';
+
 const SAFE_PACKAGE_NAME = /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/;
+
+function isReactFramework(framework: SupportedFramework): boolean {
+  return framework !== 'other';
+}
 
 export function derivePackagesToInstall(options: {
   sdkChoice: SupportedSdkChoice;
@@ -27,27 +40,34 @@ export function derivePackagesToInstall(options: {
 }): string[] {
   if (options.sdkChoice === 'ninetailed') {
     if (options.architecture === 'server-only') {
-      return ['@ninetailed/experience.js', '@ninetailed/experience.js-node'];
+      return [NINETAILED_EXPERIENCE_JS_PACKAGE, NINETAILED_EXPERIENCE_JS_NODE_PACKAGE];
     }
 
-    const packages = ['@ninetailed/experience.js', LEGACY_FRAMEWORK_PACKAGE[options.framework]];
+    const packages = [NINETAILED_EXPERIENCE_JS_PACKAGE];
+    const frameworkPackage = NINETAILED_EXPERIENCE_JS_FRAMEWORK_PACKAGES[options.framework];
+
+    if (frameworkPackage) {
+      packages.push(frameworkPackage);
+    }
 
     if (options.architecture === 'hybrid-ssr') {
-      packages.push('@ninetailed/experience.js-plugin-ssr');
+      packages.push(NINETAILED_EXPERIENCE_JS_PLUGIN_SSR_PACKAGE);
     }
 
-    packages.push('@ninetailed/experience.js-plugin-insights');
+    packages.push(NINETAILED_EXPERIENCE_JS_PLUGIN_INSIGHTS_PACKAGE);
     return packages;
   }
 
   if (options.architecture === 'server-only') {
-    return ['@contentful/optimization-node'];
+    return [CONTENTFUL_OPTIMIZATION_NODE_PACKAGE];
   }
 
-  const packages = ['@contentful/optimization-web', '@contentful/optimization-react-web'];
+  const packages = isReactFramework(options.framework)
+    ? [CONTENTFUL_OPTIMIZATION_WEB_PACKAGE, CONTENTFUL_OPTIMIZATION_REACT_WEB_PACKAGE]
+    : [CONTENTFUL_OPTIMIZATION_PACKAGE];
 
   if (options.architecture === 'hybrid-ssr') {
-    packages.push('@contentful/optimization-node');
+    packages.push(CONTENTFUL_OPTIMIZATION_NODE_PACKAGE);
   }
 
   return packages;
