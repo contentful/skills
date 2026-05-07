@@ -43,13 +43,19 @@ Edge runtimes often do not use the `NEXT_PUBLIC_` naming pattern.
 
 ## Modern SDKs: `@contentful/optimization`
 
-The new SDKs do not impose one official environment variable naming scheme.
+Use this canonical naming scheme in guidance and examples:
 
-Recommended approach:
+| Variable | Purpose | Runtime |
+|---------|---------|---------|
+| `CONTENTFUL_OPTIMIZATION_CLIENT_ID` | Optimization client ID | Server/shared config |
+| `CONTENTFUL_OPTIMIZATION_ENVIRONMENT` | Optimization environment (usually `main`) | Server/shared config |
+| `CONTENTFUL_EXPERIENCE_API_BASE_URL` | Experience API base URL override | Server/shared config |
+| `CONTENTFUL_INSIGHTS_API_BASE_URL` | Insights API base URL override | Server/shared config |
+| `NEXT_PUBLIC_CONTENTFUL_OPTIMIZATION_CLIENT_ID` | Optimization client ID exposed to browser | Browser |
+| `NEXT_PUBLIC_CONTENTFUL_OPTIMIZATION_ENVIRONMENT` | Optimization environment exposed to browser | Browser |
 
-- pick clear project-local names such as `NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID`
-- use one naming scheme consistently across browser, server, and deployment config
-- keep Contentful preview tokens server-only unless preview architecture requires otherwise
+Accepted aliases in existing projects include `OPTIMIZATION_CLIENT_ID`,
+`OPTIMIZATION_ENVIRONMENT`, and `NINETAILED_CLIENT_ID`.
 
 ## Where to Obtain Ninetailed Credentials
 

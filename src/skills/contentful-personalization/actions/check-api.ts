@@ -24,24 +24,29 @@ interface Endpoint {
 
 function buildEndpoints(input: {
   apiKey?: string;
-  ninetailedEnvironment: string;
+  clientId?: string;
+  personalizationEnvironment: string;
+  experienceBaseUrl: string;
   contentfulSpaceId?: string;
   contentfulEnvironment: string;
 }): Endpoint[] {
   const endpoints: Endpoint[] = [];
 
-  if (input.apiKey) {
+  const base = input.experienceBaseUrl.replace(/\/$/, '');
+  const legacyApiKey = input.apiKey ?? input.clientId;
+
+  if (legacyApiKey) {
     endpoints.push({
       version: 'v2',
-      url: `https://experience.ninetailed.co/v2/organizations/${input.apiKey}/environments/${input.ninetailedEnvironment}/profiles`,
-      label: `v2 (API key ${input.apiKey.substring(0, 8)}…, env "${input.ninetailedEnvironment}")`,
+      url: `${base}/v2/organizations/${legacyApiKey}/environments/${input.personalizationEnvironment}/profiles`,
+      label: `v2 (client ID ${legacyApiKey.substring(0, 8)}…, env "${input.personalizationEnvironment}")`,
     });
   }
 
   if (input.contentfulSpaceId) {
     endpoints.push({
       version: 'v3',
-      url: `https://experience.ninetailed.co/v3/spaces/${input.contentfulSpaceId}/environments/${input.contentfulEnvironment}/profiles`,
+      url: `${base}/v3/spaces/${input.contentfulSpaceId}/environments/${input.contentfulEnvironment}/profiles`,
       label: `v3 (space ${input.contentfulSpaceId}, env "${input.contentfulEnvironment}")`,
     });
   }
@@ -83,7 +88,7 @@ async function probeEndpoint(
     if (res.status === 404) {
       const hint =
         endpoint.version === 'v2'
-          ? 'check the API key and environment in Contentful under Organization settings > Optimization > SDK keys'
+          ? 'check the client ID/API key and environment in Contentful under Organization settings > Optimization > SDK keys'
           : 'check the Contentful Space ID and environment, and verify the Personalization app is installed';
       return {
         finding: {
@@ -136,9 +141,11 @@ export const checkApiConnectivity = action({
   name: 'check-api',
   input: type({
     'apiKey?': 'string',
-    ninetailedEnvironment: "string = 'main'",
+    'clientId?': 'string',
+    personalizationEnvironment: "string = 'main'",
     'contentfulSpaceId?': 'string',
     contentfulEnvironment: "string = 'master'",
+    experienceBaseUrl: "string = 'https://experience.ninetailed.co'",
   }),
   output: ApiCheckResult,
   run: async ({ input, signal }) => {
@@ -149,10 +156,10 @@ export const checkApiConnectivity = action({
         status: 'skip' as const,
         findings: [
           {
-            item: 'Ninetailed API',
+            item: 'Optimization/Experience API',
             status: 'skip' as const,
             detail:
-              'No credentials available — need either a Ninetailed API key (v2) or Contentful Space ID (v3) to check connectivity',
+              'No credentials available — need either a client ID/API key (v2) or Contentful Space ID (v3) to check connectivity',
           },
         ],
         reachable: false,

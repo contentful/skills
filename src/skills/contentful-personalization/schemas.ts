@@ -15,6 +15,17 @@ export type Finding = typeof Finding.infer;
 export const ReadinessStatus = type("'ready' | 'minor-changes' | 'needs-work' | 'not-ready'");
 export type ReadinessStatus = typeof ReadinessStatus.infer;
 
+export const SdkFamily = type("'ninetailed' | 'optimization' | 'mixed' | 'unknown'");
+export type SdkFamily = typeof SdkFamily.infer;
+
+export const SdkIntent = type(
+  "'default-legacy' | 'explicit-optimization' | 'detected-optimization' | 'detected-legacy' | 'mixed' | 'unknown'",
+);
+export type SdkIntent = typeof SdkIntent.infer;
+
+export const RuntimeHint = type("'react-web' | 'web' | 'node' | 'hybrid' | 'unknown'");
+export type RuntimeHint = typeof RuntimeHint.infer;
+
 // --- Shared field types ---
 
 export const PackageInfo = type({
@@ -39,6 +50,14 @@ export const PackagesResult = type({
     contentful: PackageInfo.array(),
     framework: PackageInfo.array(),
   },
+  detected: {
+    sdkFamily: SdkFamily,
+    runtimeHint: RuntimeHint,
+    hasPreviewPanel: 'boolean',
+    hasOptimizationReactWeb: 'boolean',
+    hasOptimizationWeb: 'boolean',
+    hasOptimizationNode: 'boolean',
+  },
   packageManager: "'npm' | 'yarn' | 'pnpm' | 'bun' | 'unknown'",
 });
 export type PackagesResult = typeof PackagesResult.infer;
@@ -49,7 +68,10 @@ export const CredentialsScanResult = type({
   envVars: EnvVarInfo.array(),
   'personalization?': {
     'apiKey?': 'string',
+    'clientId?': 'string',
     'environment?': 'string',
+    'experienceBaseUrl?': 'string',
+    'insightsBaseUrl?': 'string',
   },
   'contentful?': {
     'spaceId?': 'string',
@@ -77,6 +99,15 @@ export const ValidationResult = type({
   packages: PackagesResult,
   credentials: CredentialsScanResult,
   api: ApiCheckResult,
+  codePatterns: {
+    hasOptimizationRoot: 'boolean',
+    hasOptimizationProvider: 'boolean',
+    hasOptimizedEntry: 'boolean',
+    hasNextAppTracker: 'boolean',
+    hasNextPagesTracker: 'boolean',
+    hasCtflTrackingData: 'boolean',
+    hasAnonymousCookieUsage: 'boolean',
+  },
   overallStatus: CheckStatus,
   summary: 'string',
 });

@@ -130,6 +130,52 @@ Fix:
 
 - Replace Node-only APIs with edge-compatible web APIs.
 
+## Optimization Events Blocked by Consent
+
+Symptoms:
+
+- `page()` works but `track()`/interaction events never appear.
+- Logs or state show blocked events.
+
+Fix:
+
+- Confirm consent flow calls `sdk.consent(true)` when allowed.
+- Inspect `states.blockedEventStream` and `onEventBlocked` to verify blocked event types.
+
+## Missing Router Tracker in Optimization React
+
+Symptoms:
+
+- Initial page may personalize, but client-side navigations do not emit page events.
+
+Fix:
+
+- Next App Router: mount `NextAppAutoPageTracker` inside `OptimizationRoot`.
+- Next Pages Router: mount `NextPagesAutoPageTracker` in `_app.tsx` inside `OptimizationRoot`.
+
+## Missing `data-ctfl-entry-id` Tracking Metadata
+
+Symptoms:
+
+- Personalized content renders but view/click/hover analytics are missing.
+
+Fix:
+
+- Ensure rendered visible element includes `data-ctfl-entry-id`.
+- Add `data-ctfl-optimization-id`, `data-ctfl-sticky`, and `data-ctfl-variant-index` for optimized variants.
+
+## Hybrid SSR Cookie Not Shared (`ctfl-opt-aid`)
+
+Symptoms:
+
+- Server and browser appear to evaluate different profiles.
+- Personalization or analytics resets after hydration.
+
+Fix:
+
+- Ensure server sets `ctfl-opt-aid` (or `ANONYMOUS_ID_COOKIE`) with `path=/`.
+- If browser SDK must read it, do not mark it `HttpOnly`.
+
 ## Entry Has Unpublished Changes (nt_experiences not in CDA)
 
 Symptoms:

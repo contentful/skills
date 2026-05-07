@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { readdir, readFile } from 'node:fs/promises';
 import { CredentialsScanResult, type EnvVarInfo } from '../schemas.js';
 
-const FW_PREFIX = '(?:NEXT_PUBLIC_|GATSBY_|REACT_APP_|VITE_)?';
+const FW_PREFIX = '(?:NEXT_PUBLIC_|GATSBY_|REACT_APP_|VITE_|PUBLIC_)?';
 
 const KNOWN_ENV_VARS: Array<{ name: string; secret: boolean; patterns: RegExp[] }> = [
   {
@@ -13,6 +13,33 @@ const KNOWN_ENV_VARS: Array<{ name: string; secret: boolean; patterns: RegExp[] 
       new RegExp(`^${FW_PREFIX}NINETAILED_API_KEY\\s*=[^\\S\\n]*(.+)`, 'm'),
       new RegExp(`^${FW_PREFIX}NINETAILED_CLIENT_ID\\s*=[^\\S\\n]*(.+)`, 'm'),
     ],
+  },
+  {
+    name: 'CONTENTFUL_OPTIMIZATION_CLIENT_ID',
+    secret: true,
+    patterns: [
+      new RegExp(`^${FW_PREFIX}CONTENTFUL_OPTIMIZATION_CLIENT_ID\\s*=[^\\S\\n]*(.+)`, 'm'),
+      new RegExp(`^${FW_PREFIX}OPTIMIZATION_CLIENT_ID\\s*=[^\\S\\n]*(.+)`, 'm'),
+      new RegExp(`^${FW_PREFIX}NINETAILED_CLIENT_ID\\s*=[^\\S\\n]*(.+)`, 'm'),
+    ],
+  },
+  {
+    name: 'CONTENTFUL_OPTIMIZATION_ENVIRONMENT',
+    secret: false,
+    patterns: [
+      new RegExp(`^${FW_PREFIX}CONTENTFUL_OPTIMIZATION_ENVIRONMENT\\s*=[^\\S\\n]*(.+)`, 'm'),
+      new RegExp(`^${FW_PREFIX}OPTIMIZATION_ENVIRONMENT\\s*=[^\\S\\n]*(.+)`, 'm'),
+    ],
+  },
+  {
+    name: 'CONTENTFUL_EXPERIENCE_API_BASE_URL',
+    secret: false,
+    patterns: [new RegExp(`^${FW_PREFIX}CONTENTFUL_EXPERIENCE_API_BASE_URL\\s*=[^\\S\\n]*(.+)`, 'm')],
+  },
+  {
+    name: 'CONTENTFUL_INSIGHTS_API_BASE_URL',
+    secret: false,
+    patterns: [new RegExp(`^${FW_PREFIX}CONTENTFUL_INSIGHTS_API_BASE_URL\\s*=[^\\S\\n]*(.+)`, 'm')],
   },
   {
     name: 'NINETAILED_ENVIRONMENT',
@@ -53,6 +80,10 @@ function maskValue(value: string): string {
   return value.slice(0, 8) + '****';
 }
 
+function isPlaceholder(value: string): boolean {
+  return /^(your-|example|changeme|replace-me|<|\$\{|\{\{)/i.test(value.trim());
+}
+
 async function readFileSafe(path: string): Promise<string | null> {
   try {
     return await readFile(path, 'utf-8');
@@ -71,7 +102,9 @@ export const scanCredentials = action({
     let envEntries: string[] = [];
     try {
       const dirEntries = await readdir(root);
-      envEntries = dirEntries.filter((f) => f.startsWith('.env'));
+      envEntries = dirEntries.filter(
+        (f) => f.startsWith('.env') && !/\.example$|\.sample$|\.template$/i.test(f),
+      );
     } catch {
       /* no directory access */
     }
@@ -91,7 +124,7 @@ export const scanCredentials = action({
         const match = combinedEnv.match(pattern);
         if (match) {
           const value = match[1].trim().replace(/^["']|["']$/g, '');
-          if (!value) {
+          if (!value || isPlaceholder(value)) {
             envVars.push({ name, status: 'empty' });
           } else {
             envVars.push({ name, status: 'set', maskedValue: secret ? maskValue(value) : value });
@@ -106,16 +139,26 @@ export const scanCredentials = action({
       }
     }
 
+    const personalization = {
+      ...(detected['NINETAILED_API_KEY'] ? { apiKey: detected['NINETAILED_API_KEY'] } : {}),
+      ...(detected['NINETAILED_ENVIRONMENT'] ? { environment: detected['NINETAILED_ENVIRONMENT'] } : {}),
+      ...(detected['CONTENTFUL_OPTIMIZATION_CLIENT_ID']
+        ? { clientId: detected['CONTENTFUL_OPTIMIZATION_CLIENT_ID'] }
+        : {}),
+      ...(detected['CONTENTFUL_OPTIMIZATION_ENVIRONMENT']
+        ? { environment: detected['CONTENTFUL_OPTIMIZATION_ENVIRONMENT'] }
+        : {}),
+      ...(detected['CONTENTFUL_EXPERIENCE_API_BASE_URL']
+        ? { experienceBaseUrl: detected['CONTENTFUL_EXPERIENCE_API_BASE_URL'] }
+        : {}),
+      ...(detected['CONTENTFUL_INSIGHTS_API_BASE_URL']
+        ? { insightsBaseUrl: detected['CONTENTFUL_INSIGHTS_API_BASE_URL'] }
+        : {}),
+    };
+
     return {
       envVars,
-      ...(detected['NINETAILED_API_KEY'] || detected['NINETAILED_ENVIRONMENT']
-        ? {
-            personalization: {
-              ...(detected['NINETAILED_API_KEY'] ? { apiKey: detected['NINETAILED_API_KEY'] } : {}),
-              ...(detected['NINETAILED_ENVIRONMENT'] ? { environment: detected['NINETAILED_ENVIRONMENT'] } : {}),
-            },
-          }
-        : {}),
+      ...(Object.keys(personalization).length > 0 ? { personalization } : {}),
       ...(detected['CONTENTFUL_SPACE_ID'] || detected['CONTENTFUL_ACCESS_TOKEN']
         ? {
             contentful: {

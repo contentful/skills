@@ -28,7 +28,10 @@ export default skill({
     credentials: type({
       personalization: {
         apiKey: 'string',
+        'clientId?': 'string',
         environment: 'string',
+        'experienceBaseUrl?': 'string',
+        'insightsBaseUrl?': 'string',
       },
       contentful: {
         spaceId: 'string',
@@ -142,10 +145,13 @@ export default skill({
         const mask = (v: string) => (v.length <= 8 ? '****' : v.slice(0, 8) + '****');
         const credRows: Array<{ Credential: string; Value: string }> = [];
         if (scanned?.personalization?.apiKey) {
-          credRows.push({ Credential: 'Ninetailed API key', Value: mask(scanned.personalization.apiKey) });
+          credRows.push({ Credential: 'Optimization client ID / API key', Value: mask(scanned.personalization.apiKey) });
+        }
+        if (scanned?.personalization?.clientId) {
+          credRows.push({ Credential: 'Optimization client ID', Value: mask(scanned.personalization.clientId) });
         }
         if (scanned?.personalization?.environment) {
-          credRows.push({ Credential: 'Ninetailed environment', Value: scanned.personalization.environment });
+          credRows.push({ Credential: 'Optimization environment', Value: scanned.personalization.environment });
         }
         if (scanned?.contentful?.spaceId) {
           credRows.push({ Credential: 'Contentful Space ID', Value: scanned.contentful.spaceId });
@@ -212,11 +218,11 @@ export default skill({
 
           Explain that we can run deeper diagnostics (API connectivity, content inspection)
           if they provide credentials. Tell them where to find each value:
-          - **Ninetailed API Key** — Ninetailed dashboard or Contentful Organization settings > Optimization > SDK keys
+          - **Optimization Client ID / API key** — Contentful Organization settings > Optimization > SDK keys
           - **Contentful Space ID** — Contentful Settings > General settings
           - **CDA Token** (Content Delivery API) — Contentful Settings > API keys
           - **CPA Token** (Content Preview API) — Same location, optional but recommended
-          - **Environment** — Usually "master" for Contentful, "main" for Ninetailed
+          - **Environment** — Usually "master" for Contentful, "main" for optimization
 
           If the user provides credentials, set hasCredentials to true and populate the fields.
           If the user skips, set hasCredentials to false.
@@ -229,7 +235,7 @@ export default skill({
             {
               value: 'provide',
               label: '🔑 Yes, I can provide credentials',
-              description: 'Paste your Contentful and/or Ninetailed credentials',
+              description: 'Paste your Contentful and/or optimization credentials',
             },
             {
               value: 'decline',
@@ -244,7 +250,10 @@ export default skill({
       hasCredentials: 'boolean',
       'personalization?': {
         'apiKey?': 'string',
+        'clientId?': 'string',
         'environment?': 'string',
+        'experienceBaseUrl?': 'string',
+        'insightsBaseUrl?': 'string',
       },
       'contentful?': {
         'spaceId?': 'string',
@@ -260,7 +269,13 @@ export default skill({
     save: ({ store }) => {
       const confirmed = store.steps['confirm-credentials'] as
         | {
-            personalization?: { apiKey?: string; environment?: string };
+            personalization?: {
+              apiKey?: string;
+              clientId?: string;
+              environment?: string;
+              experienceBaseUrl?: string;
+              insightsBaseUrl?: string;
+            };
             contentful?: { spaceId?: string; accessToken?: string; previewToken?: string; environment?: string };
           }
         | undefined;
@@ -269,7 +284,22 @@ export default skill({
         credentials: {
           personalization: {
             apiKey: confirmed?.personalization?.apiKey ?? scanned?.personalization?.apiKey ?? '',
+            ...(confirmed?.personalization?.clientId || scanned?.personalization?.clientId
+              ? { clientId: confirmed?.personalization?.clientId ?? scanned?.personalization?.clientId }
+              : {}),
             environment: confirmed?.personalization?.environment ?? scanned?.personalization?.environment ?? 'main',
+            ...(confirmed?.personalization?.experienceBaseUrl || scanned?.personalization?.experienceBaseUrl
+              ? {
+                  experienceBaseUrl:
+                    confirmed?.personalization?.experienceBaseUrl ?? scanned?.personalization?.experienceBaseUrl,
+                }
+              : {}),
+            ...(confirmed?.personalization?.insightsBaseUrl || scanned?.personalization?.insightsBaseUrl
+              ? {
+                  insightsBaseUrl:
+                    confirmed?.personalization?.insightsBaseUrl ?? scanned?.personalization?.insightsBaseUrl,
+                }
+              : {}),
           },
           contentful: {
             spaceId: confirmed?.contentful?.spaceId ?? scanned?.contentful?.spaceId ?? '',
@@ -291,9 +321,13 @@ export default skill({
         const creds = store.credentials;
         return {
           ...(creds?.personalization?.apiKey ? { apiKey: creds.personalization.apiKey } : {}),
-          ninetailedEnvironment: creds?.personalization?.environment ?? 'main',
+          ...(creds?.personalization?.clientId ? { clientId: creds.personalization.clientId } : {}),
+          personalizationEnvironment: creds?.personalization?.environment ?? 'main',
           ...(creds?.contentful?.spaceId ? { contentfulSpaceId: creds.contentful.spaceId } : {}),
           contentfulEnvironment: creds?.contentful?.environment ?? 'master',
+          ...(creds?.personalization?.experienceBaseUrl
+            ? { experienceBaseUrl: creds.personalization.experienceBaseUrl }
+            : {}),
         };
       },
       run: checkApiConnectivity,
@@ -313,10 +347,10 @@ export default skill({
 
       const apiStatusNote =
         apiData?.status === 'pass'
-          ? 'Ninetailed API connectivity is **healthy**.'
+          ? 'Optimization/Experience API connectivity is **healthy**.'
           : apiData?.status === 'skip'
-            ? 'Ninetailed API check was **skipped** (no API key found).'
-            : 'Ninetailed API connectivity check **failed**.';
+            ? 'Optimization/Experience API check was **skipped** (no client ID/API key found).'
+            : 'Optimization/Experience API connectivity check **failed**.';
 
       const hasContentfulTokens = !!(
         store.credentials?.contentful?.spaceId &&
@@ -344,7 +378,7 @@ export default skill({
 
           Present a brief summary of the findings so far. Cover ALL three areas:
           1. Code-level setup (what was found or missing)
-          2. Ninetailed API connectivity result (passed, failed, or skipped — say which)
+          2. Optimization/Experience API connectivity result (passed, failed, or skipped — say which)
           3. Environment variables status
 
           Keep it concise (3-5 sentences) but don't omit any area.

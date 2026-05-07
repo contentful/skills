@@ -93,9 +93,10 @@ Use a dedicated tracker component for App Router navigation rather than scatteri
 
 Recommended pattern:
 
-1. Put `OptimizationProvider` at the app root.
-2. Use the built-in router tracker for the router in use.
-3. Keep the provider instance stable across route changes.
+1. Prefer `OptimizationRoot` at the app root (it owns provider + live updates wiring).
+2. Use `OptimizationProvider` directly only when passing a pre-built SDK instance.
+3. Use the built-in router tracker for the router in use.
+4. Keep the provider instance stable across route changes.
 
 Checklist:
 

@@ -337,3 +337,29 @@ test('develop analyze → plan → implement path', async () => {
 
   assert.deepEqual(result.path, ['analyze', 'plan', 'implement']);
 });
+
+test('develop supports optimization sdk path', async () => {
+  const result = await runSkill(developSkill, {
+    params: { userQuery: 'Add optimization entry rendering for hero' },
+    model: mockModel({
+      analyze: {
+        taskType: 'personalize-component',
+        sdkInUse: 'optimization',
+        framework: 'nextjs-app',
+        targetFiles: ['app/providers.tsx', 'components/Hero.tsx'],
+        analysis: 'Use OptimizationRoot and OptimizedEntry patterns',
+      },
+      plan: {
+        approved: true,
+        plan: 'Wire OptimizationRoot and wrap hero rendering with OptimizedEntry',
+        filesToModify: ['app/providers.tsx', 'components/Hero.tsx'],
+      },
+      implement: {
+        filesModified: ['app/providers.tsx', 'components/Hero.tsx'],
+        summary: 'Added optimization-specific rendering and provider wiring',
+      },
+    }),
+  });
+
+  assert.deepEqual(result.path, ['analyze', 'plan', 'implement']);
+});

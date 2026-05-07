@@ -24,6 +24,7 @@ const OPTIMIZATION_PACKAGES = [
   '@contentful/optimization-web',
   '@contentful/optimization-react-web',
   '@contentful/optimization-node',
+  '@contentful/optimization-react-native',
   '@contentful/optimization-web-preview-panel',
   '@contentful/optimization-core',
   '@contentful/optimization-api-client',
@@ -88,12 +89,47 @@ export const checkPackages = action({
 
     const packageManager = await detectPackageManager(root);
 
+    const ninetailed = findPackages(NINETAILED_PACKAGES);
+    const optimization = findPackages(OPTIMIZATION_PACKAGES);
+    const hasOptimizationReactWeb = optimization.some((p) => p.name === '@contentful/optimization-react-web');
+    const hasOptimizationWeb = optimization.some((p) => p.name === '@contentful/optimization-web');
+    const hasOptimizationNode = optimization.some((p) => p.name === '@contentful/optimization-node');
+    const hasPreviewPanel = optimization.some((p) => p.name === '@contentful/optimization-web-preview-panel');
+
+    const sdkFamily: 'mixed' | 'optimization' | 'ninetailed' | 'unknown' =
+      ninetailed.length > 0 && optimization.length > 0
+        ? 'mixed'
+        : optimization.length > 0
+          ? 'optimization'
+          : ninetailed.length > 0
+            ? 'ninetailed'
+            : 'unknown';
+
+    const runtimeHint: 'react-web' | 'web' | 'node' | 'hybrid' | 'unknown' =
+      hasOptimizationNode && (hasOptimizationReactWeb || hasOptimizationWeb)
+        ? 'hybrid'
+        : hasOptimizationReactWeb
+          ? 'react-web'
+          : hasOptimizationWeb
+            ? 'web'
+            : hasOptimizationNode
+              ? 'node'
+              : 'unknown';
+
     return {
       packages: {
-        ninetailed: findPackages(NINETAILED_PACKAGES),
-        optimization: findPackages(OPTIMIZATION_PACKAGES),
+        ninetailed,
+        optimization,
         contentful: findPackages(CONTENTFUL_PACKAGES),
         framework: findPackages(FRAMEWORK_PACKAGES),
+      },
+      detected: {
+        sdkFamily,
+        runtimeHint,
+        hasPreviewPanel,
+        hasOptimizationReactWeb,
+        hasOptimizationWeb,
+        hasOptimizationNode,
       },
       packageManager,
     };
