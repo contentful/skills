@@ -368,6 +368,6 @@ test('derivePackagesToInstall uses frameworkless optimization package for non-re
       framework: 'other',
       architecture: 'hybrid-ssr',
     }),
-    ['@contentful/optimization', '@contentful/optimization-node'],
+    ['@contentful/optimization-core', '@contentful/optimization-node'],
   );
 });

@@ -22,7 +22,7 @@ const NINETAILED_EXPERIENCE_JS_FRAMEWORK_PACKAGES: Partial<Record<SupportedFrame
   react: '@ninetailed/experience.js-react',
 };
 
-const CONTENTFUL_OPTIMIZATION_PACKAGE = '@contentful/optimization';
+const CONTENTFUL_OPTIMIZATION_CORE_PACKAGE = '@contentful/optimization-core';
 const CONTENTFUL_OPTIMIZATION_WEB_PACKAGE = '@contentful/optimization-web';
 const CONTENTFUL_OPTIMIZATION_REACT_WEB_PACKAGE = '@contentful/optimization-react-web';
 const CONTENTFUL_OPTIMIZATION_NODE_PACKAGE = '@contentful/optimization-node';
@@ -64,7 +64,7 @@ export function derivePackagesToInstall(options: {
 
   const packages = isReactFramework(options.framework)
     ? [CONTENTFUL_OPTIMIZATION_WEB_PACKAGE, CONTENTFUL_OPTIMIZATION_REACT_WEB_PACKAGE]
-    : [CONTENTFUL_OPTIMIZATION_PACKAGE];
+    : [CONTENTFUL_OPTIMIZATION_CORE_PACKAGE];
 
   if (options.architecture === 'hybrid-ssr') {
     packages.push(CONTENTFUL_OPTIMIZATION_NODE_PACKAGE);
