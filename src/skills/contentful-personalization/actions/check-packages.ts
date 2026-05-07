@@ -21,7 +21,7 @@ const NINETAILED_PACKAGES = [
 ];
 
 const OPTIMIZATION_PACKAGES = [
-  '@contentful/optimization',
+  '@contentful/optimization-core',
   '@contentful/optimization-web',
   '@contentful/optimization-react-web',
   '@contentful/optimization-node',
