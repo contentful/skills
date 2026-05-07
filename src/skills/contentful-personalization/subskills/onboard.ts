@@ -255,6 +255,10 @@ export default skill({
           Explain your reasoning conversationally — help the user understand WHY
           this choice fits their project, not just WHAT the choice is.
 
+          Default behavior: choose \`ninetailed\` unless there is explicit user intent
+          to test beta optimization SDKs. Do not choose optimization just because it is
+          newer or future-facing.
+
           ## Project Context
           ${render.kv({
             Framework: store.project.framework,
@@ -265,8 +269,8 @@ export default skill({
           ## Your two decisions
 
           **SDK choice:**
-          - \`ninetailed\` — @ninetailed/experience.js (current, battle-tested, more plugins)
-          - \`optimization\` — @contentful/optimization (modern, Contentful-native, simpler API)
+          - \`ninetailed\` — @ninetailed/experience.js (stable production recommendation)
+          - \`optimization\` — @contentful/optimization (experimental beta; not for default production rollout)
 
           **Architecture:**
           - \`client-only\` — All personalization runs in the browser
@@ -301,13 +305,22 @@ export default skill({
         Present the SDK and architecture recommendation below, then ask the user
         to confirm. Keep it brief — the reasoning was already explained.
 
+        If the recommended SDK is \`@contentful/optimization\`, include a mandatory
+        beta warning before confirmation:
+        - it is beta and may have breaking changes
+        - it is not production-ready
+        - they should only proceed if they are in direct contact with Contentful
+
+        For optimization recommendations, explicitly ask the user to confirm they
+        understand and accept those constraints.
+
         ## 📦 Recommendation Summary
 
-        ${render.kv({
-          SDK:
-            store.setup?.sdkChoice === 'ninetailed'
-              ? '@ninetailed/experience.js (legacy, proven)'
-              : '@contentful/optimization (modern, Contentful-native)',
+          ${render.kv({
+            SDK:
+              store.setup?.sdkChoice === 'ninetailed'
+                ? '@ninetailed/experience.js (stable production path)'
+                : '@contentful/optimization (experimental beta path)',
           Architecture:
             store.setup?.architecture === 'client-only'
               ? 'Client-only (browser-side personalization)'
@@ -318,8 +331,11 @@ export default skill({
         })}
       `,
       act.confirm({
-        message: 'Proceed with this SDK and architecture choice?',
-        defaultAnswer: 'yes',
+        message:
+          store.setup?.sdkChoice === 'optimization'
+            ? 'Confirm you want to proceed with the experimental beta optimization SDK, understand it may have breaking changes, and are in direct contact with Contentful.'
+            : 'Proceed with this SDK and architecture choice?',
+        defaultAnswer: store.setup?.sdkChoice === 'optimization' ? 'no' : 'yes',
       }),
     ],
     response: type({ approved: 'boolean' }),
