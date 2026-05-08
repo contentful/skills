@@ -84,7 +84,7 @@ export default skill({
         ${refs.load('how-personalization-works.md')}
       `,
     response: type({
-      framework: "'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'other'",
+      framework: "'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'react' | 'other'",
       'frameworkVersion?': 'string',
       projectPath: 'string',
       explorationSummary: 'string',

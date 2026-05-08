@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { runComposite, runSkill, mockModel } from '@contentful/skill-kit/test';
 import skill from './skill.js';
+import { derivePackagesToInstall } from './actions/install-packages.js';
 import doctorSkill from './subskills/doctor.js';
 import developSkill from './subskills/develop.js';
 
@@ -336,4 +337,37 @@ test('develop analyze → plan → implement path', async () => {
   });
 
   assert.deepEqual(result.path, ['analyze', 'plan', 'implement']);
+});
+
+test('derivePackagesToInstall uses react package for React ninetailed installs', () => {
+  assert.deepEqual(
+    derivePackagesToInstall({
+      sdkChoice: 'ninetailed',
+      framework: 'react',
+      architecture: 'client-only',
+    }),
+    ['@ninetailed/experience.js', '@ninetailed/experience.js-react', '@ninetailed/experience.js-plugin-insights'],
+  );
+});
+
+test('derivePackagesToInstall keeps frameworkless ninetailed installs core-only', () => {
+  assert.deepEqual(
+    derivePackagesToInstall({
+      sdkChoice: 'ninetailed',
+      framework: 'other',
+      architecture: 'client-only',
+    }),
+    ['@ninetailed/experience.js', '@ninetailed/experience.js-plugin-insights'],
+  );
+});
+
+test('derivePackagesToInstall uses frameworkless optimization package for non-react projects', () => {
+  assert.deepEqual(
+    derivePackagesToInstall({
+      sdkChoice: 'optimization',
+      framework: 'other',
+      architecture: 'hybrid-ssr',
+    }),
+    ['@contentful/optimization-core', '@contentful/optimization-node'],
+  );
 });

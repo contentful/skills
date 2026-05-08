@@ -4,6 +4,96 @@ import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { InstallResult, type PackageInfo } from '../schemas.js';
 
+export type SupportedPackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';
+type SupportedSdkChoice = 'ninetailed' | 'optimization';
+type SupportedArchitecture = 'client-only' | 'hybrid-ssr' | 'server-only';
+type SupportedFramework = 'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'react' | 'other';
+
+const NINETAILED_EXPERIENCE_JS_PACKAGE = '@ninetailed/experience.js';
+const NINETAILED_EXPERIENCE_JS_NODE_PACKAGE = '@ninetailed/experience.js-node';
+const NINETAILED_EXPERIENCE_JS_PLUGIN_INSIGHTS_PACKAGE = '@ninetailed/experience.js-plugin-insights';
+const NINETAILED_EXPERIENCE_JS_PLUGIN_SSR_PACKAGE = '@ninetailed/experience.js-plugin-ssr';
+const NINETAILED_EXPERIENCE_JS_FRAMEWORK_PACKAGES: Partial<Record<SupportedFramework, string>> = {
+  'nextjs-app': '@ninetailed/experience.js-next',
+  'nextjs-pages': '@ninetailed/experience.js-next',
+  'nextjs-hybrid': '@ninetailed/experience.js-next',
+  gatsby: '@ninetailed/experience.js-gatsby',
+  remix: '@ninetailed/experience.js-remix',
+  react: '@ninetailed/experience.js-react',
+};
+
+const CONTENTFUL_OPTIMIZATION_CORE_PACKAGE = '@contentful/optimization-core';
+const CONTENTFUL_OPTIMIZATION_WEB_PACKAGE = '@contentful/optimization-web';
+const CONTENTFUL_OPTIMIZATION_REACT_WEB_PACKAGE = '@contentful/optimization-react-web';
+const CONTENTFUL_OPTIMIZATION_NODE_PACKAGE = '@contentful/optimization-node';
+
+const SAFE_PACKAGE_NAME = /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/;
+
+function isReactFramework(framework: SupportedFramework): boolean {
+  return framework !== 'other';
+}
+
+export function derivePackagesToInstall(options: {
+  sdkChoice: SupportedSdkChoice;
+  framework: SupportedFramework;
+  architecture: SupportedArchitecture;
+}): string[] {
+  if (options.sdkChoice === 'ninetailed') {
+    if (options.architecture === 'server-only') {
+      return [NINETAILED_EXPERIENCE_JS_PACKAGE, NINETAILED_EXPERIENCE_JS_NODE_PACKAGE];
+    }
+
+    const packages = [NINETAILED_EXPERIENCE_JS_PACKAGE];
+    const frameworkPackage = NINETAILED_EXPERIENCE_JS_FRAMEWORK_PACKAGES[options.framework];
+
+    if (frameworkPackage) {
+      packages.push(frameworkPackage);
+    }
+
+    if (options.architecture === 'hybrid-ssr') {
+      packages.push(NINETAILED_EXPERIENCE_JS_PLUGIN_SSR_PACKAGE);
+    }
+
+    packages.push(NINETAILED_EXPERIENCE_JS_PLUGIN_INSIGHTS_PACKAGE);
+    return packages;
+  }
+
+  if (options.architecture === 'server-only') {
+    return [CONTENTFUL_OPTIMIZATION_NODE_PACKAGE];
+  }
+
+  const packages = isReactFramework(options.framework)
+    ? [CONTENTFUL_OPTIMIZATION_WEB_PACKAGE, CONTENTFUL_OPTIMIZATION_REACT_WEB_PACKAGE]
+    : [CONTENTFUL_OPTIMIZATION_CORE_PACKAGE];
+
+  if (options.architecture === 'hybrid-ssr') {
+    packages.push(CONTENTFUL_OPTIMIZATION_NODE_PACKAGE);
+  }
+
+  return packages;
+}
+
+export function buildInstallCommand(
+  packageManager: SupportedPackageManager,
+  packages: string[],
+): { cmd: string; args: string[]; command: string } {
+  const packageArgs = packageManager === 'bun' ? packages : ['--', ...packages];
+
+  const installCmd: Record<SupportedPackageManager, { cmd: string; args: string[] }> = {
+    npm: { cmd: 'npm', args: ['install', ...packageArgs] },
+    yarn: { cmd: 'yarn', args: ['add', ...packageArgs] },
+    pnpm: { cmd: 'pnpm', args: ['add', ...packageArgs] },
+    bun: { cmd: 'bun', args: ['add', ...packageArgs] },
+  };
+
+  const { cmd, args } = installCmd[packageManager];
+  return { cmd, args, command: `${cmd} ${args.join(' ')}` };
+}
+
+function isSafePackageName(name: string): boolean {
+  return !name.startsWith('-') && SAFE_PACKAGE_NAME.test(name);
+}
+
 function exec(
   cmd: string,
   args: string[],
@@ -33,15 +123,19 @@ export const installPackages = action({
       return { installed: [], failed: [], command: '(no packages requested)' };
     }
 
-    const installCmd: Record<string, { cmd: string; args: string[] }> = {
-      npm: { cmd: 'npm', args: ['install', ...packages] },
-      yarn: { cmd: 'yarn', args: ['add', ...packages] },
-      pnpm: { cmd: 'pnpm', args: ['add', ...packages] },
-      bun: { cmd: 'bun', args: ['add', ...packages] },
-    };
+    const unsafePackages = packages.filter((name) => !isSafePackageName(name));
+    if (unsafePackages.length > 0) {
+      return {
+        installed: [],
+        failed: unsafePackages.map((name) => ({
+          name,
+          error: 'Rejected package request because the name is not a safe npm package identifier',
+        })),
+        command: '(rejected invalid package request)',
+      };
+    }
 
-    const { cmd, args } = installCmd[packageManager];
-    const command = `${cmd} ${args.join(' ')}`;
+    const { cmd, args, command } = buildInstallCommand(packageManager, packages);
 
     try {
       await exec(cmd, args, { cwd: projectPath, signal });
