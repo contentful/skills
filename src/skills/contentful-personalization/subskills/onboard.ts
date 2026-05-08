@@ -487,21 +487,17 @@ export default skill({
       );
 
       return [
-        prompt`
-          Present the derived package install set below, then ask the user to approve the
-          exact install command. Do not change the package list.
-
-          ${render.kv({
+        'Present the install details below, then ask the user to approve the exact install command. Do not change the package list.',
+        view('Package Install', [
+          render.kv({
             SDK: store.setup?.sdkChoice ?? 'unknown',
             Architecture: store.setup?.architecture ?? 'unknown',
             Framework: `${store.project.framework} (${store.project.routerType} router)`,
             'Package manager': getInstallPackageManager(store.project?.packages?.packageManager),
-          })}
-
-          Packages: ${packages.map((name) => `\`${name}\``).join(', ')}
-
-          Exact command: \`${command}\`
-        `,
+          }),
+          `Packages: ${packages.map((name) => `\`${name}\``).join(', ')}`,
+          `Exact command: \`${command}\``,
+        ].join('\n\n')),
         act.confirm({
           message: 'Run this exact package install command?',
           defaultAnswer: 'yes',
