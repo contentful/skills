@@ -16,6 +16,13 @@ export default skill({
     'inspects Contentful content state, and helps fix problems.',
   entry: 'explore',
 
+  params: type({
+    'userQuery?': 'string',
+    'triggeredByLiveDebug?': 'boolean',
+    'runtimeUrl?': 'string',
+    'runtimeSummary?': 'string',
+  }),
+
   stores: {
     project: type({
       framework: 'string',
@@ -45,10 +52,20 @@ export default skill({
   },
 })
   .step('explore', {
-    prompt: ({ refs }) => prompt`
+    prompt: ({ params, refs }) => prompt`
         Explore this project to understand the current personalization setup.
         You are gathering facts about the CURRENT state — do NOT diagnose problems
         or suggest fixes yet. That happens in a later step.
+
+        ${params?.triggeredByLiveDebug
+          ? `
+        ## Runtime Context From Live Debug
+        A prior live browser inspection of ${params.runtimeUrl ?? 'the provided URL'} suggested something is off.
+        Runtime summary: ${params.runtimeSummary ?? 'No runtime summary was provided.'}
+
+        Use that runtime evidence as a clue while exploring the codebase, but keep this step focused on code and configuration facts.
+        `
+          : ''}
 
         ## What to investigate (in priority order)
 

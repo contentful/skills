@@ -97,6 +97,29 @@ test('classify routes to develop for component tasks', async () => {
   assert.equal(result.redirectedTo?.name, 'develop');
 });
 
+test('classify routes live URL requests to live-debug', async () => {
+  const result = await runComposite(skill, {
+    host: { toolsAvailable: [] },
+    model: mockModel({
+      classify: {
+        intent: 'live-debug',
+        confidence: 0.97,
+        requestedUrl: 'https://example.com/personalized',
+        reasoning: 'User explicitly asked to inspect a live URL',
+      },
+      'live-debug-check-mcp': {
+        mcpAvailable: false,
+        matchedTools: [],
+      },
+      'live-debug-install-mcp': { message: 'Install Chrome DevTools MCP and rerun' },
+    }),
+  });
+
+  assert.ok(result.path.includes('live-debug-check-mcp'));
+  assert.ok(result.path.includes('live-debug-install-mcp'));
+  assert.ok(!result.path.includes('doctor/explore'));
+});
+
 test('classify routes to topic for reference questions', async () => {
   const result = await runComposite(skill, {
     model: mockModel({
@@ -150,6 +173,142 @@ test('reference without topic routes to pick-topic', async () => {
   assert.ok(result.path.includes('pick-topic'));
   assert.equal(result.redirectedTo?.kind, 'topic');
   assert.equal(result.redirectedTo?.name, 'common-errors');
+});
+
+test('live-debug uses provided URL and finishes when runtime looks healthy', async () => {
+  const result = await runComposite(skill, {
+    host: { toolsAvailable: ['mcp__chrome-devtools__new_page', 'mcp__chrome-devtools__list_network_requests'] },
+    model: mockModel({
+      classify: {
+        intent: 'live-debug',
+        confidence: 0.96,
+        requestedUrl: 'https://example.com/personalized',
+        reasoning: 'User wants runtime verification for a live page',
+      },
+      'live-debug-check-mcp': {
+        mcpAvailable: true,
+        matchedTools: ['mcp__chrome-devtools__new_page', 'mcp__chrome-devtools__list_network_requests'],
+      },
+      'live-debug-inspect': {
+        url: 'https://example.com/personalized',
+        overallStatus: 'pass',
+        summary: 'Runtime behavior looks healthy.',
+        consoleSummary: 'No meaningful console issues.',
+        requestCount: 1,
+        requests: [
+          {
+            url: 'https://experience.ninetailed.co/v1/events',
+            method: 'POST',
+            status: 200,
+            summary: 'Page-level event with basic page metadata',
+          },
+        ],
+        findings: [{ item: 'experience.ninetailed.co request', status: 'pass', detail: 'Observed one successful POST request.' }],
+        recommendations: [],
+        shouldRunDoctor: false,
+      },
+      'live-debug-report': { message: 'Looks healthy' },
+    }),
+  });
+
+  assert.ok(result.path.includes('live-debug-check-mcp'));
+  assert.ok(result.path.includes('live-debug-inspect'));
+  assert.ok(result.path.includes('live-debug-report'));
+  assert.ok(!result.path.includes('live-debug-request-url'));
+  assert.ok(!result.path.includes('doctor/explore'));
+});
+
+test('live-debug asks for URL when one was not provided', async () => {
+  const result = await runComposite(skill, {
+    host: { toolsAvailable: ['mcp__chrome-devtools__new_page'] },
+    model: mockModel({
+      classify: {
+        intent: 'live-debug',
+        confidence: 0.9,
+        reasoning: 'User asked for live browser debugging but did not include a URL',
+      },
+      'live-debug-check-mcp': {
+        mcpAvailable: true,
+        matchedTools: ['mcp__chrome-devtools__new_page'],
+      },
+      'live-debug-request-url': { url: 'https://example.com/live' },
+      'live-debug-inspect': {
+        url: 'https://example.com/live',
+        overallStatus: 'pass',
+        summary: 'Runtime behavior looks healthy.',
+        consoleSummary: 'No meaningful console issues.',
+        requestCount: 0,
+        requests: [],
+        findings: [{ item: 'experience.ninetailed.co request', status: 'warn', detail: 'No matching requests were detected during this check.' }],
+        recommendations: [{ priority: 'info', message: 'Retry the page with known personalized content if you expected network activity.', category: 'runtime' }],
+        shouldRunDoctor: false,
+      },
+      'live-debug-report': { message: 'Done' },
+    }),
+  });
+
+  assert.ok(result.path.includes('live-debug-request-url'));
+  assert.ok(result.path.includes('live-debug-inspect'));
+});
+
+test('live-debug escalates into doctor when runtime looks suspicious', async () => {
+  const result = await runComposite(skill, {
+    host: { toolsAvailable: ['mcp__chrome-devtools__new_page', 'mcp__chrome-devtools__list_console_messages'] },
+    model: mockModel({
+      classify: {
+        intent: 'live-debug',
+        confidence: 0.98,
+        requestedUrl: 'https://example.com/personalized',
+        reasoning: 'User wants to inspect a live page and the runtime looks suspect',
+      },
+      'live-debug-check-mcp': {
+        mcpAvailable: true,
+        matchedTools: ['mcp__chrome-devtools__new_page', 'mcp__chrome-devtools__list_console_messages'],
+      },
+      'live-debug-inspect': {
+        url: 'https://example.com/personalized',
+        overallStatus: 'warn',
+        summary: 'The page showed runtime symptoms that look like a setup issue.',
+        consoleSummary: 'Console warnings suggest the personalization provider is not configured correctly.',
+        requestCount: 0,
+        requests: [],
+        findings: [
+          {
+            item: 'experience.ninetailed.co request',
+            status: 'fail',
+            detail: 'No matching requests were sent after page load and one reload.',
+          },
+        ],
+        recommendations: [
+          {
+            priority: 'warning',
+            message: 'No requests to experience.ninetailed.co were observed. Check provider setup, middleware, and runtime SDK wiring.',
+            category: 'runtime',
+          },
+        ],
+        shouldRunDoctor: true,
+      },
+      'live-debug-report': { message: 'Escalating to doctor' },
+      'doctor/explore': {
+        framework: 'nextjs-app',
+        projectPath: '.',
+        explorationSummary: 'Provider setup looks incomplete.',
+        concerns: ['Provider not found'],
+      },
+      'doctor/scan-credentials': {
+        envVars: [{ name: 'NINETAILED_API_KEY', status: 'missing' }],
+      },
+      'doctor/confirm-credentials': { hasCredentials: false },
+      'doctor/review': { overallStatus: 'fail', recommendations: [], summary: 'Static diagnosis found issues.' },
+      'doctor/report': { choice: 'no' },
+      'doctor/done': { message: 'Done' },
+    }),
+  });
+
+  assert.ok(result.path.includes('live-debug-report'));
+  assert.ok(result.path.includes('doctor/explore'));
+  assert.equal(result.redirectedTo?.kind, 'subskill');
+  assert.equal(result.redirectedTo?.name, 'doctor');
 });
 
 // --- Doctor sub-skill tests ---

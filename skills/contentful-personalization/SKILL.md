@@ -1,10 +1,10 @@
 ---
 name: contentful-personalization
-description: "Set up, debug, and develop with Contentful personalization and optimization. Covers readiness assessment, guided SDK installation, diagnostics and debugging, day-to-day development, and reference documentation for personalization SDKs, APIs, and patterns. Use when asked about personalization, optimization, ninetailed, A/B testing, experiments, multivariate tests, audience targeting, segments, content variants, Contentful Experiences, Experiences SDK, Studio Experiences, or the experience API. Trigger keywords: personalization, optimization, ninetailed, A/B test, experiment, multivariate test, targeting, audience targeting, segments, variants, content variants, set up personalization, personalization not working, personalization broken, personalize this component, am I ready for personalization, experience API, Contentful Experiences, Experiences SDK, Studio Experiences, personalization in Next.js, @contentful/optimization, @ninetailed/experience.js, run an experiment"
+description: "Set up, debug, and develop with Contentful personalization and optimization. Covers readiness assessment, guided SDK installation, static diagnostics, live browser debugging, day-to-day development, and reference documentation for personalization SDKs, APIs, and patterns. Use when asked about personalization, optimization, ninetailed, A/B testing, experiments, multivariate tests, audience targeting, segments, content variants, Contentful Experiences, Experiences SDK, Studio Experiences, or the experience API. Trigger keywords: personalization, optimization, ninetailed, A/B test, experiment, multivariate test, targeting, audience targeting, segments, variants, content variants, set up personalization, personalization not working, personalization broken, personalize this component, am I ready for personalization, experience API, Contentful Experiences, Experiences SDK, Studio Experiences, personalization in Next.js, @contentful/optimization, @ninetailed/experience.js, run an experiment, check this URL, debug this live page, inspect network requests, check console errors, experience.ninetailed.co"
 metadata:
   version: "1.6.6"
 argument-hint: "[question or topic]"
-allowed-tools: "Bash(scripts/run *) Read mcp__contentful-personalization__start mcp__contentful-personalization__advance mcp__contentful-personalization__topic mcp__contentful-personalization__topics mcp__contentful-mcp__* mcp__plugin_contentful-skills_contentful-mcp__* mcp__plugin_contentful-skills_contentful-personalization__*"
+allowed-tools: "Bash(scripts/run *) Read mcp__contentful-personalization__start mcp__contentful-personalization__advance mcp__contentful-personalization__topic mcp__contentful-personalization__topics mcp__contentful-mcp__* mcp__chrome-devtools__* mcp__plugin_*chrome-devtools*__* mcp__plugin_contentful-skills_contentful-mcp__* mcp__plugin_contentful-skills_contentful-personalization__*"
 license: "MIT"
 ---
 
@@ -157,6 +157,12 @@ contains the skill's result. Present it to the user.
 Read only the user's message — do N...
 - **gather-context**: You were not confident enough to classify the user's request.
 Silently explore the project to gat...
+- **live-debug-check-mcp**: (dynamic)
+- **live-debug-install-mcp**: (dynamic)
+- **live-debug-request-url**: (dynamic)
+- **live-debug-inspect**: (dynamic)
+- **live-debug-report**: (dynamic)
+- **live-debug-done**: (dynamic)
 - **pick-topic**: (dynamic)
 
 
@@ -178,7 +184,7 @@ Sub-skill step names are prefixed: `<subskill>/<step>` (e.g., `doctor/diagnose`)
 ### Available sub-skills
 
 - **onboard**: Assess readiness and guide Contentful personalization setup end-to-end. Explores the codebase, checks readiness, helps choose SDK and architecture, installs packages, and guides implementation. — params: `readinessOnly` (boolean), `userQuery` (string)
-- **doctor**: Diagnose and fix Contentful personalization issues. Explores the codebase, checks packages and env vars, tests API connectivity, inspects Contentful content state, and helps fix problems.
+- **doctor**: Diagnose and fix Contentful personalization issues. Explores the codebase, checks packages and env vars, tests API connectivity, inspects Contentful content state, and helps fix problems. — params: `runtimeSummary` (string), `runtimeUrl` (string), `triggeredByLiveDebug` (boolean), `userQuery` (string)
 - **develop**: Day-to-day development companion for building with Contentful personalization. Helps add personalization to components, create experiments, and wire analytics. — params: `userQuery` (string)
 
 ## Reference topics
