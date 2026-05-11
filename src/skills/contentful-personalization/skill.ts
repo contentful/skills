@@ -1,5 +1,6 @@
 import { skill, type, prompt, act } from '@contentful/skill-kit';
 import onboardSkill from './subskills/onboard.js';
+import liveDebugSkill from './subskills/live-debug.js';
 import doctorSkill from './subskills/doctor.js';
 import developSkill from './subskills/develop.js';
 import { VERSION } from './version.js';
@@ -8,13 +9,11 @@ export default skill({
   name: 'contentful-personalization',
   version: VERSION,
   description:
-    'Set up, debug, and develop with Contentful personalization and optimization. ' +
-    'Covers readiness assessment, guided SDK installation, diagnostics and debugging, ' +
-    'day-to-day development, and reference documentation for personalization SDKs, ' +
-    'APIs, and patterns. Use when asked about personalization, optimization, ninetailed, ' +
-    'A/B testing, experiments, multivariate tests, audience targeting, segments, ' +
-    'content variants, Contentful Experiences, Experiences SDK, Studio Experiences, ' +
-    'or the experience API.',
+    'Set up, debug, and build with Contentful personalization and optimization. ' +
+    'Covers readiness, SDK install guidance, static diagnostics, live browser debugging, ' +
+    'development help, and reference patterns. Use for personalization, optimization, ' +
+    'ninetailed, A/B testing, experiments, audience targeting, Contentful Experiences, ' +
+    'Experiences SDK, Studio Experiences, and the experience API.',
   triggers: [
     'personalization',
     'optimization',
@@ -40,10 +39,17 @@ export default skill({
     '@contentful/optimization',
     '@ninetailed/experience.js',
     'run an experiment',
+    'check this URL',
+    'debug this live page',
+    'inspect network requests',
+    'check console errors',
+    'experience.ninetailed.co',
   ],
   argumentHint: '[question or topic]',
   allowedTools: [
     'mcp__contentful-mcp__*',
+    'mcp__chrome-devtools__*',
+    'mcp__plugin_*chrome-devtools*__*',
     'mcp__plugin_contentful-skills_contentful-mcp__*',
     'mcp__plugin_contentful-skills_contentful-personalization__*',
   ],
@@ -53,7 +59,7 @@ export default skill({
   package: {
     name: '@contentful/skill-contentful-personalization',
     description:
-      'Unified Contentful personalization skill covering readiness, setup, diagnostics, development, and reference documentation',
+      'Unified Contentful personalization skill covering readiness, setup, live and static diagnostics, development, and reference documentation',
     license: 'MIT',
     files: ['SKILL.md', 'scripts/**', 'bin/**', 'references/**'],
   },
@@ -69,6 +75,9 @@ export default skill({
       🚀 **onboard** — First-time setup
       "Set up personalization", "install the SDK", "am I ready?", "get started"
 
+      🌐 **live-debug** — Browser/runtime verification for a live page
+      "Check this URL", "debug this live page", "inspect network requests", "check the console"
+
       🩺 **doctor** — Broken or misconfigured setup
       "Not working", "broken", "debug", "check my setup", "fix my personalization"
 
@@ -79,16 +88,20 @@ export default skill({
       "How does X work?", "show me a pattern", "what's the API for Y?"
       If you can identify the specific topic, set the \`topic\` field.
 
+      If the user includes a live URL for browser inspection, set the \`requestedUrl\` field.
+
       If the request is ambiguous, set intent to "unclear" and confidence below 0.6.
     `,
     response: type({
-      intent: "'onboard' | 'doctor' | 'develop' | 'reference' | 'unclear'",
+      intent: "'onboard' | 'live-debug' | 'doctor' | 'develop' | 'reference' | 'unclear'",
       confidence: 'number',
+      'requestedUrl?': 'string',
       'topic?': 'string',
       reasoning: 'string',
     }),
     next: ({ response }) => {
       if (response.confidence < 0.6 || response.intent === 'unclear') return 'gather-context';
+      if (response.intent === 'live-debug') return 'subskill:live-debug';
       if (response.intent === 'reference' && response.topic) return `topic:${response.topic}`;
       if (response.intent === 'reference') return 'pick-topic';
       return `subskill:${response.intent}`;
@@ -109,20 +122,26 @@ export default skill({
       ## Decision logic
 
       - SDK **not installed** → likely **onboard**
+      - User explicitly asks to inspect a live URL, browser traffic, console, or runtime requests
+        → **live-debug**
       - SDK **installed** but provider missing or broken config → likely **doctor**
       - SDK **installed** and working (provider present, components wired) → likely **develop**
       - User asking conceptual/reference questions → likely **reference**
 
       Base your classification on what you find in the code. If evidence is still thin,
       make your best guess — do NOT default to asking the user. Every request fits
-      one of these four categories.
+      one of these five categories.
+
+      If the user included a live URL for browser inspection, set the \`requestedUrl\` field.
     `,
     response: type({
-      intent: "'onboard' | 'doctor' | 'develop' | 'reference'",
+      intent: "'onboard' | 'live-debug' | 'doctor' | 'develop' | 'reference'",
+      'requestedUrl?': 'string',
       'topic?': 'string',
       reasoning: 'string',
     }),
     next: ({ response }) => {
+      if (response.intent === 'live-debug') return 'subskill:live-debug';
       if (response.intent === 'reference' && response.topic) return `topic:${response.topic}`;
       if (response.intent === 'reference') return 'pick-topic';
       return `subskill:${response.intent}`;
@@ -235,8 +254,15 @@ export default skill({
         /ready|readiness|can.*support|prerequisite|pre-check/i.test(''),
     }),
   })
+  .subskill('live-debug', liveDebugSkill, {
+    params: (output) => ({
+      requestedUrl: (output as { requestedUrl?: string })?.requestedUrl,
+    }),
+  })
   .subskill('doctor', doctorSkill, {
-    params: () => ({ userQuery: '' }),
+    params: () => ({
+      userQuery: '',
+    }),
   })
   .subskill('develop', developSkill, {
     params: () => ({ userQuery: '' }),

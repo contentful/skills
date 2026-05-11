@@ -16,6 +16,10 @@ export default skill({
     'inspects Contentful content state, and helps fix problems.',
   entry: 'explore',
 
+  params: type({
+    'userQuery?': 'string',
+  }),
+
   stores: {
     project: type({
       framework: 'string',
@@ -43,7 +47,7 @@ export default skill({
       summary: 'string',
     }),
   },
-})
+  })
   .step('explore', {
     prompt: ({ refs }) => prompt`
         Explore this project to understand the current personalization setup.

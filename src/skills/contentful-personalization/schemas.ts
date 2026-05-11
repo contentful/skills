@@ -109,6 +109,29 @@ export const Recommendation = type({
 });
 export type Recommendation = typeof Recommendation.infer;
 
+// --- live-debug runtime inspection ---
+
+export const RuntimeRequestSummary = type({
+  url: 'string',
+  method: 'string',
+  status: 'number',
+  summary: 'string',
+});
+export type RuntimeRequestSummary = typeof RuntimeRequestSummary.infer;
+
+export const RuntimeCheckResult = type({
+  url: 'string',
+  overallStatus: "'pass' | 'warn' | 'fail'",
+  summary: 'string',
+  consoleSummary: 'string',
+  requestCount: 'number',
+  requests: RuntimeRequestSummary.array(),
+  findings: Finding.array(),
+  recommendations: Recommendation.array(),
+  shouldRunDoctor: 'boolean',
+});
+export type RuntimeCheckResult = typeof RuntimeCheckResult.infer;
+
 // --- inspectContent action ---
 
 const EntryApiState = type({
