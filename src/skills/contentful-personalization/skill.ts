@@ -304,12 +304,12 @@ export default skill({
         3. Wait for it to settle.
         4. Reload it once so startup requests are visible.
         5. Inspect console errors and warnings.
-        6. Inspect network traffic, but ONLY requests whose URL contains \`experience.ninetailed.co\`.
+        6. Inspect network traffic, but ONLY requests whose URL contains \`ninetailed.co\` (this includes \`experience.ninetailed.co\` and \`*.insights.ninetailed.co\`).
         7. If matching requests exist, inspect up to 3 representative requests in detail.
 
         ## What to report
         - Whether any meaningful console issues were present
-        - Whether requests to \`experience.ninetailed.co\` were sent
+        - Whether requests to \`ninetailed.co\` were sent (experience API and/or analytics)
         - Method, status, and a sanitized payload-shape summary for representative requests
         - Whether the runtime evidence suggests a likely implementation/configuration issue worth escalating into the static doctor flow
 
@@ -356,14 +356,14 @@ export default skill({
               })),
               { columns: ['URL', 'Method', 'Status', 'Summary'] },
             )
-          : '*No requests to `experience.ninetailed.co` were detected*';
+          : '*No requests to `ninetailed.co` were detected*';
 
       const sections = [
         `# 🌐 Live Debug Report\n`,
         `## ${statusIcon} Overall: ${result.overallStatus.toUpperCase()}\n`,
         result.summary,
         render.section('🖥️ Console Summary', result.consoleSummary),
-        render.section('🌐 experience.ninetailed.co Requests', requestsTable),
+        render.section('🌐 ninetailed.co Requests', requestsTable),
         render.section('🔍 Findings', findingsTable),
         render.section('💡 Recommendations', formatRuntimeRecommendations(result.recommendations)),
       ];
