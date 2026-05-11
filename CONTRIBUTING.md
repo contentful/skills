@@ -20,7 +20,7 @@ ln -sn "$(pwd)/local-skills/skills" .agents/skills
 To test the Claude plugin locally from this repository root:
 
 ```sh
-claude --plugin-dir /path/to/contentful/skills
+claude --plugin-dir "$PWD"
 ```
 
 This loads the local plugin directly without installing it from a marketplace.
