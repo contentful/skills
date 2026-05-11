@@ -18,9 +18,6 @@ export default skill({
 
   params: type({
     'userQuery?': 'string',
-    'triggeredByLiveDebug?': 'boolean',
-    'runtimeUrl?': 'string',
-    'runtimeSummary?': 'string',
   }),
 
   stores: {
@@ -50,22 +47,12 @@ export default skill({
       summary: 'string',
     }),
   },
-})
+  })
   .step('explore', {
-    prompt: ({ params, refs }) => prompt`
+    prompt: ({ refs }) => prompt`
         Explore this project to understand the current personalization setup.
         You are gathering facts about the CURRENT state — do NOT diagnose problems
         or suggest fixes yet. That happens in a later step.
-
-        ${params?.triggeredByLiveDebug
-          ? `
-        ## Runtime Context From Live Debug
-        A prior live browser inspection of ${params.runtimeUrl ?? 'the provided URL'} suggested something is off.
-        Runtime summary: ${params.runtimeSummary ?? 'No runtime summary was provided.'}
-
-        Use that runtime evidence as a clue while exploring the codebase, but keep this step focused on code and configuration facts.
-        `
-          : ''}
 
         ## What to investigate (in priority order)
 
