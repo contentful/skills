@@ -2,10 +2,6 @@ import { skill, type, prompt, act, render, view, terminal } from '@contentful/sk
 import { RuntimeCheckResult } from '../schemas.js';
 import { VERSION } from '../version.js';
 
-function getChromeDevToolsToolMatches(tools: string[]) {
-  return tools.filter((tool) => tool.startsWith('mcp__chrome-devtools__') || tool.includes('chrome-devtools'));
-}
-
 function getLiveDebugUrl(store: {
   steps: {
     'request-url'?: { url?: string };
@@ -82,27 +78,30 @@ export default skill({
   }),
 })
   .step('check-mcp', {
-    prompt: ({ host }) => {
-      const matches = getChromeDevToolsToolMatches(host.toolsAvailable);
+    prompt: ({ host }) => prompt`
+      Determine whether the available tools are sufficient for this live browser debugging workflow.
+      Do not ask the user anything. Use only the host tool list below.
 
-      return prompt`
-        Determine whether Chrome DevTools MCP is available for this run.
-        Do not ask the user anything. Use only the host tool list below.
+      You are looking for browser debugging tools that would let you:
+      - open or control a browser page
+      - inspect console messages
+      - inspect network requests
 
-        Return:
-        - \`mcpAvailable\` = true if one or more tools clearly belong to Chrome DevTools MCP
-        - \`matchedTools\` = the exact matching tool names shown below
+      Tool names may be host- or plugin-prefixed, so do not rely on one exact naming convention.
 
-        ## Host
-        ${host.host}
+      Return:
+      - \`mcpAvailable\` = true if the available tools appear sufficient for this workflow
+      - \`reason\` = a brief explanation citing the relevant tools or the capability gap
 
-        ## Matching Chrome DevTools MCP tools
-        ${matches.length > 0 ? matches.map((tool) => `- ${tool}`).join('\n') : '(none)'}
-      `;
-    },
+      ## Host
+      ${host.host}
+
+      ## Available tools
+      ${host.toolsAvailable.length > 0 ? host.toolsAvailable.map((tool) => `- ${tool}`).join('\n') : '(none)'}
+    `,
     response: type({
       mcpAvailable: 'boolean',
-      matchedTools: 'string[]',
+      reason: 'string',
     }),
     next: ({ response, params }) => {
       if (!response.mcpAvailable) return 'install-mcp';

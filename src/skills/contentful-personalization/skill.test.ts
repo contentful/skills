@@ -110,7 +110,7 @@ test('classify routes live URL requests to live-debug', async () => {
       },
       'live-debug/check-mcp': {
         mcpAvailable: false,
-        matchedTools: [],
+        reason: 'No browser debugging tools were available.',
       },
       'live-debug/install-mcp': { message: 'Install Chrome DevTools MCP and rerun' },
     }),
@@ -181,11 +181,17 @@ test('reference without topic routes to pick-topic', async () => {
 test('live-debug uses provided URL and finishes when runtime looks healthy', async () => {
   const result = await runSkill(liveDebugSkill, {
     params: { requestedUrl: 'https://example.com/personalized' },
-    host: { toolsAvailable: ['mcp__chrome-devtools__new_page', 'mcp__chrome-devtools__list_network_requests'] },
+    host: {
+      toolsAvailable: [
+        'mcp__chrome-devtools__new_page',
+        'mcp__chrome-devtools__list_console_messages',
+        'mcp__chrome-devtools__list_network_requests',
+      ],
+    },
     model: mockModel({
       'check-mcp': {
         mcpAvailable: true,
-        matchedTools: ['mcp__chrome-devtools__new_page', 'mcp__chrome-devtools__list_network_requests'],
+        reason: 'The host exposes page control plus console and network inspection tools.',
       },
       inspect: {
         url: 'https://example.com/personalized',
@@ -215,11 +221,17 @@ test('live-debug uses provided URL and finishes when runtime looks healthy', asy
 
 test('live-debug asks for URL when one was not provided', async () => {
   const result = await runSkill(liveDebugSkill, {
-    host: { toolsAvailable: ['mcp__chrome-devtools__new_page'] },
+    host: {
+      toolsAvailable: [
+        'mcp__chrome-devtools__new_page',
+        'mcp__chrome-devtools__list_console_messages',
+        'mcp__chrome-devtools__list_network_requests',
+      ],
+    },
     model: mockModel({
       'check-mcp': {
         mcpAvailable: true,
-        matchedTools: ['mcp__chrome-devtools__new_page'],
+        reason: 'The host exposes page control plus console and network inspection tools.',
       },
       'request-url': { url: 'https://example.com/live' },
       inspect: {
@@ -243,11 +255,17 @@ test('live-debug asks for URL when one was not provided', async () => {
 test('live-debug recommends doctor when runtime looks suspicious', async () => {
   const result = await runSkill(liveDebugSkill, {
     params: { requestedUrl: 'https://example.com/personalized' },
-    host: { toolsAvailable: ['mcp__chrome-devtools__new_page', 'mcp__chrome-devtools__list_console_messages'] },
+    host: {
+      toolsAvailable: [
+        'mcp__chrome-devtools__new_page',
+        'mcp__chrome-devtools__list_console_messages',
+        'mcp__chrome-devtools__list_network_requests',
+      ],
+    },
     model: mockModel({
       'check-mcp': {
         mcpAvailable: true,
-        matchedTools: ['mcp__chrome-devtools__new_page', 'mcp__chrome-devtools__list_console_messages'],
+        reason: 'The host exposes page control plus console and network inspection tools.',
       },
       inspect: {
         url: 'https://example.com/personalized',
