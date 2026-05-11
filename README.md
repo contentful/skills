@@ -237,6 +237,22 @@ The `contentful-personalization` skill includes a local MCP server that powers i
 
 ---
 
+## Local Plugin Testing (Claude Code)
+
+To test the full plugin locally — including skills, MCP servers, and hooks — without publishing:
+
+```bash
+claude --plugin-dir /path/to/contentful/skills
+```
+
+This loads everything defined in `.claude-plugin/plugin.json` for that session: skills, the Contentful MCP server, and the personalization MCP server. Use `/reload-plugins` inside the session to pick up changes without restarting.
+
+You can also combine multiple plugin directories:
+
+```bash
+claude --plugin-dir ./skills --plugin-dir ./other-plugin
+```
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines. We welcome bug reports, feature requests, and pull requests.
