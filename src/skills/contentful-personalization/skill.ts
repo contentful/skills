@@ -300,11 +300,12 @@ export default skill({
 
         ## Required workflow
         1. Open the page.
-        2. Wait for it to settle.
-        3. Reload it once so startup requests are visible.
-        4. Inspect console errors and warnings.
-        5. Inspect network traffic, but ONLY requests whose URL contains \`experience.ninetailed.co\`.
-        6. If matching requests exist, inspect up to 3 representative requests in detail.
+        2. If a cookie consent banner is visible, accept/approve it — personalization and analytics require consent cookies to function fully.
+        3. Wait for it to settle.
+        4. Reload it once so startup requests are visible.
+        5. Inspect console errors and warnings.
+        6. Inspect network traffic, but ONLY requests whose URL contains \`experience.ninetailed.co\`.
+        7. If matching requests exist, inspect up to 3 representative requests in detail.
 
         ## What to report
         - Whether any meaningful console issues were present
