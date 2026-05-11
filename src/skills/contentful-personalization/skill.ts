@@ -9,13 +9,11 @@ export default skill({
   name: 'contentful-personalization',
   version: VERSION,
   description:
-    'Set up, debug, and develop with Contentful personalization and optimization. ' +
-    'Covers readiness assessment, guided SDK installation, static diagnostics, live browser debugging, ' +
-    'day-to-day development, and reference documentation for personalization SDKs, ' +
-    'APIs, and patterns. Use when asked about personalization, optimization, ninetailed, ' +
-    'A/B testing, experiments, multivariate tests, audience targeting, segments, ' +
-    'content variants, Contentful Experiences, Experiences SDK, Studio Experiences, ' +
-    'or the experience API.',
+    'Set up, debug, and build with Contentful personalization and optimization. ' +
+    'Covers readiness, SDK install guidance, static diagnostics, live browser debugging, ' +
+    'development help, and reference patterns. Use for personalization, optimization, ' +
+    'ninetailed, A/B testing, experiments, audience targeting, Contentful Experiences, ' +
+    'Experiences SDK, Studio Experiences, and the experience API.',
   triggers: [
     'personalization',
     'optimization',
