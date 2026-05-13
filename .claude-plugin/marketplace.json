@@ -1,4 +1,5 @@
 {
+  "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
   "name": "contentful",
   "owner": {
     "name": "Contentful",
@@ -10,9 +11,12 @@
   },
   "plugins": [
     {
-      "name": "contentful-skills",
+      "name": "contentful",
       "description": "Contentful and Personalization skills",
       "source": "./",
+      "category": "productivity",
+      "keywords": ["contentful", "cms", "personalization", "analytics", "ninetailed"],
+      "tags": ["contentful", "cms", "personalization", "analytics", "ninetailed"],
       "skills": [
         "./skills/contentful-api",
         "./skills/contentful-guide",

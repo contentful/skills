@@ -28,7 +28,7 @@ Two commands. You get five skills plus live MCP connections to your Contentful s
 
 ```
 /plugin marketplace add contentful/skills
-/plugin install contentful-skills@contentful
+/plugin install contentful@contentful
 ```
 
 Run `/reload-plugins` to activate. This registers two MCP servers:

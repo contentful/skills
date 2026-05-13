@@ -1,5 +1,5 @@
 {
-  "name": "contentful-skills",
+  "name": "contentful",
   "owner": {
     "name": "Contentful",
     "email": "skills@contentful.com"
@@ -10,9 +10,12 @@
   },
   "plugins": [
     {
-      "name": "contentful-skills",
+      "name": "contentful",
       "source": "./",
-      "description": "Skills for the Contentful Platform (CMS, Personalization, Analytics, etc.)"
+      "description": "Skills for the Contentful Platform (CMS, Personalization, Analytics, etc.)",
+      "category": "productivity",
+      "keywords": ["contentful", "cms", "personalization", "analytics", "ninetailed"],
+      "tags": ["contentful", "cms", "personalization", "analytics", "ninetailed"]
     }
   ]
 }
