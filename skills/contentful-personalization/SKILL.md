@@ -2,7 +2,7 @@
 name: contentful-personalization
 description: "Set up, debug, and build with Contentful personalization and optimization. Covers readiness, SDK install guidance, static diagnostics, live browser debugging, development help, and reference patterns. Use for personalization, optimization, ninetailed, A/B testing, experiments, audience targeting, Contentful Experiences, Experiences SDK, Studio Experiences, and the experience API. Trigger keywords: personalization, optimization, ninetailed, A/B test, experiment, multivariate test, targeting, audience targeting, segments, variants, content variants, set up personalization, personalization not working, personalization broken, personalize this component, am I ready for personalization, experience API, Contentful Experiences, Experiences SDK, Studio Experiences, personalization in Next.js, @contentful/optimization, @ninetailed/experience.js, run an experiment, check this URL, debug this live page, inspect network requests, check console errors, experience.ninetailed.co"
 metadata:
-  version: "1.9.0"
+  version: "2.0.0"
 argument-hint: "[question or topic]"
 allowed-tools: "Bash(scripts/run *) Read mcp__contentful-personalization__start mcp__contentful-personalization__advance mcp__contentful-personalization__topic mcp__contentful-personalization__topics mcp__contentful-mcp__* mcp__chrome-devtools__* mcp__plugin_*chrome-devtools*__* mcp__plugin_contentful_contentful-mcp__* mcp__plugin_contentful_contentful-personalization__*"
 license: "MIT"

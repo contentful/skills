@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Skills for the Contentful Platform (CMS, Personalization, Analytics, etc.)",
-    "version": "1.9.0"
+    "version": "2.0.0"
   },
   "plugins": [
     {
@@ -15,8 +15,20 @@
       "description": "Contentful and Personalization skills",
       "source": "./",
       "category": "productivity",
-      "keywords": ["contentful", "cms", "personalization", "analytics", "ninetailed"],
-      "tags": ["contentful", "cms", "personalization", "analytics", "ninetailed"],
+      "keywords": [
+        "contentful",
+        "cms",
+        "personalization",
+        "analytics",
+        "ninetailed"
+      ],
+      "tags": [
+        "contentful",
+        "cms",
+        "personalization",
+        "analytics",
+        "ninetailed"
+      ],
       "skills": [
         "./skills/contentful-api",
         "./skills/contentful-guide",
