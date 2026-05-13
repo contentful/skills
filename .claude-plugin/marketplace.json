@@ -14,6 +14,7 @@
       "description": "Contentful and Personalization skills",
       "source": "./",
       "skills": [
+        "./skills/contentful-api",
         "./skills/contentful-guide",
         "./skills/contentful-migration",
         "./skills/contentful-nextjs",
