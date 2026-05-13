@@ -13,7 +13,7 @@
 
 [![version](https://img.shields.io/badge/v1.5.1-0286FF?style=flat&label=version)](https://github.com/contentful/skills/releases)
 [![license](https://img.shields.io/badge/MIT-grey?style=flat&label=license)](LICENSE)
-[![skills](https://img.shields.io/badge/4_skills-0286FF?style=flat&label=)](skills/)
+[![skills](https://img.shields.io/badge/5_skills-0286FF?style=flat&label=)](skills/)
 [![platforms](https://img.shields.io/badge/35%2B_platforms-0286FF?style=flat&label=)](https://agentskills.io)
 
 </div>
@@ -24,7 +24,7 @@ AI coding agents write great code but know nothing about your content model, you
 
 ## Quickstart — Claude Code
 
-Two commands. You get four skills plus live MCP connections to your Contentful spaces.
+Two commands. You get five skills plus live MCP connections to your Contentful spaces.
 
 ```
 /plugin marketplace add contentful/skills
@@ -42,6 +42,7 @@ Run `/reload-plugins` to activate. This registers two MCP servers:
 | Skill | What it does |
 |:------|:-------------|
 | **[contentful-guide](#contentful-guide)** | Explains core concepts and routes you to the right skill, API, or doc. Start here. |
+| **[contentful-api](#contentful-api)** | Language-agnostic REST and GraphQL API reference — curl examples for CMA, CDA, CPA, Images, and GraphQL. |
 | **[contentful-nextjs](#contentful-nextjs)** | Integrates Contentful into a Next.js project — SDK setup, content fetching, Draft Mode previews. |
 | **[contentful-migration](#contentful-migration)** | Writes and runs content model migration scripts — fields, validations, transforms, editor interfaces. |
 | **[contentful-personalization](#contentful-personalization)** | Sets up, debugs, and develops personalization and A/B testing with the Experiences SDK. |
@@ -87,7 +88,7 @@ Skills auto-discover from `.agents/skills/` when added to your project. Use `/sk
 npx skills add contentful/skills --skill contentful-personalization
 ```
 
-Available: `contentful-guide`, `contentful-nextjs`, `contentful-migration`, `contentful-personalization`
+Available: `contentful-guide`, `contentful-api`, `contentful-nextjs`, `contentful-migration`, `contentful-personalization`
 
 </details>
 
@@ -111,6 +112,28 @@ Explains core Contentful concepts and routes you to the right skill or documenta
 - API selection — CDA vs CPA vs CMA vs GraphQL vs Images API
 - Routing to the right implementation skill
 - Contentful MCP server orientation
+
+</details>
+
+### contentful-api
+
+Language-agnostic reference for Contentful's REST and GraphQL APIs. Pair this with any framework or language — examples are curl-based.
+
+<details>
+<summary>Triggers and details</summary>
+
+<br />
+
+**Activates on:** "curl Contentful", "CMA request", "CDA query parameters", "publish entry HTTP", "Images API URL", "Contentful GraphQL query"
+
+**Covers:**
+- Authentication — token types, headers, US/EU base URLs
+- HTTP conventions — version locking, rate limits, pagination, error payloads, locale structure
+- Content Management API — entries, content types, assets, environments, bulk actions
+- Content Delivery API — querying, includes/link resolution, localization, sync
+- Content Preview API — draft + published content via CDA endpoints
+- Images API — on-the-fly transformations via URL parameters
+- GraphQL Content API — querying with CDA tokens
 
 </details>
 

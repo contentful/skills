@@ -13,7 +13,8 @@ description: >-
   "Remix Contentful", "Astro Contentful", "Gatsby Contentful",
   "SvelteKit Contentful", "Nuxt Contentful". Not for framework-specific
   implementation (contentful-nextjs), migrations (contentful-migration),
-  or personalization (contentful-personalization).
+  personalization (contentful-personalization), or hands-on REST/GraphQL
+  request examples (contentful-api).
 argument-hint: "[concept or API name]"
 allowed-tools: mcp__contentful-mcp__* mcp__plugin_contentful-skills_contentful-mcp__*
 ---
@@ -35,6 +36,8 @@ Contentful is a headless, API-first CMS (composable content platform) where team
 
 - If the user asks to add Contentful to a Next.js project, use the contentful-nextjs skill.
 - If the user asks about optimization/personalization/analytics setup or debugging, route to the `contentful-personalization` skill.
+- If the user asks to write content type migrations or schema changes, route to the `contentful-migration` skill.
+- If the user asks for concrete REST/GraphQL requests (curl examples, headers, query parameters, payload shapes for CMA/CDA/CPA/Images/GraphQL), route to the `contentful-api` skill.
 - If the user asks for conceptual guidance, architecture tradeoffs, or where to read docs, stay in this skill.
 - If the user asks about environment aliases and deployment workflows, stay in this skill unless they also ask for framework implementation.
 

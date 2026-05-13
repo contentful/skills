@@ -34,6 +34,18 @@ Route when the user asks about:
 
 That skill is unified: it covers onboarding (readiness and setup), day-to-day development, and diagnostics (`doctor` flow) in one install.
 
+## Route to the `contentful-api` skill
+
+Route when the user asks for concrete request-level details against the Contentful APIs:
+
+- curl/HTTP examples for CMA, CDA, CPA, Images, or GraphQL,
+- query parameters, filters, pagination, locales, includes, link resolution,
+- request headers, version locking, rate limits, error payload shapes,
+- entry/asset/content-type/environment CRUD payloads,
+- bulk actions and sync endpoints.
+
+Prefer this skill over framework-specific skills when the user wants to understand the API itself rather than wire it into a particular SDK or framework.
+
 ## Notes
 
 - If user intent mixes concepts and implementation, answer conceptually in 1-3 bullets, then route.
