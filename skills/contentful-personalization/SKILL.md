@@ -4,7 +4,7 @@ description: "Set up, debug, and build with Contentful personalization and optim
 metadata:
   version: "1.9.0"
 argument-hint: "[question or topic]"
-allowed-tools: "Bash(scripts/run *) Read mcp__contentful-personalization__start mcp__contentful-personalization__advance mcp__contentful-personalization__topic mcp__contentful-personalization__topics mcp__contentful-mcp__* mcp__chrome-devtools__* mcp__plugin_*chrome-devtools*__* mcp__plugin_contentful-skills_contentful-mcp__* mcp__plugin_contentful-skills_contentful-personalization__*"
+allowed-tools: "Bash(scripts/run *) Read mcp__contentful-personalization__start mcp__contentful-personalization__advance mcp__contentful-personalization__topic mcp__contentful-personalization__topics mcp__contentful-mcp__* mcp__chrome-devtools__* mcp__plugin_*chrome-devtools*__* mcp__plugin_contentful_contentful-mcp__* mcp__plugin_contentful_contentful-personalization__*"
 license: "MIT"
 ---
 

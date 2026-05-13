@@ -16,7 +16,7 @@ description: >-
   personalization (contentful-personalization), or hands-on REST/GraphQL
   request examples (contentful-api).
 argument-hint: "[concept or API name]"
-allowed-tools: mcp__contentful-mcp__* mcp__plugin_contentful-skills_contentful-mcp__*
+allowed-tools: mcp__contentful-mcp__* mcp__plugin_contentful_contentful-mcp__*
 ---
 
 # Contentful Guide

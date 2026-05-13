@@ -1,5 +1,6 @@
 {
-  "name": "contentful-skills",
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "contentful",
   "version": "1.9.0",
   "description": "Agent skills for Contentful optimization",
   "author": {
