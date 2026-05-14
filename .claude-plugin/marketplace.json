@@ -35,8 +35,8 @@
       ],
       "skills": [
         "./skills/contentful-api",
-        "./skills/contentful-custom-app-enhancement",
-        "./skills/contentful-custom-app-from-scratch",
+        "./skills/contentful-apps/contentful-custom-app-enhancement",
+        "./skills/contentful-apps/contentful-custom-app-from-scratch",
         "./skills/contentful-guide",
         "./skills/contentful-migration",
         "./skills/contentful-nextjs",

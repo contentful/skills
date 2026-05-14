@@ -49,6 +49,8 @@ Run `/reload-plugins` to activate. This registers two MCP servers:
 | **[contentful-custom-app-enhancement](#contentful-custom-app-enhancement)** | Improves and debugs existing Contentful custom apps in customer-owned repos. |
 | **[contentful-personalization](#contentful-personalization)** | Sets up, debugs, and develops personalization and A/B testing with the Experiences SDK. |
 
+The custom app skills are packaged together under `skills/contentful-apps/`.
+
 ---
 
 ## Other platforms

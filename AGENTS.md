@@ -13,7 +13,7 @@ skills/                    Distributed to customers via `npx skills add contentf
 
 `skills/` is the **distribution boundary**. Only its contents are installed to customer environments. Everything outside (`AGENTS.md`, `.agents/`, `.claude-plugin/`) stays in the repo.
 
-The `skills` CLI discovers skills recursively, so subdirectories work correctly. Skills are organized in a flat structure directly under `skills/` (e.g., `skills/contentful-personalization/`).
+The `skills` CLI discovers skills recursively, so subdirectories work correctly. Most skills are organized in a flat structure directly under `skills/` (e.g., `skills/contentful-personalization/`). Closely related skills can be grouped under a domain folder, such as `skills/contentful-apps/`.
 
 ## Skill Requirements
 
