@@ -94,7 +94,7 @@ The `--mode node` flag produces a single `.mjs` bundle that runs on the host's N
 1. Create source at `src/skills/<skill-name>/skill.ts`
 2. Add a build script to `package.json`
 3. Build: `pnpm run build`
-4. Verify: `python3 .disabled/skills/skill-authoring/scripts/quick_validate.py skills/<skill-name>`
+4. Verify: `python3 local-skills/skills/skill-authoring/scripts/quick_validate.py skills/<skill-name>`
 5. Commit both source and build output
 
 ## Distribution

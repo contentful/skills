@@ -6,17 +6,19 @@
     "email": "skills@contentful.com"
   },
   "metadata": {
-    "description": "Skills for the Contentful Platform (CMS, Personalization, Analytics, etc.)",
+    "description": "Skills for Contentful apps, APIs, migrations, personalization, and analytics",
     "version": "2.0.0"
   },
   "plugins": [
     {
       "name": "contentful",
-      "description": "Contentful and Personalization skills",
+      "description": "Contentful apps, API, migration, and personalization skills",
       "source": "./",
       "category": "productivity",
       "keywords": [
         "contentful",
+        "app-framework",
+        "custom-apps",
         "cms",
         "personalization",
         "analytics",
@@ -24,6 +26,8 @@
       ],
       "tags": [
         "contentful",
+        "app-framework",
+        "custom-apps",
         "cms",
         "personalization",
         "analytics",
@@ -31,6 +35,8 @@
       ],
       "skills": [
         "./skills/contentful-api",
+        "./skills/contentful-custom-app-enhancement",
+        "./skills/contentful-custom-app-from-scratch",
         "./skills/contentful-guide",
         "./skills/contentful-migration",
         "./skills/contentful-nextjs",

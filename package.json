@@ -21,7 +21,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test --import tsx/esm 'src/skills/**/*.test.ts'",
     "build": "skill-kit build src/skills/contentful-personalization/skill.ts -o skills/contentful-personalization --mode node",
-    "validate": "python3 .disabled/skills/skill-authoring/scripts/quick_validate.py skills --all",
+    "validate": "python3 local-skills/skills/skill-authoring/scripts/quick_validate.py skills --all",
     "update-licenses": "node ./scripts/update-licenses.mjs"
   },
   "pnpm": {
