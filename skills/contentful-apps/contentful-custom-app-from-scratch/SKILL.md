@@ -27,6 +27,11 @@ Contentful App Framework implementation.
 Default to the user's own repository, Contentful organization, and app delivery
 workflow unless they explicitly choose another destination.
 
+Public Contentful Marketplace apps and Contentful's public apps repository
+(`https://github.com/contentful/apps`) can be useful references for mature App
+Framework patterns, UX conventions, and configuration flows. Use them as
+examples to adapt, not as required repo structure or publication process.
+
 ## Working Style
 
 - Start with the app's job, primary users, affected content model, and target

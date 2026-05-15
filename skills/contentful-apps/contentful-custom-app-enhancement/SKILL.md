@@ -28,6 +28,11 @@ Default to the user's app repository and workflow. Do not assume a specific
 repository convention, publication process, or review policy unless the user
 provides one.
 
+When a comparable public Contentful Marketplace app or example in Contentful's
+public apps repository (`https://github.com/contentful/apps`) exists, use it as
+a best practice reference for App Framework patterns and UX polish without
+inheriting its release or distribution workflow.
+
 ## Inputs
 
 Accept:
