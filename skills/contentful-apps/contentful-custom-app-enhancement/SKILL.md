@@ -24,9 +24,9 @@ allowed-tools: mcp__contentful-mcp__* mcp__plugin_contentful_contentful-mcp__*
 Use this skill to turn a bug report, support note, or feature request into a
 small, reviewable improvement for an existing Contentful custom app.
 
-Default to the user's app repository and workflow. Do not assume the app belongs
-to a Contentful-owned Marketplace repository or follows Contentful internal PR
-rules.
+Default to the user's app repository and workflow. Do not assume a specific
+repository convention, publication process, or review policy unless the user
+provides one.
 
 ## Inputs
 
@@ -161,7 +161,8 @@ If the user only asked for the fix, end with:
 - Do not force a code change when the better answer is product clarification.
 - Do not overfit one vague report without saying what is uncertain.
 - Do not widen the scope into a rewrite unless the user asks.
-- Do not assume app users have Marketplace publication requirements.
+- Do not assume app users have publication or distribution requirements unless
+  they say so.
 - Do not claim Contentful plan features, SDK behavior, or API limits from memory
   when current official docs should be checked.
 

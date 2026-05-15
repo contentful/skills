@@ -6,11 +6,12 @@ description: >-
   create a custom app from an idea, choose App Framework locations, build a
   sidebar app, field editor app, page app, dialog, configuration screen, App
   Action, or Function-backed app, scaffold with create-contentful-app, or make a
-  locally testable internal Contentful app. Also triggers on "build a
-  Contentful app", "custom app from scratch", "App Framework app", "sidebar
-  app", "field editor app", "page app", "app action", and "app function". Not
-  for generic Contentful API examples (contentful-api), content model migrations
-  (contentful-migration), or website integration (contentful-nextjs).
+  locally testable app for an organization-specific Contentful workflow. Also
+  triggers on "build a Contentful app", "custom app from scratch", "App
+  Framework app", "sidebar app", "field editor app", "page app", "app action",
+  and "app function". Not for generic Contentful API examples (contentful-api),
+  content model migrations (contentful-migration), or website integration
+  (contentful-nextjs).
 license: MIT
 metadata:
   author: contentful
@@ -23,9 +24,8 @@ allowed-tools: mcp__contentful-mcp__* mcp__plugin_contentful_contentful-mcp__*
 Use this skill to turn a customer app idea into a small, locally testable
 Contentful App Framework implementation.
 
-Default to the user's own repository and Contentful organization. The public
-Contentful Apps repository can be useful as a pattern reference, but it is not
-the destination unless the user explicitly chooses it.
+Default to the user's own repository, Contentful organization, and app delivery
+workflow unless they explicitly choose another destination.
 
 ## Working Style
 

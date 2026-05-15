@@ -85,7 +85,7 @@ Use a backend, App Action, or Function when:
 - the app handles events or external callbacks,
 - another app or service needs a stable server-side endpoint.
 
-Functions are available only for eligible plans and partners, so confirm plan
+Functions are available only for eligible accounts and plans, so confirm
 availability before making them a v1 requirement.
 
 ## Security Checks
