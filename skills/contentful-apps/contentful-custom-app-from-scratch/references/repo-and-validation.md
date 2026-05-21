@@ -52,6 +52,11 @@ Run the checks that exist in the project:
 - Build: production build or app bundle command.
 - Manual smoke: Contentful web app flow with local app URL.
 - Security: no secrets in code, logs, test data, screenshots, or docs.
+- Runtime config: if app code reads installation parameters, search for
+  `appInstallation.getForOrganization`, `appInstallation.get`, and
+  `getForOrganization`; runtime reads should come from
+  `sdk.parameters.installation` unless a CMA app-installation call is explicitly
+  needed for remote installation records.
 
 If a check is missing, do not invent a passing result. State the gap and run the
 closest meaningful alternative.

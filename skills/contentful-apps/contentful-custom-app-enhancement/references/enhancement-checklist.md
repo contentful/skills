@@ -23,6 +23,9 @@ Use this reference while improving an existing Contentful custom app.
 - App definition, deployment, or bundle configuration.
 - Installation parameter schemas and config screens.
 - Content Management API usage.
+- Runtime reads of installation parameters; these should use
+  `sdk.parameters.installation` instead of CMA app-installation calls unless the
+  app truly needs remote installation records.
 - App Action or Function handlers.
 - Tests for the changed flow.
 - README or setup docs that explain local Contentful wiring.
@@ -77,6 +80,9 @@ Choose the checks that match the change:
 - Lint/format for touched files.
 - Production build for dependency or bundling changes.
 - Manual local app flow in the Contentful web app.
+- Runtime config search for `appInstallation.getForOrganization`,
+  `appInstallation.get`, and `getForOrganization` when installation-parameter
+  access is touched.
 - CMA smoke test for write operations.
 - App Action, Function, webhook, or backend endpoint smoke test for server-side
   changes.

@@ -115,6 +115,10 @@ If the user does not have a repo:
   workflow.
 - Keep field and entry writes explicit, reversible where possible, and easy for
   editors to understand.
+- When runtime locations need app configuration, read installation parameters
+  from `sdk.parameters.installation`. Do not fetch app installation records
+  through CMA from mount effects, render paths, hooks, or user interactions just
+  to retrieve configured parameters.
 - Avoid broad abstractions until the app has more than one real usage path.
 - Do not expose management tokens, API keys, or third-party credentials in
   browser code.
@@ -145,6 +149,9 @@ Run the closest meaningful checks available in the user's project:
 - production build,
 - local dev server smoke test,
 - manual Contentful web app flow in a non-production space.
+- `rg -n "appInstallation\\.(getForOrganization|get)\\(|getForOrganization"`
+  over the app source when runtime code reads installation parameters, with any
+  remaining CMA app-installation call explained.
 
 Do not claim the app works unless you ran the relevant validation or clearly
 state what could not be run.

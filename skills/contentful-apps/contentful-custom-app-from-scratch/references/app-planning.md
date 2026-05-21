@@ -75,7 +75,9 @@ Use the CMA from the app when:
 
 - the app needs structured content management operations,
 - those operations should happen as the current user,
-- the code can safely run in the browser without exposing secrets.
+- the code can safely run in the browser without exposing secrets,
+- the operation is not just reading installation parameters already available
+  through `sdk.parameters.installation`.
 
 Use a backend, App Action, or Function when:
 
@@ -92,6 +94,9 @@ availability before making them a v1 requirement.
 
 - Treat non-secret installation and instance parameters as readable by space
   members.
+- In runtime locations, read non-secret installation parameters from
+  `sdk.parameters.installation` instead of fetching app installation records
+  through CMA.
 - Use secret installation parameters for access tokens and private credentials.
 - Do not write tokens into source files, test fixtures, screenshots, logs, or PR
   descriptions.

@@ -123,6 +123,10 @@ Prefer improving the existing flow over replacing it.
 - Keep configuration UI explicit about what values are stored at installation
   versus instance scope.
 - Treat non-secret parameters as readable by space members.
+- When runtime locations need installation parameters, prefer
+  `sdk.parameters.installation`. Do not add or preserve CMA app-installation
+  reads in sidebar, field editor, entry editor, page, dialog, home, mount
+  effects, render paths, or click handlers just to retrieve app configuration.
 - Do not expose tokens or private credentials in client code.
 - Keep changes narrow; avoid unrelated formatting, dependency churn, or
   refactors.
@@ -137,6 +141,11 @@ Run the closest available validation:
 - production build,
 - local dev server smoke test,
 - Contentful web app manual flow in a non-production space,
+- grep or ripgrep for `appInstallation.getForOrganization`,
+  `appInstallation.get`, and `getForOrganization` when installation-parameter
+  access is touched, confirming runtime config reads use
+  `sdk.parameters.installation` or documenting why a CMA app-installation call
+  remains,
 - App Action, Function, or backend endpoint test when the change touches
   server-side behavior.
 
