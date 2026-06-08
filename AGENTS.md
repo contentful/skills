@@ -13,7 +13,7 @@ skills/                    Distributed to customers via `npx skills add contentf
 
 `skills/` is the **distribution boundary**. Only its contents are installed to customer environments. Everything outside (`AGENTS.md`, `.agents/`, `.claude-plugin/`) stays in the repo.
 
-The `skills` CLI discovers skills recursively, so subdirectories work correctly. Skills are organized in a flat structure directly under `skills/` (e.g., `skills/contentful-personalization/`).
+The `skills` CLI discovers skills recursively, so subdirectories work correctly. Most skills are organized in a flat structure directly under `skills/` (e.g., `skills/contentful-personalization/`). Closely related skills can be grouped under a domain folder, such as `skills/contentful-apps/`.
 
 ## Skill Requirements
 
@@ -94,7 +94,7 @@ The `--mode node` flag produces a single `.mjs` bundle that runs on the host's N
 1. Create source at `src/skills/<skill-name>/skill.ts`
 2. Add a build script to `package.json`
 3. Build: `pnpm run build`
-4. Verify: `python3 .disabled/skills/skill-authoring/scripts/quick_validate.py skills/<skill-name>`
+4. Verify: `python3 local-skills/skills/skill-authoring/scripts/quick_validate.py skills/<skill-name>`
 5. Commit both source and build output
 
 ## Distribution

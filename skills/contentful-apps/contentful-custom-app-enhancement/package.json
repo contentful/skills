@@ -1,0 +1,10 @@
+{
+  "name": "@contentful/skill-contentful-custom-app-enhancement",
+  "version": "2.0.0",
+  "description": "Improve, debug, and extend existing Contentful App Framework custom apps",
+  "license": "MIT",
+  "files": [
+    "SKILL.md",
+    "references/**"
+  ]
+}

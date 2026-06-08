@@ -13,7 +13,7 @@
 
 [![version](https://img.shields.io/badge/v1.5.1-0286FF?style=flat&label=version)](https://github.com/contentful/skills/releases)
 [![license](https://img.shields.io/badge/MIT-grey?style=flat&label=license)](LICENSE)
-[![skills](https://img.shields.io/badge/5_skills-0286FF?style=flat&label=)](skills/)
+[![skills](https://img.shields.io/badge/7_skills-0286FF?style=flat&label=)](skills/)
 [![platforms](https://img.shields.io/badge/35%2B_platforms-0286FF?style=flat&label=)](https://agentskills.io)
 
 </div>
@@ -24,7 +24,7 @@ AI coding agents write great code but know nothing about your content model, you
 
 ## Quickstart — Claude Code
 
-Two commands. You get five skills plus live MCP connections to your Contentful spaces.
+Two commands. You get seven skills plus live MCP connections to your Contentful spaces.
 
 ```
 /plugin marketplace add contentful/skills
@@ -45,7 +45,11 @@ Run `/reload-plugins` to activate. This registers two MCP servers:
 | **[contentful-api](#contentful-api)** | Language-agnostic REST and GraphQL API reference — curl examples for CMA, CDA, CPA, Images, and GraphQL. |
 | **[contentful-nextjs](#contentful-nextjs)** | Integrates Contentful into a Next.js project — SDK setup, content fetching, Draft Mode previews. |
 | **[contentful-migration](#contentful-migration)** | Writes and runs content model migration scripts — fields, validations, transforms, editor interfaces. |
+| **[contentful-custom-app-from-scratch](#contentful-custom-app-from-scratch)** | Designs, scaffolds, builds, and validates new App Framework custom apps. |
+| **[contentful-custom-app-enhancement](#contentful-custom-app-enhancement)** | Improves and debugs existing Contentful custom apps in customer-owned repos. |
 | **[contentful-personalization](#contentful-personalization)** | Sets up, debugs, and develops personalization and A/B testing with the Experiences SDK. |
+
+The custom app skills are packaged together under `skills/contentful-apps/`.
 
 ---
 
@@ -88,7 +92,7 @@ Skills auto-discover from `.agents/skills/` when added to your project. Use `/sk
 npx skills add contentful/skills --skill contentful-personalization
 ```
 
-Available: `contentful-guide`, `contentful-api`, `contentful-nextjs`, `contentful-migration`, `contentful-personalization`
+Available: `contentful-guide`, `contentful-api`, `contentful-nextjs`, `contentful-migration`, `contentful-custom-app-from-scratch`, `contentful-custom-app-enhancement`, `contentful-personalization`
 
 </details>
 
@@ -176,6 +180,46 @@ Write and run content model migration scripts using the Contentful migration lib
 - Entry transforms — in-place edits, deriving linked entries, moving entries between types
 - Editor interface wiring — widgets, field layout, sidebar controls
 - Best practices — sandbox testing, sequential file naming, separating schema from data changes
+
+</details>
+
+### contentful-custom-app-from-scratch
+
+Design, scaffold, build, and validate a new Contentful App Framework custom app for your own repository or workspace.
+
+<details>
+<summary>Triggers and details</summary>
+
+<br />
+
+**Activates on:** "build a Contentful app", "custom app from scratch", "App Framework app", "sidebar app", "field editor app", "page app", "app action", "app function"
+
+**Covers:**
+- Idea shaping and v1 scoping for internal custom apps
+- App location selection — app config, page, home, dialog, entry editor, entry field, entry sidebar
+- Scaffolding with `create-contentful-app`
+- App SDK, React Apps Toolkit, Forma 36, installation parameters, App Actions, and Functions guidance
+- Local Contentful setup, sandbox testing, validation, and handoff
+
+</details>
+
+### contentful-custom-app-enhancement
+
+Improve, debug, and extend an existing Contentful App Framework custom app in a customer-owned repository.
+
+<details>
+<summary>Triggers and details</summary>
+
+<br />
+
+**Activates on:** "fix my Contentful app", "improve a custom app", "enhance App Framework app", "debug custom app", "update sidebar app", "custom app feature request"
+
+**Covers:**
+- Triage from bug reports, support notes, screenshots, and feature requests
+- Existing app inspection across locations, SDK usage, parameters, App Actions, Functions, and backend code
+- Small, reviewable implementation plans
+- App-native UI and security guardrails
+- Targeted tests, local smoke checks, sandbox verification, and PR handoff
 
 </details>
 
