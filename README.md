@@ -59,6 +59,10 @@ Skills also work without the plugin on any platform that supports the [agentskil
 
 ### Cursor
 
+Install the [Contentful Cursor plugin](https://cursor.directory/plugins/contentful-1) from Cursor Directory.
+
+Alternatively, add the skills manually:
+
 1. Open **Settings** → **Rules**
 2. Click **Add Rule** → **Remote Rule (GitHub)**
 3. Enter `contentful/skills`
