@@ -1,7 +1,8 @@
 name: Traffic stats
 
 # Daily snapshot of GitHub Traffic API stats (clones, views, top referrers)
-# uploaded to s3://mcp-usage-playground/skills/. Feeds the PRDA-976
+# uploaded to s3://s3-github-mcp-skills-usage-stats-043206427008-eu-central-1-an/skills/.
+# Feeds the PRDA-976
 # dashboard for FY27 SP4 metrics. The Traffic API only retains 14 days of
 # history, so this must run at least once a fortnight to avoid permanent data
 # loss.
@@ -42,12 +43,12 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.USAGE_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.USAGE_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: eu-central-1
 
       - name: Fetch Traffic API and upload to S3
         env:
           GH_TOKEN: ${{ steps.vault.outputs.GITHUB_TOKEN }}
-          BUCKET: mcp-usage-playground
+          BUCKET: s3-github-mcp-skills-usage-stats-043206427008-eu-central-1-an
           PREFIX: skills
         run: |
           set -euo pipefail
