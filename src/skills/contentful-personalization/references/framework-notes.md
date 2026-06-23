@@ -6,8 +6,31 @@ Guidance for personalization readiness by framework.
 
 ### Provider Placement
 
-`NinetailedProvider` is a client component — it must be in a Client Component
-boundary. Typically placed in `app/layout.tsx` wrapped with `'use client'`:
+Both SDK providers are client components — they must live in a Client Component
+boundary, typically `app/providers.tsx` wrapped with `'use client'` and rendered
+from `app/layout.tsx`.
+
+**Recommended — `@contentful/optimization`** (via the Next.js adapter):
+
+```tsx
+// app/providers.tsx
+'use client';
+import { NextAppAutoPageTracker, OptimizationRoot } from '@contentful/optimization-nextjs/client';
+
+export function Providers({ children }) {
+  return (
+    <OptimizationRoot
+      clientId={process.env.NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID!}
+      environment={process.env.NEXT_PUBLIC_OPTIMIZATION_ENVIRONMENT ?? 'main'}
+    >
+      <NextAppAutoPageTracker />
+      {children}
+    </OptimizationRoot>
+  );
+}
+```
+
+**Legacy — `@ninetailed/experience.js`:**
 
 ```typescript
 // app/providers.tsx

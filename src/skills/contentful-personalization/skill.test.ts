@@ -506,13 +506,66 @@ test('derivePackagesToInstall keeps frameworkless ninetailed installs core-only'
   );
 });
 
-test('derivePackagesToInstall uses frameworkless optimization package for non-react projects', () => {
+test('derivePackagesToInstall uses the web SDK (not core) for non-react optimization installs', () => {
   assert.deepEqual(
     derivePackagesToInstall({
       sdkChoice: 'optimization',
       framework: 'other',
       architecture: 'hybrid-ssr',
     }),
-    ['@contentful/optimization-core', '@contentful/optimization-node'],
+    ['@contentful/optimization-web', '@contentful/optimization-node'],
+  );
+});
+
+test('derivePackagesToInstall uses web-only for non-react client-only optimization installs', () => {
+  assert.deepEqual(
+    derivePackagesToInstall({
+      sdkChoice: 'optimization',
+      framework: 'other',
+      architecture: 'client-only',
+    }),
+    ['@contentful/optimization-web'],
+  );
+});
+
+test('derivePackagesToInstall uses the Next.js adapter for all Next.js optimization installs', () => {
+  assert.deepEqual(
+    derivePackagesToInstall({
+      sdkChoice: 'optimization',
+      framework: 'nextjs-app',
+      architecture: 'hybrid-ssr',
+    }),
+    ['@contentful/optimization-nextjs'],
+  );
+
+  assert.deepEqual(
+    derivePackagesToInstall({
+      sdkChoice: 'optimization',
+      framework: 'nextjs-pages',
+      architecture: 'client-only',
+    }),
+    ['@contentful/optimization-nextjs'],
+  );
+});
+
+test('derivePackagesToInstall uses react-web for client-only React optimization installs', () => {
+  assert.deepEqual(
+    derivePackagesToInstall({
+      sdkChoice: 'optimization',
+      framework: 'react',
+      architecture: 'client-only',
+    }),
+    ['@contentful/optimization-react-web'],
+  );
+});
+
+test('derivePackagesToInstall adds the node SDK for server-involved React optimization installs', () => {
+  assert.deepEqual(
+    derivePackagesToInstall({
+      sdkChoice: 'optimization',
+      framework: 'remix',
+      architecture: 'server-only',
+    }),
+    ['@contentful/optimization-react-web', '@contentful/optimization-node'],
   );
 });

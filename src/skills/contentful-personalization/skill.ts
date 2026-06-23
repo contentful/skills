@@ -162,7 +162,7 @@ export default skill({
         | Key | Description |
         |-----|-------------|
         | how-personalization-works | Core concepts, content model, rendering flow |
-        | sdk-selection | Decision framework: legacy vs modern SDK |
+        | sdk-selection | Decision framework: recommended @contentful/optimization vs legacy @ninetailed/experience.js |
         | provider-patterns | Provider placement, Pages/App Router, hydration |
         | middleware-patterns | Preflight, cookies, edge personalization |
         | component-patterns | ContentTypeMap, BlockRenderer, component isolation |
@@ -171,8 +171,8 @@ export default skill({
         | analytics-and-preview | Insights plugin, event tracking, preview mode |
         | common-errors | Failure modes and fixes |
         | ssr-guide | Server-side patterns and anti-patterns |
-        | sdk-legacy-guide | @ninetailed/experience.js API reference |
-        | sdk-next-guide | @contentful/optimization API reference |
+        | sdk-next-guide | @contentful/optimization API reference (recommended) |
+        | sdk-legacy-guide | @ninetailed/experience.js API reference (legacy fallback) |
         | contentful-integration-guide | Content types, ExperienceMapper, publishing |
         | implementation-examples | Real implementation patterns and code |
       `,
@@ -192,7 +192,8 @@ export default skill({
     content: ({ refs }) => refs.load('how-personalization-works.md'),
   })
   .topic('sdk-selection', {
-    label: 'SDK decision framework: legacy (@ninetailed/experience.js) vs modern (@contentful/optimization)',
+    label:
+      'SDK decision framework: recommended @contentful/optimization vs legacy @ninetailed/experience.js fallback',
     content: ({ refs }) => refs.load('sdk-selection.md'),
   })
   .topic('provider-patterns', {
@@ -232,7 +233,7 @@ export default skill({
     content: ({ refs }) => refs.load('sdk-legacy-guide.md'),
   })
   .topic('sdk-next-guide', {
-    label: '@contentful/optimization next-gen SDK reference',
+    label: '@contentful/optimization recommended SDK reference (OptimizationRoot, hooks, Next.js adapter)',
     content: ({ refs }) => refs.load('sdk-next-guide.md'),
   })
   .topic('contentful-integration-guide', {

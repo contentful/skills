@@ -2,9 +2,158 @@
 
 # Implementation Examples
 
-Real-world implementation patterns for Contentful Personalization (Ninetailed) with Next.js, Contentful, and the SDK.
+Real-world implementation patterns for Contentful Personalization with Next.js, Contentful, and the
+SDK.
+
+The **recommended** patterns use `@contentful/optimization`. The **legacy** patterns (using
+`@ninetailed/experience.js`) follow afterward and remain valid for existing Ninetailed projects.
 
 ---
+
+## Recommended: `@contentful/optimization`
+
+> Pre-release (alpha): pin versions and keep all `@contentful/optimization-*` packages aligned.
+
+### Provider setup (React)
+
+```tsx
+import { OptimizationRoot } from '@contentful/optimization-react-web';
+import { ReactRouterAutoPageTracker } from '@contentful/optimization-react-web/router/react-router';
+
+export function App() {
+  return (
+    <OptimizationRoot
+      clientId={import.meta.env.VITE_OPTIMIZATION_CLIENT_ID}
+      environment="main"
+      trackEntryInteraction={{ views: true, clicks: true }}
+    >
+      <ReactRouterAutoPageTracker />
+      <Routes>{/* ... */}</Routes>
+    </OptimizationRoot>
+  );
+}
+```
+
+### Next.js App Router (adapter)
+
+Client providers:
+
+```tsx
+// app/providers.tsx
+'use client';
+
+import { NextAppAutoPageTracker, OptimizationRoot } from '@contentful/optimization-nextjs/client';
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <OptimizationRoot
+      clientId={process.env.NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID!}
+      environment={process.env.NEXT_PUBLIC_OPTIMIZATION_ENVIRONMENT ?? 'main'}
+    >
+      <NextAppAutoPageTracker />
+      {children}
+    </OptimizationRoot>
+  );
+}
+```
+
+Server-rendered, resolved entry (first paint without flicker):
+
+```tsx
+// app/[slug]/page.tsx
+import {
+  ServerOptimizedEntry,
+  createNextjsOptimization,
+  getNextjsServerOptimizationData,
+} from '@contentful/optimization-nextjs/server';
+import { cookies, headers } from 'next/headers';
+
+const sdk = createNextjsOptimization({
+  clientId: process.env.OPTIMIZATION_CLIENT_ID!,
+  environment: 'main',
+});
+
+export default async function Page() {
+  const entry = await getPage(/* ... include: 10 ... */);
+  const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
+
+  const { data } = await getNextjsServerOptimizationData(sdk, {
+    consent: { events: true, persistence: true },
+    cookies: cookieStore,
+    headers: headerStore,
+    locale: 'en-US',
+  });
+
+  const resolvedData = sdk.resolveOptimizedEntry(entry, data?.selectedOptimizations);
+
+  return (
+    <ServerOptimizedEntry baselineEntry={entry} resolvedData={resolvedData}>
+      {resolvedData.entry.fields.title}
+    </ServerOptimizedEntry>
+  );
+}
+```
+
+### OptimizedEntry (client render prop)
+
+```tsx
+import { OptimizedEntry } from '@contentful/optimization-react-web';
+
+function HeroEntry({ baselineEntry }) {
+  return (
+    <OptimizedEntry baselineEntry={baselineEntry}>
+      {(resolvedEntry) => <Hero {...resolvedEntry.fields} />}
+    </OptimizedEntry>
+  );
+}
+```
+
+`baselineEntry` must include `nt_experiences` (fetch with `include: 10`). The new SDK resolves the
+same `nt_experiences` / `nt_variants` content model as the legacy SDK.
+
+### Actions, state, and flags (hooks)
+
+```tsx
+import {
+  useOptimization,
+  useOptimizationActions,
+  useProfileState,
+} from '@contentful/optimization-react-web';
+
+function Cta() {
+  const { track } = useOptimizationActions();              // destructurable actions
+  return <button onClick={() => track({ event: 'purchase' })}>Buy now</button>;
+}
+
+function Debug() {
+  const optimization = useOptimization();                  // SDK instance — do NOT destructure
+  const profile = useProfileState();
+  const flag = optimization.getFlag('dark-mode');
+  return <pre>{JSON.stringify({ profile, flag }, null, 2)}</pre>;
+}
+```
+
+### Data fetching (shared with the legacy patterns)
+
+Fetch a single-locale CDA entry with deep includes so `nt_experiences` and their variants resolve:
+
+```ts
+const entries = await client.getEntries({
+  content_type: 'page',
+  'fields.slug': slug,
+  include: 10,
+  limit: 1,
+});
+```
+
+Do **not** pass all-locale (`withAllLocales` / `locale=*`) responses to `OptimizedEntry`,
+`resolveOptimizedEntry()`, or `useEntryResolver()` — they expect direct single-locale field values.
+
+---
+
+## Legacy: `@ninetailed/experience.js`
+
+The remaining patterns use the legacy SDK and remain valid for existing Ninetailed projects.
 
 ## Table of Contents
 

@@ -9,7 +9,70 @@ Use these patterns to avoid scope and hydration problems.
 - Keep provider initialization stable across navigation.
 - Avoid wrapping only a subset of pages unless that is intentional.
 
-## Current Production SDKs: `@ninetailed/experience.js`
+## Recommended SDKs: `@contentful/optimization`
+
+Mount `OptimizationRoot` once near the app root. It owns the Web SDK lifecycle (creation,
+initialization, teardown). Use the router tracker subpath for the router in use.
+
+Recommended pattern:
+
+1. Put `OptimizationRoot` at the app root with `clientId` and `environment`.
+2. Mount the matching router tracker inside `OptimizationRoot`.
+3. Render personalized entries with `OptimizedEntry` (render prop).
+4. Keep the provider instance stable across route changes.
+
+Checklist:
+
+- App Router: `NextAppAutoPageTracker` from `@contentful/optimization-react-web/router/next-app`.
+- Pages Router: `NextPagesAutoPageTracker` from `@contentful/optimization-react-web/router/next-pages`.
+- React Router / TanStack: the corresponding `/router/*` subpath.
+- For full Next.js server + client + request-handler integration, prefer the
+  `@contentful/optimization-nextjs` adapter (see below).
+
+### React (non-Next)
+
+```tsx
+import { OptimizationRoot } from '@contentful/optimization-react-web';
+import { ReactRouterAutoPageTracker } from '@contentful/optimization-react-web/router/react-router';
+
+function App() {
+  return (
+    <OptimizationRoot clientId={import.meta.env.VITE_OPTIMIZATION_CLIENT_ID} environment="main">
+      <ReactRouterAutoPageTracker />
+      <Routes>{/* ... */}</Routes>
+    </OptimizationRoot>
+  );
+}
+```
+
+### Next.js App Router (via the adapter)
+
+Use the `@contentful/optimization-nextjs` adapter so the server and client share one configuration.
+
+```tsx
+// app/providers.tsx
+'use client';
+
+import { NextAppAutoPageTracker, OptimizationRoot } from '@contentful/optimization-nextjs/client';
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <OptimizationRoot
+      clientId={process.env.NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID!}
+      environment={process.env.NEXT_PUBLIC_OPTIMIZATION_ENVIRONMENT ?? 'main'}
+    >
+      {/* Use initialPageEvent="skip" only when the server already called page() for this route */}
+      <NextAppAutoPageTracker />
+      {children}
+    </OptimizationRoot>
+  );
+}
+```
+
+Wrap `children` with `<Providers>` in `app/layout.tsx`. Keep the root layout server-first and the
+provider in a client component.
+
+## Legacy SDKs: `@ninetailed/experience.js`
 
 ### Next.js Pages Router
 
@@ -54,7 +117,8 @@ Recommended pattern:
 
 1. Keep root layout server-first where possible.
 2. Put `NinetailedProvider` initialization in a dedicated client wrapper component.
-3. Add a dedicated client-side page tracker because the current SDKs do not auto-track App Router navigation.
+3. Add a dedicated client-side page tracker because the legacy SDKs do not auto-track App Router
+   navigation.
 4. Keep the provider high enough that all personalizable entries are wrapped.
 
 Example shape:
@@ -87,33 +151,24 @@ Checklist:
 - App Router navigation triggers exactly one `page()` call.
 - Initial render is deterministic between server and client.
 
-Use a dedicated tracker component for App Router navigation rather than scattering `page()` calls across many routes.
-
-## Modern SDKs: `@contentful/optimization`
-
-Recommended pattern:
-
-1. Put `OptimizationProvider` at the app root.
-2. Use the built-in router tracker for the router in use.
-3. Keep the provider instance stable across route changes.
-
-Checklist:
-
-- App Router: use `NextAppAutoPageTracker`.
-- Pages Router: use `NextPagesAutoPageTracker`.
-- Render personalized entries with `OptimizedEntry` or an equivalent resolver-based wrapper.
+Use a dedicated tracker component for App Router navigation rather than scattering `page()` calls
+across many routes.
 
 ## Hydration Safety Rules
 
-- Do not render personalized variant on server and baseline on client for the same first paint.
+- Do not render the personalized variant on the server and the baseline on the client for the same
+  first paint.
 - Avoid non-deterministic branching during initial render.
 - Keep initial data contracts consistent for baseline and variant props.
-- If SSR or edge setup passes selected experiences to the client, make that handoff deterministic and inspectable.
+- If an SSR or edge setup passes selected experiences/optimizations to the client, make that handoff
+  deterministic and inspectable.
 
 ## Common Issues
 
-- Provider placed too deep in the tree (must wrap all personalized content)
-- Missing `clientId` prop (API key not passed or env var undefined)
-- Plugins array empty when analytics is expected
-- Using `apiKey` prop instead of `clientId` (older SDK versions)
-- Provider rendered only on some pages instead of globally
+- Provider placed too deep in the tree (must wrap all personalized content).
+- Missing `clientId` prop (API key not passed or env var undefined).
+- `@contentful/optimization`: destructuring methods off `useOptimization()` instead of using
+  `useOptimizationActions()` (loses the instance binding).
+- `@ninetailed/experience.js`: empty `plugins` array when analytics is expected; using `apiKey`
+  instead of `clientId` on older SDK versions.
+- Provider rendered only on some pages instead of globally.

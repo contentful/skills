@@ -35,7 +35,7 @@ function getDerivedPackages(store: {
   };
 }) {
   return derivePackagesToInstall({
-    sdkChoice: store.setup?.sdkChoice ?? 'ninetailed',
+    sdkChoice: store.setup?.sdkChoice ?? 'optimization',
     framework: getInstallableFramework(store.project.framework),
     architecture: store.setup?.architecture ?? 'client-only',
   });
@@ -299,8 +299,8 @@ export default skill({
           ## Your two decisions
 
           **SDK choice:**
-          - \`ninetailed\` — @ninetailed/experience.js (current, battle-tested, more plugins)
-          - \`optimization\` — @contentful/optimization (modern, Contentful-native, simpler API)
+          - \`optimization\` — @contentful/optimization (recommended default; modern, Contentful-native, simpler API; pre-release/alpha)
+          - \`ninetailed\` — @ninetailed/experience.js (legacy fallback for existing Ninetailed projects; battle-tested, more plugins)
 
           **Architecture:**
           - \`client-only\` — All personalization runs in the browser
@@ -340,8 +340,8 @@ export default skill({
         ${render.kv({
           SDK:
             store.setup?.sdkChoice === 'ninetailed'
-              ? '@ninetailed/experience.js (legacy, proven)'
-              : '@contentful/optimization (modern, Contentful-native)',
+              ? '@ninetailed/experience.js (legacy fallback)'
+              : '@contentful/optimization (recommended default)',
           Architecture:
             store.setup?.architecture === 'client-only'
               ? 'Client-only (browser-side personalization)'
@@ -427,7 +427,7 @@ export default skill({
       });
 
       const steps = [
-        `📦 Install packages: ${store.setup?.sdkChoice === 'ninetailed' ? '@ninetailed/experience.js + plugins' : '@contentful/optimization + plugins'}`,
+        `📦 Install packages: ${store.setup?.sdkChoice === 'ninetailed' ? '@ninetailed/experience.js + plugins' : '@contentful/optimization SDK packages'}`,
         '🔑 Configure environment variables with placeholder values',
         '🔌 Add provider wrapper to the appropriate layout/app file',
         '🧩 Wire components with Experience/Personalize wrappers and update component mapper',

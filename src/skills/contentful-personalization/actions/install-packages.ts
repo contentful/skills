@@ -22,9 +22,9 @@ const NINETAILED_EXPERIENCE_JS_FRAMEWORK_PACKAGES: Partial<Record<SupportedFrame
   react: '@ninetailed/experience.js-react',
 };
 
-const CONTENTFUL_OPTIMIZATION_CORE_PACKAGE = '@contentful/optimization-core';
 const CONTENTFUL_OPTIMIZATION_WEB_PACKAGE = '@contentful/optimization-web';
 const CONTENTFUL_OPTIMIZATION_REACT_WEB_PACKAGE = '@contentful/optimization-react-web';
+const CONTENTFUL_OPTIMIZATION_NEXTJS_PACKAGE = '@contentful/optimization-nextjs';
 const CONTENTFUL_OPTIMIZATION_NODE_PACKAGE = '@contentful/optimization-node';
 
 const SAFE_PACKAGE_NAME = /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/;
@@ -58,13 +58,38 @@ export function derivePackagesToInstall(options: {
     return packages;
   }
 
+  // @contentful/optimization (recommended default)
+
+  // Next.js uses the dedicated adapter for every architecture. It composes the
+  // Node SDK (server) and React Web SDK (client) and exposes the /server,
+  // /client, and /request-handler subpaths application code imports from.
+  if (
+    options.framework === 'nextjs-app' ||
+    options.framework === 'nextjs-pages' ||
+    options.framework === 'nextjs-hybrid'
+  ) {
+    return [CONTENTFUL_OPTIMIZATION_NEXTJS_PACKAGE];
+  }
+
+  // Non-Next React frameworks: the React Web SDK wraps the Web SDK
+  // transitively. Add the Node SDK whenever the server is involved.
+  if (isReactFramework(options.framework)) {
+    const packages = [CONTENTFUL_OPTIMIZATION_REACT_WEB_PACKAGE];
+
+    if (options.architecture !== 'client-only') {
+      packages.push(CONTENTFUL_OPTIMIZATION_NODE_PACKAGE);
+    }
+
+    return packages;
+  }
+
+  // Non-React ("other"): the browser uses the Web SDK, the server uses the
+  // Node SDK. The Core SDK is the shared foundation and is not used directly.
   if (options.architecture === 'server-only') {
     return [CONTENTFUL_OPTIMIZATION_NODE_PACKAGE];
   }
 
-  const packages = isReactFramework(options.framework)
-    ? [CONTENTFUL_OPTIMIZATION_WEB_PACKAGE, CONTENTFUL_OPTIMIZATION_REACT_WEB_PACKAGE]
-    : [CONTENTFUL_OPTIMIZATION_CORE_PACKAGE];
+  const packages = [CONTENTFUL_OPTIMIZATION_WEB_PACKAGE];
 
   if (options.architecture === 'hybrid-ssr') {
     packages.push(CONTENTFUL_OPTIMIZATION_NODE_PACKAGE);

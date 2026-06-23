@@ -11,21 +11,27 @@ present or missing.
 
 ## The Core Idea
 
-Contentful Personalization (powered by Ninetailed) lets content authors
-create **experiences** — rules that swap content for specific audiences.
-For example: visitors from Germany see a German hero banner, while everyone
-else sees the default.
+Contentful Personalization lets content authors create **experiences** — rules
+that swap content for specific audiences. For example: visitors from Germany see
+a German hero banner, while everyone else sees the default.
 
-On the code side, this works by wrapping React components with an
-`<Experience>` component that:
+On the code side, this works by wrapping React components with a personalization
+primitive that:
 
 1. Checks which audience the current visitor belongs to
 2. Selects the matching variant (or falls back to baseline)
 3. Renders the same component with the variant's content instead
 
-This is why **component isolation** is the most important readiness factor —
-the component must render identically whether it receives baseline or
-variant content.
+The primitive depends on the SDK:
+
+- **`@contentful/optimization` (recommended)** uses `<OptimizedEntry>` (a render
+  prop that resolves the baseline entry to the selected variant).
+- **`@ninetailed/experience.js` (legacy)** uses the `<Experience>` wrapper.
+
+Either way, this is why **component isolation** is the most important readiness
+factor — the component must render identically whether it receives baseline or
+variant content. The underlying Contentful content model (`nt_experience`,
+`nt_variants`) is the same for both SDKs.
 
 ## Content Model
 
