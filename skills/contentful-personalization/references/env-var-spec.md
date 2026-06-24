@@ -16,32 +16,7 @@ To find your credentials:
 3. Copy the **Client ID**.
 4. The **Environment** is also visible on this screen.
 
-## Recommended SDKs: `@contentful/optimization`
-
-The new SDKs take `clientId` and `environment` directly and do not impose one official environment
-variable naming scheme. Pick clear, project-local names and use them consistently.
-
-Recommended Next.js names:
-
-| Variable | Purpose | Typical runtime |
-|---------|---------|-----------------|
-| `NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID` | SDK `clientId` for browser-facing initialization | Browser |
-| `NEXT_PUBLIC_OPTIMIZATION_ENVIRONMENT` | Personalization environment slug, often `main` | Browser |
-| `NEXT_PUBLIC_CONTENTFUL_SPACE_ID` | Contentful space ID | Browser or shared |
-| `NEXT_PUBLIC_CONTENTFUL_TOKEN` | Contentful Delivery API token | Browser or shared |
-| `NEXT_PUBLIC_CONTENTFUL_ENVIRONMENT` | Contentful environment, often `master` | Browser or shared |
-
-For other frameworks, use the framework's public-variable convention (e.g.
-`VITE_OPTIMIZATION_CLIENT_ID`, `PUBLIC_OPTIMIZATION_CLIENT_ID`). For the Node SDK and the Next.js
-adapter's server path, the same `clientId` can be read from a non-public server variable
-(`OPTIMIZATION_CLIENT_ID`) when it is only used server-side.
-
-Rules:
-
-- Pick one naming scheme and use it consistently across browser, server, and deployment config.
-- Keep Contentful preview tokens server-only unless the preview architecture requires otherwise.
-
-## Legacy SDKs: `@ninetailed/experience.js`
+## Current default SDKs: `@ninetailed/experience.js`
 
 ### Browser and Next.js
 
@@ -61,6 +36,31 @@ Rules:
 | `NINETAILED_ENVIRONMENT` | String, usually `main` | Personalization environment slug |
 
 Edge runtimes often do not use the `NEXT_PUBLIC_` naming pattern.
+
+## Modern SDKs: `@contentful/optimization`
+
+The new SDKs take `clientId` and `environment` directly and do not impose one official environment
+variable naming scheme. Pick clear, project-local names and use them consistently.
+
+Suggested Next.js names:
+
+| Variable | Purpose | Typical runtime |
+|---------|---------|-----------------|
+| `NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID` | SDK `clientId` for browser-facing initialization | Browser |
+| `NEXT_PUBLIC_OPTIMIZATION_ENVIRONMENT` | Personalization environment slug, often `main` | Browser |
+| `NEXT_PUBLIC_CONTENTFUL_SPACE_ID` | Contentful space ID | Browser or shared |
+| `NEXT_PUBLIC_CONTENTFUL_TOKEN` | Contentful Delivery API token | Browser or shared |
+| `NEXT_PUBLIC_CONTENTFUL_ENVIRONMENT` | Contentful environment, often `master` | Browser or shared |
+
+For other frameworks, use the framework's public-variable convention (e.g.
+`VITE_OPTIMIZATION_CLIENT_ID`, `PUBLIC_OPTIMIZATION_CLIENT_ID`). For the Node SDK and the Next.js
+adapter's server path, the same `clientId` can be read from a non-public server variable
+(`OPTIMIZATION_CLIENT_ID`) when it is only used server-side.
+
+Rules:
+
+- Pick one naming scheme and use it consistently across browser, server, and deployment config.
+- Keep Contentful preview tokens server-only unless the preview architecture requires otherwise.
 
 ## Preview Support (both families)
 
@@ -88,7 +88,7 @@ architecture.
 - Missing `NEXT_PUBLIC_` prefix in Next.js (key won't be available client-side).
 - Duplicate definitions across `.env` and `.env.local` with conflicting values.
 - Trailing whitespace or quotes in `.env` values.
-- (Legacy) Using `NINETAILED_KEY` instead of `NINETAILED_API_KEY`, or a production key
+- (Ninetailed) Using `NINETAILED_KEY` instead of `NINETAILED_API_KEY`, or a production key
   (`nt_production_*`) in development (or vice versa).
 
 ## Rules

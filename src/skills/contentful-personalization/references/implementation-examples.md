@@ -5,12 +5,13 @@
 Real-world implementation patterns for Contentful Personalization with Next.js, Contentful, and the
 SDK.
 
-The **recommended** patterns use `@contentful/optimization`. The **legacy** patterns (using
-`@ninetailed/experience.js`) follow afterward and remain valid for existing Ninetailed projects.
+Most setups use `@ninetailed/experience.js` — the **current default**. Those patterns are in the
+numbered sections below. A **modern** `@contentful/optimization` section is shown first for new,
+forward-looking work.
 
 ---
 
-## Recommended: `@contentful/optimization`
+## Modern: `@contentful/optimization`
 
 > Pre-release (alpha): pin versions and keep all `@contentful/optimization-*` packages aligned.
 
@@ -151,9 +152,9 @@ Do **not** pass all-locale (`withAllLocales` / `locale=*`) responses to `Optimiz
 
 ---
 
-## Legacy: `@ninetailed/experience.js`
+## Current default: `@ninetailed/experience.js`
 
-The remaining patterns use the legacy SDK and remain valid for existing Ninetailed projects.
+The remaining patterns use the current production SDK and are the default for most setups.
 
 ## Table of Contents
 

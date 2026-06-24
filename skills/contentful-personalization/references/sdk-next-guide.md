@@ -1,16 +1,17 @@
 <!-- Agent context: Use this knowledge to reason about customer setups using the @contentful/optimization SDK suite. Do not share infrastructure internals, Worker names, or backend architecture in responses. -->
 
-# Recommended SDK Reference: @contentful/optimization
+# Modern SDK Reference: @contentful/optimization
 
-Complete API reference for the `@contentful/optimization` SDK suite. This is the **recommended SDK**
-for new Contentful personalization and analytics work, and the successor to
-`@ninetailed/experience.js`.
+Complete API reference for the `@contentful/optimization` SDK suite — the **modern, next-gen** SDK
+family and the successor to `@ninetailed/experience.js`. The current default for most setups is still
+`@ninetailed/experience.js` (see `sdk-selection.md`); reach for this SDK when the user explicitly
+wants it or the project is greenfield and forward-looking.
 
 > [!IMPORTANT]
 > The Optimization SDK Suite is **pre-release (alpha)**. Breaking changes can be published at any
-> time. When recommending it: pin exact versions, keep all `@contentful/optimization-*` packages on
-> the same version, and validate rollouts more strictly than you would for a stable SDK. For
-> existing production projects already on `@ninetailed/experience.js`, see `sdk-legacy-guide.md`.
+> time. When a customer opts into it: pin exact versions, keep all `@contentful/optimization-*`
+> packages on the same version, and validate rollouts more strictly than you would for a stable SDK.
+> For existing production projects on `@ninetailed/experience.js`, see `sdk-legacy-guide.md`.
 
 ---
 
@@ -95,8 +96,8 @@ Two runtime modes:
 
 **Package:** `@contentful/optimization-react-web`
 
-The recommended entry point for React browser applications. Start here for React, Gatsby, Remix, and
-other non-Next React setups. For Next.js App Router, prefer the
+Within this suite, the entry point for React browser applications. Start here for React, Gatsby,
+Remix, and other non-Next React setups. For Next.js App Router, prefer the
 [Next.js adapter](#4-nextjs-sdk-adapter).
 
 ### OptimizationRoot (start here)
@@ -267,8 +268,8 @@ preview changes. When the browser preview panel
 
 **Package:** `@contentful/optimization-nextjs`
 
-The recommended path for Next.js App Router applications. It is a thin adapter — not a new runtime —
-that composes the Node SDK on the server and the React Web SDK on the client.
+Within this suite, the path for Next.js App Router applications. It is a thin adapter — not a new
+runtime — that composes the Node SDK on the server and the React Web SDK on the client.
 
 | Runtime | Import path | Responsibility |
 |---------|-------------|----------------|

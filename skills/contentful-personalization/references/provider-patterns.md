@@ -9,7 +9,7 @@ Use these patterns to avoid scope and hydration problems.
 - Keep provider initialization stable across navigation.
 - Avoid wrapping only a subset of pages unless that is intentional.
 
-## Recommended SDKs: `@contentful/optimization`
+## Modern SDKs: `@contentful/optimization`
 
 Mount `OptimizationRoot` once near the app root. It owns the Web SDK lifecycle (creation,
 initialization, teardown). Use the router tracker subpath for the router in use.
@@ -72,7 +72,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 Wrap `children` with `<Providers>` in `app/layout.tsx`. Keep the root layout server-first and the
 provider in a client component.
 
-## Legacy SDKs: `@ninetailed/experience.js`
+## Current default SDKs: `@ninetailed/experience.js`
 
 ### Next.js Pages Router
 
@@ -117,7 +117,7 @@ Recommended pattern:
 
 1. Keep root layout server-first where possible.
 2. Put `NinetailedProvider` initialization in a dedicated client wrapper component.
-3. Add a dedicated client-side page tracker because the legacy SDKs do not auto-track App Router
+3. Add a dedicated client-side page tracker because the current SDKs do not auto-track App Router
    navigation.
 4. Keep the provider high enough that all personalizable entries are wrapped.
 

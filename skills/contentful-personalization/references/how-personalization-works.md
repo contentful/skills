@@ -24,9 +24,9 @@ primitive that:
 
 The primitive depends on the SDK:
 
-- **`@contentful/optimization` (recommended)** uses `<OptimizedEntry>` (a render
-  prop that resolves the baseline entry to the selected variant).
-- **`@ninetailed/experience.js` (legacy)** uses the `<Experience>` wrapper.
+- **`@ninetailed/experience.js` (current default)** uses the `<Experience>` wrapper.
+- **`@contentful/optimization` (modern)** uses `<OptimizedEntry>` (a render prop
+  that resolves the baseline entry to the selected variant).
 
 Either way, this is why **component isolation** is the most important readiness
 factor — the component must render identically whether it receives baseline or

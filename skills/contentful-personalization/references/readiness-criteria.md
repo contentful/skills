@@ -47,7 +47,7 @@ Detailed rubric for each readiness check.
 ## Existing Personalization Setup Rubric
 
 This check measures adoption progress, not code quality. It covers both SDK families:
-`@contentful/optimization-*` (recommended) and `@ninetailed/experience.js*` (legacy).
+`@ninetailed/experience.js*` (current default) and `@contentful/optimization-*` (modern).
 
 | Situation | Status | Guidance |
 |----------|--------|----------|
@@ -58,8 +58,8 @@ This check measures adoption progress, not code quality. It covers both SDK fami
 Tone guidance:
 - Do not call this state `NOT READY` when no SDK is installed yet.
 - Prefer neutral wording: "fresh setup", "not installed yet", or "setup not started".
-- When a project already uses `@ninetailed/experience.js`, treat the legacy SDK as a valid configured
-  state — do not push a migration unless the user asks.
+- When a project already uses `@ninetailed/experience.js`, treat it as a valid configured state —
+  do not push a migration to the modern SDKs unless the user asks.
 
 ## Component Architecture Rubric
 
@@ -108,18 +108,18 @@ Report any gaps:
 
 ### Required for personalization (needed when you run the **onboard** flow in `contentful-personalization`)
 
-Recommended (`@contentful/optimization`) — names are project-local; pick a clear scheme:
-
-```
-NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID    # SDK clientId
-NEXT_PUBLIC_OPTIMIZATION_ENVIRONMENT  # Environment slug (default: 'main')
-```
-
-Legacy (`@ninetailed/experience.js`):
+Current default (`@ninetailed/experience.js`):
 
 ```
 NEXT_PUBLIC_NINETAILED_CLIENT_ID    # Ninetailed API key
 NEXT_PUBLIC_NINETAILED_ENVIRONMENT  # Environment slug (default: 'main')
+```
+
+Modern (`@contentful/optimization`) — names are project-local; pick a clear scheme:
+
+```
+NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID    # SDK clientId
+NEXT_PUBLIC_OPTIMIZATION_ENVIRONMENT  # Environment slug (default: 'main')
 ```
 
 ### Required for Contentful (should already exist)

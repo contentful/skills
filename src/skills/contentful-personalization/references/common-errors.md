@@ -17,15 +17,15 @@ Fix:
 Symptoms:
 
 - The setup mentions analytics, but no component insights appear.
-- (Legacy) The project installed `@ninetailed/experience.js-plugin-analytics` expecting built-in experiment measurement.
+- The project installed `@ninetailed/experience.js-plugin-analytics` expecting built-in experiment measurement.
 
 Fix:
 
-- `@contentful/optimization` (recommended): analytics is built in — there is no separate insights
-  plugin. Enable `trackEntryInteraction` (or `autoTrackEntryInteraction` on the Web SDK) and confirm
-  consent is granted so events are not blocked.
-- `@ninetailed/experience.js` (legacy): use `@ninetailed/experience.js-plugin-insights` for built-in
-  measurement and component insights.
+- `@ninetailed/experience.js` (current default): use `@ninetailed/experience.js-plugin-insights` for
+  built-in measurement and component insights.
+- `@contentful/optimization` (modern): analytics is built in — there is no separate insights plugin.
+  Enable `trackEntryInteraction` (or `autoTrackEntryInteraction` on the Web SDK) and confirm consent
+  is granted so events are not blocked.
 
 ## Provider Not Applied Globally
 

@@ -4,7 +4,18 @@ Analytics and preview are part of setup, not afterthoughts.
 
 ## Default Analytics Recommendation
 
-### `@contentful/optimization` (recommended)
+### `@ninetailed/experience.js` (current default)
+
+Use `@ninetailed/experience.js-plugin-insights` when the customer wants:
+
+- experiment measurement
+- component insights
+- click and view tracking from personalized components
+
+Do not present `@ninetailed/experience.js-plugin-analytics` as the default built-in answer for these
+setups.
+
+### `@contentful/optimization` (modern)
 
 Analytics is **built in** — there is no separate insights plugin to install. Enable it through the
 SDK:
@@ -24,17 +35,6 @@ SDK:
   {children}
 </OptimizationRoot>
 ```
-
-### `@ninetailed/experience.js` (legacy)
-
-Use `@ninetailed/experience.js-plugin-insights` when an existing Ninetailed setup needs:
-
-- experiment measurement
-- component insights
-- click and view tracking from personalized components
-
-Do not present `@ninetailed/experience.js-plugin-analytics` as the default built-in answer for these
-legacy setups.
 
 ## Event Responsibilities
 
@@ -74,14 +74,7 @@ legacy setups.
 
 ## Preview Guidance
 
-### `@contentful/optimization` (recommended)
-
-Use `@contentful/optimization-web-preview-panel` for author preview against an existing Web SDK
-instance. When the panel is open, live updates are forced on for all `OptimizedEntry` components so
-authors see variant changes immediately. Set `liveUpdates` on `OptimizationRoot` (or per
-`OptimizedEntry`) when entries must react to profile/flag/preview changes outside of preview.
-
-### `@ninetailed/experience.js` (legacy)
+### `@ninetailed/experience.js` (current default)
 
 Use the preview plugin only when the customer needs editor or QA tooling.
 
@@ -91,6 +84,13 @@ Requirements:
 2. Fetch audiences for the preview environment.
 3. Pass both into the preview plugin.
 4. Gate the plugin away from production unless the customer explicitly wants live preview behavior.
+
+### `@contentful/optimization` (modern)
+
+Use `@contentful/optimization-web-preview-panel` for author preview against an existing Web SDK
+instance. When the panel is open, live updates are forced on for all `OptimizedEntry` components so
+authors see variant changes immediately. Set `liveUpdates` on `OptimizationRoot` (or per
+`OptimizedEntry`) when entries must react to profile/flag/preview changes outside of preview.
 
 ## Server-Only Limitation Warning
 

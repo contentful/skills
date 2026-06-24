@@ -35,7 +35,7 @@ function getDerivedPackages(store: {
   };
 }) {
   return derivePackagesToInstall({
-    sdkChoice: store.setup?.sdkChoice ?? 'optimization',
+    sdkChoice: store.setup?.sdkChoice ?? 'ninetailed',
     framework: getInstallableFramework(store.project.framework),
     architecture: store.setup?.architecture ?? 'client-only',
   });
@@ -299,8 +299,8 @@ export default skill({
           ## Your two decisions
 
           **SDK choice:**
-          - \`optimization\` — @contentful/optimization (recommended default; modern, Contentful-native, simpler API; pre-release/alpha)
-          - \`ninetailed\` — @ninetailed/experience.js (legacy fallback for existing Ninetailed projects; battle-tested, more plugins)
+          - \`ninetailed\` — @ninetailed/experience.js (current default; battle-tested, more plugins)
+          - \`optimization\` — @contentful/optimization (modern, Contentful-native, simpler API; pre-release/alpha)
 
           **Architecture:**
           - \`client-only\` — All personalization runs in the browser
@@ -340,8 +340,8 @@ export default skill({
         ${render.kv({
           SDK:
             store.setup?.sdkChoice === 'ninetailed'
-              ? '@ninetailed/experience.js (legacy fallback)'
-              : '@contentful/optimization (recommended default)',
+              ? '@ninetailed/experience.js (current default)'
+              : '@contentful/optimization (modern, Contentful-native)',
           Architecture:
             store.setup?.architecture === 'client-only'
               ? 'Client-only (browser-side personalization)'

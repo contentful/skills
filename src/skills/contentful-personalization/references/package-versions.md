@@ -1,9 +1,9 @@
 # SDK Packages
 
-Two SDK families exist. `@contentful/optimization-*` is the **recommended default** for new work.
-`@ninetailed/experience.js*` is the **legacy fallback** for existing projects already on it.
+Two SDK families exist. `@ninetailed/experience.js*` is the **current default** customers use today.
+`@contentful/optimization-*` is the **modern, next-gen** family for new, forward-looking work.
 
-## Recommended: `@contentful/optimization-*`
+## Modern: `@contentful/optimization-*`
 
 > Pre-release (alpha): pin exact versions and keep every `@contentful/optimization-*` package on the
 > **same version**. Breaking changes can ship at any time.
@@ -48,10 +48,10 @@ Install the narrowest package for your runtime:
 
 ---
 
-## Legacy fallback: `@ninetailed/experience.js`
+## Current default: `@ninetailed/experience.js`
 
-Use these only for projects already built on Ninetailed, or when a required integration exists only
-here. See `sdk-legacy-guide.md` for the full API.
+The production-proven family customers use today. Prefer these unless the user explicitly wants the
+modern SDKs or the project is greenfield. See `sdk-legacy-guide.md` for the full API.
 
 ### Core SDK
 

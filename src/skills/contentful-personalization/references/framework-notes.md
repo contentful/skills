@@ -10,27 +10,7 @@ Both SDK providers are client components — they must live in a Client Componen
 boundary, typically `app/providers.tsx` wrapped with `'use client'` and rendered
 from `app/layout.tsx`.
 
-**Recommended — `@contentful/optimization`** (via the Next.js adapter):
-
-```tsx
-// app/providers.tsx
-'use client';
-import { NextAppAutoPageTracker, OptimizationRoot } from '@contentful/optimization-nextjs/client';
-
-export function Providers({ children }) {
-  return (
-    <OptimizationRoot
-      clientId={process.env.NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID!}
-      environment={process.env.NEXT_PUBLIC_OPTIMIZATION_ENVIRONMENT ?? 'main'}
-    >
-      <NextAppAutoPageTracker />
-      {children}
-    </OptimizationRoot>
-  );
-}
-```
-
-**Legacy — `@ninetailed/experience.js`:**
+**Current default — `@ninetailed/experience.js`:**
 
 ```typescript
 // app/providers.tsx
@@ -47,6 +27,26 @@ export function Providers({ children }) {
 import { Providers } from './providers';
 export default function RootLayout({ children }) {
   return <html><body><Providers>{children}</Providers></body></html>;
+}
+```
+
+**Modern — `@contentful/optimization`** (via the Next.js adapter):
+
+```tsx
+// app/providers.tsx
+'use client';
+import { NextAppAutoPageTracker, OptimizationRoot } from '@contentful/optimization-nextjs/client';
+
+export function Providers({ children }) {
+  return (
+    <OptimizationRoot
+      clientId={process.env.NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID!}
+      environment={process.env.NEXT_PUBLIC_OPTIMIZATION_ENVIRONMENT ?? 'main'}
+    >
+      <NextAppAutoPageTracker />
+      {children}
+    </OptimizationRoot>
+  );
 }
 ```
 

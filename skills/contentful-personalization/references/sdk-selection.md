@@ -1,37 +1,52 @@
 # SDK Selection
 
-Use this guide to choose between the recommended `@contentful/optimization` SDKs and the legacy
-`@ninetailed/experience.js` SDKs.
+Use this guide to choose between the current production `@ninetailed/experience.js` SDKs and the
+modern `@contentful/optimization` SDKs.
 
 ## Positioning
 
-- `@contentful/optimization` is the **recommended default** for new personalization and analytics
-  work. It has a modern, layered architecture (React Web, Next.js adapter, Web, Node, React Native)
-  and is the platform's forward direction.
-- `@ninetailed/experience.js` is the **legacy fallback**. It remains a fully supported, production-
-  proven path and is the right choice for projects already built on it, or when a required
-  integration exists only there.
-- Do not tell customers the legacy SDKs are deprecated or obsolete. They still work and are widely
-  deployed — they are simply no longer the default recommendation for new builds.
+- `@ninetailed/experience.js` is the **current default** customers should use today unless there is a
+  strong reason to adopt the new SDKs. It is production-proven and widely deployed.
+- `@contentful/optimization` is the **modern, next-gen** SDK family with a redesigned architecture
+  (React Web, Next.js adapter, Web, Node, React Native) and is the platform's forward direction.
+- Do not casually tell customers the current SDKs are deprecated or obsolete. They are still the
+  "now" path.
 
-> [!IMPORTANT]
+> [!NOTE]
 > `@contentful/optimization` is **pre-release (alpha)**; breaking changes can ship at any time.
-> When you recommend it, pin exact versions, keep all `@contentful/optimization-*` packages on the
-> same version, and apply stricter validation and rollout discipline than you would for a stable SDK.
+> When a customer opts into it, pin exact versions, keep all `@contentful/optimization-*` packages on
+> the same version, and apply stricter validation and rollout discipline than usual.
 
 ## Quick Decision Table
 
 | Scenario | Recommended SDK family | Why |
 |---------|------------------------|-----|
-| New / greenfield project | `@contentful/optimization` | Modern architecture and the platform's forward direction |
-| New feature in a codebase **not** already using a personalization SDK | `@contentful/optimization` | Start on the recommended path |
-| Next.js App Router build | `@contentful/optimization` | Dedicated `@contentful/optimization-nextjs` adapter (server + client + request-handler) |
-| React app needing router page tracking | `@contentful/optimization` | Built-in router adapters and `OptimizedEntry` |
-| Existing project already using Ninetailed packages | `@ninetailed/experience.js` | Keep the stack consistent; lowest migration risk |
-| Change that must ship now and can't absorb alpha churn | `@ninetailed/experience.js` | Most production-proven path today |
-| Requires a plugin/integration only Ninetailed has | `@ninetailed/experience.js` | Capability not yet in the new SDKs |
+| Existing production project | `@ninetailed/experience.js` | Lowest migration risk and best-known integration patterns |
+| New feature in an existing codebase already using Ninetailed packages | `@ninetailed/experience.js` | Keep the stack consistent |
+| Pages Router setup today | `@ninetailed/experience.js` | Mature provider, plugin, and mapper patterns |
+| SSR or edge setup that must ship now | `@ninetailed/experience.js` | Proven hybrid SSR and ESR patterns |
+| Forward-looking greenfield work | `@contentful/optimization` | Modern architecture and future platform direction |
+| Team explicitly wants the new SDKs | `@contentful/optimization` | Aligns with customer intent |
+| Strong App Router-first investment and willingness to adopt evolving APIs | `@contentful/optimization` | Dedicated Next.js adapter and newer primitives |
 
-## Recommended SDKs: `@contentful/optimization`
+## Current Production SDKs: `@ninetailed/experience.js`
+
+- Rendering primitive: `<Experience>`
+- Provider pattern: `NinetailedProvider`
+- Contentful helpers: `@ninetailed/experience.js-utils-contentful`
+- Tracking model: plugins, `page()`, `track()`, `identify()`
+- Anonymous cookie: `ntaid`
+- Best fit today: current customer production setups
+
+Recommended add-ons:
+
+- `@ninetailed/experience.js-plugin-insights` for experiment and component measurement
+- `@ninetailed/experience.js-plugin-ssr` for SSR or edge profile continuity
+- `@ninetailed/experience.js-plugin-preview` for preview workflows
+
+See `sdk-legacy-guide.md` for the full API.
+
+## Modern SDKs: `@contentful/optimization`
 
 - Rendering primitive: `<OptimizedEntry>` (React render prop)
 - React entry point: `OptimizationRoot` (owns SDK lifecycle); `OptimizationProvider` to inject an instance
@@ -42,26 +57,15 @@ Use this guide to choose between the recommended `@contentful/optimization` SDKs
 - Actions: `useOptimizationActions()`; SDK instance via `useOptimization()` (do not destructure)
 - Consent: object-capable `consent({ events, persistence })` with blocked-event streams
 - Anonymous cookie: `ctfl-opt-aid`, auto-migrated from `ntaid`
-- Best fit: new builds and teams adopting the platform's forward direction
+- Best fit: customers explicitly adopting the new platform direction
+
+Use the modern SDKs when:
+
+- the user explicitly asks for the new optimization SDKs
+- the project is greenfield and can absorb faster, pre-release API evolution
+- the team wants to build toward the newer platform model
 
 See `sdk-next-guide.md` for the full API and `package-versions.md` for package selection.
-
-## Legacy SDKs: `@ninetailed/experience.js`
-
-- Rendering primitive: `<Experience>`
-- Provider pattern: `NinetailedProvider`
-- Contentful helpers: `@ninetailed/experience.js-utils-contentful`
-- Tracking model: plugins, `page()`, `track()`, `identify()`
-- Anonymous cookie: `ntaid`
-- Best fit: existing customer production setups
-
-Recommended add-ons:
-
-- `@ninetailed/experience.js-plugin-insights` for experiment and component measurement
-- `@ninetailed/experience.js-plugin-ssr` for SSR or edge profile continuity
-- `@ninetailed/experience.js-plugin-preview` for preview workflows
-
-See `sdk-legacy-guide.md` for the full API.
 
 ## Architecture Guidance
 
@@ -70,23 +74,22 @@ Choose architecture before choosing package details. Both SDK families support a
 | Architecture | Recommendation | Notes |
 |-------------|----------------|-------|
 | Client-only | Either family | Simplest option when first-response personalized HTML is not required |
-| Hybrid SSR or edge plus client | Either family; prefer `@contentful/optimization` for new builds | Use server/edge preflight, then hydrate the client SDK |
+| Hybrid SSR or edge plus client | Prefer the current SDKs unless the user explicitly wants the new SDKs | Use preflight on server or edge |
 | Server-only | Only when no client SDK is allowed | Weak fit for experiment reporting and component insights |
 
 ## Decision Rule
 
-Use `@contentful/optimization` by default.
+Use `@ninetailed/experience.js` by default.
 
-Move to `@ninetailed/experience.js` when one of these is true:
+Move to `@contentful/optimization` when one of these is true:
 
-1. The project already uses `@ninetailed/experience.js` and you are extending it.
-2. A required integration or plugin exists only in the legacy SDK.
-3. The change must ship now and cannot absorb the new SDK's faster-moving, pre-release behavior.
+1. The user explicitly asks for it.
+2. The implementation is intentionally future-facing and greenfield.
+3. The team accepts faster-moving, pre-release SDK behavior and stricter verification needs.
 
 ## What to Communicate to Customers
 
-- If you choose `@contentful/optimization`, frame it as the recommended, modern path — and state
-  plainly that it is pre-release (alpha), so versions should be pinned and rollouts validated more
-  strictly than usual.
-- If you choose `@ninetailed/experience.js`, frame it as the stable, production-proven path that is
-  best for existing setups — not as deprecated.
+- If you choose the current SDKs, frame them as the stable production recommendation.
+- If you choose the modern SDKs, frame them as the newer architecture with more future-facing
+  capabilities — and state plainly that they are pre-release (alpha), so versions should be pinned
+  and rollouts validated more strictly than usual.
