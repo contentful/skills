@@ -15,6 +15,11 @@ export type Finding = typeof Finding.infer;
 export const ReadinessStatus = type("'ready' | 'minor-changes' | 'needs-work' | 'not-ready'");
 export type ReadinessStatus = typeof ReadinessStatus.infer;
 
+// Which personalization SDK family a project uses, derived from installed packages.
+// 'legacy' = @ninetailed/experience.js, 'modern' = @contentful/optimization.
+export const SdkFamily = type("'legacy' | 'modern' | 'both' | 'none'");
+export type SdkFamily = typeof SdkFamily.infer;
+
 // --- Shared field types ---
 
 export const PackageInfo = type({
@@ -47,8 +52,14 @@ export type PackagesResult = typeof PackagesResult.infer;
 
 export const CredentialsScanResult = type({
   envVars: EnvVarInfo.array(),
+  // Legacy @ninetailed/experience.js credentials (NINETAILED_API_KEY / _ENVIRONMENT).
   'personalization?': {
     'apiKey?': 'string',
+    'environment?': 'string',
+  },
+  // Modern @contentful/optimization credentials (OPTIMIZATION_CLIENT_ID / _ENVIRONMENT).
+  'optimization?': {
+    'clientId?': 'string',
     'environment?': 'string',
   },
   'contentful?': {
@@ -158,3 +169,22 @@ export const ContentInspectionResult = type({
   'error?': 'string',
 });
 export type ContentInspectionResult = typeof ContentInspectionResult.infer;
+
+// --- surveyContent action ---
+//
+// Account-wide survey of personalization content state. Unlike inspectContent
+// (which deep-inspects one entry by ID), this queries nt_experience entries
+// across CDA + CPA without needing an entry ID, so it can run as an automatic
+// up-front gate. It flags suspicious entries for optional drill-down.
+
+export const ContentSurveyResult = type({
+  status: CheckStatus,
+  findings: Finding.array(),
+  // Published (CDA) vs preview (CPA) experience counts.
+  publishedExperienceCount: 'number',
+  previewExperienceCount: 'number',
+  // Entry IDs worth a deeper inspectContent pass (e.g. unpublished experiences).
+  suspiciousEntryIds: 'string[]',
+  'error?': 'string',
+});
+export type ContentSurveyResult = typeof ContentSurveyResult.infer;

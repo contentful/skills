@@ -1,9 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { runComposite, runSkill, mockModel } from '@contentful/skill-kit/test';
 import skill from './skill.js';
 import { derivePackagesToInstall } from './actions/install-packages.js';
-import doctorSkill from './subskills/doctor.js';
+import doctorSkill, { resolveCredentials } from './subskills/doctor.js';
 import developSkill from './subskills/develop.js';
 import liveDebugSkill from './subskills/live-debug.js';
 
@@ -50,18 +53,15 @@ test('classify routes to doctor for debugging requests', async () => {
         confidence: 0.9,
         reasoning: 'User says personalization is broken',
       },
-      'doctor/explore': {
+      'doctor/detect-sdk': {
         framework: 'nextjs-app',
         projectPath: '.',
-        explorationSummary: 'Broken setup',
-        concerns: ['No provider'],
       },
       'doctor/scan-credentials': {
-        envVars: [{ name: 'NINETAILED_API_KEY', status: 'missing' }],
+        envVars: [{ name: 'OPTIMIZATION_CLIENT_ID', status: 'missing' }],
       },
-      'doctor/confirm-credentials': { hasCredentials: false },
-      'doctor/review': { overallStatus: 'fail', recommendations: [], summary: 'Needs fixes' },
-      'doctor/report': { choice: 'no' },
+      'doctor/confirm-credentials': { runCredentialChecks: false },
+      'doctor/programmatic-gate': { choice: 'done', problemDescription: '' },
       'doctor/done': { message: 'Ok' },
     }),
   });
@@ -144,18 +144,15 @@ test('low confidence routes to gather-context', async () => {
     model: mockModel({
       classify: { intent: 'unclear', confidence: 0.3, reasoning: 'Ambiguous request' },
       'gather-context': { intent: 'doctor', reasoning: 'Found broken setup' },
-      'doctor/explore': {
+      'doctor/detect-sdk': {
         framework: 'nextjs-app',
         projectPath: '.',
-        explorationSummary: 'Broken',
-        concerns: [],
       },
       'doctor/scan-credentials': {
         envVars: [{ name: 'NINETAILED_API_KEY', status: 'missing' }],
       },
-      'doctor/confirm-credentials': { hasCredentials: false },
-      'doctor/review': { overallStatus: 'warn', recommendations: [], summary: 'Issues found' },
-      'doctor/report': { choice: 'no' },
+      'doctor/confirm-credentials': { runCredentialChecks: false },
+      'doctor/programmatic-gate': { choice: 'done', problemDescription: '' },
       'doctor/done': { message: 'Ok' },
     }),
   });
@@ -299,161 +296,342 @@ test('live-debug recommends doctor when runtime looks suspicious', async () => {
 
 // --- Doctor sub-skill tests ---
 
-test('doctor: no credentials → code-only review → report → done', async () => {
+// Modern @contentful/optimization app: programmatic checks pass, user investigates the
+// codebase, which is where the problem turns out to be.
+test('doctor: modern SDK, clean programmatic checks → explore-code → review → report → done', async () => {
   const result = await runSkill(doctorSkill, {
     model: mockModel({
-      explore: {
+      'detect-sdk': {
         framework: 'nextjs-app',
-        frameworkVersion: '14.1.0',
+        frameworkVersion: '15.3.0',
         projectPath: '.',
-        explorationSummary: 'Next.js 14 App Router project with partial Ninetailed setup',
-        concerns: ['Provider not found', 'Missing middleware'],
       },
       'scan-credentials': {
-        envVars: [{ name: 'NINETAILED_API_KEY', status: 'missing' }],
+        envVars: [
+          { name: 'OPTIMIZATION_CLIENT_ID', status: 'set', maskedValue: '3ad32994' },
+          { name: 'CONTENTFUL_SPACE_ID', status: 'set', maskedValue: 'ov5rm2sf' },
+        ],
+        optimization: { clientId: '3ad32994-25c6-43d0-a87f-bf7d5fd49a67', environment: 'main' },
+        contentful: { spaceId: 'ov5rm2sf4eyi', accessToken: 'cda_token' },
       },
-      'confirm-credentials': { hasCredentials: false },
+      'confirm-credentials': { runCredentialChecks: true },
+      'programmatic-gate': { choice: 'explore-code', problemDescription: 'Variant never renders' },
+      'explore-code': {
+        explorationSummary: 'OptimizationRoot is missing from the root layout',
+        concerns: ['OptimizationRoot provider not found'],
+      },
       review: {
-        overallStatus: 'warn',
-        recommendations: [{ priority: 'warning', message: 'Provider not found in source', category: 'provider' }],
-        summary: 'Partial setup detected.',
+        overallStatus: 'fail',
+        recommendations: [{ priority: 'critical', message: 'Add OptimizationRoot to the root layout', category: 'provider' }],
+        summary: 'Provider missing.',
       },
       report: { choice: 'no' },
       done: { message: 'Good luck!' },
     }),
   });
 
-  assert.ok(result.path.includes('explore'));
+  assert.ok(result.path.includes('detect-sdk'));
   assert.ok(result.path.includes('scan-credentials'));
-  assert.ok(result.path.includes('confirm-credentials'));
-  assert.ok(!result.path.includes('check-api'));
+  assert.ok(result.path.includes('check-api'));
+  assert.ok(result.path.includes('survey-content'));
+  assert.ok(result.path.includes('programmatic-gate'));
+  assert.ok(result.path.includes('explore-code'));
   assert.ok(result.path.includes('review'));
   assert.ok(result.path.includes('report'));
   assert.ok(result.path.includes('done'));
 });
 
-test('doctor: with credentials → API check → skip inspection → review', async () => {
+// Infra problem found and fixed → user confirms it's working → stop without code review.
+test('doctor: fix-infra → ask-fixed (working) → done, no code exploration', async () => {
   const result = await runSkill(doctorSkill, {
     model: mockModel({
-      explore: {
+      'detect-sdk': {
         framework: 'nextjs-app',
-        frameworkVersion: '14.1.0',
+        frameworkVersion: '15.3.0',
         projectPath: '.',
-        explorationSummary: 'Setup looks correct',
-        concerns: [],
       },
       'scan-credentials': {
-        envVars: [
-          { name: 'NINETAILED_API_KEY', status: 'set', maskedValue: 'nt_prod_****' },
-          { name: 'CONTENTFUL_SPACE_ID', status: 'set', maskedValue: 'space123****' },
-        ],
-        personalization: { apiKey: 'nt_prod_test123' },
-        contentful: { spaceId: 'space123' },
+        envVars: [{ name: 'OPTIMIZATION_CLIENT_ID', status: 'missing' }],
       },
-      'confirm-credentials': {
-        hasCredentials: true,
-        personalization: { apiKey: 'nt_prod_test123', environment: 'main' },
-        contentful: { spaceId: 'space123', accessToken: 'token1', environment: 'master' },
-      },
-      'check-api': {
-        status: 'pass',
-        findings: [{ item: 'Experience API v3', status: 'pass', detail: 'Reachable (120ms)' }],
-        reachable: true,
-        responseTimeMs: 120,
-      },
-      triage: { choice: 'skip', problemDescription: 'Just checking' },
-      review: { overallStatus: 'pass', recommendations: [], summary: 'All good.' },
-      report: { choice: 'no' },
-      done: { message: 'All clear' },
+      'confirm-credentials': { runCredentialChecks: false },
+      'programmatic-gate': { choice: 'fix-infra', problemDescription: 'No personalization at all' },
+      'fix-infra': { summary: 'Added NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID to .env.local', filesModified: ['.env.local'] },
+      'ask-fixed': { working: true },
+      done: { message: 'Fixed!' },
     }),
   });
 
-  assert.ok(result.path.includes('check-api'));
-  assert.ok(result.path.includes('triage'));
-  assert.ok(!result.path.includes('choose-entry'));
-  assert.ok(result.path.includes('review'));
+  assert.ok(result.path.includes('fix-infra'));
+  assert.ok(result.path.includes('ask-fixed'));
+  assert.ok(result.path.includes('done'));
+  assert.ok(!result.path.includes('explore-code'));
+  assert.ok(!result.path.includes('review'));
 });
 
-test('doctor: with credentials → inspect entry → review', async () => {
+// Infra fix did not resolve it → fall through to codebase exploration.
+test('doctor: fix-infra → ask-fixed (not working) → explore-code', async () => {
   const result = await runSkill(doctorSkill, {
     model: mockModel({
-      explore: {
+      'detect-sdk': {
         framework: 'nextjs-app',
-        frameworkVersion: '14.1.0',
+        frameworkVersion: '15.3.0',
         projectPath: '.',
-        explorationSummary: 'Setup looks correct',
-        concerns: [],
       },
       'scan-credentials': {
-        envVars: [
-          { name: 'CONTENTFUL_SPACE_ID', status: 'set', maskedValue: 'space123****' },
-          { name: 'CONTENTFUL_ACCESS_TOKEN', status: 'set', maskedValue: 'token12****' },
-        ],
-        contentful: { spaceId: 'space123', accessToken: 'token1' },
+        envVars: [{ name: 'OPTIMIZATION_CLIENT_ID', status: 'set', maskedValue: '3ad32994' }],
+        optimization: { clientId: '3ad32994-25c6-43d0-a87f-bf7d5fd49a67', environment: 'main' },
       },
-      'confirm-credentials': {
-        hasCredentials: true,
-        contentful: { spaceId: 'space123', accessToken: 'token1', environment: 'master' },
-        personalization: { apiKey: 'nt_key', environment: 'main' },
+      'confirm-credentials': { runCredentialChecks: true },
+      'programmatic-gate': { choice: 'fix-infra', problemDescription: 'Still broken' },
+      'fix-infra': { summary: 'Corrected the client ID value', filesModified: ['.env.local'] },
+      'ask-fixed': { working: false },
+      'explore-code': {
+        explorationSummary: 'Middleware matcher catches static assets',
+        concerns: ['Middleware matcher too broad'],
       },
-      'check-api': {
-        status: 'skip',
-        findings: [{ item: 'Ninetailed API', status: 'skip', detail: 'No API key' }],
-        reachable: false,
-      },
-      triage: { choice: 'inspect-entry', problemDescription: 'Variants not showing' },
-      'choose-entry': { entryId: 'abc123', skip: false },
-      'run-inspection': { status: 'pass', findings: [], entry: { id: 'abc123' } },
       review: {
-        overallStatus: 'fail',
-        recommendations: [{ priority: 'critical', message: 'Entry has unpublished changes', category: 'content' }],
-        summary: 'Unpublished changes detected.',
+        overallStatus: 'warn',
+        recommendations: [{ priority: 'warning', message: 'Tighten the middleware matcher', category: 'middleware' }],
+        summary: 'Middleware misconfigured.',
       },
       report: { choice: 'no' },
       done: { message: 'Ok' },
     }),
   });
 
-  assert.ok(result.path.includes('choose-entry'));
-  assert.ok(result.path.includes('run-inspection'));
+  assert.ok(result.path.includes('fix-infra'));
+  assert.ok(result.path.includes('ask-fixed'));
+  assert.ok(result.path.includes('explore-code'));
   assert.ok(result.path.includes('review'));
 });
 
-test('doctor: choose-entry skip → review (no entry provided)', async () => {
+// run-inspection (and scan-credentials) are ACTION steps: runSkill executes the real actions,
+// so the mock can't inject their results. To exercise the drill-down transition we (1) point the
+// project at a temp dir with a real .env.local so scanCredentials extracts usable tokens, and
+// (2) stub globalThis.fetch so the real inspectContent returns the status each test needs.
+function withProjectEnv(): { projectPath: string; cleanup: () => void } {
+  const dir = mkdtempSync(join(tmpdir(), 'doctor-test-'));
+  writeFileSync(
+    join(dir, '.env.local'),
+    [
+      'NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID=client-uuid',
+      'NEXT_PUBLIC_CONTENTFUL_SPACE_ID=space123',
+      'NEXT_PUBLIC_CONTENTFUL_TOKEN=cda-token',
+      'NEXT_PUBLIC_CONTENTFUL_PREVIEW_TOKEN=cpa-token',
+    ].join('\n'),
+  );
+  return { projectPath: dir, cleanup: () => rmSync(dir, { recursive: true, force: true }) };
+}
+
+function makeDrillDownModel(projectPath: string, extra: Record<string, unknown>) {
+  return mockModel({
+    'detect-sdk': { framework: 'nextjs-app', frameworkVersion: '15.3.0', projectPath },
+    'confirm-credentials': { runCredentialChecks: true },
+    'programmatic-gate': { choice: 'inspect-entry', problemDescription: 'Hero personalization does nothing' },
+    'choose-entry': { entryId: 'perch-sec-hero-home', skip: false },
+    ...extra,
+  });
+}
+
+function entryResponse(body: unknown): Response {
+  return new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
+}
+
+// Fetch stub: list/survey queries return empty; the inspected entry has a draft-only baseline link
+// (published has no nt_experiences, preview has it) → inspectContent returns 'fail'.
+function stubDraftOnlyLink() {
+  const baseEntry = { sys: { id: 'perch-sec-hero-home', contentType: { sys: { id: 'hero' } } } };
+  return async (input: string | URL | Request) => {
+    const url = new URL(typeof input === 'string' ? input : input.toString());
+    // Experience API connectivity probe.
+    if (url.hostname.includes('ninetailed.co')) return entryResponse({});
+    // Single-entry inspection (path ends with the entry id).
+    if (url.pathname.includes('/entries/perch-sec-hero-home')) {
+      return url.hostname.includes('cdn.contentful.com')
+        ? entryResponse({ ...baseEntry, fields: { title: 'Hero' } })
+        : entryResponse({
+            ...baseEntry,
+            fields: { title: 'Hero', nt_experiences: [{ sys: { type: 'Link', linkType: 'Entry', id: 'exp1' } }] },
+          });
+    }
+    // survey-content list queries → no experiences, keeps the survey out of the way.
+    return entryResponse({ items: [] });
+  };
+}
+
+// Drill-down with a CONFIRMED content problem → fix-first, verify, done. Must NOT railroad
+// into a codebase exploration the way it used to.
+test('doctor: drill-down confirms content problem → fix-infra → ask-fixed (working) → done', async () => {
+  const originalFetch = globalThis.fetch;
+  const { projectPath, cleanup } = withProjectEnv();
+  globalThis.fetch = stubDraftOnlyLink();
+  try {
+    const result = await runSkill(doctorSkill, {
+      model: makeDrillDownModel(projectPath, {
+        'fix-infra': { summary: 'Gave republish instructions for perch-sec-hero-home', filesModified: [] },
+        'ask-fixed': { working: true },
+        done: { message: 'Fixed!' },
+      }),
+    });
+
+    assert.ok(result.path.includes('run-inspection'));
+    assert.ok(result.path.includes('fix-infra'));
+    assert.ok(result.path.includes('ask-fixed'));
+    assert.ok(result.path.includes('done'));
+    // The whole point: a confirmed content fix is tried + verified BEFORE any code exploration.
+    assert.ok(!result.path.includes('explore-code'));
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+  }
+});
+
+// Drill-down confirms a content problem, but the fix doesn't resolve it → fall through to code.
+test('doctor: drill-down → fix-infra → ask-fixed (not working) → explore-code', async () => {
+  const originalFetch = globalThis.fetch;
+  const { projectPath, cleanup } = withProjectEnv();
+  globalThis.fetch = stubDraftOnlyLink();
+  try {
+    const result = await runSkill(doctorSkill, {
+      model: makeDrillDownModel(projectPath, {
+        'fix-infra': { summary: 'Republished, but issue persists', filesModified: [] },
+        'ask-fixed': { working: false },
+        'explore-code': { explorationSummary: 'Provider looks fine', concerns: [] },
+        review: { overallStatus: 'warn', recommendations: [], summary: 'Inconclusive.' },
+        report: { choice: 'no' },
+        done: { message: 'Ok' },
+      }),
+    });
+
+    assert.ok(result.path.includes('fix-infra'));
+    assert.ok(result.path.includes('ask-fixed'));
+    assert.ok(result.path.includes('explore-code'));
+    assert.ok(result.path.includes('review'));
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+  }
+});
+
+// Drill-down finds the entry HEALTHY → the problem is elsewhere, so go to code.
+test('doctor: drill-down → run-inspection (pass) → explore-code', async () => {
+  const originalFetch = globalThis.fetch;
+  const { projectPath, cleanup } = withProjectEnv();
+  // Same fully-resolved entry in CDA and CPA → inspectContent returns 'pass'.
+  const healthy = {
+    sys: { id: 'abc123', contentType: { sys: { id: 'hero' } } },
+    fields: {
+      title: 'Hero',
+      nt_experiences: [
+        {
+          sys: { id: 'exp1', contentType: { sys: { id: 'nt_experience' } } },
+          fields: { nt_variants: [{ sys: { id: 'v1', contentType: { sys: { id: 'hero' } } }, fields: { title: 'B' } }] },
+        },
+      ],
+    },
+  };
+  globalThis.fetch = async (input: string | URL | Request) => {
+    const url = new URL(typeof input === 'string' ? input : input.toString());
+    if (url.pathname.includes('/entries/abc123')) return entryResponse(healthy);
+    if (url.hostname.includes('ninetailed.co')) return entryResponse({});
+    return entryResponse({ items: [] });
+  };
+  try {
+    const result = await runSkill(doctorSkill, {
+      model: makeDrillDownModel(projectPath, {
+        'choose-entry': { entryId: 'abc123', skip: false },
+        'programmatic-gate': { choice: 'inspect-entry', problemDescription: 'One page is wrong' },
+        'explore-code': { explorationSummary: 'Setup looks correct', concerns: [] },
+        review: { overallStatus: 'warn', recommendations: [], summary: 'Entry healthy; check code.' },
+        report: { choice: 'no' },
+        done: { message: 'Ok' },
+      }),
+    });
+
+    assert.ok(result.path.includes('run-inspection'));
+    assert.ok(result.path.includes('explore-code'));
+    assert.ok(!result.path.includes('fix-infra'));
+    assert.ok(result.path.includes('review'));
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+  }
+});
+
+// --- resolveCredentials: secrets must not round-trip through the model ---
+
+const REAL_CDA = 'KXNnMDByyIDpK409LDWDxA7KCKtW1YrxkoI00kBYl7I';
+const REAL_PREVIEW = 'kuSQX62SWjquLPR-EGYIA96_mJtlzbYAJwaiutA3N94';
+
+test('resolveCredentials: keeps scanned tokens when the agent echoes masked previews', () => {
+  const resolved = resolveCredentials({
+    scanned: {
+      optimization: { clientId: 'client-uuid', environment: 'main' },
+      contentful: { spaceId: 'ov5rm2sf4eyi', accessToken: REAL_CDA, previewToken: REAL_PREVIEW, environment: 'master' },
+    },
+    runCredentialChecks: true,
+    // The agent misbehaves and echoes the masked previews from the table as "corrections".
+    corrections: { contentful: { accessToken: 'KXNnMDBy****', previewToken: 'kuSQX62S****' } },
+  });
+
+  assert.equal(resolved.contentful.accessToken, REAL_CDA);
+  assert.equal(resolved.contentful.previewToken, REAL_PREVIEW);
+});
+
+test('resolveCredentials: a real user correction overrides the scanned value', () => {
+  const resolved = resolveCredentials({
+    scanned: { contentful: { spaceId: 'old-space', accessToken: 'old-token', environment: 'master' } },
+    runCredentialChecks: true,
+    corrections: { contentful: { accessToken: 'a-genuinely-new-token-value' } },
+  });
+
+  assert.equal(resolved.contentful.accessToken, 'a-genuinely-new-token-value');
+  assert.equal(resolved.contentful.spaceId, 'old-space');
+});
+
+test('resolveCredentials: runCredentialChecks=false yields empty credentials so checks skip', () => {
+  const resolved = resolveCredentials({
+    scanned: { optimization: { clientId: 'client-uuid' }, contentful: { spaceId: 'space', accessToken: REAL_CDA } },
+    runCredentialChecks: false,
+    corrections: undefined,
+  });
+
+  assert.equal(resolved.optimization.clientId, '');
+  assert.equal(resolved.contentful.accessToken, '');
+  assert.equal(resolved.contentful.spaceId, '');
+});
+
+test('resolveCredentials: applies sensible environment defaults', () => {
+  const resolved = resolveCredentials({ scanned: {}, runCredentialChecks: true, corrections: undefined });
+  assert.equal(resolved.personalization.environment, 'main');
+  assert.equal(resolved.optimization.environment, 'main');
+  assert.equal(resolved.contentful.environment, 'master');
+  assert.equal(resolved.contentful.previewToken, undefined);
+});
+
+// User stops at the gate — programmatic findings are enough, no code review.
+test('doctor: gate → done (findings are enough)', async () => {
   const result = await runSkill(doctorSkill, {
     model: mockModel({
-      explore: {
+      'detect-sdk': {
         framework: 'nextjs-app',
-        frameworkVersion: '14.1.0',
+        frameworkVersion: '15.3.0',
         projectPath: '.',
-        explorationSummary: 'Setup looks correct',
-        concerns: [],
       },
       'scan-credentials': {
-        envVars: [{ name: 'CONTENTFUL_SPACE_ID', status: 'set', maskedValue: 'space****' }],
-        contentful: { spaceId: 'space1', accessToken: 'token1' },
+        envVars: [{ name: 'OPTIMIZATION_CLIENT_ID', status: 'set', maskedValue: '3ad32994' }],
+        optimization: { clientId: 'client-uuid', environment: 'main' },
       },
-      'confirm-credentials': {
-        hasCredentials: true,
-        contentful: { spaceId: 'space1', accessToken: 'token1', environment: 'master' },
-        personalization: { apiKey: 'nt_key', environment: 'main' },
-      },
-      'check-api': {
-        status: 'skip',
-        findings: [{ item: 'Ninetailed API', status: 'skip', detail: 'No credentials' }],
-        reachable: false,
-      },
-      triage: { choice: 'inspect-entry', problemDescription: 'Not sure what is wrong' },
-      'choose-entry': { skip: true },
-      review: { overallStatus: 'pass', recommendations: [], summary: 'Everything looks good.' },
-      report: { choice: 'no' },
-      done: { message: 'All clear' },
+      'confirm-credentials': { runCredentialChecks: true },
+      'programmatic-gate': { choice: 'done', problemDescription: '' },
+      done: { message: 'Thanks' },
     }),
   });
 
-  assert.ok(result.path.includes('choose-entry'));
-  assert.ok(!result.path.includes('run-inspection'));
-  assert.ok(result.path.includes('review'));
+  assert.ok(result.path.includes('programmatic-gate'));
+  assert.ok(result.path.includes('done'));
+  assert.ok(!result.path.includes('explore-code'));
+  assert.ok(!result.path.includes('review'));
 });
 
 // --- Develop sub-skill tests ---

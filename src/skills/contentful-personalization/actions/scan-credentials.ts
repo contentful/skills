@@ -20,6 +20,16 @@ const KNOWN_ENV_VARS: Array<{ name: string; secret: boolean; patterns: RegExp[] 
     patterns: [new RegExp(`^${FW_PREFIX}NINETAILED_ENVIRONMENT\\s*=[^\\S\\n]*(.+)`, 'm')],
   },
   {
+    name: 'OPTIMIZATION_CLIENT_ID',
+    secret: false,
+    patterns: [new RegExp(`^${FW_PREFIX}OPTIMIZATION_CLIENT_ID\\s*=[^\\S\\n]*(.+)`, 'm')],
+  },
+  {
+    name: 'OPTIMIZATION_ENVIRONMENT',
+    secret: false,
+    patterns: [new RegExp(`^${FW_PREFIX}OPTIMIZATION_ENVIRONMENT\\s*=[^\\S\\n]*(.+)`, 'm')],
+  },
+  {
     name: 'CONTENTFUL_SPACE_ID',
     secret: false,
     patterns: [new RegExp(`^${FW_PREFIX}CONTENTFUL_SPACE_ID\\s*=[^\\S\\n]*(.+)`, 'm')],
@@ -113,6 +123,14 @@ export const scanCredentials = action({
             personalization: {
               ...(detected['NINETAILED_API_KEY'] ? { apiKey: detected['NINETAILED_API_KEY'] } : {}),
               ...(detected['NINETAILED_ENVIRONMENT'] ? { environment: detected['NINETAILED_ENVIRONMENT'] } : {}),
+            },
+          }
+        : {}),
+      ...(detected['OPTIMIZATION_CLIENT_ID'] || detected['OPTIMIZATION_ENVIRONMENT']
+        ? {
+            optimization: {
+              ...(detected['OPTIMIZATION_CLIENT_ID'] ? { clientId: detected['OPTIMIZATION_CLIENT_ID'] } : {}),
+              ...(detected['OPTIMIZATION_ENVIRONMENT'] ? { environment: detected['OPTIMIZATION_ENVIRONMENT'] } : {}),
             },
           }
         : {}),

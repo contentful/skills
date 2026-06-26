@@ -27,6 +27,31 @@ function getInstallPackageManager(packageManager: PackagesResultData['packageMan
   return packageManager === 'unknown' || !packageManager ? 'npm' : packageManager;
 }
 
+// Summarize which personalization SDK (if any) is already installed, so the assess and
+// recommend steps can weigh consistency vs. migration instead of treating every project
+// as greenfield. Accepts the loosely-typed store shape (deeply optional/readonly).
+function describeInstalledSdk(packages?: {
+  packages?: {
+    ninetailed?: ReadonlyArray<{ name?: string } | undefined>;
+    optimization?: ReadonlyArray<{ name?: string } | undefined>;
+  };
+}): string {
+  const names = (list: ReadonlyArray<{ name?: string } | undefined> | undefined): string[] =>
+    (list ?? []).map((p) => p?.name).filter((n): n is string => !!n);
+  const ninetailed = names(packages?.packages?.ninetailed);
+  const optimization = names(packages?.packages?.optimization);
+  if (ninetailed.length > 0 && optimization.length > 0) {
+    return 'Both @ninetailed/experience.js AND @contentful/optimization packages are present — this is unusual and likely a migration in progress.';
+  }
+  if (optimization.length > 0) {
+    return `Already using the modern @contentful/optimization SDK (${optimization.join(', ')}). Prefer staying on this SDK unless the user explicitly wants to change.`;
+  }
+  if (ninetailed.length > 0) {
+    return `Already using the legacy @ninetailed/experience.js SDK (${ninetailed.join(', ')}). Recommending @contentful/optimization would mean a migration — call that out and prefer consistency unless the user explicitly wants to migrate.`;
+  }
+  return 'No personalization SDK is installed yet — this is a greenfield choice.';
+}
+
 function getDerivedPackages(store: {
   project: { framework: string; packages?: { packageManager?: PackagesResultData['packageManager'] } };
   setup?: {
@@ -175,6 +200,7 @@ export default skill({
         : 'No package data available';
 
       const readinessOnly = store.steps.explore.readinessOnly;
+      const installedSdkNote = describeInstalledSdk(store.project.packages);
 
       return prompt`
           Combine the exploration findings with the deterministic package/env data below
@@ -187,6 +213,9 @@ export default skill({
           | **Personalization SDK** | Current state of Ninetailed/Optimization setup |
           | **Component architecture** | Mapper present? Components isolated? |
           | **Rendering pipeline** | Page-level fetching? Include depth adequate? |
+
+          ## Installed personalization SDK
+          ${installedSdkNote}
 
           For each area, give a status and explain **why** it matters — not just pass/fail.
           Be conversational and helpful.
@@ -284,6 +313,7 @@ export default skill({
 
   .step('recommend', {
     prompt: ({ store, refs }) => {
+      const installedSdkNote = describeInstalledSdk(store.project.packages);
       return prompt`
           Recommend a specific SDK and architecture for this project.
           Explain your reasoning conversationally — help the user understand WHY
@@ -295,6 +325,13 @@ export default skill({
             Router: store.project.routerType,
           })}
           ${store.project.explorationSummary ? `\n${store.project.explorationSummary}` : ''}
+
+          ## Installed personalization SDK
+          ${installedSdkNote}
+
+          Factor the installed SDK into your recommendation: if one is already in use, prefer
+          staying consistent with it unless the user explicitly wants to migrate, and if you do
+          recommend switching, name the migration cost explicitly.
 
           ## Your two decisions
 
