@@ -1,8 +1,17 @@
-<!-- Agent context: Use this knowledge to reason about customer setups using the new @contentful/optimization SDK. Do not share infrastructure internals, Worker names, or backend architecture in responses. -->
+<!-- Agent context: Use this knowledge to reason about customer setups using the @contentful/optimization SDK suite. Do not share infrastructure internals, Worker names, or backend architecture in responses. -->
 
-# Next-Gen SDK Reference: @contentful/optimization
+# Modern SDK Reference: @contentful/optimization
 
-Complete API reference for the @contentful/optimization SDK packages (successor to @ninetailed/experience.js). Not yet released (alpha).
+Complete API reference for the `@contentful/optimization` SDK suite — the **modern, next-gen** SDK
+family and the successor to `@ninetailed/experience.js`. The current default for most setups is still
+`@ninetailed/experience.js` (see `sdk-selection.md`); reach for this SDK when the user explicitly
+wants it or the project is greenfield and forward-looking.
+
+> [!IMPORTANT]
+> The Optimization SDK Suite is **pre-release (alpha)**. Breaking changes can be published at any
+> time. When a customer opts into it: pin exact versions, keep all `@contentful/optimization-*`
+> packages on the same version, and validate rollouts more strictly than you would for a stable SDK.
+> For existing production projects on `@ninetailed/experience.js`, see `sdk-legacy-guide.md`.
 
 ---
 
@@ -10,37 +19,55 @@ Complete API reference for the @contentful/optimization SDK packages (successor 
 
 1. [Package Ecosystem](#1-package-ecosystem)
 2. [Architecture Overview](#2-architecture-overview)
-3. [Web SDK](#3-web-sdk)
-4. [React Web SDK](#4-react-web-sdk)
-5. [Node SDK](#5-node-sdk)
-6. [API Client](#6-api-client)
-7. [Consent System](#7-consent-system)
-8. [Migration from Legacy SDK](#8-migration-from-legacy-sdk)
+3. [React Web SDK](#3-react-web-sdk)
+4. [Next.js SDK Adapter](#4-nextjs-sdk-adapter)
+5. [Web SDK](#5-web-sdk)
+6. [Node SDK](#6-node-sdk)
+7. [API Client](#7-api-client)
+8. [Consent System](#8-consent-system)
+9. [Resolvers and Optimization Data](#9-resolvers-and-optimization-data)
+10. [Migration from the Legacy SDK](#10-migration-from-the-legacy-sdk)
 
 ---
 
 ## 1. Package Ecosystem
 
+Pick the narrowest package that matches the runtime you are building for.
+
 | Package | npm Name | Purpose | Runtime |
 |---------|----------|---------|---------|
-| Core SDK | `@contentful/optimization-core` | Platform-agnostic foundation (stateful + stateless) | Any |
-| Web SDK | `@contentful/optimization-web` | Stateful browser SDK | Browser |
-| React Web SDK | `@contentful/optimization-react-web` | React integration layer | React (web) |
-| Node SDK | `@contentful/optimization-node` | Stateless server SDK | Node.js |
+| React Web SDK | `@contentful/optimization-react-web` | React providers, hooks, router adapters, entry rendering | React (web) |
+| Next.js adapter | `@contentful/optimization-nextjs` | Next.js App Router server + client + request-handler glue | Next.js |
+| Web SDK | `@contentful/optimization-web` | Stateful browser SDK (non-React or custom adapters) | Browser |
+| Node SDK | `@contentful/optimization-node` | Stateless server SDK for SSR and server functions | Node.js |
 | React Native SDK | `@contentful/optimization-react-native` | Mobile SDK | React Native |
+| Web Preview Panel | `@contentful/optimization-web-preview-panel` | Author preview tooling for an existing Web SDK instance | Browser |
+| Core SDK | `@contentful/optimization-core` | Shared foundation (`CoreStateful` + `CoreStateless`) | Any |
 | API Client | `@contentful/optimization-api-client` | Direct Experience API + Insights API client | Any |
 | API Schemas | `@contentful/optimization-api-schemas` | Zod Mini validation schemas and inferred types | Any |
 
-General selection rules:
-- Most application code should start with an environment SDK (web, node) or framework SDK (react-web).
-- `@contentful/optimization-core` is the shared foundation -- not used directly.
-- `@contentful/optimization-api-client` and `@contentful/optimization-api-schemas` are lower-level building blocks.
+Selection rules:
+
+- **React on the web** → `@contentful/optimization-react-web`. It wraps the Web SDK transitively, so
+  React apps use the React layer as the application-facing entry point.
+- **Next.js App Router** → `@contentful/optimization-nextjs`. It composes the Node SDK on the server
+  and the React Web SDK on the client. Import its `/server`, `/client`, and `/request-handler`
+  subpaths rather than wiring the lower-level packages by hand.
+- **Non-React browser app** → `@contentful/optimization-web` directly.
+- **Stateless server / SSR layer** → `@contentful/optimization-node`.
+- `@contentful/optimization-core` is the shared foundation and is **not used directly** by app code.
+- `@contentful/optimization-api-client` and `@contentful/optimization-api-schemas` are lower-level
+  building blocks for custom integrations.
+
+Native iOS (`ContentfulOptimization` Swift Package) and native Android
+(`com.contentful.java:optimization-android`) SDKs also exist as pre-release implementations and are
+separate from `@contentful/optimization-react-native`.
 
 ---
 
 ## 2. Architecture Overview
 
-The SDK suite is layered:
+The suite is layered:
 
 ```
 @contentful/optimization-api-schemas   (Zod validation, types)
@@ -48,521 +75,475 @@ The SDK suite is layered:
 @contentful/optimization-api-client    (HTTP clients: Experience + Insights)
             |
 @contentful/optimization-core          (CoreBase -> CoreStateful / CoreStateless)
-          /    \
-optimization-web  optimization-node    (Environment SDKs)
-         |
-optimization-react-web                (Framework SDK)
+          /        \
+optimization-web   optimization-node    (Environment SDKs)
+       |
+optimization-react-web                 (React framework SDK)
+       |
+optimization-nextjs                    (Next.js adapter: server + client + request handler)
 ```
 
 Two runtime modes:
 
-- **CoreStateful** (Browser/mobile) -- Manages state via reactive signals, cookies, event queues, consent gating, and singleton enforcement.
-- **CoreStateless** (Server/SSR) -- All event methods return `Promise<OptimizationData>` and accept `requestOptions` for per-request scoping. No internal state.
+- **CoreStateful** (browser/mobile) — manages state via reactive signals, cookies, event queues,
+  consent gating, and singleton enforcement.
+- **CoreStateless** (server/SSR) — no internal state. Event methods are request-scoped and return
+  `Promise<OptimizationData>`.
 
 ---
 
-## 3. Web SDK
-
-### ContentfulOptimization
-
-Extends CoreStateful. Provides browser-specific wiring. Singleton enforced via `window.contentfulOptimization`.
-
-```typescript
-import ContentfulOptimization from '@contentful/optimization-web';
-
-const sdk = new ContentfulOptimization({
-  clientId: 'abc-123',
-  environment: 'main',
-  // Optional:
-  app?: App,
-  autoTrackEntryInteraction?: { views?: boolean, clicks?: boolean, hovers?: boolean },
-  cookie?: { domain?: string, expires?: number },  // default expires: 365 days
-  logLevel?: LogLevels,
-  allowedEventTypes?: EventType[],  // Default: ['identify', 'page']
-  defaults?: { consent?: boolean, profile?: Profile, changes?: ChangeArray, selectedOptimizations?: SelectedOptimizationArray },
-  api?: {
-    experienceBaseUrl?: string,
-    insightsBaseUrl?: string,
-    enabledFeatures?: ('ip-enrichment' | 'location')[],
-    preflight?: boolean,
-    locale?: string,
-    ip?: string,
-  },
-  queuePolicy?: {
-    flush?: {
-      flushIntervalMs?: number,          // Default: 30000 (30s)
-      baseBackoffMs?: number,            // Default: 500
-      maxBackoffMs?: number,             // Default: 30000
-      maxConsecutiveFailures?: number,   // Default: 8
-      circuitOpenMs?: number,            // Default: 120000 (2min)
-    },
-    offlineMaxEvents?: number,           // Default: 100
-  },
-});
-```
-
-#### Key Methods
-
-```typescript
-// Event methods (all consent-gated)
-await sdk.identify({ userId: 'ext-123', traits: { plan: 'pro' } });
-await sdk.page({ properties: { title: 'Home' } });
-await sdk.track({ event: 'purchase', properties: { total: 99 } });
-await sdk.trackView({ componentId: 'hero', viewId: 'v1', viewDurationMs: 2000 });
-await sdk.trackClick({ componentId: 'hero' });
-
-// State management
-sdk.consent(true);   // Grant consent
-sdk.reset();         // Clear all state
-sdk.destroy();       // Clean up (force-flush, release singleton)
-await sdk.flush();   // Flush event queues
-
-// Resolvers
-const flag = sdk.getFlag('dark-mode');
-const resolved = sdk.resolveOptimizedEntry(entry);
-const mergeTagValue = sdk.getMergeTagValue(mergeTagEntry);
-```
-
-#### Observable State
-
-All state is accessible via `sdk.states`:
-
-```typescript
-interface CoreStates {
-  consent: Observable<boolean | undefined>;
-  profile: Observable<Profile | undefined>;
-  selectedOptimizations: Observable<SelectedOptimizationArray | undefined>;
-  canOptimize: Observable<boolean>;       // computed: selectedOptimizations !== undefined
-  flag: (name: string) => Observable<Json>;
-  eventStream: Observable<Event | undefined>;
-  blockedEventStream: Observable<BlockedEvent | undefined>;
-  previewPanelAttached: Observable<boolean>;
-  previewPanelOpen: Observable<boolean>;
-}
-```
-
-Observable interface:
-
-```typescript
-interface Observable<T> {
-  readonly current: T;                                 // Deep-cloned snapshot
-  subscribe: (next: (v: T) => void) => Subscription;  // Emits immediately + on change
-  subscribeOnce: (next: (v: NonNullable<T>) => void) => Subscription;  // First non-null, then auto-unsubscribe
-}
-```
-
-Key detail: `subscribe` fires immediately with the current value (like `BehaviorSubject`), then on every change.
-
-#### Interceptors
-
-Transform events or state updates via a pipeline:
-
-```typescript
-// Add an event interceptor
-const id = sdk.interceptors.event.add(async (event) => {
-  // Transform event before it's sent
-  return event;
-});
-
-// Add a state interceptor
-const id = sdk.interceptors.state.add(async (data) => {
-  // Transform optimization data before it's applied
-  return data;
-});
-
-// Remove
-sdk.interceptors.event.remove(id);
-```
-
-#### Entry Interaction Tracking
-
-Automatic DOM-based tracking for views, clicks, and hovers. Elements are discovered via `[data-ctfl-entry-id]` selector using MutationObserver.
-
-```typescript
-// Auto-tracking via config
-new ContentfulOptimization({
-  autoTrackEntryInteraction: { views: true, clicks: true, hovers: true },
-  ...
-});
-
-// Manual tracking API
-sdk.tracking.enable('views', { dwellTimeMs: 2000, minVisibleRatio: 0.5 });
-sdk.tracking.enable('clicks');
-sdk.tracking.enableElement('views', element, { dwellTimeMs: 3000 });
-sdk.tracking.disable('views');
-sdk.tracking.disableElement('views', element);
-```
-
-#### Cookie and Storage
-
-```typescript
-// Cookie names
-ANONYMOUS_ID_COOKIE = 'ctfl-opt-aid'
-ANONYMOUS_ID_COOKIE_LEGACY = 'ntaid'       // auto-migrated
-
-// localStorage keys
-ANONYMOUS_ID_KEY = '__ctfl_opt_anonymous_id__'
-CONSENT_KEY = '__ctfl_opt_consent__'
-PROFILE_CACHE_KEY = '__ctfl_opt_profile__'
-SELECTED_OPTIMIZATIONS_CACHE_KEY = '__ctfl_opt_selected-optimizations__'
-CHANGES_CACHE_KEY = '__ctfl_opt_changes__'
-```
-
-Legacy cookies and localStorage keys are automatically migrated on construction.
-
----
-
-## 4. React Web SDK
+## 3. React Web SDK
 
 **Package:** `@contentful/optimization-react-web`
 
-### OptimizationProvider
+Within this suite, the entry point for React browser applications. Start here for React, Gatsby,
+Remix, and other non-Next React setups. For Next.js App Router, prefer the
+[Next.js adapter](#4-nextjs-sdk-adapter).
 
-Wraps the React tree with SDK context. Two usage modes:
+### OptimizationRoot (start here)
 
-```typescript
-// Mode 1: Pass config props -- creates ContentfulOptimization instance internally
-<OptimizationProvider clientId="abc" environment="main">
-  {children}
-</OptimizationProvider>
+Mount `OptimizationRoot` once near the root of the React tree. It owns the Web SDK lifecycle
+(creation, initialization, and teardown).
 
-// Mode 2: Pass an existing SDK instance
-<OptimizationProvider sdk={existingInstance}>
-  {children}
+```tsx
+import { OptimizationRoot } from '@contentful/optimization-react-web';
+
+function App() {
+  return (
+    <OptimizationRoot clientId="your-client-id" environment="main" locale="en-US">
+      <YourApp />
+    </OptimizationRoot>
+  );
+}
+```
+
+`OptimizationRoot` accepts the Web SDK config props plus React-specific props:
+
+| Prop | Required? | Default | Description |
+|------|-----------|---------|-------------|
+| `clientId` | Yes | — | Shared API key for the Experience API and Insights API |
+| `environment` | No | `'main'` | Contentful environment identifier |
+| `locale` | No | `undefined` | SDK Experience API and default event locale |
+| `defaults` | No | `undefined` | Initial state (e.g. `{ consent: true }`, profile values) |
+| `allowedEventTypes` | No | `['identify', 'page']` | Event types allowed before consent is set |
+| `trackEntryInteraction` | No | `{ views: true, clicks: false, hovers: false }` | Auto interaction tracking for `OptimizedEntry` elements |
+| `liveUpdates` | No | `false` | Whether `OptimizedEntry` reacts continuously to SDK state |
+| `onStatesReady` | No | `undefined` | Subscribe to SDK state as part of provider initialization |
+| `onEventBlocked` | No | `undefined` | Callback invoked when consent/guard logic blocks an event |
+| `queuePolicy` | No | SDK defaults | Flush retry behavior and offline queue bounds |
+| `cookie` | No | `{ expires: 365 }` | Anonymous ID cookie settings (from the Web SDK) |
+| `api` | No | Web SDK defaults | Experience/Insights endpoint and request options |
+| `logLevel` | No | `'error'` | Minimum log level for the default console sink |
+
+### OptimizationProvider (escape hatch)
+
+Use `OptimizationProvider` directly only when application or adapter code must own a pre-built SDK
+instance. When you inject an instance, the provider does **not** destroy it — teardown stays with the
+owner that created it.
+
+```tsx
+import { OptimizationProvider } from '@contentful/optimization-react-web';
+
+<OptimizationProvider sdk={optimization}>
+  <YourApp />
 </OptimizationProvider>
 ```
 
-When the provider creates the instance (config mode), it calls `destroy()` on unmount. When an external SDK is passed, the provider does not own or destroy it.
-
-### OptimizationRoot
-
-Convenience wrapper combining `OptimizationProvider` + `LiveUpdatesProvider`:
+### Hooks
 
 ```tsx
-<OptimizationRoot clientId="abc" environment="main" liveUpdates>
+import {
+  useOptimization,
+  useOptimizationActions,
+  useConsentState,
+  useProfileState,
+  useSelectedOptimizationsState,
+  useEntryResolver,
+  useMergeTagResolver,
+  useOptimizedEntry,
+} from '@contentful/optimization-react-web';
+```
+
+- **`useOptimization()`** returns the **SDK instance itself**. Keep it in a variable and call methods
+  on it. Do **not** destructure methods off it — they rely on the instance `this` binding.
+
+  ```tsx
+  const optimization = useOptimization();
+  optimization.track({ event: 'purchase' }); // correct
+  // const { track } = useOptimization(); // ❌ loses the binding
+  ```
+
+- **`useOptimizationActions()`** returns destructurable, pre-bound action methods. Prefer it when a
+  component just needs to call actions.
+
+  ```tsx
+  const { track, identify, page, reset, consent } = useOptimizationActions();
+  ```
+
+- **State hooks** — render current SDK state without subscribing to `sdk.states.*` from effects:
+  `useConsentState()`, `useProfileState()`, `useSelectedOptimizationsState()`.
+
+- **`useEntryResolver()`** — manual entry resolution without the `OptimizedEntry` wrapper:
+
+  ```tsx
+  const { resolveEntry } = useEntryResolver();
+  const resolvedEntry = resolveEntry(baselineEntry);
+  ```
+
+- **`useMergeTagResolver()`** — resolve embedded merge tag entries:
+
+  ```tsx
+  const { getMergeTagValue } = useMergeTagResolver();
+  return <span>{getMergeTagValue(mergeTagEntry) ?? ''}</span>;
+  ```
+
+- **`useOptimizedEntry({ baselineEntry, liveUpdates })`** — lower-level resolution result
+  (`{ canOptimize, entry, isLoading, isReady, selectedOptimization, ... }`).
+
+### OptimizedEntry
+
+Resolves a baseline Contentful entry to the selected variant (or baseline) and renders via a render
+prop:
+
+```tsx
+import { OptimizedEntry } from '@contentful/optimization-react-web';
+
+function HeroEntry({ baselineEntry }) {
+  return (
+    <OptimizedEntry baselineEntry={baselineEntry}>
+      {(resolvedEntry) => <HeroCard entry={resolvedEntry} />}
+    </OptimizedEntry>
+  );
+}
+```
+
+Behavior:
+
+- The loading phase begins immediately while optimization is unresolved. If state is still
+  unresolved after **5 seconds**, the component reveals baseline content so loading never persists
+  forever. Without a custom `loadingFallback`, the wrapper preserves layout by hiding the baseline
+  until that timeout elapses.
+- Emits the Web SDK's `data-ctfl-*` tracking attributes for resolved entries. Configure entry
+  tracking with `clickable`, `hoverDurationUpdateIntervalMs`, and `viewDurationUpdateIntervalMs`
+  props instead of setting `data-ctfl-*` manually.
+- `baselineEntry` must be a single-locale CDA entry that includes `nt_experiences` (use `include: 10`
+  when fetching). Do **not** pass all-locale (`withAllLocales` / `locale=*`) responses.
+
+### Router page events
+
+Router adapters live on **subpaths** and auto-emit `page()` on route changes. Mount each inside
+`OptimizationRoot`.
+
+| Router | Import path | Mounting rule |
+|--------|-------------|---------------|
+| React Router | `@contentful/optimization-react-web/router/react-router` | Under a React Router data router |
+| Next.js Pages | `@contentful/optimization-react-web/router/next-pages` | Once in `pages/_app.tsx` |
+| Next.js App Router | `@contentful/optimization-react-web/router/next-app` | In `app/layout.tsx` |
+| TanStack Router | `@contentful/optimization-react-web/router/tanstack-router` | Under the TanStack router tree |
+
+```tsx
+import { NextAppAutoPageTracker } from '@contentful/optimization-react-web/router/next-app';
+
+<OptimizationRoot clientId="your-client-id">
+  <NextAppAutoPageTracker />
   {children}
 </OptimizationRoot>
 ```
 
-### OptimizedEntry Component
+All adapters accept `pagePayload` (static) and `getPagePayload(context)` (dynamic) for payload
+enrichment. For Next.js apps that also need the server and request-handler integration, prefer the
+[`@contentful/optimization-nextjs`](#4-nextjs-sdk-adapter) adapter.
 
-Resolves a baseline entry to the appropriate variant and renders it.
+### Live updates and preview
 
-```typescript
-interface OptimizedEntryProps {
-  baselineEntry: Entry;              // Must include nt_experiences (include: 10)
-  children: (entry: Entry) => ReactNode;  // Render prop
-  liveUpdates?: boolean;             // Override global setting
-  as?: WrapperElement;               // Default: 'div'
-  loadingFallback?: ReactNode | (() => ReactNode) | false;
-}
-```
-
-Usage:
-
-```tsx
-<OptimizedEntry baselineEntry={entry}>
-  {(resolvedEntry) => <MyComponent {...resolvedEntry.fields} />}
-</OptimizedEntry>
-```
-
-Key behaviors:
-- Renders with `style={{ display: 'contents' }}` wrapper (invisible in layout)
-- Shows a loading fallback while `canOptimize` is false and the entry has optimization references
-- Attaches `data-ctfl-*` tracking attributes to the wrapper element when resolved
-
-### useOptimizedEntry Hook
-
-```typescript
-interface UseOptimizedEntryResult {
-  canOptimize: boolean;
-  entry: Entry;                                        // Resolved (variant or baseline)
-  isLoading: boolean;
-  isReady: boolean;
-  selectedOptimization: SelectedOptimization | undefined;
-  resolvedData: ResolvedData;
-  selectedOptimizations: SelectedOptimizationArray | undefined;
-}
-
-const result = useOptimizedEntry({ baselineEntry: entry, liveUpdates: true });
-```
-
-When `liveUpdates` is true (or preview panel is open), always updates to latest selections. When false, locks selections after the first non-undefined value.
-
-### useOptimization Hook
-
-Returns bound SDK methods for React components.
-
-```typescript
-interface UseOptimizationResult {
-  readonly consent: OptimizationSdk['consent'];
-  readonly getFlag: OptimizationSdk['getFlag'];
-  readonly getMergeTagValue: OptimizationSdk['getMergeTagValue'];
-  readonly identify: OptimizationSdk['identify'];
-  readonly interactionTracking: OptimizationSdk['tracking'];
-  readonly page: OptimizationSdk['page'];
-  readonly resolveOptimizedEntry: OptimizationSdk['resolveOptimizedEntry'];
-  readonly resolveEntry: (entry: Entry) => Entry;
-  readonly resolveEntryData: (entry: Entry) => ResolvedData;
-  readonly sdk: OptimizationSdk;
-  readonly track: OptimizationSdk['track'];
-}
-
-const { page, track, identify, getFlag, resolveEntry, consent, sdk } = useOptimization();
-```
-
-### useOptimizationContext Hook
-
-Lower-level context access. Returns the raw context value without throwing on missing SDK.
-
-```typescript
-interface OptimizationContextValue {
-  readonly sdk: OptimizationSdk | undefined;
-  readonly isReady: boolean;
-  readonly error: Error | undefined;
-}
-
-const { sdk, isReady, error } = useOptimizationContext();
-```
-
-### Router Auto-Page Trackers
-
-Pre-built components that auto-emit `page()` events on route changes. All render `null`.
-
-#### Next.js App Router
-
-```tsx
-import { NextAppAutoPageTracker } from '@contentful/optimization-react-web';
-
-<NextAppAutoPageTracker />
-<NextAppAutoPageTracker pagePayload={{ properties: { title: 'My Page' } }} />
-<NextAppAutoPageTracker getPagePayload={(ctx) => ({ properties: { title: ctx.pathname } })} />
-```
-
-#### Next.js Pages Router
-
-```tsx
-import { NextPagesAutoPageTracker } from '@contentful/optimization-react-web';
-
-<NextPagesAutoPageTracker />
-```
-
-#### React Router (v6+)
-
-```tsx
-import { ReactRouterAutoPageTracker } from '@contentful/optimization-react-web';
-
-<ReactRouterAutoPageTracker />
-```
-
-#### TanStack Router
-
-```tsx
-import { TanStackRouterAutoPageTracker } from '@contentful/optimization-react-web';
-
-<TanStackRouterAutoPageTracker />
-```
-
-All trackers accept:
-
-```typescript
-interface AutoPagePayloadOptions<TRouteContext> {
-  readonly pagePayload?: AutoPagePayload;                     // Static payload for every emission
-  readonly getPagePayload?: (context: AutoPageEmissionContext<TRouteContext>) => AutoPagePayload | undefined;
-}
-```
-
-### LiveUpdatesProvider
-
-Subscribes to preview panel open state and provides live-update context:
-
-```typescript
-<LiveUpdatesProvider globalLiveUpdates={false}>
-  {children}
-</LiveUpdatesProvider>
-```
+`liveUpdates` defaults to `false`, so optimized entries lock to the first resolved value. Set it
+globally on `OptimizationRoot` or per `OptimizedEntry` when entries must react to profile, flag, or
+preview changes. When the browser preview panel
+(`@contentful/optimization-web-preview-panel`) is open, live updates are forced on for all
+`OptimizedEntry` components so authors can inspect variant changes immediately.
 
 ---
 
-## 5. Node SDK
+## 4. Next.js SDK Adapter
+
+**Package:** `@contentful/optimization-nextjs`
+
+Within this suite, the path for Next.js App Router applications. It is a thin adapter — not a new
+runtime — that composes the Node SDK on the server and the React Web SDK on the client.
+
+| Runtime | Import path | Responsibility |
+|---------|-------------|----------------|
+| Client | `@contentful/optimization-nextjs/client` | React providers, hooks, components, trackers |
+| Server | `@contentful/optimization-nextjs/server` | Node SDK creation, request binding, SSR wrapper |
+| Request handler | `@contentful/optimization-nextjs/request-handler` | Next middleware/proxy request composition |
+| Shared | `@contentful/optimization-nextjs/tracking-attributes` | SSR `data-ctfl-*` tracking attributes |
+
+### Server
+
+```tsx
+import {
+  ServerOptimizedEntry,
+  createNextjsOptimization,
+  getNextjsServerOptimizationData,
+} from '@contentful/optimization-nextjs/server';
+import { cookies, headers } from 'next/headers';
+
+const sdk = createNextjsOptimization({ clientId: 'client-id', environment: 'main' });
+
+export default async function Page() {
+  const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
+  const { data } = await getNextjsServerOptimizationData(sdk, {
+    consent: { events: true, persistence: true },
+    cookies: cookieStore,
+    headers: headerStore,
+    locale: 'en-US',
+  });
+
+  const resolvedData = sdk.resolveOptimizedEntry(entry, data?.selectedOptimizations);
+
+  return (
+    <ServerOptimizedEntry baselineEntry={entry} resolvedData={resolvedData}>
+      {resolvedData.entry.fields.title}
+    </ServerOptimizedEntry>
+  );
+}
+```
+
+### Client
+
+```tsx
+import { NextAppAutoPageTracker, OptimizationRoot } from '@contentful/optimization-nextjs/client';
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <OptimizationRoot clientId="client-id" environment="main">
+      <NextAppAutoPageTracker initialPageEvent="skip" />
+      {children}
+    </OptimizationRoot>
+  );
+}
+```
+
+Use `initialPageEvent="skip"` only when the server already called `page()` for the same initial
+route. Route changes still emit normally.
+
+### Request handler
+
+```ts
+import { optimization } from '@/lib/optimization-server';
+import { createNextjsOptimizationRequestHandler } from '@contentful/optimization-nextjs/request-handler';
+
+export const proxy = createNextjsOptimizationRequestHandler(optimization, {
+  getLocale: () => 'en-US',
+  resolveConsent: () => ({ events: true, persistence: true }),
+});
+```
+
+Export the returned handler from `middleware.ts` or `proxy.ts`. It can compose with another
+request-layer handler by accepting and returning the same `NextResponse`.
+
+---
+
+## 5. Web SDK
+
+**Package:** `@contentful/optimization-web`
+
+Use directly for non-React browser apps, custom framework adapters, and Web Components. React apps
+should use the React Web SDK instead.
+
+```ts
+import ContentfulOptimization from '@contentful/optimization-web';
+
+const optimization = new ContentfulOptimization({
+  clientId: 'your-client-id',
+  environment: 'main',
+  locale: 'en-US',
+});
+```
+
+> Initialize once per page runtime. Reuse `window.contentfulOptimization` (or your own singleton
+> binding) instead of constructing additional instances.
+
+Key configuration (see the generated reference for the complete surface):
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `clientId` | — | Required shared API key |
+| `environment` | `'main'` | Contentful environment identifier |
+| `locale` | `undefined` | Experience API + default event locale |
+| `defaults` | `undefined` | Initial state (e.g. `{ consent: true }`) |
+| `allowedEventTypes` | `['identify', 'page']` | Events allowed before consent |
+| `autoTrackEntryInteraction` | `{ views: false, clicks: false, hovers: false }` | Opt-in DOM interaction tracking |
+| `cookie` | `{ expires: 365 }` | Anonymous ID cookie settings |
+| `getAnonymousId` | `undefined` | Provide an anonymous ID from app-owned identity state |
+| `queuePolicy` | SDK defaults | Flush retry behavior and offline queue bounds |
+| `onEventBlocked` | `undefined` | Callback when consent/guard logic blocks an event |
+
+`api` options include `experienceBaseUrl`, `insightsBaseUrl`, `enabledFeatures`
+(`['ip-enrichment', 'location']`), `preflight`, `beaconHandler`, and `plainText`. Default fetch
+retries apply only to HTTP `503`.
+
+### Key methods
+
+```ts
+await optimization.identify({ userId: 'ext-123', traits: { plan: 'pro' } });
+await optimization.page({ properties: { path: location.pathname } });
+await optimization.track({ event: 'purchase', properties: { total: 99 } });
+
+optimization.consent(true);                         // boolean form
+optimization.consent({ events: true, persistence: false }); // object form
+
+const resolved = optimization.resolveOptimizedEntry(baselineEntry, data?.selectedOptimizations);
+const flag = optimization.getFlag('dark-mode');
+const value = optimization.getMergeTagValue(mergeTagEntry);
+
+optimization.setLocale('de-DE'); // updates default Experience API locale; does not refetch
+await optimization.flush();
+optimization.reset();            // clears state except consent/persistence consent
+optimization.destroy();          // teardown for tests / hot reload
+```
+
+### Observable state
+
+```ts
+const unsubscribe = optimization.states.profile.subscribe((profile) => {
+  console.log(profile?.id);
+});
+```
+
+Common streams: `consent`, `persistenceConsent`, `profile`, `selectedOptimizations`, `changes`,
+`eventStream`, `blockedEventStream`, plus preview-panel state. Subscriptions fire immediately with
+the current value (like a `BehaviorSubject`), then on every change.
+
+### Web Components (optional)
+
+```ts
+import { defineContentfulOptimizationElements } from '@contentful/optimization-web/web-components';
+
+defineContentfulOptimizationElements();
+```
+
+Importing the subpath is side-effect-free; elements register only when
+`defineContentfulOptimizationElements()` runs. Use `<ctfl-optimization-root>` and
+`<ctfl-optimized-entry>`, assign structured values (like `baselineEntry`) as DOM **properties** (not
+attributes), and listen for `ctfl-entry-loading`, `ctfl-entry-resolved`, and `ctfl-entry-error`.
+
+---
+
+## 6. Node SDK
 
 **Package:** `@contentful/optimization-node`
 
-Thin wrapper over CoreStateless with Node-appropriate defaults.
+Stateless server-side SDK for SSR, server functions, and Node services. Create it once per module or
+process, then bind consent and request context per request with `forRequest()`.
 
-```typescript
+```ts
 import ContentfulOptimization from '@contentful/optimization-node';
 
-const sdk = new ContentfulOptimization({
-  clientId: 'abc-123',
+const optimization = new ContentfulOptimization({
+  clientId: 'your-client-id',
   environment: 'main',
-  logLevel: 'info',
+  locale: 'en-US',
 });
 
-// All methods require request-scoped options
-const requestOptions = { locale: 'en-US', ip: req.ip, preflight: true };
+app.get('/products/:slug', async (req, res) => {
+  const appLocale = getAppLocale(req);
+  const requestOptimization = optimization.forRequest({
+    consent: {
+      events: appPolicyAllowsOptimizationEvent(req),
+      persistence: appPolicyAllowsOptimizationEvent(req),
+    },
+    locale: appLocale,
+    eventContext: { locale: appLocale },
+    profile: { id: req.cookies.profileId },
+  });
 
-const data = await sdk.page({ properties: { title: 'Home' } }, requestOptions);
-const flag = sdk.getFlag('dark-mode', data.changes);
-const resolved = sdk.resolveOptimizedEntry(entry, data.selectedOptimizations);
+  const optimizationData = await requestOptimization.page({ properties: { path: req.path } });
+
+  if (requestOptimization.canPersistProfile && optimizationData?.profile.id) {
+    persistProfileId(res, optimizationData.profile.id);
+  }
+
+  const resolvedEntry = optimization.resolveOptimizedEntry(
+    baselineEntry,
+    optimizationData?.selectedOptimizations,
+  );
+
+  res.render('product', { optimizationData, resolvedEntry });
+});
 ```
 
-Default configuration:
-- `channel: 'server'`
-- `library: { name: '@contentful/optimization-node', version: BUILD_VERSION }`
+Key differences from the Web SDK:
 
-All event methods accept an optional `requestOptions` final argument:
+- No signals, queues, or singleton enforcement. The SDK holds no state between requests.
+- All event methods (`page`, `identify`, `screen`, `track`, sticky `trackView`) return
+  `Promise<OptimizationData>` and are scoped through `forRequest()`.
+- Event calls **fail closed** except the pre-consent allowlist `['identify', 'page']`, which send
+  with `context.gdpr.isConsentGiven: false` when consent is not granted. Pass `allowedEventTypes: []`
+  to require strict opt-in for all methods.
+- Insights-backed methods (non-sticky `trackView`/`trackClick`/`trackHover`/`trackFlagView`) require
+  a request-bound profile ID.
+- `getFlag()` does **not** auto-emit flag-view tracking (the Web SDK does).
 
-```typescript
-interface CoreStatelessRequestOptions {
-  ip?: string;
-  locale?: string;
-  plainText?: boolean;
-  preflight?: boolean;
-}
-```
-
-Key differences from the web SDK:
-- No signals, no queues, no consent gating, no singleton enforcement
-- All event methods return `Promise<OptimizationData>` directly
-- Events are validated and sent immediately (no queueing)
-- `trackView` with `sticky: true` sends to both Experience and Insights APIs; with `sticky: false` sends only to Insights
-
-Re-exports Core and API types via entrypoints:
-- `@contentful/optimization-node/core-sdk`
-- `@contentful/optimization-node/api-client`
-- `@contentful/optimization-node/api-schemas`
+**Caching:** cache raw Contentful CDA payloads; never cache `page()`/`track()` results or
+`resolveOptimizedEntry()`/`getMergeTagValue()` output across requests (they depend on the current
+profile).
 
 ---
 
-## 6. API Client
+## 7. API Client
 
 **Package:** `@contentful/optimization-api-client`
 
-### ApiClient
+Low-level transport for the Experience API and Insights API. Most app code should not use this
+directly.
 
-Top-level client exposing both Experience and Insights API clients.
-
-```typescript
+```ts
 import { ApiClient } from '@contentful/optimization-api-client';
 
-const api = new ApiClient({
-  clientId: 'abc-123',
-  environment: 'main',
-  experience?: { /* ExperienceApiClientConfig overrides */ },
-  insights?: { /* InsightsApiClientConfig overrides */ },
-});
+const api = new ApiClient({ clientId: 'abc-123', environment: 'main' });
 ```
 
-### ExperienceApiClient
+- `api.experience` — `getProfile`, `createProfile`, `updateProfile`, `upsertProfile`,
+  `upsertManyProfiles`. Default base URL `https://experience.ninetailed.co/`. Request options:
+  `enabledFeatures`, `ip` (`X-Force-IP`), `locale`, `plainText`, `preflight`.
+- `api.insights` — `sendBatchEvents`. Default base URL `https://ingest.insights.ninetailed.co/`.
+  Supports a beacon fallback for fire-and-forget delivery during page unload.
+- Retries apply only to HTTP `503` (default 1 retry attempt).
 
-```typescript
-const EXPERIENCE_BASE_URL = 'https://experience.ninetailed.co/';
-
-interface ExperienceApiClientRequestOptions {
-  enabledFeatures?: ('ip-enrichment' | 'location')[];
-  ip?: string;                  // X-Force-IP header
-  locale?: string;
-  plainText?: boolean;          // text/plain to avoid CORS preflight
-  preflight?: boolean;          // Evaluate without persisting
-}
-
-// Methods
-api.experience.getProfile(id, options?): Promise<OptimizationData>
-api.experience.createProfile({ events }, options?): Promise<OptimizationData>
-api.experience.updateProfile({ profileId, events }, options?): Promise<OptimizationData>
-api.experience.upsertProfile({ profileId?, events }, options?): Promise<OptimizationData>
-api.experience.upsertManyProfiles({ events }, options?): Promise<BatchResponse>
-```
-
-URL patterns:
-- `GET v2/organizations/{clientId}/environments/{env}/profiles/{id}`
-- `POST v2/organizations/{clientId}/environments/{env}/profiles`
-- `POST v2/organizations/{clientId}/environments/{env}/profiles/{profileId}`
-- `POST v2/organizations/{clientId}/environments/{env}/events`
-
-### InsightsApiClient
-
-```typescript
-const INSIGHTS_BASE_URL = 'https://ingest.insights.ninetailed.co/';
-
-api.insights.sendBatchEvents(batches, options?): Promise<boolean>
-```
-
-Beacon fallback: If `beaconHandler` is configured and returns `true`, skips fetch. Used for fire-and-forget delivery during page unload.
-
-### Retry Behavior
-
-Only retries on HTTP 503 status. Default 1 retry attempt.
+> The `experience.ninetailed.co` / `ingest.insights.ninetailed.co` hosts are the current backend
+> endpoint names. They are not the legacy SDK — `@contentful/optimization-*` and
+> `@ninetailed/experience.js*` are different client packages that talk to the same platform.
 
 ---
 
-## 7. Consent System
+## 8. Consent System
 
-The SDK has built-in consent gating:
+Consent is application policy. The SDK stores event consent, blocks non-allowed events until consent
+is accepted, and tracks durable profile-continuity persistence consent separately.
 
-```typescript
-// Grant or revoke consent
-sdk.consent(true);
-sdk.consent(false);
-
-// Observe consent state
-sdk.states.consent.subscribe((consent) => {
-  console.log('Consent:', consent);
-});
+```ts
+optimization.consent(true);                          // grant events + persistence
+optimization.consent(false);                         // withdraw
+optimization.consent({ events: true, persistence: false }); // events on, continuity session-only
 ```
 
-Event methods are gated by `allowedEventTypes`. Default allowed without consent: `['identify', 'page']` (web) or `['identify', 'page', 'screen']` (core). Events not in the allowed list are blocked until consent is granted.
+- **Boolean** consent controls both event emission and durable profile-continuity persistence.
+- **Object** consent lets events emit while keeping profile, selected optimizations, changes, and the
+  anonymous ID session-only until persistence consent is granted.
+- Events not in `allowedEventTypes` (default `['identify', 'page']`) are blocked until consent is
+  granted. Blocked events surface on `sdk.states.blockedEventStream` and via the `onEventBlocked`
+  callback.
 
-Blocked events emit to `sdk.states.blockedEventStream`:
-
-```typescript
-sdk.states.blockedEventStream.subscribe((blocked) => {
-  if (blocked) {
-    console.log(`Event ${blocked.method} blocked: ${blocked.reason}`);
-  }
-});
-```
-
-You can also configure a callback:
-
-```typescript
-new ContentfulOptimization({
-  onEventBlocked: (event) => {
-    console.log(`Blocked: ${event.method} (${event.reason})`);
-  },
-  ...
-});
-```
+For default-on policies with no end-user consent UI, seed accepted consent at startup with
+`defaults: { consent: true }`. For cross-SDK consent semantics see `analytics-and-preview.md` and the
+SDK suite's consent concept doc.
 
 ---
 
-## 8. Migration from Legacy SDK
+## 9. Resolvers and Optimization Data
 
-### Key Differences
-
-| Aspect | Legacy (`@ninetailed/*`) | New (`@contentful/optimization-*`) |
-|--------|------------------------|------------------------------------|
-| Init | `new Ninetailed({ clientId })` | `new ContentfulOptimization({ clientId })` |
-| State | Callbacks (`onProfileChange`) | Observable signals (`.current` + `.subscribe()`) |
-| Personalization | `<Experience>` wrapper | `<OptimizedEntry>` + render prop |
-| Plugins | `plugins[]` array | Built-in `interceptors` (`event` + `state`) |
-| API client | Single `NinetailedApiClient` | Dual `ExperienceApiClient` + `InsightsApiClient` |
-| SSR | Plugin-based (`NinetailedSsrPlugin`) | Native `CoreStateless` / Node SDK |
-| Feature flags | Via experiences/variants | Dedicated `getFlag()` + `states.flag(name)` |
-| Cookie name | `ntaid` | `ctfl-opt-aid` (auto-migrates from legacy) |
-| LocalStorage keys | `__nt_*` | `__ctfl_opt_*` (auto-migrates from legacy) |
-| Window global | `window.ninetailed` | `window.contentfulOptimization` |
-| Entry tracking | Manual `observeElement` | `autoTrackEntryInteraction` + `tracking` API |
-| Router integration | Next.js Pages only (auto) | Auto-page trackers for Next.js App/Pages, React Router, TanStack |
-| Consent | Basic (privacy plugin) | Built-in gated event system with `allowedEventTypes`, `BlockedEvent` stream |
-| Queue resilience | Basic | Exponential backoff, circuit breaker, offline buffering |
-| Validation | None | Zod mini schemas on all API boundaries |
-| Live updates | None | `LiveUpdatesProvider` + `liveUpdates` prop + preview panel signals |
-
-### OptimizationData Type
-
-The unified response type:
+The unified response type returned by event methods:
 
 ```typescript
 type OptimizationData = {
@@ -572,28 +553,56 @@ type OptimizationData = {
 };
 ```
 
-### Resolvers
-
-Three static resolvers are available on all SDK instances:
+Three resolvers are available on every SDK instance:
 
 ```typescript
-// Feature flags: flattens ChangeArray into key-value map
+// Feature flags: flattens ChangeArray into a value
 sdk.getFlag(name: string, changes?: ChangeArray): Json
 
-// Entry resolution: returns the correct variant for an entry
+// Entry resolution: returns the correct variant for a baseline entry
 sdk.resolveOptimizedEntry(entry, selectedOptimizations?): ResolvedData
 // ResolvedData = { entry: Entry, selectedOptimization?: SelectedOptimization }
 
-// Merge tags: resolves profile data references
+// Merge tags: resolves profile data references in Rich Text
 sdk.getMergeTagValue(mergeTagEntry, profile?): string | undefined
 ```
 
-Variant indexing: `variantIndex` is 1-based. `0` = baseline. First variant = `1`.
-
 Resolution flow for `resolveOptimizedEntry`:
-1. Check if `selectedOptimizations` exist -- if not, return baseline
-2. Check if entry has `nt_experiences` -- if not, return baseline
-3. Find matching optimization entry by `experienceId`
-4. Look up `variantIndex` (0 = baseline, 1+ = variant)
-5. Resolve variant entry from `nt_variants`
-6. Return resolved variant entry + optimization metadata
+
+1. If no `selectedOptimizations`, return baseline.
+2. If the entry has no `nt_experiences`, return baseline.
+3. Find the matching optimization entry by `experienceId`.
+4. Look up `variantIndex` (`0` = baseline, `1+` = variant; 1-based).
+5. Resolve the variant entry from `nt_variants` and return it with optimization metadata.
+
+The new SDK resolves the **same `nt_experiences` / `nt_variants` content model** as the legacy SDK,
+so the Contentful content side does not change when migrating.
+
+---
+
+## 10. Migration from the Legacy SDK
+
+| Aspect | Legacy (`@ninetailed/*`) | New (`@contentful/optimization-*`) |
+|--------|--------------------------|------------------------------------|
+| Init | `new Ninetailed({ clientId })` | `new ContentfulOptimization({ clientId })` |
+| React entry | `NinetailedProvider` | `OptimizationRoot` (provider lifecycle owner) |
+| React actions | `useNinetailed()` | `useOptimizationActions()` (and `useOptimization()` for the instance) |
+| State | Callbacks (`onProfileChange`) | Observable signals + state hooks (`useProfileState`, etc.) |
+| Personalization | `<Experience>` wrapper | `<OptimizedEntry>` render prop |
+| Next.js | `@ninetailed/experience.js-next` | `@contentful/optimization-nextjs` (server + client + request-handler) |
+| Router tracking | Pages Router only (auto) | Subpath adapters for Next App/Pages, React Router, TanStack |
+| Plugins | `plugins[]` array | Built-in behavior + `interceptors` (event + state) |
+| SSR | Plugin-based (`NinetailedSsrPlugin`) | Native `CoreStateless` / Node SDK |
+| Feature flags | Via experiences/variants | Dedicated `getFlag()` + `states.flag(name)` |
+| Consent | Privacy plugin | Built-in `{ events, persistence }` gating + `BlockedEvent` stream |
+| Cookie name | `ntaid` | `ctfl-opt-aid` (auto-migrates from `ntaid`) |
+| Window global | `window.ninetailed` | `window.contentfulOptimization` |
+| Validation | None | Zod Mini schemas on all API boundaries |
+
+Cookie and localStorage keys auto-migrate from the legacy names on construction:
+
+```
+ANONYMOUS_ID_COOKIE        = 'ctfl-opt-aid'
+ANONYMOUS_ID_COOKIE_LEGACY = 'ntaid'        // auto-migrated
+__ctfl_opt_*  localStorage keys             // auto-migrated from __nt_*
+```

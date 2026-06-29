@@ -24,9 +24,10 @@ const OPTIMIZATION_PACKAGES = [
   '@contentful/optimization-core',
   '@contentful/optimization-web',
   '@contentful/optimization-react-web',
+  '@contentful/optimization-nextjs',
   '@contentful/optimization-node',
+  '@contentful/optimization-react-native',
   '@contentful/optimization-web-preview-panel',
-  '@contentful/optimization-core',
   '@contentful/optimization-api-client',
   '@contentful/optimization-api-schemas',
 ];

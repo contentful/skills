@@ -1,12 +1,21 @@
 # SDK Selection
 
-Use this guide to choose between the current production `@ninetailed/experience.js` SDKs and the modern `@contentful/optimization` SDKs.
+Use this guide to choose between the current production `@ninetailed/experience.js` SDKs and the
+modern `@contentful/optimization` SDKs.
 
 ## Positioning
 
-- `@ninetailed/experience.js` is the current production path customers should use today unless there is a strong reason to adopt the new SDKs.
-- `@contentful/optimization` is the newer SDK family with a more modern architecture and future-facing platform direction.
-- Do not casually tell customers the current SDKs are deprecated or obsolete. They are still the "now" path.
+- `@ninetailed/experience.js` is the **current default** customers should use today unless there is a
+  strong reason to adopt the new SDKs. It is production-proven and widely deployed.
+- `@contentful/optimization` is the **modern, next-gen** SDK family with a redesigned architecture
+  (React Web, Next.js adapter, Web, Node, React Native) and is the platform's forward direction.
+- Do not casually tell customers the current SDKs are deprecated or obsolete. They are still the
+  "now" path.
+
+> [!NOTE]
+> `@contentful/optimization` is **pre-release (alpha)**; breaking changes can ship at any time.
+> When a customer opts into it, pin exact versions, keep all `@contentful/optimization-*` packages on
+> the same version, and apply stricter validation and rollout discipline than usual.
 
 ## Quick Decision Table
 
@@ -18,7 +27,7 @@ Use this guide to choose between the current production `@ninetailed/experience.
 | SSR or edge setup that must ship now | `@ninetailed/experience.js` | Proven hybrid SSR and ESR patterns |
 | Forward-looking greenfield work | `@contentful/optimization` | Modern architecture and future platform direction |
 | Team explicitly wants the new SDKs | `@contentful/optimization` | Aligns with customer intent |
-| Strong App Router-first investment and willingness to adopt evolving APIs | `@contentful/optimization` | Built-in router tracker components and newer primitives |
+| Strong App Router-first investment and willingness to adopt evolving APIs | `@contentful/optimization` | Dedicated Next.js adapter and newer primitives |
 
 ## Current Production SDKs: `@ninetailed/experience.js`
 
@@ -35,24 +44,32 @@ Recommended add-ons:
 - `@ninetailed/experience.js-plugin-ssr` for SSR or edge profile continuity
 - `@ninetailed/experience.js-plugin-preview` for preview workflows
 
+See `sdk-legacy-guide.md` for the full API.
+
 ## Modern SDKs: `@contentful/optimization`
 
-- Rendering primitive: `<OptimizedEntry>`
-- Provider pattern: `OptimizationProvider`
-- Server path: `@contentful/optimization-node`
-- Router helpers: `NextAppAutoPageTracker`, `NextPagesAutoPageTracker`
-- Anonymous cookie: `ctfl-opt-aid`, with migration support from `ntaid`
+- Rendering primitive: `<OptimizedEntry>` (React render prop)
+- React entry point: `OptimizationRoot` (owns SDK lifecycle); `OptimizationProvider` to inject an instance
+- Next.js: `@contentful/optimization-nextjs` (`/server`, `/client`, `/request-handler` subpaths)
+- Server path: `@contentful/optimization-node` (stateless, `forRequest()`)
+- Router tracking: subpath adapters — `@contentful/optimization-react-web/router/next-app`,
+  `/router/next-pages`, `/router/react-router`, `/router/tanstack-router`
+- Actions: `useOptimizationActions()`; SDK instance via `useOptimization()` (do not destructure)
+- Consent: object-capable `consent({ events, persistence })` with blocked-event streams
+- Anonymous cookie: `ctfl-opt-aid`, auto-migrated from `ntaid`
 - Best fit: customers explicitly adopting the new platform direction
 
 Use the modern SDKs when:
 
 - the user explicitly asks for the new optimization SDKs
-- the project is greenfield and can absorb faster API evolution
+- the project is greenfield and can absorb faster, pre-release API evolution
 - the team wants to build toward the newer platform model
+
+See `sdk-next-guide.md` for the full API and `package-versions.md` for package selection.
 
 ## Architecture Guidance
 
-Choose architecture before choosing package details.
+Choose architecture before choosing package details. Both SDK families support all three.
 
 | Architecture | Recommendation | Notes |
 |-------------|----------------|-------|
@@ -68,10 +85,11 @@ Move to `@contentful/optimization` when one of these is true:
 
 1. The user explicitly asks for it.
 2. The implementation is intentionally future-facing and greenfield.
-3. The team accepts faster-moving SDK behavior and verification needs.
+3. The team accepts faster-moving, pre-release SDK behavior and stricter verification needs.
 
 ## What to Communicate to Customers
 
 - If you choose the current SDKs, frame them as the stable production recommendation.
-- If you choose the modern SDKs, frame them as the newer architecture with more future-facing capabilities.
-- If you choose the modern SDKs, explicitly state that validation and rollout discipline should be stricter than usual.
+- If you choose the modern SDKs, frame them as the newer architecture with more future-facing
+  capabilities — and state plainly that they are pre-release (alpha), so versions should be pinned
+  and rollouts validated more strictly than usual.

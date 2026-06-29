@@ -44,19 +44,22 @@ Detailed rubric for each readiness check.
 | Include depth | ≥ 3 in queries | 2 (works with `.withoutUnresolvableLinks`) | < 2 (easy fix — increase value) |
 | Preview client | Configured | — | Not configured (optional) |
 
-## Existing Ninetailed Setup Rubric
+## Existing Personalization Setup Rubric
 
-This check measures adoption progress, not code quality.
+This check measures adoption progress, not code quality. It covers both SDK families:
+`@ninetailed/experience.js*` (current default) and `@contentful/optimization-*` (modern).
 
 | Situation | Status | Guidance |
 |----------|--------|----------|
-| No `@ninetailed/experience.js*` packages found | `NOT INSTALLED` | Neutral baseline for projects that have not started personalization yet |
+| No `@contentful/optimization-*` or `@ninetailed/experience.js*` packages found | `NOT INSTALLED` | Neutral baseline for projects that have not started personalization yet |
 | Packages found but provider/wrappers missing | `PARTIAL SETUP` | Installation started; wiring and usage still needed |
-| Provider + core wrappers/plugins found | `CONFIGURED` | Existing setup present; validate completeness |
+| Provider + entry wrappers found (`OptimizationRoot`/`OptimizedEntry` or `NinetailedProvider`/`Experience`) | `CONFIGURED` | Existing setup present; validate completeness |
 
 Tone guidance:
-- Do not call this state `NOT READY` when the SDK is simply not installed yet.
+- Do not call this state `NOT READY` when no SDK is installed yet.
 - Prefer neutral wording: "fresh setup", "not installed yet", or "setup not started".
+- When a project already uses `@ninetailed/experience.js`, treat it as a valid configured state —
+  do not push a migration to the modern SDKs unless the user asks.
 
 ## Component Architecture Rubric
 
@@ -103,11 +106,20 @@ Report any gaps:
 
 ## Environment Variables Checklist
 
-### Required for Ninetailed (needed when you run the **onboard** flow in `contentful-personalization`)
+### Required for personalization (needed when you run the **onboard** flow in `contentful-personalization`)
+
+Current default (`@ninetailed/experience.js`):
 
 ```
 NEXT_PUBLIC_NINETAILED_CLIENT_ID    # Ninetailed API key
 NEXT_PUBLIC_NINETAILED_ENVIRONMENT  # Environment slug (default: 'main')
+```
+
+Modern (`@contentful/optimization`) — names are project-local; pick a clear scheme:
+
+```
+NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID    # SDK clientId
+NEXT_PUBLIC_OPTIMIZATION_ENVIRONMENT  # Environment slug (default: 'main')
 ```
 
 ### Required for Contentful (should already exist)
@@ -132,7 +144,7 @@ depending on whether they're needed client-side. Both patterns are common.
 
 The overall verdict is the **worst** individual assessment, with one exception:
 
-- If the only issue is "no Ninetailed packages installed" (check C) but all
+- If the only issue is "no personalization SDK packages installed" (check C) but all
   other checks pass, the overall is still **READY** — installing packages is
   what the **onboard** flow in the `contentful-personalization` skill handles.
 

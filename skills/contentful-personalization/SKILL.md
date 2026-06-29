@@ -179,7 +179,7 @@ Sub-skill step names are prefixed: `<subskill>/<step>` (e.g., `doctor/diagnose`)
 
 - **onboard**: Assess readiness and guide Contentful personalization setup end-to-end. Explores the codebase, checks readiness, helps choose SDK and architecture, installs packages, and guides implementation. — params: `readinessOnly` (boolean), `userQuery` (string)
 - **live-debug**: Inspect a live URL with Chrome DevTools MCP for runtime personalization issues. Checks console problems, observes ninetailed.co requests, and reports whether the next step should be static doctor diagnosis. — params: `requestedUrl` (string)
-- **doctor**: Diagnose and fix Contentful personalization issues. Explores the codebase, checks packages and env vars, tests API connectivity, inspects Contentful content state, and helps fix problems. — params: `userQuery` (string)
+- **doctor**: Diagnose and fix Contentful personalization issues. Runs programmatic checks first (credentials, API connectivity, content state), fixes infrastructure problems, and only then explores the codebase. — params: `userQuery` (string)
 - **develop**: Day-to-day development companion for building with Contentful personalization. Helps add personalization to components, create experiments, and wire analytics. — params: `userQuery` (string)
 
 ## Reference topics
@@ -192,7 +192,7 @@ Quick-reference topics accessible without running the full workflow:
 ```
 
 - **how-personalization-works**: Core concepts: content model, rendering flow, and how personalization works
-- **sdk-selection**: SDK decision framework: legacy (@ninetailed/experience.js) vs modern (@contentful/optimization)
+- **sdk-selection**: SDK decision framework: current @ninetailed/experience.js vs modern @contentful/optimization
 - **provider-patterns**: Provider placement patterns for Pages Router, App Router, and both SDKs
 - **middleware-patterns**: Middleware and SSR/edge patterns: preflight, cookies, matcher config
 - **component-patterns**: Component architecture patterns: ContentTypeMap, BlockRenderer, isolation
@@ -202,6 +202,6 @@ Quick-reference topics accessible without running the full workflow:
 - **common-errors**: Common failure modes with root causes and fixes
 - **ssr-guide**: SSR and edge-side personalization: patterns, anti-patterns, troubleshooting
 - **sdk-legacy-guide**: @ninetailed/experience.js complete SDK reference
-- **sdk-next-guide**: @contentful/optimization next-gen SDK reference
+- **sdk-next-guide**: @contentful/optimization modern SDK reference (OptimizationRoot, hooks, Next.js adapter)
 - **contentful-integration-guide**: Contentful CMS integration: content types, ExperienceMapper, publishing workflow
 - **implementation-examples**: Real code examples: providers, BlockRenderer, Experience component patterns

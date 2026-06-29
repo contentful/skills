@@ -17,32 +17,36 @@ const PROBE_EVENT = {
 };
 
 interface Endpoint {
-  version: 'v2' | 'v3';
+  sdk: 'legacy' | 'modern';
   url: string;
   label: string;
 }
 
+// The Experience API is keyed by an organization/client identifier — never by the
+// Contentful space ID. Both SDK families hit v2/organizations/{id}/.../profiles:
+// the legacy SDK passes its API key as {id}; the modern @contentful/optimization SDK
+// passes its Client ID. We probe whichever identifiers we have.
 function buildEndpoints(input: {
   apiKey?: string;
   ninetailedEnvironment: string;
-  contentfulSpaceId?: string;
-  contentfulEnvironment: string;
+  optimizationClientId?: string;
+  optimizationEnvironment: string;
 }): Endpoint[] {
   const endpoints: Endpoint[] = [];
 
   if (input.apiKey) {
     endpoints.push({
-      version: 'v2',
+      sdk: 'legacy',
       url: `https://experience.ninetailed.co/v2/organizations/${input.apiKey}/environments/${input.ninetailedEnvironment}/profiles`,
-      label: `v2 (API key ${input.apiKey.substring(0, 8)}…, env "${input.ninetailedEnvironment}")`,
+      label: `legacy SDK (API key ${input.apiKey.substring(0, 8)}…, env "${input.ninetailedEnvironment}")`,
     });
   }
 
-  if (input.contentfulSpaceId) {
+  if (input.optimizationClientId) {
     endpoints.push({
-      version: 'v3',
-      url: `https://experience.ninetailed.co/v3/spaces/${input.contentfulSpaceId}/environments/${input.contentfulEnvironment}/profiles`,
-      label: `v3 (space ${input.contentfulSpaceId}, env "${input.contentfulEnvironment}")`,
+      sdk: 'modern',
+      url: `https://experience.ninetailed.co/v2/organizations/${input.optimizationClientId}/environments/${input.optimizationEnvironment}/profiles`,
+      label: `modern SDK (client ID ${input.optimizationClientId.substring(0, 8)}…, env "${input.optimizationEnvironment}")`,
     });
   }
 
@@ -82,9 +86,7 @@ async function probeEndpoint(
 
     if (res.status === 404) {
       const hint =
-        endpoint.version === 'v2'
-          ? 'check the API key and environment in Contentful under Organization settings > Optimization > SDK keys'
-          : 'check the Contentful Space ID and environment, and verify the Personalization app is installed';
+        'check the Client ID and environment in Contentful under Organization settings > Optimization > Data sources and metrics > SDK keys';
       return {
         finding: {
           item: `Experience API ${endpoint.label}`,
@@ -137,8 +139,8 @@ export const checkApiConnectivity = action({
   input: type({
     'apiKey?': 'string',
     ninetailedEnvironment: "string = 'main'",
-    'contentfulSpaceId?': 'string',
-    contentfulEnvironment: "string = 'master'",
+    'optimizationClientId?': 'string',
+    optimizationEnvironment: "string = 'main'",
   }),
   output: ApiCheckResult,
   run: async ({ input, signal }) => {
@@ -149,10 +151,10 @@ export const checkApiConnectivity = action({
         status: 'skip' as const,
         findings: [
           {
-            item: 'Ninetailed API',
+            item: 'Experience API',
             status: 'skip' as const,
             detail:
-              'No credentials available — need either a Ninetailed API key (v2) or Contentful Space ID (v3) to check connectivity',
+              'No personalization credentials available — need a legacy Ninetailed API key or a modern Optimization Client ID to check connectivity',
           },
         ],
         reachable: false,

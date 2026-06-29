@@ -23,21 +23,28 @@ export const validateSetup = action({
       input: {
         ...(credentials.personalization?.apiKey ? { apiKey: credentials.personalization.apiKey } : {}),
         ninetailedEnvironment: credentials.personalization?.environment ?? 'main',
-        ...(credentials.contentful?.spaceId ? { contentfulSpaceId: credentials.contentful.spaceId } : {}),
-        contentfulEnvironment: credentials.contentful?.environment ?? 'master',
+        ...(credentials.optimization?.clientId ? { optimizationClientId: credentials.optimization.clientId } : {}),
+        optimizationEnvironment: credentials.optimization?.environment ?? 'main',
       },
       signal,
     });
 
     const issues: string[] = [];
 
-    const hasAnySdk = packages.packages.ninetailed.length > 0 || packages.packages.optimization.length > 0;
+    const hasNinetailed = packages.packages.ninetailed.length > 0;
+    const hasOptimization = packages.packages.optimization.length > 0;
+    const hasAnySdk = hasNinetailed || hasOptimization;
     if (!hasAnySdk) issues.push('No personalization SDK packages installed');
 
     const hasContentful = packages.packages.contentful.some((p) => p.name === 'contentful');
     if (!hasContentful) issues.push('Contentful SDK not installed');
 
-    const missingEnv = credentials.envVars.filter((v) => v.status === 'missing');
+    // Only flag env vars relevant to the installed SDK family — a modern @contentful/optimization
+    // app legitimately has no NINETAILED_* vars, and a legacy app has no OPTIMIZATION_* vars.
+    const irrelevantPrefix = hasOptimization && !hasNinetailed ? 'NINETAILED_' : hasNinetailed && !hasOptimization ? 'OPTIMIZATION_' : null;
+    const missingEnv = credentials.envVars.filter(
+      (v) => v.status === 'missing' && (!irrelevantPrefix || !v.name.startsWith(irrelevantPrefix)),
+    );
     if (missingEnv.length > 0) issues.push(`Missing env vars: ${missingEnv.map((v) => v.name).join(', ')}`);
 
     if (api.status === 'fail') issues.push('API connectivity check failed');
