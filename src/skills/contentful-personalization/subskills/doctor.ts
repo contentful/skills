@@ -505,10 +505,9 @@ export default skill({
       const surveyWarned = survey?.status === 'warn';
       const optimizationDoctorFailed = optimizationDoctor?.status === 'fail';
 
-      // Infrastructure is "fixable" if we found a connectivity/content failure, or if we
-      // could not even verify because credentials are missing. Zero live-events (`warn` from
-      // optimizationDoctor) is intentionally NOT an infra problem — a quiet 15-minute window
-      // is common on staging/dev and would steer users to "fix infra" for no reason.
+      // Note: Current choice is to have zero live-events (`warn` from
+      // optimizationDoctor) NOT be an infra problem — a quiet 15-minute window is
+      // not necessarily broken infra
       const missingCreds = !hasPersonalizationCred;
       const hasInfraProblem =
         missingCreds ||
