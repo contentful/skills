@@ -81,7 +81,8 @@ Use server-only names when the app fetches Contentful content on the server or i
 | `CONTENTFUL_PREVIEW_TOKEN` | Contentful Preview API token |
 | `CONTENTFUL_MANAGEMENT_TOKEN` | Contentful Management API token (Personal Access Token / CFPAT) |
 
-Do not expose server-only preview tokens or the management token to the browser.
+Do not expose server-only preview tokens to the browser unless that is an intentional part of the 
+architecture.
 
 ## Common Mistakes
 
