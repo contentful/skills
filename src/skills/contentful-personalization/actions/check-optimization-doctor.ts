@@ -1,7 +1,7 @@
 import { type, action } from '@contentful/skill-kit';
 import {
   OptimizationDoctorCheckResult,
-  OptimizationDoctorLiveEventsLast15m,
+  OptimizationDoctorResponse,
   type Finding,
 } from '../schemas.js';
 
@@ -100,14 +100,7 @@ export const checkOptimizationDoctor = action({
         };
       }
 
-      const body = (await res.json()) as unknown;
-      const liveEvents = (
-        body as {
-          data?: { diagnostics?: { liveEvents?: { last15m?: unknown } } };
-        }
-      )?.data?.diagnostics?.liveEvents?.last15m;
-
-      const parsed = OptimizationDoctorLiveEventsLast15m(liveEvents);
+      const parsed = OptimizationDoctorResponse(await res.json());
       if (parsed instanceof type.errors) {
         return {
           status: 'fail' as const,
@@ -122,23 +115,24 @@ export const checkOptimizationDoctor = action({
         };
       }
 
+      const counts = parsed.data.diagnostics.liveEvents.last15m;
       const findings: Finding[] = [
-        eventFinding('Track events', parsed.numTrackEvents),
-        eventFinding('Page events', parsed.numPageEvents),
-        eventFinding('Component events', parsed.numComponentEvents),
-        eventFinding('Identify events', parsed.numIdentifyEvents),
+        eventFinding('Track events', counts.numTrackEvents),
+        eventFinding('Page events', counts.numPageEvents),
+        eventFinding('Component events', counts.numComponentEvents),
+        eventFinding('Identify events', counts.numIdentifyEvents),
       ];
 
       const totalEvents =
-        parsed.numTrackEvents +
-        parsed.numPageEvents +
-        parsed.numComponentEvents +
-        parsed.numIdentifyEvents;
+        counts.numTrackEvents +
+        counts.numPageEvents +
+        counts.numComponentEvents +
+        counts.numIdentifyEvents;
 
       return {
         status: totalEvents > 0 ? ('pass' as const) : ('warn' as const),
         findings,
-        liveEvents: parsed,
+        liveEvents: counts,
       };
     } catch (err) {
       clearTimeout(timeout);
