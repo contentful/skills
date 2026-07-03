@@ -6,9 +6,6 @@ import {
 } from '../schemas.js';
 
 const API_TIMEOUT_MS = 10_000;
-
-// Production analytics API. Convention mirrors check-api.ts, which hardcodes
-// experience.ninetailed.co — there is no local/dev host to switch to.
 const ANALYTICS_API_HOST = 'analytics.ninetailed.co';
 
 function eventFinding(label: string, count: number): Finding {

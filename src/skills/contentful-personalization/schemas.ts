@@ -195,8 +195,8 @@ export type ContentSurveyResult = typeof ContentSurveyResult.infer;
 // --- checkOptimizationDoctor action ---
 //
 // Calls the analytics-api /optimization-doctor endpoint with a CFPAT to fetch
-// per-event-type counts observed in the last 15 minutes. Useful to verify that
-// tracking is reaching the ingestion pipeline for a given (space, environment).
+// per-event-type counts observed in the last 15 minutes. 
+// Useful to verify that events are reaching the destination.
 
 export const OptimizationDoctorLiveEventsLast15m = type({
   numTrackEvents: 'number',

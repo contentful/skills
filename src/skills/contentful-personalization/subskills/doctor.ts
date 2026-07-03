@@ -504,18 +504,18 @@ export default skill({
       const surveyFailed = survey?.status === 'fail';
       const surveyWarned = survey?.status === 'warn';
       const optimizationDoctorFailed = optimizationDoctor?.status === 'fail';
-      const optimizationDoctorWarned = optimizationDoctor?.status === 'warn';
 
       // Infrastructure is "fixable" if we found a connectivity/content failure, or if we
-      // could not even verify because credentials are missing.
+      // could not even verify because credentials are missing. Zero live-events (`warn` from
+      // optimizationDoctor) is intentionally NOT an infra problem — a quiet 15-minute window
+      // is common on staging/dev and would steer users to "fix infra" for no reason.
       const missingCreds = !hasPersonalizationCred;
       const hasInfraProblem =
         missingCreds ||
         apiFailed ||
         surveyFailed ||
         surveyWarned ||
-        optimizationDoctorFailed ||
-        optimizationDoctorWarned;
+        optimizationDoctorFailed;
 
       const credNote = hasPersonalizationCred
         ? `✅ ${profile.name} credentials are available.`

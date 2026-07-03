@@ -79,7 +79,7 @@ Use server-only names when the app fetches Contentful content on the server or i
 | `CONTENTFUL_SPACE_ID` | Contentful space ID |
 | `CONTENTFUL_TOKEN` | Contentful Delivery API token |
 | `CONTENTFUL_PREVIEW_TOKEN` | Contentful Preview API token |
-| `CONTENTFUL_MANAGEMENT_TOKEN` | Contentful Management API token (Personal Access Token / CFPAT). Only used by the doctor's `/optimization-doctor` live-events check; never required by the Personalization SDK itself. Obtain from Contentful Account settings > CMA tokens. |
+| `CONTENTFUL_MANAGEMENT_TOKEN` | Contentful Management API token (Personal Access Token / CFPAT) |
 
 Do not expose server-only preview tokens or the management token to the browser.
 
