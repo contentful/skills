@@ -52,6 +52,14 @@ const KNOWN_ENV_VARS: Array<{ name: string; secret: boolean; patterns: RegExp[] 
     ],
   },
   {
+    name: 'CONTENTFUL_MANAGEMENT_TOKEN',
+    secret: true,
+    patterns: [
+      new RegExp(`^${FW_PREFIX}CONTENTFUL_MANAGEMENT_TOKEN\\s*=[^\\S\\n]*(.+)`, 'm'),
+      new RegExp(`^${FW_PREFIX}CONTENTFUL_CMA_TOKEN\\s*=[^\\S\\n]*(.+)`, 'm'),
+    ],
+  },
+  {
     name: 'CONTENTFUL_ENVIRONMENT',
     secret: false,
     patterns: [new RegExp(`^${FW_PREFIX}CONTENTFUL_ENVIRONMENT\\s*=[^\\S\\n]*(.+)`, 'm')],
@@ -134,12 +142,17 @@ export const scanCredentials = action({
             },
           }
         : {}),
-      ...(detected['CONTENTFUL_SPACE_ID'] || detected['CONTENTFUL_ACCESS_TOKEN']
+      ...(detected['CONTENTFUL_SPACE_ID'] ||
+      detected['CONTENTFUL_ACCESS_TOKEN'] ||
+      detected['CONTENTFUL_MANAGEMENT_TOKEN']
         ? {
             contentful: {
               ...(detected['CONTENTFUL_SPACE_ID'] ? { spaceId: detected['CONTENTFUL_SPACE_ID'] } : {}),
               ...(detected['CONTENTFUL_ACCESS_TOKEN'] ? { accessToken: detected['CONTENTFUL_ACCESS_TOKEN'] } : {}),
               ...(detected['CONTENTFUL_PREVIEW_TOKEN'] ? { previewToken: detected['CONTENTFUL_PREVIEW_TOKEN'] } : {}),
+              ...(detected['CONTENTFUL_MANAGEMENT_TOKEN']
+                ? { managementToken: detected['CONTENTFUL_MANAGEMENT_TOKEN'] }
+                : {}),
               ...(detected['CONTENTFUL_ENVIRONMENT'] ? { environment: detected['CONTENTFUL_ENVIRONMENT'] } : {}),
             },
           }

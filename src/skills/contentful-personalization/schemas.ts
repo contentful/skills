@@ -66,6 +66,9 @@ export const CredentialsScanResult = type({
     'spaceId?': 'string',
     'accessToken?': 'string',
     'previewToken?': 'string',
+    // Personal Access Token (CFPAT) — used only by the /optimization-doctor
+    // live-events check. Not used for CDA/CPA content queries.
+    'managementToken?': 'string',
     'environment?': 'string',
   },
 });
@@ -188,3 +191,27 @@ export const ContentSurveyResult = type({
   'error?': 'string',
 });
 export type ContentSurveyResult = typeof ContentSurveyResult.infer;
+
+// --- checkOptimizationDoctor action ---
+//
+// Calls the analytics-api /optimization-doctor endpoint with a CFPAT to fetch
+// per-event-type counts observed in the last 15 minutes. Useful to verify that
+// tracking is reaching the ingestion pipeline for a given (space, environment).
+
+export const OptimizationDoctorLiveEventsLast15m = type({
+  numTrackEvents: 'number',
+  numComponentEvents: 'number',
+  numIdentifyEvents: 'number',
+  numPageEvents: 'number',
+});
+export type OptimizationDoctorLiveEventsLast15m =
+  typeof OptimizationDoctorLiveEventsLast15m.infer;
+
+export const OptimizationDoctorCheckResult = type({
+  status: CheckStatus,
+  findings: Finding.array(),
+  'liveEvents?': OptimizationDoctorLiveEventsLast15m,
+  'error?': 'string',
+});
+export type OptimizationDoctorCheckResult =
+  typeof OptimizationDoctorCheckResult.infer;
