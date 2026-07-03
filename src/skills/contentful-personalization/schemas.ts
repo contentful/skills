@@ -207,9 +207,6 @@ export const OptimizationDoctorLiveEventsLast15m = type({
 export type OptimizationDoctorLiveEventsLast15m =
   typeof OptimizationDoctorLiveEventsLast15m.infer;
 
-// Full wire envelope of the analytics-api /optimization-doctor response. Kept as
-// one arktype schema so we can validate the whole body in a single call instead
-// of chaining `as` casts and optional lookups down to the leaf.
 export const OptimizationDoctorResponse = type({
   data: {
     diagnostics: {

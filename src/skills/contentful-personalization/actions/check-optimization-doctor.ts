@@ -129,6 +129,16 @@ export const checkOptimizationDoctor = action({
         counts.numComponentEvents +
         counts.numIdentifyEvents;
 
+      // Page events without component events usually means personalizable components aren't wired up.
+      if (counts.numPageEvents > 0 && counts.numComponentEvents === 0) {
+        findings.push({
+          item: 'Page events without component events',
+          status: 'warn',
+          detail:
+            'Pages are being viewed but no component events are firing. Personalizable components may not be wrapped in the SDK or the provider tree is missing.',
+        });
+      }
+
       return {
         status: totalEvents > 0 ? ('pass' as const) : ('warn' as const),
         findings,

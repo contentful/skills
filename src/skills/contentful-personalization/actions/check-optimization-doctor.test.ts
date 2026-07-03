@@ -82,6 +82,38 @@ test('optimization-doctor: reports fail on 401 without leaking the token', async
   }
 });
 
+test('optimization-doctor: warns when page events > 0 but component events = 0', async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = async () =>
+    jsonResponse({
+      data: {
+        diagnostics: {
+          liveEvents: {
+            last15m: {
+              numTrackEvents: 0,
+              numComponentEvents: 0,
+              numIdentifyEvents: 0,
+              numPageEvents: 55,
+            },
+          },
+        },
+      },
+    });
+
+  try {
+    const result = await checkOptimizationDoctor.run({
+      input: { spaceId: 'space1', environmentId: 'master', managementToken: 'cfpat_xxx' },
+      signal: controller.signal,
+    });
+
+    const finding = result.findings.find((f) => f.item.includes('Page events without component events'));
+    assert.ok(finding, 'expected a page-without-components finding');
+    assert.equal(finding.status, 'warn');
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
 test('optimization-doctor: fails when response body has an unexpected shape', async () => {
   const original = globalThis.fetch;
   globalThis.fetch = async () => jsonResponse({ data: { diagnostics: { liveEvents: { last15m: { foo: 'bar' } } } } });
