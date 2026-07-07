@@ -108,7 +108,7 @@ If the user does not have a repo:
 ### 4. Build in Contentful-Native Style
 
 - Use the App SDK or React Apps Toolkit to access the current location SDK.
-- Use Forma 36 components for Contentful web app UI.
+- Use Forma 36 components for Contentful web app UI. Always check if Forma 36 has a similar component before attempting to build something custom.
 - Keep UI dense, clear, and editor-friendly; avoid marketing layouts inside the
   Contentful web app.
 - Include loading, empty, permission, and error states when they affect the main
