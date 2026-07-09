@@ -1,6 +1,6 @@
 {
   "name": "@contentful/skill-contentful-api",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Comprehensive Contentful REST API guide covering CMA, CDA, Preview, Images, and GraphQL APIs",
   "license": "MIT",
   "files": [
