@@ -2,6 +2,7 @@ import { skill, type, prompt, render, act, view, terminal } from '@contentful/sk
 import { checkPackages } from '../actions/check-packages.js';
 import { scanCredentials } from '../actions/scan-credentials.js';
 import { checkApiConnectivity } from '../actions/check-api.js';
+import { checkOptimizationDoctor } from '../actions/check-optimization-doctor.js';
 import { surveyContent } from '../actions/survey-content.js';
 import { inspectContent } from '../actions/inspect-content.js';
 import { validateSetup } from '../actions/validate-setup.js';
@@ -12,13 +13,25 @@ import { VERSION } from '../version.js';
 export interface CredentialBlocks {
   personalization?: { apiKey?: string; environment?: string };
   optimization?: { clientId?: string; environment?: string };
-  contentful?: { spaceId?: string; accessToken?: string; previewToken?: string; environment?: string };
+  contentful?: {
+    spaceId?: string;
+    accessToken?: string;
+    previewToken?: string;
+    managementToken?: string;
+    environment?: string;
+  };
 }
 
 export interface ResolvedCredentials {
   personalization: { apiKey: string; environment: string };
   optimization: { clientId: string; environment: string };
-  contentful: { spaceId: string; accessToken: string; previewToken?: string; environment: string };
+  contentful: {
+    spaceId: string;
+    accessToken: string;
+    previewToken?: string;
+    managementToken?: string;
+    environment: string;
+  };
 }
 
 // Merge scanned credentials with user corrections, keeping secrets out of the model's hands.
@@ -55,6 +68,10 @@ export function resolveCredentials({
   };
 
   const previewToken = override(corrections?.contentful?.previewToken, scanned?.contentful?.previewToken);
+  const managementToken = override(
+    corrections?.contentful?.managementToken,
+    scanned?.contentful?.managementToken,
+  );
 
   return {
     personalization: {
@@ -69,6 +86,7 @@ export function resolveCredentials({
       spaceId: override(corrections?.contentful?.spaceId, scanned?.contentful?.spaceId) ?? '',
       accessToken: override(corrections?.contentful?.accessToken, scanned?.contentful?.accessToken) ?? '',
       ...(previewToken ? { previewToken } : {}),
+      ...(managementToken ? { managementToken } : {}),
       environment: override(corrections?.contentful?.environment, scanned?.contentful?.environment) ?? 'master',
     },
   };
@@ -164,6 +182,7 @@ export default skill({
         spaceId: 'string',
         accessToken: 'string',
         'previewToken?': 'string',
+        'managementToken?': 'string',
         environment: 'string',
       },
     }),
@@ -272,6 +291,12 @@ export default skill({
         if (scanned?.contentful?.previewToken) {
           credRows.push({ Credential: 'CPA token', Value: mask(scanned.contentful.previewToken) });
         }
+        if (scanned?.contentful?.managementToken) {
+          credRows.push({
+            Credential: 'CMA token / CFPAT (for optimization-doctor)',
+            Value: mask(scanned.contentful.managementToken),
+          });
+        }
         if (scanned?.contentful?.environment) {
           credRows.push({ Credential: 'Contentful environment', Value: scanned.contentful.environment });
         }
@@ -344,6 +369,7 @@ export default skill({
           - **Contentful Space ID** — Contentful Settings > General settings
           - **CDA Token** (Content Delivery API) — Contentful Settings > API keys
           - **CPA Token** (Content Preview API) — Same location, optional but recommended
+          - **CMA Token / CFPAT** (Content Management, Personal Access Token) — Contentful Account settings > CMA tokens. Optional; only used to hit the /optimization-doctor endpoint for a live-events check.
           - **Environment** — Usually "master" for Contentful, "main" for the personalization SDK
 
           If the user provides credentials, set runCredentialChecks = true and put the values they
@@ -386,6 +412,7 @@ export default skill({
           'spaceId?': 'string',
           'accessToken?': 'string',
           'previewToken?': 'string',
+          'managementToken?': 'string',
           'environment?': 'string',
         },
       },
@@ -439,6 +466,21 @@ export default skill({
       },
       run: surveyContent,
     },
+    next: 'check-optimization-doctor',
+  })
+
+  .step('check-optimization-doctor', {
+    action: {
+      mapInput: ({ store }) => {
+        const creds = store.credentials;
+        return {
+          spaceId: creds?.contentful?.spaceId ?? '',
+          environmentId: creds?.contentful?.environment ?? 'master',
+          ...(creds?.contentful?.managementToken ? { managementToken: creds.contentful.managementToken } : {}),
+        };
+      },
+      run: checkOptimizationDoctor,
+    },
     next: 'programmatic-gate',
   })
 
@@ -449,6 +491,7 @@ export default skill({
       const creds = store.credentials;
       const apiData = store.steps['check-api'];
       const survey = store.steps['survey-content'];
+      const optimizationDoctor = store.steps['check-optimization-doctor'];
       const profile = sdkProfile(store.project?.sdkFamily);
 
       const hasPersonalizationCred = !!(creds?.personalization?.apiKey || creds?.optimization?.clientId);
@@ -460,11 +503,18 @@ export default skill({
       const apiFailed = apiData?.status === 'fail';
       const surveyFailed = survey?.status === 'fail';
       const surveyWarned = survey?.status === 'warn';
+      const optimizationDoctorFailed = optimizationDoctor?.status === 'fail';
 
-      // Infrastructure is "fixable" if we found a connectivity/content failure, or if we
-      // could not even verify because credentials are missing.
+      // Note: Current choice is to have zero live-events (`warn` from
+      // optimizationDoctor) NOT be an infra problem — a quiet 15-minute window is
+      // not necessarily broken infra
       const missingCreds = !hasPersonalizationCred;
-      const hasInfraProblem = missingCreds || apiFailed || surveyFailed || surveyWarned;
+      const hasInfraProblem =
+        missingCreds ||
+        apiFailed ||
+        surveyFailed ||
+        surveyWarned ||
+        optimizationDoctorFailed;
 
       const credNote = hasPersonalizationCred
         ? `✅ ${profile.name} credentials are available.`
@@ -486,11 +536,26 @@ export default skill({
               ? '⚠️ Content survey found something worth attention.'
               : '❌ Content survey found published/preview inconsistencies.';
 
+      const optimizationDoctorNote =
+        optimizationDoctor?.status === 'pass'
+          ? '✅ Optimization-doctor endpoint returned live-event counts for the last 15 minutes.'
+          : optimizationDoctor?.status === 'warn'
+            ? '⚠️ Optimization-doctor endpoint reachable but no live events observed in the last 15 minutes.'
+            : optimizationDoctor?.status === 'skip'
+              ? '⏭️ Optimization-doctor check skipped (no CONTENTFUL_MANAGEMENT_TOKEN available).'
+              : '❌ Optimization-doctor endpoint call failed.';
+
       const sections: string[] = [];
       sections.push(render.kv({ SDK: profile.name }));
       sections.push(render.section('🔑 Credentials', credNote));
       sections.push(render.section('🌐 Experience API', `${apiNote}\n\n${findingsTable(apiData?.findings)}`));
       sections.push(render.section('📄 Content survey', `${surveyNote}\n\n${findingsTable(survey?.findings)}`));
+      sections.push(
+        render.section(
+          '🩺 Optimization doctor (live events last 15m)',
+          `${optimizationDoctorNote}\n\n${findingsTable(optimizationDoctor?.findings)}`,
+        ),
+      );
 
       const options: Array<{ value: string; label: string; description?: string }> = [];
       if (hasInfraProblem) {
@@ -1004,6 +1069,16 @@ export default skill({
       const survey = store.steps['survey-content'];
       if (survey) {
         sections.push(render.section('📄 Content Survey', findingsTable(survey.findings)));
+      }
+
+      const optimizationDoctor = store.steps['check-optimization-doctor'];
+      if (optimizationDoctor) {
+        sections.push(
+          render.section(
+            '🩺 Optimization doctor (live events last 15m)',
+            findingsTable(optimizationDoctor.findings),
+          ),
+        );
       }
 
       const content = store.steps['run-inspection'];

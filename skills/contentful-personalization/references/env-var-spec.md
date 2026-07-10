@@ -79,8 +79,9 @@ Use server-only names when the app fetches Contentful content on the server or i
 | `CONTENTFUL_SPACE_ID` | Contentful space ID |
 | `CONTENTFUL_TOKEN` | Contentful Delivery API token |
 | `CONTENTFUL_PREVIEW_TOKEN` | Contentful Preview API token |
+| `CONTENTFUL_MANAGEMENT_TOKEN` | Contentful Management API token (Personal Access Token / CFPAT) |
 
-Do not expose server-only preview tokens to the browser unless that is an intentional part of the
+Do not expose server-only preview tokens to the browser unless that is an intentional part of the 
 architecture.
 
 ## Common Mistakes
