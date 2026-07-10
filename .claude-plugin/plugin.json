@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
   "name": "contentful",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "Agent skills for Contentful apps, APIs, migrations, and personalization",
   "author": {
     "name": "Contentful",
