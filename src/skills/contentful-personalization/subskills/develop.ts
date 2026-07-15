@@ -1,10 +1,59 @@
-import { skill, type, prompt, terminal, render } from '@contentful/skill-kit';
+import { skill, type, prompt, terminal, render, act, view } from '@contentful/skill-kit';
+import { checkApiConnectivity } from '../actions/check-api.js';
+import { checkOptimizationDoctor } from '../actions/check-optimization-doctor.js';
+import { surveyContent } from '../actions/survey-content.js';
+import { validateLocalSetup } from '../actions/validate-local-setup.js';
 import { getOptimizationReferenceFiles } from '../optimization-references.js';
+import { ValidationSummary, type ValidationProfile, type ValidationStageEvidence } from '../schemas.js';
+import {
+  aggregateLiveEventsEvidence,
+  buildLiveEventsUrl,
+  cmsGraphEvidence,
+  connectivityEvidence,
+  localSetupEvidence,
+  liveEventsDeltaRows,
+  manualRuntimeEvidence,
+} from '../validation/evidence.js';
+import {
+  deriveValidationFinalState,
+  describeValidationFinalState,
+  filterValidationEvidence,
+  getEvidenceRerunStages,
+  getValidationRequirements,
+} from '../validation/policy.js';
 import { VERSION } from '../version.js';
 
 type DetectedSdk = 'ninetailed' | 'optimization' | 'both' | 'unknown';
 type DevelopmentSdk = 'ninetailed' | 'optimization';
 type DevelopmentScope = 'existing-integration' | 'new-integration';
+type DevelopmentTaskType = 'personalize-component' | 'create-experiment' | 'add-analytics' | 'add-merge-tag' | 'other';
+
+export function resolveDevelopmentValidationProfile(
+  taskType: DevelopmentTaskType,
+  mergeTagAuthoring: 'cms' | 'code' | 'unknown' = 'unknown',
+): ValidationProfile {
+  switch (taskType) {
+    case 'personalize-component':
+      return 'component-extension';
+    case 'create-experiment':
+      return 'experiment-authoring';
+    case 'add-analytics':
+      return 'analytics-extension';
+    case 'add-merge-tag':
+      return mergeTagAuthoring === 'code' ? 'merge-tag-code-extension' : 'merge-tag-extension';
+    default:
+      return 'full-setup';
+  }
+}
+
+function firstRemoteValidationStage(
+  taskType: DevelopmentTaskType,
+  mergeTagAuthoring: 'cms' | 'code' | 'unknown',
+): string {
+  if (taskType === 'add-analytics' || taskType === 'other') return 'check-connectivity';
+  if (taskType === 'add-merge-tag' && mergeTagAuthoring === 'code') return 'runtime-validation';
+  return 'survey-content';
+}
 
 export function resolveDevelopmentSdk({
   sdkInUse,
@@ -57,6 +106,12 @@ export default skill({
       5. **User's task** — What do they want? (personalize a component, add analytics,
          create an experiment, add a merge tag)
       6. **Target files** — Which specific files need to change?
+      7. **Target merge tag** — For a CMS-authored merge-tag task, identify the exact Contentful
+         entry ID or nt_mergetag_id when the request or existing code makes it knowable. Do not
+         substitute the ID of some other merge tag merely because it already exists.
+      8. **Analytics contract** — For analytics tasks, list every event that this change must emit
+         and every destination that must receive it. Keep SDK admission and third-party delivery
+         as separate checks.
 
       Focus on understanding the existing patterns so your changes will be consistent.
       Choose a Ninetailed target only when the requested change acts on an existing Ninetailed
@@ -79,9 +134,30 @@ export default skill({
         "'react-web' | 'nextjs-app-router' | 'nextjs-pages-router' | 'web' | 'node' | 'react-native' | 'unknown'",
       optimizationArchitecture: "'client-only' | 'hybrid-ssr' | 'server-only' | 'unknown'",
       framework: 'string',
+      projectPath: 'string',
+      mergeTagAuthoring: "'cms' | 'code' | 'unknown'",
+      'targetMergeTagId?': 'string',
+      analyticsEvents: 'string[]',
+      analyticsDestinations: 'string[]',
       targetFiles: 'string[]',
       analysis: 'string',
     }),
+    next: 'capture-local-baseline',
+  })
+
+  .step('capture-local-baseline', {
+    action: {
+      mapInput: ({ store }) => ({
+        projectPath: store.steps.analyze?.projectPath ?? '.',
+        profile: resolveDevelopmentValidationProfile(
+          store.steps.analyze?.taskType ?? 'other',
+          store.steps.analyze?.mergeTagAuthoring ?? 'unknown',
+        ),
+      }),
+      run: validateLocalSetup,
+    },
+    // This is a baseline, not a gate. A scoped extension may be able to proceed even when the
+    // local shell lacks optional credentials; the final profile decides which evidence matters.
     next: 'plan',
   })
 
@@ -222,6 +298,419 @@ export default skill({
         ${refSections.map((r) => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
       `;
     },
+    response: type({
+      filesModified: 'string[]',
+      summary: 'string',
+    }),
+    next: 'verify-code',
+  })
+
+  .step('verify-code', {
+    prompt: ({ store, refs }) => prompt`
+      Validate the scoped implementation with the project's existing build, typecheck, test, and
+      lint commands where available. Then inspect the exact changed path against the relevant SDK
+      runtime contract. Do not fix failures in this step.
+
+      ${render.kv({
+        Project: store.steps.analyze.projectPath,
+        Task: store.steps.analyze.taskType,
+        Files: store.steps.implement?.filesModified?.join(', ') ?? store.steps.analyze.targetFiles.join(', '),
+      })}
+
+      Check only obligations relevant to this change, but include baseline/fallback behavior and
+      one event owner whenever the task affects rendered personalization or tracking.
+
+      ${refs.load('common-errors.md')}
+    `,
+    response: type({
+      status: "'pass' | 'fail'",
+      summary: 'string',
+      checksRun: 'string[]',
+      failures: 'string[]',
+    }),
+    next: ({ response }) => (response.status === 'pass' ? 'validate-local' : 'fix-validation'),
+  })
+
+  .step('fix-validation', {
+    prompt: ({ store, refs }) => prompt`
+      Repair the failed validation evidence for this scoped change, then return to the same checks.
+      Do not broaden the implementation beyond the approved task.
+
+      Static failures: ${(store.steps['verify-code']?.failures ?? []).join('; ') || 'none'}
+      ${refs.load('common-errors.md')}
+    `,
+    next: 'verify-code',
+  })
+
+  .step('validate-local', {
+    action: {
+      mapInput: ({ store }) => ({
+        projectPath: store.steps.analyze?.projectPath ?? '.',
+        profile: resolveDevelopmentValidationProfile(
+          store.steps.analyze?.taskType ?? 'other',
+          store.steps.analyze?.mergeTagAuthoring ?? 'unknown',
+        ),
+      }),
+      run: validateLocalSetup,
+    },
+    next: ({ actionResult, attempts, store }) => {
+      if (actionResult?.status !== 'pass' && attempts < 3) return 'fix-local-validation';
+      return firstRemoteValidationStage(
+        store.steps.analyze?.taskType ?? 'other',
+        store.steps.analyze?.mergeTagAuthoring ?? 'unknown',
+      );
+    },
+  })
+
+  .step('fix-local-validation', {
+    prompt: ({ store, refs }) => prompt`
+      Repair the local package, environment, or credential-exposure failures below without
+      broadening the approved scoped implementation. Then rerun build/static and local checks.
+
+      ${render.table(
+        (store.steps['validate-local']?.findings ?? []).map((finding) => ({
+          Check: finding.item,
+          Status: finding.status,
+          Detail: finding.detail,
+        })),
+        { columns: ['Check', 'Status', 'Detail'] },
+      )}
+
+      ${refs.load('common-errors.md')}
+    `,
+    next: 'verify-code',
+  })
+
+  .step('check-connectivity', {
+    action: {
+      mapInput: ({ store }) => ({
+        ...(store.steps['validate-local']?.credentials?.personalization?.apiKey
+          ? { apiKey: store.steps['validate-local'].credentials.personalization.apiKey }
+          : {}),
+        ninetailedEnvironment: store.steps['validate-local']?.credentials?.personalization?.environment ?? 'main',
+        ...(store.steps['validate-local']?.credentials?.optimization?.clientId
+          ? { optimizationClientId: store.steps['validate-local'].credentials.optimization.clientId }
+          : {}),
+        optimizationEnvironment: store.steps['validate-local']?.credentials?.optimization?.environment ?? 'main',
+      }),
+      run: checkApiConnectivity,
+    },
+    next: ({ store }) => (store.steps.analyze?.taskType === 'other' ? 'survey-content' : 'capture-live-events'),
+  })
+
+  .step('survey-content', {
+    action: {
+      mapInput: ({ store }) => ({
+        spaceId: store.steps['validate-local']?.credentials?.contentful?.spaceId ?? '',
+        environment: store.steps['validate-local']?.credentials?.contentful?.environment ?? 'master',
+        ...(store.steps['validate-local']?.credentials?.contentful?.accessToken
+          ? { accessToken: store.steps['validate-local'].credentials.contentful.accessToken }
+          : {}),
+        ...(store.steps['validate-local']?.credentials?.contentful?.previewToken
+          ? { previewToken: store.steps['validate-local'].credentials.contentful.previewToken }
+          : {}),
+      }),
+      run: surveyContent,
+    },
+    next: 'capture-live-events',
+  })
+
+  .step('capture-live-events', {
+    action: {
+      mapInput: ({ store }) => ({
+        spaceId: store.steps['validate-local']?.credentials?.contentful?.spaceId ?? '',
+        environmentId: store.steps['validate-local']?.credentials?.contentful?.environment ?? 'master',
+        ...(store.steps['validate-local']?.credentials?.contentful?.managementToken
+          ? { managementToken: store.steps['validate-local'].credentials.contentful.managementToken }
+          : {}),
+      }),
+      run: checkOptimizationDoctor,
+    },
+    next: 'runtime-validation',
+  })
+
+  .step('runtime-validation', {
+    prompt: ({ store }) => {
+      const profile = resolveDevelopmentValidationProfile(
+        store.steps.analyze.taskType,
+        store.steps.analyze.mergeTagAuthoring,
+      );
+      const credentials = store.steps['validate-local']?.credentials?.contentful;
+      const liveEventsUrl = buildLiveEventsUrl(credentials?.spaceId, credentials?.environment ?? 'master');
+      const scenario = store.steps['survey-content']?.testScenario;
+      const requirements = getValidationRequirements(profile);
+      const requiresRuntimeTransport = requirements['runtime-transport'] !== 'not-applicable';
+      const analyticsEvents = store.steps.analyze.analyticsEvents ?? [];
+      const analyticsDestinations = store.steps.analyze.analyticsDestinations ?? [];
+      const targetEvidence: Record<ValidationProfile, string> = {
+        'full-setup': 'a correlated page event plus the selected experience and rendered variant',
+        'component-extension':
+          'the target component, selected experience/variant, rendered entry metadata, and component exposure after intentional consent',
+        'analytics-extension': 'every expected accepted event and each intended analytics destination',
+        'experiment-authoring':
+          'the authored experience, audience or all-visitors qualification, selected variant, rendered result, and configured metric event',
+        'merge-tag-extension': 'the CMS merge tag resolving against the current profile and its fallback',
+        'merge-tag-code-extension':
+          'the code-authored merge tag resolving against the current profile and its fallback',
+        'diagnostic-repair': 'the repaired symptom and its downstream regression evidence',
+      };
+
+      return [
+        prompt`
+          Present this validation target and ask the user to run the strongest practical check.
+          ${requiresRuntimeTransport ? 'Use Live Events as runtime context even when no Management token is available.' : 'Do not use Live Events for this profile because runtime event transport is not part of its evidence target.'}
+          Do not imply that recent aggregate counts belong to this run, and do not force consent,
+          navigation, clicks, audience changes, or CMS authoring. For merge tags, require both the
+          target-profile value and the missing-value fallback before accepting outcome confirmation.
+        `,
+        view(
+          'Scoped personalization validation',
+          [
+            render.kv({
+              Profile: profile,
+              'Evidence target': targetEvidence[profile],
+              Scenario: scenario?.summary ?? 'Use the existing target and its known trigger or preview panel.',
+            }),
+            profile === 'analytics-extension'
+              ? render.section(
+                  'Analytics checklist',
+                  [
+                    `SDK admission / Live Events: ${analyticsEvents.join(', ') || 'every event named in the approved task'}`,
+                    `External delivery: ${analyticsDestinations.join(', ') || 'every destination named in the approved task'}`,
+                    'Confirm both the SDK-side event and the destination-side receipt (network request, destination debugger, or analytics dashboard) before selecting full confirmation.',
+                  ].join('\n'),
+                )
+              : '',
+            requiresRuntimeTransport
+              ? liveEventsUrl
+                ? `[Open Contentful Live Events](${liveEventsUrl})`
+                : 'Open the Personalization app and navigate to Analytics → Live Events.'
+              : 'Live Events is not applicable. Validate both the resolved value and fallback in the rendered application.',
+          ].join('\n\n'),
+        ),
+        act.askUser({
+          type: 'structured',
+          question: 'What did the scoped validation confirm?',
+          options: requiresRuntimeTransport
+            ? profile === 'analytics-extension'
+              ? [
+                  { value: 'confirmed-end-to-end', label: '✅ All events + destinations confirmed' },
+                  { value: 'confirmed-transport', label: '📡 SDK events only' },
+                  { value: 'check-again', label: '🔄 Triggered traffic — compare counts' },
+                  { value: 'unavailable', label: '⏸️ Cannot validate now' },
+                ]
+              : [
+                  { value: 'confirmed-end-to-end', label: '✅ Expected outcome confirmed' },
+                  { value: 'confirmed-transport', label: '📡 Runtime event only' },
+                  { value: 'check-again', label: '🔄 Triggered traffic — compare counts' },
+                  { value: 'unavailable', label: '⏸️ Cannot validate now' },
+                ]
+            : [
+                { value: 'confirmed-end-to-end', label: '✅ Value and fallback confirmed' },
+                { value: 'unavailable', label: '⏸️ Cannot validate both paths now' },
+              ],
+        }),
+      ];
+    },
+    response: type({
+      choice: "'confirmed-end-to-end' | 'confirmed-transport' | 'check-again' | 'unavailable'",
+    }),
+    next: ({ response }) =>
+      response.choice === 'check-again'
+        ? 'capture-live-events-after'
+        : response.choice === 'unavailable'
+          ? 'validation-disposition'
+          : 'report',
+  })
+
+  .step('capture-live-events-after', {
+    action: {
+      mapInput: ({ store }) => ({
+        spaceId: store.steps['validate-local']?.credentials?.contentful?.spaceId ?? '',
+        environmentId: store.steps['validate-local']?.credentials?.contentful?.environment ?? 'master',
+        ...(store.steps['validate-local']?.credentials?.contentful?.managementToken
+          ? { managementToken: store.steps['validate-local'].credentials.contentful.managementToken }
+          : {}),
+      }),
+      run: checkOptimizationDoctor,
+    },
+    next: 'runtime-confirmation',
+  })
+
+  .step('runtime-confirmation', {
+    prompt: ({ store }) => {
+      const before = store.steps['capture-live-events']?.liveEvents;
+      const after = store.steps['capture-live-events-after']?.liveEvents;
+      const rows = liveEventsDeltaRows(before, after);
+
+      return [
+        'Explain that these space-wide deltas are supporting evidence and require correlation with the run the user just performed.',
+        view('Live Events comparison', render.table(rows, { columns: ['Event', 'Baseline', 'Current', 'Delta'] })),
+        act.askUser({
+          type: 'structured',
+          question: 'What did this run confirm?',
+          options: [
+            { value: 'confirmed-end-to-end', label: '✅ Expected outcome confirmed' },
+            { value: 'confirmed-transport', label: '📡 Runtime event only' },
+            { value: 'retry', label: '🔄 Try one more run' },
+            { value: 'unavailable', label: '⏸️ Cannot validate now' },
+          ],
+        }),
+      ];
+    },
+    response: type({
+      choice: "'confirmed-end-to-end' | 'confirmed-transport' | 'retry' | 'unavailable'",
+    }),
+    next: ({ response, attempts }) =>
+      response.choice === 'retry' && attempts < 3
+        ? 'capture-live-events'
+        : response.choice === 'unavailable'
+          ? 'validation-disposition'
+          : 'report',
+  })
+
+  .step('validation-disposition', {
+    prompt: ({ store }) => {
+      const profile = resolveDevelopmentValidationProfile(
+        store.steps.analyze.taskType,
+        store.steps.analyze.mergeTagAuthoring,
+      );
+      const cmsApplies = getValidationRequirements(profile)['cms-graph'] !== 'not-applicable';
+      return act.askUser({
+        type: 'structured',
+        question: 'Why is scoped validation unavailable?',
+        options: [
+          {
+            value: 'defer',
+            label: '⏭️ Defer by choice',
+            description: 'Finish the scoped change while retaining unresolved validation evidence',
+          },
+          {
+            value: 'blocked',
+            label: cmsApplies ? '🚧 Authoring or publishing blocked' : '🚧 Validation blocked',
+            description: cmsApplies
+              ? 'Permissions, ownership, publishing, or organizational constraints prevent the test'
+              : 'Permissions, traffic, ownership, or organizational constraints prevent the test',
+          },
+        ],
+      });
+    },
+    response: type({ choice: "'defer' | 'blocked'" }),
+    next: 'report',
+  })
+
+  .step('report', {
+    prompt: ({ store }) => {
+      const profile = resolveDevelopmentValidationProfile(
+        store.steps.analyze.taskType,
+        store.steps.analyze.mergeTagAuthoring,
+      );
+      const evidence: ValidationStageEvidence[] = [];
+      if (store.steps['validate-local']) {
+        const local = localSetupEvidence(store.steps['validate-local']);
+        local.findings.push({
+          item: 'Scoped build and static wiring',
+          status: store.steps['verify-code'].status,
+          detail: store.steps['verify-code'].summary,
+        });
+        if (store.steps['verify-code'].status === 'fail') local.status = 'fail';
+        evidence.push(local);
+      }
+      if (store.steps['check-connectivity']) {
+        evidence.push(connectivityEvidence(store.steps['check-connectivity']));
+      }
+      if (store.steps['survey-content']) {
+        evidence.push(cmsGraphEvidence(store.steps['survey-content'], profile, store.steps.analyze.targetMergeTagId));
+      }
+
+      const runtimeChoice =
+        store.steps['validation-disposition']?.choice ??
+        store.steps['runtime-confirmation']?.choice ??
+        store.steps['runtime-validation']?.choice;
+      if (runtimeChoice === 'confirmed-end-to-end') {
+        evidence.push(...manualRuntimeEvidence('end-to-end', profile));
+      } else if (runtimeChoice === 'confirmed-transport') {
+        evidence.push(...manualRuntimeEvidence('transport-only', profile));
+      } else if (runtimeChoice === 'defer') {
+        evidence.push(...manualRuntimeEvidence('deferred', profile));
+      } else if (runtimeChoice === 'blocked') {
+        evidence.push(...manualRuntimeEvidence('blocked', profile));
+      } else {
+        const aggregate = store.steps['capture-live-events-after'] ?? store.steps['capture-live-events'];
+        if (aggregate) evidence.push(aggregateLiveEventsEvidence(aggregate));
+        evidence.push({
+          stage: 'personalization-outcome',
+          status: 'unavailable',
+          source: 'manual-confirmation',
+          summary: 'The task-specific personalization outcome was not confirmed.',
+          findings: [],
+        });
+      }
+
+      const requirements = getValidationRequirements(profile);
+      const decision =
+        runtimeChoice === 'blocked'
+          ? requirements['cms-graph'] === 'not-applicable'
+            ? ('cannot-complete-validation' as const)
+            : ('cannot-author-or-trigger' as const)
+          : runtimeChoice === 'defer'
+            ? ('defer-live-validation' as const)
+            : ('continue' as const);
+      const applicableEvidence = filterValidationEvidence(profile, evidence);
+      const finalState = deriveValidationFinalState({ profile, evidence: applicableEvidence, decision });
+      const credentials = store.steps['validate-local']?.credentials?.contentful;
+      const liveEventsUrl = buildLiveEventsUrl(credentials?.spaceId, credentials?.environment ?? 'master');
+
+      const sections = [
+        `# ${describeValidationFinalState(finalState)}`,
+        store.steps.implement?.summary ?? 'The scoped implementation was completed.',
+        render.section(
+          'Validation evidence',
+          render.table(
+            applicableEvidence.map((item) => ({
+              Stage: item.stage,
+              Status: item.status,
+              Source: item.source,
+              Summary: item.summary,
+            })),
+            { columns: ['Stage', 'Status', 'Source', 'Summary'] },
+          ),
+        ),
+        render.section(
+          'Resume point',
+          [
+            requirements['runtime-transport'] !== 'not-applicable'
+              ? liveEventsUrl
+                ? `[Open Contentful Live Events](${liveEventsUrl})`
+                : 'Open Analytics → Live Events.'
+              : 'Resume by checking both the target-profile result and fallback in the rendered application.',
+            profile === 'analytics-extension'
+              ? `Also confirm destination-side receipt in: ${store.steps.analyze.analyticsDestinations?.join(', ') || 'the external analytics destinations named in the task'}.`
+              : '',
+            finalState === 'validated-end-to-end'
+              ? 'Keep the target, trigger, and expected IDs as a regression fixture.'
+              : finalState === 'validation-failed'
+                ? 'Run doctor against the failed stage and rerun its downstream evidence.'
+                : 'Resume the same task profile when authoring, traffic, or organizational access is available.',
+          ].join('\n\n'),
+        ),
+      ];
+
+      const machineResult = {
+        profile,
+        finalState,
+        evidence: applicableEvidence,
+        rerunStages: getEvidenceRerunStages(profile, applicableEvidence),
+        summary: describeValidationFinalState(finalState),
+      };
+
+      return [
+        'Present the scoped implementation and validation report exactly as rendered. Do not collapse deferred or unavailable evidence into success.',
+        view('Scoped implementation report', sections.join('\n\n')),
+        `After presenting the report, return this exact structured result to the workflow protocol without changing its values:\n${JSON.stringify(machineResult)}`,
+      ];
+    },
+    response: ValidationSummary,
     next: terminal,
   })
 

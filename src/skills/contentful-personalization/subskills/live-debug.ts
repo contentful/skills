@@ -32,9 +32,13 @@ function getChromeDevToolsInstallGuidance(hostName: string) {
   }
 
   if (normalizedHost.includes('claude')) {
-    return ['Install it with:', '', '```bash', 'claude mcp add chrome-devtools --scope user npx chrome-devtools-mcp@latest', '```'].join(
-      '\n',
-    );
+    return [
+      'Install it with:',
+      '',
+      '```bash',
+      'claude mcp add chrome-devtools --scope user npx chrome-devtools-mcp@latest',
+      '```',
+    ].join('\n');
   }
 
   return [
@@ -61,7 +65,10 @@ function formatRuntimeRecommendations(
       const order: Record<string, number> = { critical: 0, warning: 1, info: 2 };
       return (order[a.priority] ?? 3) - (order[b.priority] ?? 3);
     })
-    .map((rec, index) => `${index + 1}. ${priorityIcon[rec.priority] ?? '•'} **[${rec.priority}]** ${rec.message} *(${rec.category})*`)
+    .map(
+      (rec, index) =>
+        `${index + 1}. ${priorityIcon[rec.priority] ?? '•'} **[${rec.priority}]** ${rec.message} *(${rec.category})*`,
+    )
     .join('\n');
 }
 
@@ -142,11 +149,13 @@ export default skill({
 
   .step('inspect', {
     prompt: ({ params, store }) => {
-      const url = params?.requestedUrl ?? getLiveDebugUrl({
-        steps: {
-          'request-url': store.steps['request-url'],
-        },
-      });
+      const url =
+        params?.requestedUrl ??
+        getLiveDebugUrl({
+          steps: {
+            'request-url': store.steps['request-url'],
+          },
+        });
 
       return prompt`
         Use Chrome DevTools MCP to inspect runtime personalization behavior for this live page:
@@ -154,35 +163,78 @@ export default skill({
 
         ## Required workflow
         1. Open the page.
-        2. If a cookie consent banner is visible, accept/approve it — personalization and analytics require consent cookies to function fully.
-        3. Wait for it to settle.
-        4. Reload it once so startup requests are visible.
-        5. Inspect console errors and warnings.
-        6. Inspect network traffic, but ONLY requests whose URL contains \`ninetailed.co\` (this includes \`experience.ninetailed.co\` and \`*.insights.ninetailed.co\`).
-        7. If matching requests exist, inspect up to 3 representative requests in detail.
+        2. Observe the existing consent state, rendered content, and page URL without changing them.
+        3. Wait for the existing page load to settle; do not reload automatically.
+        4. Inspect console errors and warnings.
+        5. Inspect network traffic, but ONLY requests whose URL contains \`ninetailed.co\` (this includes \`experience.ninetailed.co\` and \`*.insights.ninetailed.co\`).
+        6. If matching requests exist, inspect up to 3 representative requests in detail.
+        7. Look for admitted/blocked event state, profile audience IDs, selected optimization IDs,
+           and rendered entry metadata only when the application already exposes them. Redact values.
 
         ## What to report
         - Whether any meaningful console issues were present
         - Whether requests to \`ninetailed.co\` were sent (experience API and/or analytics)
         - Method, status, and a sanitized payload-shape summary for representative requests
         - Whether the runtime evidence suggests a likely implementation/configuration issue worth following up with the static doctor flow
+        - Whether a controlled validation would materially improve the evidence, and the exact actions it would require
 
         ## Safety rules
         - Do NOT include cookies, authorization headers, API keys, or full raw payload dumps
         - Summarize payload shape only
         - If no matching requests are present, say so explicitly
+        - Do NOT accept consent, identify a profile, reload, change URL/query parameters, click,
+          submit, or force a preview variant during passive inspection
 
         Set \`shouldRunDoctor\` to true when the runtime evidence suggests something is off and static code/config diagnosis should be the next step.
         Set it to false only when the runtime behavior looks healthy enough that no static follow-up is needed.
+        Set \`controlledValidationSuggested\` only when passive evidence is insufficient and list
+        the minimum required \`controlledActions\`. Query navigation is valid only for a known,
+        already-authored audience condition; it is not a magic SDK override.
       `;
     },
+    response: RuntimeCheckResult,
+    next: ({ response }) =>
+      response.controlledValidationSuggested && (response.controlledActions?.length ?? 0) > 0
+        ? 'offer-controlled-validation'
+        : 'report',
+  })
+
+  .step('offer-controlled-validation', {
+    prompt: ({ store }) => [
+      prompt`
+        Passive inspection is complete. Present the exact proposed side effects below and ask for
+        approval. Make clear that skipping preserves the passive report; do not pressure the user.
+
+        Proposed actions: ${(store.steps.inspect?.controlledActions ?? []).join(', ')}
+      `,
+      act.confirm({
+        message: 'Run these controlled validation actions in the current development or staging page?',
+        defaultAnswer: 'no',
+      }),
+    ],
+    response: type({ approved: 'boolean' }),
+    next: ({ response }) => (response.approved ? 'controlled-inspect' : 'report'),
+  })
+
+  .step('controlled-inspect', {
+    prompt: ({ params, store }) => prompt`
+      Run a controlled follow-up on ${params?.requestedUrl ?? getLiveDebugUrl({ steps: { 'request-url': store.steps['request-url'] } })}.
+
+      The user approved only these actions:
+      ${(store.steps.inspect?.controlledActions ?? []).map((action: string) => `- ${action}`).join('\n')}
+
+      Perform only those actions, once each, and observe the resulting console, Experience API,
+      Insights, admitted/blocked event, selected optimization, and rendered entry evidence. Do not
+      broaden the test. Do not expose credentials, cookies, profile traits, location, or raw payloads.
+      Restore any local preview override you applied. Return the same structured runtime report.
+    `,
     response: RuntimeCheckResult,
     next: 'report',
   })
 
   .step('report', {
     prompt: ({ store }) => {
-      const result = store.steps.inspect;
+      const result = store.steps['controlled-inspect'] ?? store.steps.inspect;
       if (!result) {
         return prompt`
           Tell the user the live-debug report could not be rendered because no runtime inspection result was captured.
@@ -202,12 +254,14 @@ export default skill({
       const requestsTable =
         (result.requests?.length ?? 0) > 0
           ? render.table(
-              (result.requests ?? []).map((request: { url: string; method: string; status: number; summary: string }) => ({
-                URL: request.url,
-                Method: request.method,
-                Status: String(request.status),
-                Summary: request.summary,
-              })),
+              (result.requests ?? []).map(
+                (request: { url: string; method: string; status: number; summary: string }) => ({
+                  URL: request.url,
+                  Method: request.method,
+                  Status: String(request.status),
+                  Summary: request.summary,
+                }),
+              ),
               { columns: ['URL', 'Method', 'Status', 'Summary'] },
             )
           : '*No requests to `ninetailed.co` were detected*';

@@ -7,12 +7,31 @@ import { runComposite, runSkill, mockModel } from '@contentful/skill-kit/test';
 import skill, { resolveInitialIntent } from './skill.js';
 import { derivePackagesToInstall } from './actions/install-packages.js';
 import { getOptimizationReferenceFiles } from './optimization-references.js';
-import doctorSkill, { resolveCredentials } from './subskills/doctor.js';
-import extendExistingSkill, { resolveDevelopmentSdk } from './subskills/develop.js';
+import doctorSkill, { resolveCredentials, resolveDoctorRerunStages } from './subskills/doctor.js';
+import extendExistingSkill, {
+  resolveDevelopmentSdk,
+  resolveDevelopmentValidationProfile,
+} from './subskills/develop.js';
 import liveDebugSkill from './subskills/live-debug.js';
-import { resolveRecommendedSdkChoice } from './subskills/onboard.js';
+import { buildLiveEventsUrl, hasInventoriedOutcomeScenario, resolveRecommendedSdkChoice } from './subskills/onboard.js';
 
 // --- Dispatcher routing tests ---
+
+test('onboard builds the Contentful Live Events URL for the verified space and environment', () => {
+  assert.equal(
+    buildLiveEventsUrl('space id', 'feature/env'),
+    'https://app.contentful.com/spaces/space%20id/environments/feature%2Fenv/apps/app_installations/contentful-personalization/analytics/realtime',
+  );
+  assert.equal(buildLiveEventsUrl(undefined, 'master'), undefined);
+});
+
+test('onboard only accepts end-to-end outcome confirmation for an inventoried CMS scenario', () => {
+  assert.equal(hasInventoriedOutcomeScenario(undefined), false);
+  assert.equal(hasInventoriedOutcomeScenario({ kind: 'unavailable' }), false);
+  assert.equal(hasInventoriedOutcomeScenario({ kind: 'fixture-needed' }), false);
+  assert.equal(hasInventoriedOutcomeScenario({ kind: 'preview-only' }), true);
+  assert.equal(hasInventoriedOutcomeScenario({ kind: 'existing-targeted' }), true);
+});
 
 test('classify routes to onboard for setup requests', async () => {
   const result = await runComposite(skill, {
@@ -91,15 +110,19 @@ test('classify routes to extend-existing for a scoped task on a working setup', 
         optimizationRuntime: 'unknown',
         optimizationArchitecture: 'unknown',
         framework: 'nextjs-app',
+        projectPath: '.',
+        mergeTagAuthoring: 'unknown',
+        analyticsEvents: [],
+        analyticsDestinations: [],
         targetFiles: ['Hero.tsx'],
         analysis: 'Wrap Hero',
       },
       'extend-existing/plan': {
-        approved: true,
+        approved: false,
         plan: 'Add Experience wrapper',
         filesToModify: ['Hero.tsx'],
       },
-      'extend-existing/implement': { filesModified: ['Hero.tsx'], summary: 'Done' },
+      'extend-existing/declined': { message: 'No changes made' },
     }),
   });
 
@@ -345,7 +368,7 @@ test('live-debug recommends doctor when runtime looks suspicious', async () => {
           {
             item: 'experience.ninetailed.co request',
             status: 'fail',
-            detail: 'No matching requests were sent after page load and one reload.',
+            detail: 'No matching requests were sent during passive page observation.',
           },
         ],
         recommendations: [
@@ -363,6 +386,40 @@ test('live-debug recommends doctor when runtime looks suspicious', async () => {
   });
 
   assert.deepEqual(result.path, ['check-mcp', 'inspect', 'report']);
+});
+
+test('live-debug requires approval before controlled side effects', async () => {
+  const result = await runSkill(liveDebugSkill, {
+    params: { requestedUrl: 'https://example.com/personalized' },
+    host: {
+      toolsAvailable: [
+        'mcp__chrome-devtools__new_page',
+        'mcp__chrome-devtools__list_console_messages',
+        'mcp__chrome-devtools__list_network_requests',
+      ],
+    },
+    model: mockModel({
+      'check-mcp': { mcpAvailable: true, reason: 'Browser inspection tools are available.' },
+      inspect: {
+        url: 'https://example.com/personalized',
+        overallStatus: 'warn',
+        summary: 'Consent blocks events during passive observation.',
+        consoleSummary: 'No console errors.',
+        requestCount: 0,
+        requests: [],
+        findings: [{ item: 'Consent', status: 'warn', detail: 'Events remain blocked.' }],
+        recommendations: [],
+        shouldRunDoctor: false,
+        controlledValidationSuggested: true,
+        controlledActions: ['accept-consent', 'reload'],
+      },
+      'offer-controlled-validation': { approved: false },
+      report: { message: 'Passive report preserved' },
+    }),
+  });
+
+  assert.deepEqual(result.path, ['check-mcp', 'inspect', 'offer-controlled-validation', 'report']);
+  assert.ok(!result.path.includes('controlled-inspect'));
 });
 
 // --- Doctor sub-skill tests ---
@@ -414,8 +471,8 @@ test('doctor: modern SDK, clean programmatic checks → explore-code → review 
   assert.ok(result.path.includes('done'));
 });
 
-// Infra problem found and fixed → user confirms it's working → stop without code review.
-test('doctor: fix-infra → ask-fixed (working) → done, no code exploration', async () => {
+// Infra problem found and fixed → user confirms it's working → rerun affected evidence without code review.
+test('doctor: fix-infra → ask-fixed (working) → affected validation, no code exploration', async () => {
   const result = await runSkill(doctorSkill, {
     model: mockModel({
       'detect-sdk': {
@@ -428,15 +485,31 @@ test('doctor: fix-infra → ask-fixed (working) → done, no code exploration', 
       },
       'confirm-credentials': { runCredentialChecks: false },
       'programmatic-gate': { choice: 'fix-infra', problemDescription: 'No personalization at all' },
-      'fix-infra': { summary: 'Added NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID to .env.local', filesModified: ['.env.local'] },
+      'fix-infra': {
+        summary: 'Corrected the affected CMS graph configuration',
+        filesModified: ['.env.local'],
+        changedStages: ['cms-graph'],
+      },
       'ask-fixed': { working: true },
-      done: { message: 'Fixed!' },
+      'begin-cms-rerun': {},
+      're-confirm-runtime': { choice: 'confirmed-end-to-end' },
+      'validation-report': {
+        profile: 'diagnostic-repair',
+        finalState: 'validated-end-to-end',
+        evidence: [],
+        rerunStages: ['personalization-outcome'],
+        summary: 'Validated end to end',
+      },
     }),
   });
 
   assert.ok(result.path.includes('fix-infra'));
   assert.ok(result.path.includes('ask-fixed'));
-  assert.ok(result.path.includes('done'));
+  assert.ok(result.path.includes('begin-cms-rerun'));
+  assert.ok(result.path.includes('re-survey-content'));
+  assert.ok(result.path.includes('re-capture-live-events'));
+  assert.ok(result.path.includes('re-confirm-runtime'));
+  assert.ok(result.path.includes('validation-report'));
   assert.ok(!result.path.includes('explore-code'));
   assert.ok(!result.path.includes('review'));
 });
@@ -534,23 +607,34 @@ function stubDraftOnlyLink() {
 
 // Drill-down with a CONFIRMED content problem → fix-first, verify, done. Must NOT railroad
 // into a codebase exploration the way it used to.
-test('doctor: drill-down confirms content problem → fix-infra → ask-fixed (working) → done', async () => {
+test('doctor: drill-down confirms content problem → fix-infra → affected validation', async () => {
   const originalFetch = globalThis.fetch;
   const { projectPath, cleanup } = withProjectEnv();
   globalThis.fetch = stubDraftOnlyLink();
   try {
     const result = await runSkill(doctorSkill, {
       model: makeDrillDownModel(projectPath, {
-        'fix-infra': { summary: 'Gave republish instructions for perch-sec-hero-home', filesModified: [] },
+        'fix-infra': {
+          summary: 'Gave republish instructions for perch-sec-hero-home',
+          filesModified: [],
+          changedStages: ['personalization-outcome'],
+        },
         'ask-fixed': { working: true },
-        done: { message: 'Fixed!' },
+        're-confirm-runtime': { choice: 'confirmed-end-to-end' },
+        'validation-report': {
+          profile: 'diagnostic-repair',
+          finalState: 'validated-end-to-end',
+          evidence: [],
+          rerunStages: ['personalization-outcome'],
+          summary: 'Validated end to end',
+        },
       }),
     });
 
     assert.ok(result.path.includes('run-inspection'));
     assert.ok(result.path.includes('fix-infra'));
     assert.ok(result.path.includes('ask-fixed'));
-    assert.ok(result.path.includes('done'));
+    assert.ok(result.path.includes('validation-report'));
     // The whole point: a confirmed content fix is tried + verified BEFORE any code exploration.
     assert.ok(!result.path.includes('explore-code'));
   } finally {
@@ -712,33 +796,120 @@ test('doctor: gate → done (findings are enough)', async () => {
 // --- Develop sub-skill tests ---
 
 test('extend-existing analyze → plan → implement path', async () => {
-  const result = await runSkill(extendExistingSkill, {
-    params: { userQuery: 'Personalize the Hero component' },
-    model: mockModel({
-      analyze: {
-        taskType: 'personalize-component',
-        sdkInUse: 'ninetailed',
-        targetSdk: 'ninetailed',
-        workScope: 'existing-integration',
-        optimizationRuntime: 'unknown',
-        optimizationArchitecture: 'unknown',
-        framework: 'nextjs-app',
-        targetFiles: ['components/Hero.tsx', 'components/BlockRenderer.tsx'],
-        analysis: 'Hero component needs Experience wrapper',
-      },
-      plan: {
-        approved: true,
-        plan: 'Wrap Hero in Experience component, add to ContentTypeMap',
-        filesToModify: ['components/Hero.tsx', 'components/BlockRenderer.tsx'],
-      },
-      implement: {
-        filesModified: ['components/Hero.tsx', 'components/BlockRenderer.tsx'],
-        summary: 'Added Experience wrapper to Hero',
+  const projectPath = mkdtempSync(join(tmpdir(), 'contentful-personalization-extend-'));
+  const originalFetch = globalThis.fetch;
+  writeFileSync(
+    join(projectPath, 'package.json'),
+    JSON.stringify({
+      dependencies: {
+        '@ninetailed/experience.js': '^6.0.0',
+        contentful: '^11.0.0',
+        next: '^15.0.0',
       },
     }),
-  });
+  );
+  writeFileSync(
+    join(projectPath, '.env.local'),
+    ['NINETAILED_API_KEY=legacy-client', 'CONTENTFUL_SPACE_ID=space-id', 'CONTENTFUL_ACCESS_TOKEN=delivery-token'].join(
+      '\n',
+    ),
+  );
+  globalThis.fetch = async () =>
+    new Response(JSON.stringify({ items: [] }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
 
-  assert.deepEqual(result.path, ['analyze', 'plan', 'implement']);
+  try {
+    const result = await runSkill(extendExistingSkill, {
+      params: { userQuery: 'Personalize the Hero component' },
+      model: mockModel({
+        analyze: {
+          taskType: 'personalize-component',
+          sdkInUse: 'ninetailed',
+          targetSdk: 'ninetailed',
+          workScope: 'existing-integration',
+          optimizationRuntime: 'unknown',
+          optimizationArchitecture: 'unknown',
+          framework: 'nextjs-app',
+          projectPath,
+          mergeTagAuthoring: 'unknown',
+          analyticsEvents: [],
+          analyticsDestinations: [],
+          targetFiles: ['components/Hero.tsx', 'components/BlockRenderer.tsx'],
+          analysis: 'Hero component needs Experience wrapper',
+        },
+        plan: {
+          approved: true,
+          plan: 'Wrap Hero in Experience component, add to ContentTypeMap',
+          filesToModify: ['components/Hero.tsx', 'components/BlockRenderer.tsx'],
+        },
+        implement: {
+          filesModified: ['components/Hero.tsx', 'components/BlockRenderer.tsx'],
+          summary: 'Added Experience wrapper to Hero',
+        },
+        'verify-code': {
+          status: 'pass',
+          summary: 'Build and scoped wiring checks passed',
+          checksRun: ['typecheck'],
+          failures: [],
+        },
+        'runtime-validation': { choice: 'confirmed-end-to-end' },
+        report: {
+          profile: 'component-extension',
+          finalState: 'validated-end-to-end',
+          evidence: [],
+          rerunStages: [],
+          summary: 'Validated end to end',
+        },
+      }),
+    });
+
+    assert.deepEqual(result.path, [
+      'analyze',
+      'capture-local-baseline',
+      'plan',
+      'implement',
+      'verify-code',
+      'validate-local',
+      'survey-content',
+      'capture-live-events',
+      'runtime-validation',
+      'report',
+    ]);
+    assert.deepEqual(result.response, {
+      profile: 'component-extension',
+      finalState: 'validated-end-to-end',
+      evidence: [],
+      rerunStages: [],
+      summary: 'Validated end to end',
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+    rmSync(projectPath, { recursive: true, force: true });
+  }
+});
+
+test('extend-existing maps task types to reusable validation profiles', () => {
+  assert.equal(resolveDevelopmentValidationProfile('personalize-component'), 'component-extension');
+  assert.equal(resolveDevelopmentValidationProfile('add-analytics'), 'analytics-extension');
+  assert.equal(resolveDevelopmentValidationProfile('add-merge-tag', 'cms'), 'merge-tag-extension');
+  assert.equal(resolveDevelopmentValidationProfile('add-merge-tag', 'code'), 'merge-tag-code-extension');
+});
+
+test('doctor reruns changed evidence and its downstream dependencies', () => {
+  assert.deepEqual(resolveDoctorRerunStages(['cms-graph']), [
+    'cms-graph',
+    'runtime-transport',
+    'personalization-outcome',
+  ]);
+  assert.deepEqual(resolveDoctorRerunStages(['local-integrity']), [
+    'local-integrity',
+    'credential-connectivity',
+    'cms-graph',
+    'runtime-transport',
+    'personalization-outcome',
+  ]);
 });
 
 test('extend-existing defaults new integrations to Optimization even if legacy is requested', () => {

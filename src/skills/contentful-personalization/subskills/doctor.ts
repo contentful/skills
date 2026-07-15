@@ -5,10 +5,72 @@ import { checkApiConnectivity } from '../actions/check-api.js';
 import { checkOptimizationDoctor } from '../actions/check-optimization-doctor.js';
 import { surveyContent } from '../actions/survey-content.js';
 import { inspectContent } from '../actions/inspect-content.js';
-import { validateSetup } from '../actions/validate-setup.js';
+import { validateLocalSetup } from '../actions/validate-local-setup.js';
 import { getOptimizationReferenceFiles } from '../optimization-references.js';
-import { PackagesResult, Recommendation, type Finding } from '../schemas.js';
+import {
+  PackagesResult,
+  Recommendation,
+  ValidationStage,
+  ValidationSummary,
+  type Finding,
+  type ValidationStageEvidence,
+} from '../schemas.js';
+import {
+  aggregateLiveEventsEvidence,
+  buildLiveEventsUrl,
+  cmsGraphEvidence,
+  connectivityEvidence,
+  localSetupEvidence,
+  liveEventsDeltaRows,
+  manualRuntimeEvidence,
+} from '../validation/evidence.js';
+import {
+  deriveValidationFinalState,
+  describeValidationFinalState,
+  getRerunStages,
+  VALIDATION_STAGES,
+} from '../validation/policy.js';
 import { VERSION } from '../version.js';
+
+export function resolveDoctorRerunStages(changedStages: ValidationStage[]): ValidationStage[] {
+  const affected = new Set(changedStages.flatMap((stage) => getRerunStages(stage)));
+  return VALIDATION_STAGES.filter((stage) => affected.has(stage));
+}
+
+function beginDoctorRerunStep(stages: ValidationStage[]): string {
+  const first = VALIDATION_STAGES.find((stage) => stages.includes(stage));
+  switch (first) {
+    case 'local-integrity':
+      return 'begin-local-rerun';
+    case 'credential-connectivity':
+      return 'begin-connectivity-rerun';
+    case 'cms-graph':
+      return 'begin-cms-rerun';
+    case 'runtime-transport':
+      return 'begin-runtime-rerun';
+    case 'personalization-outcome':
+      return 're-confirm-runtime';
+    default:
+      return 'validation-report';
+  }
+}
+
+function recordedDoctorChangedStages(steps: unknown): ValidationStage[] {
+  const records = steps as {
+    fix?: { changedStages?: ValidationStage[] };
+    'fix-infra'?: { changedStages?: ValidationStage[] };
+  };
+  const changed = records.fix?.changedStages ?? records['fix-infra']?.changedStages;
+  return changed && changed.length > 0 ? changed : ['local-integrity'];
+}
+
+function recordedDoctorFixSummary(steps: unknown): string {
+  const records = steps as {
+    fix?: { summary?: string };
+    'fix-infra'?: { summary?: string };
+  };
+  return records.fix?.summary ?? records['fix-infra']?.summary ?? 'No fix summary was captured.';
+}
 
 // Shape of credentials extracted by scan-credentials and (optionally) corrected by the user.
 export interface CredentialBlocks {
@@ -566,17 +628,19 @@ export default skill({
             : '❌ Experience API connectivity failed.';
 
       const surveyNote =
-        survey?.status === 'pass'
-          ? '✅ Personalization content looks healthy.'
-          : survey?.status === 'skip'
-            ? '⏭️ Content survey was skipped (no Contentful tokens).'
-            : survey?.status === 'warn'
-              ? '⚠️ Content survey found something worth attention.'
-              : '❌ Content survey found published/preview inconsistencies.';
+        survey?.testScenario.kind === 'unavailable'
+          ? '❌ The CMS survey could not retrieve content. No graph, authoring, or publishing conclusion can be drawn until Content API connectivity is restored.'
+          : survey?.status === 'pass'
+            ? '✅ The published inventory and baseline-link checks passed.'
+            : survey?.status === 'skip'
+              ? '⏭️ Content survey was skipped (no Contentful tokens).'
+              : survey?.status === 'warn'
+                ? '⚠️ Content survey found something worth attention.'
+                : '❌ Content survey found published/preview inconsistencies.';
 
       const optimizationDoctorNote =
         optimizationDoctor?.status === 'pass'
-          ? '✅ Optimization-doctor endpoint returned live-event counts for the last 15 minutes.'
+          ? '✅ Optimization-doctor returned recent space-wide counts. They are not correlated to this diagnostic run.'
           : optimizationDoctor?.status === 'warn'
             ? '⚠️ Optimization-doctor endpoint reachable but no live events observed in the last 15 minutes.'
             : optimizationDoctor?.status === 'skip'
@@ -638,6 +702,11 @@ export default skill({
           - **Never tell the user their content is healthy or rule out their concern based on these
             checks alone.** If the survey passed, say only that the checks it can run did not find a
             problem — not that content is fine.
+          - A successful synthetic Experience API probe proves credential/destination connectivity,
+            not that the application runtime sends events.
+          - Non-zero optimization-doctor counts are space-wide aggregate evidence and cannot prove
+            that this page, profile, or validation run produced them without a before/after delta
+            plus user correlation.
 
           If the user has described a specific symptom (especially a content or publishing
           suspicion), take it seriously: do NOT argue it away on the strength of this summary.
@@ -715,6 +784,8 @@ export default skill({
             entries first, then experience entries, then republish the baseline entries.
 
           Do NOT explore or modify application code in this step.
+          In your structured result, record which shared evidence stages changed so the doctor can
+          rerun that stage and its downstream dependencies.
 
           ## Current environment variables
           ${envView}
@@ -754,6 +825,7 @@ export default skill({
     response: type({
       summary: 'string',
       filesModified: 'string[]',
+      'changedStages?': ValidationStage.array(),
     }),
     next: 'ask-fixed',
   })
@@ -771,7 +843,10 @@ export default skill({
       }),
     ],
     response: type({ working: 'boolean' }),
-    next: ({ response }) => (response.working ? 'done' : 'explore-code'),
+    next: ({ response, store }) =>
+      response.working
+        ? beginDoctorRerunStep(resolveDoctorRerunStages(recordedDoctorChangedStages(store.steps)))
+        : 'explore-code',
   })
 
   // --- Optional drill-down: inspect one specific entry in depth ---
@@ -1302,6 +1377,10 @@ export default skill({
           - **Content issues** (unpublished entries, missing fields) → provide Contentful UI instructions
 
           After all fixes, the setup will be re-verified automatically.
+          In your structured result, list the evidence stages changed by the fix. Environment,
+          package, or source changes are local-integrity; SDK destination changes are
+          credential-connectivity; Contentful entry/publish work is cms-graph; browser/event
+          changes are runtime-transport; targeting/rendering changes are personalization-outcome.
 
           ${fixPlan ? `**Plan:** ${fixPlan}` : ''}
           ${fixFiles?.length ? `**Files to modify:** ${fixFiles.join(', ')}` : ''}
@@ -1317,43 +1396,348 @@ export default skill({
         }),
       ];
     },
-    next: 're-verify',
+    response: type({
+      summary: 'string',
+      changedStages: ValidationStage.array(),
+    }),
+    next: ({ response }) =>
+      beginDoctorRerunStep(
+        resolveDoctorRerunStages(response.changedStages.length > 0 ? response.changedStages : ['local-integrity']),
+      ),
   })
 
-  .step('re-verify', {
+  .step('begin-local-rerun', {
+    prompt: prompt`
+      Continue immediately with the affected validation ladder, beginning at local integrity.
+      Do not ask the user a question. Return the acknowledgement object so the deterministic
+      checks can run in sequence. Return {}.
+    `,
+    response: type({}),
+    next: 're-verify-code',
+  })
+
+  .step('begin-connectivity-rerun', {
+    prompt: prompt`
+      Continue immediately with the affected validation ladder, beginning at credential and
+      destination connectivity. Do not ask the user a question. Return {}.
+    `,
+    response: type({}),
+    next: 're-check-api',
+  })
+
+  .step('begin-cms-rerun', {
+    prompt: prompt`
+      Continue immediately with the affected validation ladder, beginning with the GET-only CMS
+      graph survey. Do not ask the user a question. Return {}.
+    `,
+    response: type({}),
+    next: 're-survey-content',
+  })
+
+  .step('begin-runtime-rerun', {
+    prompt: prompt`
+      Continue immediately with the affected validation ladder, beginning with the optional
+      aggregate Live Events snapshot. Do not ask the user a question. Return {}.
+    `,
+    response: type({}),
+    next: 're-capture-live-events',
+  })
+
+  .step('re-verify-code', {
+    prompt: ({ store }) => prompt`
+      Re-run the project's relevant build, typecheck, test, and lint commands after the doctor fix.
+      Verify the repaired static wiring and the original symptom's regression path. Do not claim
+      success from code inspection alone, and do not fix failures in this step.
+
+      Project: ${store.project?.projectPath ?? '.'}
+      Fix: ${recordedDoctorFixSummary(store.steps)}
+    `,
+    response: type({
+      status: "'pass' | 'fail'",
+      summary: 'string',
+      checksRun: 'string[]',
+      failures: 'string[]',
+    }),
+    next: ({ response, attempts }) => (response.status === 'fail' && attempts < 3 ? 'fix' : 're-verify-local'),
+  })
+
+  .step('re-verify-local', {
     action: {
       mapInput: ({ store }) => ({
         projectPath: store.project?.projectPath ?? '.',
       }),
-      run: validateSetup,
+      run: validateLocalSetup,
     },
-    next: ({ actionResult, attempts }) => {
-      if (actionResult?.overallStatus === 'pass') return 'done';
-      if (attempts >= 3) return 'done';
-      return 'fix';
+    next: 're-check-api',
+  })
+
+  .step('re-check-api', {
+    action: {
+      mapInput: ({ store }) => {
+        const refreshed = store.steps['re-verify-local']?.credentials;
+        const original = store.credentials;
+        return {
+          ...(refreshed?.personalization?.apiKey
+            ? { apiKey: refreshed.personalization.apiKey }
+            : original?.personalization?.apiKey
+              ? { apiKey: original.personalization.apiKey }
+              : {}),
+          ninetailedEnvironment:
+            refreshed?.personalization?.environment ?? original?.personalization?.environment ?? 'main',
+          ...(refreshed?.optimization?.clientId
+            ? { optimizationClientId: refreshed.optimization.clientId }
+            : original?.optimization?.clientId
+              ? { optimizationClientId: original.optimization.clientId }
+              : {}),
+          optimizationEnvironment:
+            refreshed?.optimization?.environment ?? original?.optimization?.environment ?? 'main',
+        };
+      },
+      run: checkApiConnectivity,
     },
+    next: 're-survey-content',
+  })
+
+  .step('re-survey-content', {
+    action: {
+      mapInput: ({ store }) => {
+        const refreshed = store.steps['re-verify-local']?.credentials?.contentful;
+        const original = store.credentials?.contentful;
+        return {
+          spaceId: refreshed?.spaceId ?? original?.spaceId ?? '',
+          environment: refreshed?.environment ?? original?.environment ?? 'master',
+          ...(refreshed?.accessToken
+            ? { accessToken: refreshed.accessToken }
+            : original?.accessToken
+              ? { accessToken: original.accessToken }
+              : {}),
+          ...(refreshed?.previewToken
+            ? { previewToken: refreshed.previewToken }
+            : original?.previewToken
+              ? { previewToken: original.previewToken }
+              : {}),
+        };
+      },
+      run: surveyContent,
+    },
+    next: 're-capture-live-events',
+  })
+
+  .step('re-capture-live-events', {
+    action: {
+      mapInput: ({ store }) => {
+        const refreshed = store.steps['re-verify-local']?.credentials?.contentful;
+        const original = store.credentials?.contentful;
+        return {
+          spaceId: refreshed?.spaceId ?? original?.spaceId ?? '',
+          environmentId: refreshed?.environment ?? original?.environment ?? 'master',
+          ...(refreshed?.managementToken
+            ? { managementToken: refreshed.managementToken }
+            : original?.managementToken
+              ? { managementToken: original.managementToken }
+              : {}),
+        };
+      },
+      run: checkOptimizationDoctor,
+    },
+    next: 're-confirm-runtime',
+  })
+
+  .step('re-confirm-runtime', {
+    prompt: ({ store }) => {
+      const refreshed = store.steps['re-verify-local']?.credentials?.contentful;
+      const original = store.credentials?.contentful;
+      const liveEventsUrl = buildLiveEventsUrl(
+        refreshed?.spaceId ?? original?.spaceId,
+        refreshed?.environment ?? original?.environment ?? 'master',
+      );
+      const scenario = store.steps['re-survey-content']?.testScenario ?? store.steps['survey-content']?.testScenario;
+      const liveEventRows = liveEventsDeltaRows(
+        store.steps['check-optimization-doctor']?.liveEvents,
+        store.steps['re-capture-live-events']?.liveEvents,
+      );
+      const liveEventComparison = store.steps['re-capture-live-events']
+        ? render.section(
+            'Before/after aggregate counts',
+            `${render.table(liveEventRows, { columns: ['Event', 'Baseline', 'Current', 'Delta'] })}\n\n${store.steps['check-optimization-doctor']?.status === 'fail' || store.steps['re-capture-live-events']?.status === 'fail' ? 'One or both aggregate endpoint calls failed, so unavailable cells are not observed zero-event counts. Fix endpoint access before comparing.' : 'These space-wide deltas are supporting evidence only; correlate them with the reproduction run.'}`,
+          )
+        : 'No automated before/after comparison was required for the affected evidence stages.';
+
+      return [
+        prompt`
+          Ask the user to reproduce the original symptom and validate the repaired path. Keep the
+          Live Events link for product context even when the automated endpoint worked. Prefer a
+          known existing trigger or preview panel; do not invent a query parameter for an audience
+          whose server-side rules are unknown. Consent changes, navigation, and interactions must
+          remain intentional user actions.
+        `,
+        view(
+          'Doctor regression validation',
+          [
+            liveEventsUrl
+              ? `[Open Contentful Live Events](${liveEventsUrl})`
+              : 'Open the Personalization app and navigate to Analytics → Live Events.',
+            scenario?.summary ?? 'Use the same route, profile state, and trigger that reproduced the original problem.',
+            liveEventComparison,
+          ].join('\n\n'),
+        ),
+        act.askUser({
+          type: 'structured',
+          question: 'What did the regression run prove?',
+          options: [
+            { value: 'confirmed-end-to-end', label: '✅ Original symptom fixed end to end' },
+            { value: 'confirmed-transport', label: '📡 Runtime event confirmed only' },
+            { value: 'failed', label: '❌ Original symptom still reproduces' },
+            { value: 'unavailable', label: '⏸️ Cannot validate now' },
+          ],
+        }),
+      ];
+    },
+    response: type({
+      choice: "'confirmed-end-to-end' | 'confirmed-transport' | 'failed' | 'unavailable'",
+    }),
+    next: ({ response }) => (response.choice === 'unavailable' ? 're-validation-disposition' : 'validation-report'),
+  })
+
+  .step('re-validation-disposition', {
+    prompt: act.askUser({
+      type: 'structured',
+      question: 'Why is the regression run unavailable?',
+      options: [
+        {
+          value: 'defer',
+          label: '⏭️ Defer by choice',
+          description: 'Keep the repaired implementation while live regression evidence remains unresolved',
+        },
+        {
+          value: 'blocked',
+          label: '🚧 Authoring or publishing blocked',
+          description: 'Permissions, ownership, publishing, or organizational constraints prevent reproduction',
+        },
+      ],
+    }),
+    response: type({ choice: "'defer' | 'blocked'" }),
+    next: 'validation-report',
+  })
+
+  .step('validation-report', {
+    prompt: ({ store }) => {
+      const rerunStages = resolveDoctorRerunStages(recordedDoctorChangedStages(store.steps));
+      const evidence: ValidationStageEvidence[] = [];
+
+      if (rerunStages.includes('local-integrity') && store.steps['re-verify-local']) {
+        const local = localSetupEvidence(store.steps['re-verify-local']);
+        if (store.steps['re-verify-code']) {
+          local.findings.push({
+            item: 'Doctor build and static regression',
+            status: store.steps['re-verify-code'].status,
+            detail: store.steps['re-verify-code'].summary,
+          });
+          if (store.steps['re-verify-code'].status === 'fail') local.status = 'fail';
+        }
+        evidence.push(local);
+      }
+      if (rerunStages.includes('credential-connectivity') && store.steps['re-check-api']) {
+        evidence.push(connectivityEvidence(store.steps['re-check-api']));
+      }
+      if (rerunStages.includes('cms-graph') && store.steps['re-survey-content']) {
+        evidence.push(cmsGraphEvidence(store.steps['re-survey-content']));
+      }
+
+      const choice = store.steps['re-validation-disposition']?.choice ?? store.steps['re-confirm-runtime']?.choice;
+      if (choice === 'confirmed-end-to-end') {
+        evidence.push(...manualRuntimeEvidence('end-to-end', 'diagnostic-repair'));
+      } else if (choice === 'confirmed-transport') {
+        evidence.push(...manualRuntimeEvidence('transport-only', 'diagnostic-repair'));
+      } else if (choice === 'defer') {
+        evidence.push(...manualRuntimeEvidence('deferred', 'diagnostic-repair'));
+      } else if (choice === 'blocked') {
+        evidence.push(...manualRuntimeEvidence('blocked', 'diagnostic-repair'));
+      } else if (choice === 'failed') {
+        evidence.push(
+          {
+            stage: 'runtime-transport',
+            status: 'fail',
+            source: 'manual-confirmation',
+            summary: 'The user reproduced the original runtime symptom after the fix.',
+            findings: [],
+          },
+          {
+            stage: 'personalization-outcome',
+            status: 'fail',
+            source: 'manual-confirmation',
+            summary: 'The expected repaired personalization outcome was not observed.',
+            findings: [],
+          },
+        );
+      } else if (store.steps['re-capture-live-events']) {
+        evidence.push(aggregateLiveEventsEvidence(store.steps['re-capture-live-events']));
+      }
+
+      const decision =
+        choice === 'blocked'
+          ? ('cannot-author-or-trigger' as const)
+          : choice === 'defer'
+            ? ('defer-live-validation' as const)
+            : ('continue' as const);
+      const finalState = deriveValidationFinalState({
+        profile: 'diagnostic-repair',
+        evidence,
+        decision,
+        requiredStages: rerunStages,
+      });
+      const sections = [
+        `# ${describeValidationFinalState(finalState)}`,
+        render.section('Fix applied', recordedDoctorFixSummary(store.steps)),
+        render.section(
+          'Rerun evidence',
+          render.table(
+            evidence.map((item) => ({
+              Stage: item.stage,
+              Status: item.status,
+              Source: item.source,
+              Summary: item.summary,
+            })),
+            { columns: ['Stage', 'Status', 'Source', 'Summary'] },
+          ),
+        ),
+        finalState === 'validated-end-to-end'
+          ? 'The original repair and its affected downstream evidence were validated.'
+          : 'The report keeps the exact failed, blocked, deferred, or unavailable evidence as the resume point.',
+      ];
+      const machineResult = {
+        profile: 'diagnostic-repair' as const,
+        finalState,
+        evidence,
+        rerunStages,
+        summary: describeValidationFinalState(finalState),
+      };
+
+      return [
+        'Present the doctor validation report exactly as rendered. Do not call the repair successful when required rerun evidence is unresolved.',
+        view('Doctor validation report', sections.join('\n\n')),
+        `After presenting the report, return this exact structured result to the workflow protocol without changing its values:\n${JSON.stringify(machineResult)}`,
+      ];
+    },
+    response: ValidationSummary,
+    next: terminal,
   })
 
   .step('done', {
     prompt: ({ store }) => {
       const diagnosis = store.diagnosis;
-
       const askFixed = store.steps['ask-fixed'];
-      const reVerifyResult = store.steps['re-verify'];
-      const reVerifyStatus = reVerifyResult?.overallStatus;
-      const reVerifySummary = reVerifyResult?.summary;
 
-      // Infra fix resolved it — user confirmed working, no code work needed.
       if (askFixed?.working) {
         return prompt`
-          The user confirmed personalization is working after the infrastructure fixes.
-          Celebrate briefly (2-3 sentences) and mention they can re-run the doctor anytime.
-          Do NOT repeat the findings.
+          The user manually confirmed that the original symptom stopped after the infrastructure
+          fix. State that concrete result without upgrading it to a full end-to-end validation.
+          Mention that they can run the same evidence ladder later for CMS graph, runtime transport,
+          and personalization outcome proof. Keep it brief.
         `;
       }
 
-      // Reached "done" straight from the programmatic gate (no code review ran).
-      if (!diagnosis && !reVerifyResult) {
+      if (!diagnosis) {
         return prompt`
           The user has the programmatic check results and chose to stop here. Thank them warmly
           and mention they can re-run the doctor, investigate the code, or come back anytime.
@@ -1361,10 +1745,8 @@ export default skill({
         `;
       }
 
-      const recs = (diagnosis?.recommendations ?? []).filter((r): r is Recommendation => !!r);
-
-      const cameFromReport = !store.steps['plan-fix'] && !reVerifyResult;
-      const cameFromPlanFix = store.steps['plan-fix'] && !store.steps['plan-fix']?.approved && !reVerifyResult;
+      const cameFromReport = !store.steps['plan-fix'];
+      const cameFromPlanFix = store.steps['plan-fix'] && !store.steps['plan-fix']?.approved;
 
       if (cameFromReport) {
         return prompt`
@@ -1384,39 +1766,10 @@ export default skill({
         `;
       }
 
-      // Fixes applied — show before/after.
-      const statusIcon = reVerifyStatus === 'pass' ? '✅' : reVerifyStatus === 'warn' ? '⚠️' : '❌';
-
-      const sections: string[] = [];
-      sections.push(`# 🩺 Doctor Summary\n`);
-      sections.push(render.section('Before', `Status: ${diagnosis?.overallStatus ?? 'unknown'}`));
-
-      if (reVerifyStatus) {
-        sections.push(
-          render.section(
-            `After: ${statusIcon} ${reVerifyStatus.toUpperCase()}`,
-            reVerifySummary ?? 'No verification summary',
-          ),
-        );
-      }
-
-      if (recs.length > 0) {
-        sections.push(render.section('🔧 Fixes Applied', recs.map((r) => `- ${r.message}`).join('\n')));
-      }
-
-      if (reVerifyStatus !== 'pass') {
-        sections.push(
-          render.section(
-            '💡 Remaining Issues',
-            'Some issues may remain. Consider running the doctor again after addressing any manual steps above.',
-          ),
-        );
-      }
-
-      return [
-        'Present the final summary below to the user. Be warm and encouraging. If everything passed, celebrate briefly. If issues remain, be honest but constructive.',
-        view('Doctor Summary', sections.join('\n\n')),
-      ];
+      return prompt`
+        The diagnostic flow ended without applying an approved fix. State that no repair was
+        validated and keep the report's unresolved evidence available as the resume point.
+      `;
     },
     next: terminal,
   })
