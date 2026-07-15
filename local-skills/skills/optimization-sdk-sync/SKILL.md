@@ -36,8 +36,12 @@ https://github.com/contentful/optimization.git
 Resolve sources in this order:
 
 1. An explicit local path supplied by the user.
-2. The managed remote cache at `.docs/optimization-sdk-sync/repository`.
+2. An existing reusable clone at `.docs/optimization-sdk-sync/repository`.
 3. A fresh clone of the official HTTPS repository into that cache.
+
+The cache is repo-local working state for the sync process. It is not committed or distributed.
+Reusing it avoids cloning the public repository on every run while still allowing the skill to
+fetch and inspect an exact upstream commit.
 
 For the default remote flow:
 
