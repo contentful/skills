@@ -1,5 +1,6 @@
 import { skill, type, prompt, render, act, view, terminal } from '@contentful/skill-kit';
 import { checkPackages } from '../actions/check-packages.js';
+import { scanCredentials } from '../actions/scan-credentials.js';
 import { checkApiConnectivity } from '../actions/check-api.js';
 import { checkOptimizationDoctor } from '../actions/check-optimization-doctor.js';
 import { surveyContent } from '../actions/survey-content.js';
@@ -26,6 +27,7 @@ import {
 } from '../validation/evidence.js';
 import {
   CredentialReviewResponse,
+  credentialScansDiffer,
   credentialReviewPrompt,
   managementTokenSource,
   optimizationDoctorRequestRows,
@@ -202,6 +204,11 @@ export default skill({
 
         6. **Env var approach** — .env files? Vercel env? Framework-prefixed vars?
 
+        Do not open or read .env files and do not inspect, print, or repeat raw environment
+        variable values. You may identify variable names from source code, config, and example
+        files. A dedicated credential scanner runs immediately after this step so the workflow can
+        present a consistent masked summary before continuing.
+
         Spend most time on items 1-4. For each area, note the specific files and patterns you find.
         Think about which components would be good candidates for personalization.
 
@@ -236,7 +243,21 @@ export default skill({
       mapInput: ({ response }) => ({ projectPath: response.projectPath }),
       run: checkPackages,
     },
-    next: 'assess',
+    next: 'scan-credentials',
+  })
+
+  .step('scan-credentials', {
+    action: {
+      mapInput: ({ store }) => ({ projectPath: store.project?.projectPath ?? '.' }),
+      run: scanCredentials,
+    },
+    next: 'review-credentials',
+  })
+
+  .step('review-credentials', {
+    prompt: ({ store }) => credentialReviewPrompt(store.steps['scan-credentials']),
+    response: CredentialReviewResponse,
+    next: ({ response }) => (response.choice === 'rescan' ? 'scan-credentials' : 'assess'),
   })
 
   .step('assess', {
@@ -900,10 +921,16 @@ export default skill({
       }),
       run: validateLocalSetup,
     },
-    next: ({ actionResult }) => (actionResult?.status === 'pass' ? 'review-credentials' : 'fix'),
+    next: ({ actionResult, store }) => {
+      if (actionResult?.status !== 'pass') return 'fix';
+      if (store.steps['review-credentials']?.choice === 'manual-only') return 'runtime-validation';
+      return credentialScansDiffer(store.steps['scan-credentials'], actionResult.credentials)
+        ? 'review-validation-credentials'
+        : 'check-connectivity';
+    },
   })
 
-  .step('review-credentials', {
+  .step('review-validation-credentials', {
     prompt: ({ store }) => credentialReviewPrompt(store.steps.verify?.credentials),
     response: CredentialReviewResponse,
     next: ({ response }) =>

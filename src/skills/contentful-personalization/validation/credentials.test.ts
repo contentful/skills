@@ -2,9 +2,40 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createOptimizationDoctorRequestContext,
+  credentialScansDiffer,
   detectedCredentialRows,
   optimizationDoctorRequestRows,
 } from './credentials.js';
+
+test('credential drift compares exact selected values and sources without exposing them', () => {
+  const initial = {
+    envVars: [
+      {
+        name: 'CONTENTFUL_MANAGEMENT_TOKEN',
+        status: 'set' as const,
+        maskedValue: 'cfpat_sa****',
+        source: '/project/.env.local',
+      },
+    ],
+    contentful: { managementToken: 'cfpat_same-prefix-one' },
+  };
+
+  assert.equal(credentialScansDiffer(initial, structuredClone(initial)), false);
+  assert.equal(
+    credentialScansDiffer(initial, {
+      ...structuredClone(initial),
+      contentful: { managementToken: 'cfpat_same-prefix-two' },
+    }),
+    true,
+  );
+  assert.equal(
+    credentialScansDiffer(initial, {
+      ...structuredClone(initial),
+      envVars: [{ ...initial.envVars[0], source: 'process environment' }],
+    }),
+    true,
+  );
+});
 
 test('detected credential rows expose masked values and their selected sources', () => {
   const rows = detectedCredentialRows({

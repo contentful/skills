@@ -103,7 +103,7 @@ export interface ResolvedCredentials {
   };
 }
 
-// Merge scanned credentials with user corrections, keeping secrets out of the model's hands.
+// Merge scanned credentials with user corrections without accepting masked previews as values.
 //
 // `scanned` is the source of truth — it came straight from the .env files and never passed
 // through the LLM. A correction only wins when the user supplied a real, non-masked override.
@@ -382,8 +382,8 @@ export default skill({
             user — show the environment variable table and the detected credentials table exactly
             as rendered. Then let the user confirm, correct, or skip.
 
-            The full credential values are already captured securely from the scan — the table
-            shows masked previews only. Your response must NOT carry credential values:
+            The user-facing table shows masked previews. Do not imply that this presentation creates
+            a security boundary around workflow state. Do not repeat raw credential values in prose:
 
             - If the user confirms the detected values are correct → set runCredentialChecks = true
               and DO NOT include any corrections. The real scanned values will be used automatically.

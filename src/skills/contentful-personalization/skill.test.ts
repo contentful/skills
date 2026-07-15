@@ -52,6 +52,7 @@ test('classify routes to onboard for setup requests', async () => {
         existingSetup: 'none',
         readinessOnly: true,
       },
+      'onboard/review-credentials': { choice: 'continue' },
       'onboard/assess': {
         readinessStatus: 'ready',
         report: 'All good',
@@ -65,6 +66,8 @@ test('classify routes to onboard for setup requests', async () => {
   assert.equal(result.redirectedTo?.kind, 'subskill');
   assert.equal(result.redirectedTo?.name, 'onboard');
   assert.ok(result.path.includes('classify'));
+  assert.ok(result.path.indexOf('onboard/scan-credentials') < result.path.indexOf('onboard/review-credentials'));
+  assert.ok(result.path.indexOf('onboard/review-credentials') < result.path.indexOf('onboard/assess'));
 });
 
 test('classify routes to doctor for debugging requests', async () => {
@@ -151,6 +154,7 @@ test('bare implement-personalization requests cannot enter extend-existing', asy
         existingSetup: 'none',
         readinessOnly: true,
       },
+      'onboard/review-credentials': { choice: 'continue' },
       'onboard/assess': {
         readinessStatus: 'ready',
         report: 'Ready for project-wide implementation',

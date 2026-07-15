@@ -49,14 +49,34 @@ export function detectedCredentialRows(credentials?: CredentialsScanResult): Det
     }));
 }
 
+export function credentialScansDiffer(initial?: CredentialsScanResult, current?: CredentialsScanResult): boolean {
+  if (!initial || !current) return initial !== current;
+
+  const snapshot = (credentials: CredentialsScanResult) => ({
+    envVars: credentials.envVars.map((variable) => ({
+      name: variable.name,
+      status: variable.status,
+      maskedValue: variable.maskedValue,
+      source: variable.source,
+      warning: variable.warning,
+    })),
+    personalization: credentials.personalization,
+    optimization: credentials.optimization,
+    contentful: credentials.contentful,
+  });
+
+  return JSON.stringify(snapshot(initial)) !== JSON.stringify(snapshot(current));
+}
+
 export function credentialReviewPrompt(credentials?: CredentialsScanResult) {
   const rows = detectedCredentialRows(credentials);
   return [
     prompt`
-      Present the detected credential table exactly as rendered. Explain that secret values are
-      masked, the source is where the scanner selected each value, and this checkpoint identifies
-      what the upcoming automated validation will use. Do not claim that detection proves a
-      credential is valid.
+      Present the detected credential table exactly as rendered. Explain that credential values
+      are masked in this user-facing summary, the source is where the scanner selected each value,
+      and this checkpoint identifies what the upcoming automated validation will use. Do not claim
+      that detection proves a credential is valid or that masking the table creates a security
+      boundary around the workflow's runtime or replay state.
     `,
     view(
       '🔑 Detected credentials for validation',
