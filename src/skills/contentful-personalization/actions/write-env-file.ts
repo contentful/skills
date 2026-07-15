@@ -3,6 +3,9 @@ import { join } from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
 import { WriteEnvResult } from '../schemas.js';
 
+const PUBLIC_MANAGEMENT_TOKEN =
+  /^(?:NEXT_PUBLIC_|GATSBY_|REACT_APP_|VITE_|EXPO_PUBLIC_)CONTENTFUL_(?:MANAGEMENT|CMA)_TOKEN$/;
+
 export const writeEnvFile = action({
   name: 'write-env-file',
   input: type({
@@ -31,7 +34,12 @@ export const writeEnvFile = action({
     const newLines: string[] = [];
 
     for (const [name, value] of Object.entries(input.variables) as Array<[string, string]>) {
-      if (existingKeys.has(name)) {
+      if (PUBLIC_MANAGEMENT_TOKEN.test(name)) {
+        skipped.push({
+          name,
+          reason: 'Management tokens must remain server-only and cannot use a browser-visible env prefix',
+        });
+      } else if (existingKeys.has(name)) {
         skipped.push({ name, reason: 'Already exists in file' });
       } else {
         newLines.push(`${name}=${value}`);

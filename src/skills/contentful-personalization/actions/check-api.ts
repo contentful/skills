@@ -1,20 +1,23 @@
 import { type, action } from '@contentful/skill-kit';
+import { randomUUID } from 'node:crypto';
 import { ApiCheckResult, type Finding } from '../schemas.js';
 
 const API_TIMEOUT_MS = 10_000;
 
-const PROBE_EVENT = {
-  events: [
-    {
-      type: 'track' as const,
-      channel: 'web' as const,
-      messageId: 'doctor-connectivity-check',
-      event: 'doctor-check',
-      properties: {},
-      context: { library: { name: 'skill-kit-doctor', version: '1.0.0' } },
-    },
-  ],
-};
+function buildProbeEvent() {
+  return {
+    events: [
+      {
+        type: 'track' as const,
+        channel: 'web' as const,
+        messageId: `skill-connectivity-check-${randomUUID()}`,
+        event: 'skill-credential-connectivity-check',
+        properties: { diagnostic: true },
+        context: { library: { name: 'contentful-personalization-skill', version: '1.0.0' } },
+      },
+    ],
+  };
+}
 
 interface Endpoint {
   sdk: 'legacy' | 'modern';
@@ -67,7 +70,7 @@ async function probeEndpoint(
       method: 'POST',
       signal: controller.signal,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(PROBE_EVENT),
+      body: JSON.stringify(buildProbeEvent()),
     });
     clearTimeout(timeout);
     const elapsed = Date.now() - start;
@@ -77,7 +80,7 @@ async function probeEndpoint(
         finding: {
           item: `Experience API ${endpoint.label}`,
           status: 'pass' as const,
-          detail: `Reachable (${elapsed}ms)`,
+          detail: `Credential and destination accepted a synthetic diagnostic event (${elapsed}ms). This does not prove that the application runtime sends events.`,
         },
         reachable: true,
         responseTimeMs: elapsed,

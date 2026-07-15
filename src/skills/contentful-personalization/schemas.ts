@@ -15,6 +15,56 @@ export type Finding = typeof Finding.infer;
 export const ReadinessStatus = type("'ready' | 'minor-changes' | 'needs-work' | 'not-ready'");
 export type ReadinessStatus = typeof ReadinessStatus.infer;
 
+// Validation is deliberately expressed as evidence rather than one overall boolean.
+// Each workflow gathers the stages that fit its task and the shared policy below turns
+// those observations into a consistent final state.
+export const ValidationStage = type(
+  "'local-integrity' | 'credential-connectivity' | 'cms-graph' | 'runtime-transport' | 'personalization-outcome'",
+);
+export type ValidationStage = typeof ValidationStage.infer;
+
+export const ValidationEvidenceStatus = type(
+  "'pass' | 'warn' | 'fail' | 'unavailable' | 'deferred' | 'blocked' | 'not-applicable'",
+);
+export type ValidationEvidenceStatus = typeof ValidationEvidenceStatus.infer;
+
+export const ValidationEvidenceSource = type(
+  "'local-analysis' | 'synthetic-probe' | 'contentful-api' | 'analytics-api' | 'browser' | 'manual-confirmation'",
+);
+export type ValidationEvidenceSource = typeof ValidationEvidenceSource.infer;
+
+export const ValidationRequirement = type("'required' | 'recommended' | 'not-applicable'");
+export type ValidationRequirement = typeof ValidationRequirement.infer;
+
+export const ValidationProfile = type(
+  "'full-setup' | 'component-extension' | 'analytics-extension' | 'experiment-authoring' | 'merge-tag-extension' | 'merge-tag-code-extension' | 'diagnostic-repair'",
+);
+export type ValidationProfile = typeof ValidationProfile.infer;
+
+export const ValidationFinalState = type(
+  "'validated-end-to-end' | 'implementation-complete-validation-deferred' | 'implementation-complete-live-validation-pending' | 'blocked-by-cms-authoring-or-publishing' | 'blocked-by-validation-constraints' | 'validation-failed'",
+);
+export type ValidationFinalState = typeof ValidationFinalState.infer;
+
+export const ValidationStageEvidence = type({
+  stage: ValidationStage,
+  status: ValidationEvidenceStatus,
+  source: ValidationEvidenceSource,
+  summary: 'string',
+  findings: Finding.array(),
+  'synthetic?': 'boolean',
+});
+export type ValidationStageEvidence = typeof ValidationStageEvidence.infer;
+
+export const ValidationSummary = type({
+  profile: ValidationProfile,
+  finalState: ValidationFinalState,
+  evidence: ValidationStageEvidence.array(),
+  rerunStages: ValidationStage.array(),
+  summary: 'string',
+});
+export type ValidationSummary = typeof ValidationSummary.infer;
+
 // Which personalization SDK family a project uses, derived from installed packages.
 // 'legacy' = @ninetailed/experience.js, 'modern' = @contentful/optimization.
 export const SdkFamily = type("'legacy' | 'modern' | 'both' | 'none'");
@@ -32,6 +82,8 @@ export const EnvVarInfo = type({
   name: 'string',
   status: "'set' | 'empty' | 'missing'",
   'maskedValue?': 'string',
+  'source?': 'string',
+  'warning?': 'string',
 });
 export type EnvVarInfo = typeof EnvVarInfo.infer;
 
@@ -66,8 +118,8 @@ export const CredentialsScanResult = type({
     'spaceId?': 'string',
     'accessToken?': 'string',
     'previewToken?': 'string',
-    // Personal Access Token (CFPAT) — used only by the /optimization-doctor
-    // live-events check. Not used for CDA/CPA content queries.
+    // Personal Access Token (CFPAT) — used only for GET-only automated Live Events
+    // validation through /optimization-doctor. Not used for CDA/CPA content queries.
     'managementToken?': 'string',
     'environment?': 'string',
   },
@@ -84,6 +136,17 @@ export const ApiCheckResult = type({
   'error?': 'string',
 });
 export type ApiCheckResult = typeof ApiCheckResult.infer;
+
+// --- validateLocalSetup action ---
+
+export const LocalValidationResult = type({
+  packages: PackagesResult,
+  credentials: CredentialsScanResult,
+  status: CheckStatus,
+  findings: Finding.array(),
+  summary: 'string',
+});
+export type LocalValidationResult = typeof LocalValidationResult.infer;
 
 // --- validateSetup action ---
 
@@ -133,6 +196,9 @@ export const RuntimeRequestSummary = type({
 });
 export type RuntimeRequestSummary = typeof RuntimeRequestSummary.infer;
 
+export const ControlledValidationAction = type("'accept-consent' | 'reload' | 'query-navigation' | 'interaction'");
+export type ControlledValidationAction = typeof ControlledValidationAction.infer;
+
 export const RuntimeCheckResult = type({
   url: 'string',
   overallStatus: "'pass' | 'warn' | 'fail'",
@@ -143,6 +209,8 @@ export const RuntimeCheckResult = type({
   findings: Finding.array(),
   recommendations: Recommendation.array(),
   shouldRunDoctor: 'boolean',
+  'controlledValidationSuggested?': 'boolean',
+  'controlledActions?': ControlledValidationAction.array(),
 });
 export type RuntimeCheckResult = typeof RuntimeCheckResult.infer;
 
@@ -186,6 +254,23 @@ export const ContentSurveyResult = type({
   // Published (CDA) vs preview (CPA) experience counts.
   publishedExperienceCount: 'number',
   previewExperienceCount: 'number',
+  publishedAudienceCount: 'number',
+  previewAudienceCount: 'number',
+  publishedMergeTagCount: 'number',
+  previewMergeTagCount: 'number',
+  publishedMergeTagIdentifiers: 'string[]',
+  previewMergeTagIdentifiers: 'string[]',
+  testScenario: {
+    kind: "'all-visitors' | 'existing-targeted' | 'preview-only' | 'fixture-needed' | 'unavailable'",
+    summary: 'string',
+    'experienceEntryId?': 'string',
+    'experienceId?': 'string',
+    'experienceName?': 'string',
+    'audienceEntryId?': 'string',
+    'audienceId?': 'string',
+    'audienceName?': 'string',
+    variantEntryIds: 'string[]',
+  },
   // Entry IDs worth a deeper inspectContent pass (e.g. unpublished experiences).
   suspiciousEntryIds: 'string[]',
   'error?': 'string',
@@ -195,7 +280,7 @@ export type ContentSurveyResult = typeof ContentSurveyResult.infer;
 // --- checkOptimizationDoctor action ---
 //
 // Calls the analytics-api /optimization-doctor endpoint with a CFPAT to fetch
-// per-event-type counts observed in the last 15 minutes. 
+// per-event-type counts observed in the last 15 minutes.
 // Useful to verify that events are reaching the destination.
 
 export const OptimizationDoctorLiveEventsLast15m = type({
@@ -204,8 +289,7 @@ export const OptimizationDoctorLiveEventsLast15m = type({
   numIdentifyEvents: 'number',
   numPageEvents: 'number',
 });
-export type OptimizationDoctorLiveEventsLast15m =
-  typeof OptimizationDoctorLiveEventsLast15m.infer;
+export type OptimizationDoctorLiveEventsLast15m = typeof OptimizationDoctorLiveEventsLast15m.infer;
 
 export const OptimizationDoctorResponse = type({
   data: {
@@ -224,5 +308,4 @@ export const OptimizationDoctorCheckResult = type({
   'liveEvents?': OptimizationDoctorLiveEventsLast15m,
   'error?': 'string',
 });
-export type OptimizationDoctorCheckResult =
-  typeof OptimizationDoctorCheckResult.infer;
+export type OptimizationDoctorCheckResult = typeof OptimizationDoctorCheckResult.infer;

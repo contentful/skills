@@ -299,6 +299,36 @@ test('handles invalid CDA token (401)', async () => {
   }
 });
 
+test('does not infer content structure when every API request fails', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw new Error('connection refused');
+  };
+
+  try {
+    const result = await inspectContent.run({
+      input: {
+        spaceId: 'space1',
+        environment: 'master',
+        entryId: 'entry1',
+        includeDepth: 3,
+        accessToken: 'cda-token',
+        previewToken: 'cpa-token',
+      },
+      signal: controller.signal,
+    });
+
+    assert.equal(result.status, 'fail');
+    assert.equal(result.entry.cda, undefined);
+    assert.equal(result.entry.cpa, undefined);
+    assert.equal(result.findings.length, 2);
+    assert.ok(result.findings.every((finding) => finding.item.includes('connectivity')));
+    assert.ok(!result.findings.some((finding) => finding.item.includes('Content type')));
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('detects content type not extended (no nt_experiences field anywhere)', async () => {
   const entry = makeEntry({
     title: 'Test',
