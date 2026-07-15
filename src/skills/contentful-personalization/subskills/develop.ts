@@ -27,11 +27,13 @@ export function resolveDevelopmentSdk({
 }
 
 export default skill({
-  name: 'develop',
+  name: 'extend-existing',
   version: VERSION,
   description:
-    'Day-to-day development companion for building with Contentful personalization. ' +
-    'Helps add personalization to components, create experiments, and wire analytics.',
+    'Extend an explicitly existing, working Contentful personalization integration. ' +
+    'Use only for scoped changes such as personalizing another component, adding an experiment, ' +
+    'or wiring analytics into the installed SDK. Not for first-time, project-wide, or unknown-state ' +
+    'implementation requests; use onboard for those.',
   entry: 'analyze',
 
   params: type({

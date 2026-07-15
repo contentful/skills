@@ -111,9 +111,10 @@ export default skill({
   name: 'onboard',
   version: VERSION,
   description:
-    'Assess readiness and guide Contentful personalization setup end-to-end. ' +
-    'Explores the codebase, checks readiness, helps choose SDK and architecture, ' +
-    'installs packages, and guides implementation.',
+    'Default workflow for implementing, setting up, or enabling Contentful personalization ' +
+    'project-wide, including when the existing setup state is unknown. Explores the codebase, ' +
+    'checks readiness, chooses SDK and architecture, installs packages, implements, and validates. ' +
+    'Use extend-existing only for a scoped change to an explicitly working integration.',
   entry: 'explore',
 
   params: type({

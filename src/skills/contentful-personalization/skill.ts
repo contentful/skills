@@ -2,18 +2,26 @@ import { skill, type, prompt, act } from '@contentful/skill-kit';
 import onboardSkill from './subskills/onboard.js';
 import liveDebugSkill from './subskills/live-debug.js';
 import doctorSkill from './subskills/doctor.js';
-import developSkill from './subskills/develop.js';
+import extendExistingSkill from './subskills/develop.js';
 import { VERSION } from './version.js';
+
+type InitialIntent = 'onboard' | 'live-debug' | 'doctor' | 'extend-existing' | 'reference' | 'unclear';
+type SetupContext = 'explicit-working' | 'explicit-broken' | 'not-established';
+
+export function resolveInitialIntent(intent: InitialIntent, setupContext: SetupContext): InitialIntent {
+  if (intent === 'extend-existing' && setupContext !== 'explicit-working') {
+    return 'onboard';
+  }
+
+  return intent;
+}
 
 export default skill({
   name: 'contentful-personalization',
   version: VERSION,
   description:
-    'Set up, debug, and build with Contentful personalization and optimization. ' +
-    'Covers readiness, SDK install guidance, static diagnostics, live browser debugging, ' +
-    'development help, and reference patterns. Use for personalization, optimization, ' +
-    'ninetailed, A/B testing, experiments, audience targeting, Contentful Experiences, ' +
-    'Experiences SDK, Studio Experiences, and the experience API.',
+    'Implement, extend, and debug Contentful personalization. Use onboarding for new, project-wide, ' +
+    'or unknown setups; use extend-existing only for scoped work on an explicitly working integration.',
   triggers: [
     'personalization',
     'optimization',
@@ -27,6 +35,8 @@ export default skill({
     'variants',
     'content variants',
     'set up personalization',
+    'implement personalization',
+    'enable personalization',
     'personalization not working',
     'personalization broken',
     'personalize this component',
@@ -59,7 +69,7 @@ export default skill({
   package: {
     name: '@contentful/skill-contentful-personalization',
     description:
-      'Unified Contentful personalization skill covering readiness, setup, live and static diagnostics, development, and reference documentation',
+      'Unified Contentful personalization skill for new setup, existing-integration extensions, diagnostics, and reference documentation',
     license: 'MIT',
     files: ['SKILL.md', 'scripts/**', 'bin/**', 'references/**'],
   },
@@ -72,8 +82,10 @@ export default skill({
 
       ## Categories
 
-      🚀 **onboard** — First-time setup
-      "Set up personalization", "install the SDK", "am I ready?", "get started"
+      🚀 **onboard** — Implement personalization project-wide, or set it up when the current state
+      is not explicitly established as working
+      "Implement personalization", "set up personalization", "enable personalization",
+      "install the SDK", "am I ready?", "get started"
 
       🌐 **live-debug** — Browser/runtime verification for a live page
       "Check this URL", "debug this live page", "inspect network requests", "check the console"
@@ -81,8 +93,14 @@ export default skill({
       🩺 **doctor** — Broken or misconfigured setup
       "Not working", "broken", "debug", "check my setup", "fix my personalization"
 
-      🛠️ **develop** — Build on a working setup
-      "Personalize this component", "add A/B test", "create experiment", "wire analytics"
+      🛠️ **extend-existing** — Make a scoped change to an explicitly existing, working integration
+      "Using our existing OptimizationRoot, personalize this component",
+      "add an A/B test to our current setup", "wire analytics into the installed SDK"
+
+      Never infer a working setup from verbs such as "implement", "build", "add", or
+      "personalize". Choose **extend-existing** only when the user's message itself establishes
+      that personalization is already installed and working. If setup state is unstated, a
+      project-wide implementation request is **onboard**.
 
       📖 **reference** — Look something up
       "How does X work?", "show me a pattern", "what's the API for Y?"
@@ -90,21 +108,29 @@ export default skill({
 
       If the user includes a live URL for browser inspection, set the \`requestedUrl\` field.
 
-      If the request is ambiguous, set intent to "unclear" and confidence below 0.6.
+      Set \`setupContext\` from the user's message only:
+      - \`explicit-working\` — the user clearly states an existing integration works
+      - \`explicit-broken\` — the user clearly describes an existing broken integration
+      - \`not-established\` — setup state is absent or only implied
+
+      If the request is otherwise ambiguous, set intent to "unclear" and confidence below 0.6.
     `,
     response: type({
-      intent: "'onboard' | 'live-debug' | 'doctor' | 'develop' | 'reference' | 'unclear'",
+      intent: "'onboard' | 'live-debug' | 'doctor' | 'extend-existing' | 'reference' | 'unclear'",
+      setupContext: "'explicit-working' | 'explicit-broken' | 'not-established'",
       confidence: 'number',
       'requestedUrl?': 'string',
       'topic?': 'string',
       reasoning: 'string',
     }),
     next: ({ response }) => {
+      const intent = resolveInitialIntent(response.intent, response.setupContext);
+      if (response.intent === 'extend-existing' && intent === 'onboard') return 'subskill:onboard';
       if (response.confidence < 0.6 || response.intent === 'unclear') return 'gather-context';
-      if (response.intent === 'live-debug') return 'subskill:live-debug';
-      if (response.intent === 'reference' && response.topic) return `topic:${response.topic}`;
-      if (response.intent === 'reference') return 'pick-topic';
-      return `subskill:${response.intent}`;
+      if (intent === 'live-debug') return 'subskill:live-debug';
+      if (intent === 'reference' && response.topic) return `topic:${response.topic}`;
+      if (intent === 'reference') return 'pick-topic';
+      return `subskill:${intent}`;
     },
   })
 
@@ -125,7 +151,8 @@ export default skill({
       - User explicitly asks to inspect a live URL, browser traffic, console, or runtime requests
         → **live-debug**
       - SDK **installed** but provider missing or broken config → likely **doctor**
-      - SDK **installed** and working (provider present, components wired) → likely **develop**
+      - SDK **installed** and working (provider present, components wired) and the request is a
+        scoped change to that integration → likely **extend-existing**
       - User asking conceptual/reference questions → likely **reference**
 
       Base your classification on what you find in the code. If evidence is still thin,
@@ -135,7 +162,7 @@ export default skill({
       If the user included a live URL for browser inspection, set the \`requestedUrl\` field.
     `,
     response: type({
-      intent: "'onboard' | 'live-debug' | 'doctor' | 'develop' | 'reference'",
+      intent: "'onboard' | 'live-debug' | 'doctor' | 'extend-existing' | 'reference'",
       'requestedUrl?': 'string',
       'topic?': 'string',
       reasoning: 'string',
@@ -301,7 +328,7 @@ export default skill({
       userQuery: '',
     }),
   })
-  .subskill('develop', developSkill, {
+  .subskill('extend-existing', extendExistingSkill, {
     params: () => ({ userQuery: '' }),
   })
 
