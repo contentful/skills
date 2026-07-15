@@ -25,6 +25,12 @@ import {
   manualRuntimeEvidence,
 } from '../validation/evidence.js';
 import {
+  CredentialReviewResponse,
+  credentialReviewPrompt,
+  managementTokenSource,
+  optimizationDoctorRequestRows,
+} from '../validation/credentials.js';
+import {
   deriveValidationFinalState,
   describeValidationFinalState,
   getEvidenceRerunStages,
@@ -894,7 +900,18 @@ export default skill({
       }),
       run: validateLocalSetup,
     },
-    next: ({ actionResult }) => (actionResult?.status === 'pass' ? 'check-connectivity' : 'fix'),
+    next: ({ actionResult }) => (actionResult?.status === 'pass' ? 'review-credentials' : 'fix'),
+  })
+
+  .step('review-credentials', {
+    prompt: ({ store }) => credentialReviewPrompt(store.steps.verify?.credentials),
+    response: CredentialReviewResponse,
+    next: ({ response }) =>
+      response.choice === 'rescan'
+        ? 'verify'
+        : response.choice === 'manual-only'
+          ? 'runtime-validation'
+          : 'check-connectivity',
   })
 
   .step('check-connectivity', {
@@ -943,6 +960,9 @@ export default skill({
           spaceId,
           environmentId,
           ...(managementToken ? { managementToken } : {}),
+          ...(managementTokenSource(store.steps.verify?.credentials)
+            ? { managementTokenSource: managementTokenSource(store.steps.verify?.credentials) }
+            : {}),
         };
       },
       run: checkOptimizationDoctor,
@@ -960,17 +980,22 @@ export default skill({
       const findings = result?.findings ?? [];
       const scenario = store.steps['survey-content']?.testScenario;
 
-      const statusMessage =
-        result?.status === 'pass'
+      const statusMessage = !result
+        ? 'Automated API validation was skipped by request. Use the Live Events view for manual runtime evidence.'
+        : result.status === 'pass'
           ? 'Recent events exist in the space-wide 15-minute window. Treat this only as a baseline: it is not yet correlated to this validation run.'
           : result?.status === 'warn'
             ? 'The endpoint is reachable, but it has not observed any events in the last 15 minutes.'
             : result?.status === 'skip'
               ? 'The automated live-event check was skipped because no management token was available.'
-              : 'The automated live-event check failed. Use the Live Events view to distinguish an authentication problem from missing runtime events.';
+              : 'The automated live-event check failed. Compare the masked credential, source, and target below, then use Live Events as independent runtime evidence.';
 
+      const requestRows = optimizationDoctorRequestRows(result);
       const sections = [
         statusMessage,
+        requestRows.length > 0
+          ? render.section('Automated Live Events request', render.table(requestRows, { columns: ['Field', 'Value'] }))
+          : '',
         findings.length > 0
           ? render.table(
               findings.map((finding) => ({
@@ -1016,7 +1041,8 @@ export default skill({
       ];
 
       const hasInventoriedOutcome = hasInventoriedOutcomeScenario(scenario);
-      const needsCmsSurvey = !hasInventoriedOutcome;
+      const automatedApiChecksRan = result !== undefined || store.steps['survey-content'] !== undefined;
+      const needsCmsSurvey = !hasInventoriedOutcome && automatedApiChecksRan;
       const validationOptions = [
         ...(hasInventoriedOutcome
           ? [
@@ -1048,11 +1074,15 @@ export default skill({
           label: '📡 Page event confirmed',
           description: 'Runtime transport works, but no specific personalization outcome could be confirmed',
         },
-        {
-          value: 'check-again',
-          label: '🔄 I triggered traffic — compare counts',
-          description: 'Rerun the optional automated Live Events endpoint after the baseline snapshot',
-        },
+        ...(result
+          ? [
+              {
+                value: 'check-again',
+                label: '🔄 I triggered traffic — compare counts',
+                description: 'Rerun the optional automated Live Events endpoint after the baseline snapshot',
+              },
+            ]
+          : []),
         {
           value: 'unavailable',
           label: '⏸️ Cannot validate now',
@@ -1061,7 +1091,12 @@ export default skill({
       ];
 
       return [
-        'Present the runtime verification instructions below exactly as rendered, then ask how to proceed.',
+        prompt`
+          Present the runtime verification instructions below exactly as rendered, then ask how to
+          proceed. If the automated check returned HTTP 401, state only that the endpoint rejected
+          the exact request shown. Do not say the token is expired, incorrectly scoped, or missing
+          access unless separate evidence establishes that diagnosis.
+        `,
         view('📡 Runtime Verification', sections.join('\n\n')),
         act.askUser({
           type: 'structured',
@@ -1088,13 +1123,17 @@ export default skill({
 
   .step('verify-live-events-after', {
     action: {
-      mapInput: ({ store }) => ({
-        spaceId: store.steps.verify?.credentials?.contentful?.spaceId ?? '',
-        environmentId: store.steps.verify?.credentials?.contentful?.environment ?? 'master',
-        ...(store.steps.verify?.credentials?.contentful?.managementToken
-          ? { managementToken: store.steps.verify.credentials.contentful.managementToken }
-          : {}),
-      }),
+      mapInput: ({ store }) => {
+        const credentials = store.steps.verify?.credentials;
+        return {
+          spaceId: credentials?.contentful?.spaceId ?? '',
+          environmentId: credentials?.contentful?.environment ?? 'master',
+          ...(credentials?.contentful?.managementToken
+            ? { managementToken: credentials.contentful.managementToken }
+            : {}),
+          ...(managementTokenSource(credentials) ? { managementTokenSource: managementTokenSource(credentials) } : {}),
+        };
+      },
       run: checkOptimizationDoctor,
     },
     next: 'runtime-confirmation',

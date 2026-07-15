@@ -12,6 +12,7 @@ import {
   Recommendation,
   ValidationStage,
   ValidationSummary,
+  type CredentialsScanResult,
   type Finding,
   type ValidationStageEvidence,
 } from '../schemas.js';
@@ -24,6 +25,11 @@ import {
   liveEventsDeltaRows,
   manualRuntimeEvidence,
 } from '../validation/evidence.js';
+import {
+  detectedCredentialRows,
+  managementTokenSource,
+  optimizationDoctorRequestRows,
+} from '../validation/credentials.js';
 import {
   deriveValidationFinalState,
   describeValidationFinalState,
@@ -354,13 +360,6 @@ export default skill({
       const family = store.project?.sdkFamily;
       const profile = sdkProfile(family);
 
-      const hasPersonalization = !!scanned?.personalization?.apiKey;
-      const hasOptimization = !!scanned?.optimization?.clientId;
-      const hasContentful = !!(
-        scanned?.contentful?.spaceId &&
-        (scanned?.contentful?.accessToken || scanned?.contentful?.previewToken)
-      );
-
       const envTable = render.table(
         envVars.map((ev: { name: string; status: string; maskedValue?: string }) => ({
           Variable: ev.name,
@@ -370,43 +369,12 @@ export default skill({
         { columns: ['Variable', 'Status', 'Value'] },
       );
 
-      const hasAnyCreds = hasPersonalization || hasOptimization || hasContentful;
+      const hasAnyCreds = detectedCredentialRows(scanned).length > 0;
 
       if (hasAnyCreds) {
-        const mask = (v: string) => (v.length <= 8 ? '****' : v.slice(0, 8) + '****');
-        const credRows: Array<{ Credential: string; Value: string }> = [];
-        if (scanned?.personalization?.apiKey) {
-          credRows.push({ Credential: 'Ninetailed API key (legacy SDK)', Value: mask(scanned.personalization.apiKey) });
-        }
-        if (scanned?.personalization?.environment) {
-          credRows.push({ Credential: 'Ninetailed environment', Value: scanned.personalization.environment });
-        }
-        if (scanned?.optimization?.clientId) {
-          credRows.push({ Credential: 'Optimization Client ID', Value: scanned.optimization.clientId });
-        }
-        if (scanned?.optimization?.environment) {
-          credRows.push({ Credential: 'Optimization environment', Value: scanned.optimization.environment });
-        }
-        if (scanned?.contentful?.spaceId) {
-          credRows.push({ Credential: 'Contentful Space ID', Value: scanned.contentful.spaceId });
-        }
-        if (scanned?.contentful?.accessToken) {
-          credRows.push({ Credential: 'CDA token', Value: mask(scanned.contentful.accessToken) });
-        }
-        if (scanned?.contentful?.previewToken) {
-          credRows.push({ Credential: 'CPA token', Value: mask(scanned.contentful.previewToken) });
-        }
-        if (scanned?.contentful?.managementToken) {
-          credRows.push({
-            Credential: 'CMA token / CFPAT (for optimization-doctor)',
-            Value: mask(scanned.contentful.managementToken),
-          });
-        }
-        if (scanned?.contentful?.environment) {
-          credRows.push({ Credential: 'Contentful environment', Value: scanned.contentful.environment });
-        }
-
-        const credTable = render.table(credRows, { columns: ['Credential', 'Value'] });
+        const credTable = render.table(detectedCredentialRows(scanned), {
+          columns: ['Credential', 'Variable', 'Value', 'Source'],
+        });
 
         return [
           prompt`
@@ -578,10 +546,16 @@ export default skill({
     action: {
       mapInput: ({ store }) => {
         const creds = store.credentials;
+        const confirmed = store.steps['confirm-credentials'] as { corrections?: CredentialBlocks } | undefined;
+        const scanned = store.steps['scan-credentials'] as CredentialsScanResult | undefined;
+        const tokenSource = confirmed?.corrections?.contentful?.managementToken
+          ? 'user-provided correction'
+          : managementTokenSource(scanned);
         return {
           spaceId: creds?.contentful?.spaceId ?? '',
           environmentId: creds?.contentful?.environment ?? 'master',
           ...(creds?.contentful?.managementToken ? { managementToken: creds.contentful.managementToken } : {}),
+          ...(tokenSource ? { managementTokenSource: tokenSource } : {}),
         };
       },
       run: checkOptimizationDoctor,
@@ -646,6 +620,7 @@ export default skill({
             : optimizationDoctor?.status === 'skip'
               ? '⏭️ Optimization-doctor check skipped (no CONTENTFUL_MANAGEMENT_TOKEN available).'
               : '❌ Optimization-doctor endpoint call failed.';
+      const optimizationDoctorRequest = optimizationDoctorRequestRows(optimizationDoctor);
 
       const sections: string[] = [];
       sections.push(render.kv({ SDK: profile.name }));
@@ -655,7 +630,13 @@ export default skill({
       sections.push(
         render.section(
           '🩺 Optimization doctor (live events last 15m)',
-          `${optimizationDoctorNote}\n\n${findingsTable(optimizationDoctor?.findings)}`,
+          [
+            optimizationDoctorNote,
+            optimizationDoctorRequest.length > 0
+              ? render.table(optimizationDoctorRequest, { columns: ['Field', 'Value'] })
+              : '',
+            findingsTable(optimizationDoctor?.findings),
+          ].join('\n\n'),
         ),
       );
 
@@ -707,6 +688,10 @@ export default skill({
           - Non-zero optimization-doctor counts are space-wide aggregate evidence and cannot prove
             that this page, profile, or validation run produced them without a before/after delta
             plus user correlation.
+          - An HTTP 401 proves only that the endpoint rejected this exact request. Do not say the
+            token is expired, incorrectly scoped, or missing space access unless separate evidence
+            establishes that diagnosis. First compare the masked token, source, space, environment,
+            and endpoint shown in the request table.
 
           If the user has described a specific symptom (especially a content or publishing
           suspicion), take it seriously: do NOT argue it away on the strength of this summary.
@@ -1203,7 +1188,13 @@ export default skill({
       const optimizationDoctor = store.steps['check-optimization-doctor'];
       if (optimizationDoctor) {
         sections.push(
-          render.section('🩺 Optimization doctor (live events last 15m)', findingsTable(optimizationDoctor.findings)),
+          render.section(
+            '🩺 Optimization doctor (live events last 15m)',
+            [
+              render.table(optimizationDoctorRequestRows(optimizationDoctor), { columns: ['Field', 'Value'] }),
+              findingsTable(optimizationDoctor.findings),
+            ].join('\n\n'),
+          ),
         );
       }
 

@@ -302,9 +302,23 @@ export const OptimizationDoctorResponse = type({
 });
 export type OptimizationDoctorResponse = typeof OptimizationDoctorResponse.infer;
 
+export const OptimizationDoctorRequestContext = type({
+  endpoint: 'string',
+  spaceId: 'string',
+  environmentId: 'string',
+  managementToken: {
+    status: "'used' | 'missing'",
+    variable: "'CONTENTFUL_MANAGEMENT_TOKEN'",
+    'maskedValue?': 'string',
+    'source?': 'string',
+  },
+});
+export type OptimizationDoctorRequestContext = typeof OptimizationDoctorRequestContext.infer;
+
 export const OptimizationDoctorCheckResult = type({
   status: CheckStatus,
   findings: Finding.array(),
+  request: OptimizationDoctorRequestContext,
   'liveEvents?': OptimizationDoctorLiveEventsLast15m,
   'error?': 'string',
 });

@@ -31,6 +31,17 @@ test('aggregate Live Events counts never prove correlated runtime transport', ()
   const evidence = aggregateLiveEventsEvidence({
     status: 'pass',
     findings: [],
+    request: {
+      endpoint: 'https://analytics.ninetailed.co/v1/spaces/space1/environments/master/optimization-doctor',
+      spaceId: 'space1',
+      environmentId: 'master',
+      managementToken: {
+        status: 'used',
+        variable: 'CONTENTFUL_MANAGEMENT_TOKEN',
+        maskedValue: 'cfpat_xx****',
+        source: '/project/.env.local',
+      },
+    },
     liveEvents: {
       numTrackEvents: 1,
       numComponentEvents: 1,

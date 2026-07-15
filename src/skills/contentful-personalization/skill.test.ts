@@ -854,6 +854,7 @@ test('extend-existing analyze → plan → implement path', async () => {
           checksRun: ['typecheck'],
           failures: [],
         },
+        'review-credentials': { choice: 'continue' },
         'runtime-validation': { choice: 'confirmed-end-to-end' },
         report: {
           profile: 'component-extension',
@@ -872,6 +873,7 @@ test('extend-existing analyze → plan → implement path', async () => {
       'implement',
       'verify-code',
       'validate-local',
+      'review-credentials',
       'survey-content',
       'capture-live-events',
       'runtime-validation',

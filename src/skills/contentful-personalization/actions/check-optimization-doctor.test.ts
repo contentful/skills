@@ -99,7 +99,12 @@ test('optimization-doctor: reports fail on 401 without leaking the token', async
 
   try {
     const result = await checkOptimizationDoctor.run({
-      input: { spaceId: 'space1', environmentId: 'master', managementToken: 'cfpat_secret' },
+      input: {
+        spaceId: 'space1',
+        environmentId: 'master',
+        managementToken: 'cfpat_secret',
+        managementTokenSource: '/project/.env.local',
+      },
       signal: controller.signal,
     });
 
@@ -107,8 +112,18 @@ test('optimization-doctor: reports fail on 401 without leaking the token', async
     const finding = result.findings[0];
     assert.equal(finding.status, 'fail');
     assert.ok(finding.detail.includes('401'), 'detail should mention the HTTP status');
+    assert.match(finding.detail, /does not prove/);
+    assert.deepEqual(result.request.managementToken, {
+      status: 'used',
+      variable: 'CONTENTFUL_MANAGEMENT_TOKEN',
+      maskedValue: 'cfpat_se****',
+      source: '/project/.env.local',
+    });
+    assert.equal(result.request.spaceId, 'space1');
+    assert.equal(result.request.environmentId, 'master');
     assert.ok(!finding.detail.includes('cfpat_secret'), 'detail must not leak the token');
     assert.ok(!(result.error ?? '').includes('cfpat_secret'), 'error must not leak the token');
+    assert.ok(!JSON.stringify(result).includes('cfpat_secret'), 'result must not leak the token');
   } finally {
     globalThis.fetch = original;
   }

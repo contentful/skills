@@ -15,6 +15,12 @@ import {
   manualRuntimeEvidence,
 } from '../validation/evidence.js';
 import {
+  CredentialReviewResponse,
+  credentialReviewPrompt,
+  managementTokenSource,
+  optimizationDoctorRequestRows,
+} from '../validation/credentials.js';
+import {
   deriveValidationFinalState,
   describeValidationFinalState,
   filterValidationEvidence,
@@ -353,13 +359,24 @@ export default skill({
       }),
       run: validateLocalSetup,
     },
-    next: ({ actionResult, attempts, store }) => {
+    next: ({ actionResult, attempts }) => {
       if (actionResult?.status !== 'pass' && attempts < 3) return 'fix-local-validation';
-      return firstRemoteValidationStage(
-        store.steps.analyze?.taskType ?? 'other',
-        store.steps.analyze?.mergeTagAuthoring ?? 'unknown',
-      );
+      return 'review-credentials';
     },
+  })
+
+  .step('review-credentials', {
+    prompt: ({ store }) => credentialReviewPrompt(store.steps['validate-local']?.credentials),
+    response: CredentialReviewResponse,
+    next: ({ response, store }) =>
+      response.choice === 'rescan'
+        ? 'validate-local'
+        : response.choice === 'manual-only'
+          ? 'runtime-validation'
+          : firstRemoteValidationStage(
+              store.steps.analyze?.taskType ?? 'other',
+              store.steps.analyze?.mergeTagAuthoring ?? 'unknown',
+            ),
   })
 
   .step('fix-local-validation', {
@@ -417,13 +434,17 @@ export default skill({
 
   .step('capture-live-events', {
     action: {
-      mapInput: ({ store }) => ({
-        spaceId: store.steps['validate-local']?.credentials?.contentful?.spaceId ?? '',
-        environmentId: store.steps['validate-local']?.credentials?.contentful?.environment ?? 'master',
-        ...(store.steps['validate-local']?.credentials?.contentful?.managementToken
-          ? { managementToken: store.steps['validate-local'].credentials.contentful.managementToken }
-          : {}),
-      }),
+      mapInput: ({ store }) => {
+        const credentials = store.steps['validate-local']?.credentials;
+        return {
+          spaceId: credentials?.contentful?.spaceId ?? '',
+          environmentId: credentials?.contentful?.environment ?? 'master',
+          ...(credentials?.contentful?.managementToken
+            ? { managementToken: credentials.contentful.managementToken }
+            : {}),
+          ...(managementTokenSource(credentials) ? { managementTokenSource: managementTokenSource(credentials) } : {}),
+        };
+      },
       run: checkOptimizationDoctor,
     },
     next: 'runtime-validation',
@@ -442,6 +463,8 @@ export default skill({
       const requiresRuntimeTransport = requirements['runtime-transport'] !== 'not-applicable';
       const analyticsEvents = store.steps.analyze.analyticsEvents ?? [];
       const analyticsDestinations = store.steps.analyze.analyticsDestinations ?? [];
+      const liveEvents = store.steps['capture-live-events'];
+      const requestRows = optimizationDoctorRequestRows(liveEvents);
       const targetEvidence: Record<ValidationProfile, string> = {
         'full-setup': 'a correlated page event plus the selected experience and rendered variant',
         'component-extension':
@@ -462,6 +485,9 @@ export default skill({
           Do not imply that recent aggregate counts belong to this run, and do not force consent,
           navigation, clicks, audience changes, or CMS authoring. For merge tags, require both the
           target-profile value and the missing-value fallback before accepting outcome confirmation.
+          If the automated check returned HTTP 401, state only that the endpoint rejected the exact
+          request shown. Do not say the token is expired, incorrectly scoped, or missing access
+          unless separate evidence establishes that diagnosis.
         `,
         view(
           'Scoped personalization validation',
@@ -486,6 +512,22 @@ export default skill({
                 ? `[Open Contentful Live Events](${liveEventsUrl})`
                 : 'Open the Personalization app and navigate to Analytics → Live Events.'
               : 'Live Events is not applicable. Validate both the resolved value and fallback in the rendered application.',
+            liveEvents
+              ? render.section(
+                  'Automated Live Events check',
+                  [
+                    render.table(requestRows, { columns: ['Field', 'Value'] }),
+                    render.table(
+                      liveEvents.findings.map((finding) => ({
+                        Check: finding.item,
+                        Status: finding.status,
+                        Detail: finding.detail,
+                      })),
+                      { columns: ['Check', 'Status', 'Detail'] },
+                    ),
+                  ].join('\n\n'),
+                )
+              : 'Automated API validation was skipped by request.',
           ].join('\n\n'),
         ),
         act.askUser({
@@ -496,13 +538,13 @@ export default skill({
               ? [
                   { value: 'confirmed-end-to-end', label: '✅ All events + destinations confirmed' },
                   { value: 'confirmed-transport', label: '📡 SDK events only' },
-                  { value: 'check-again', label: '🔄 Triggered traffic — compare counts' },
+                  ...(liveEvents ? [{ value: 'check-again', label: '🔄 Triggered traffic — compare counts' }] : []),
                   { value: 'unavailable', label: '⏸️ Cannot validate now' },
                 ]
               : [
                   { value: 'confirmed-end-to-end', label: '✅ Expected outcome confirmed' },
                   { value: 'confirmed-transport', label: '📡 Runtime event only' },
-                  { value: 'check-again', label: '🔄 Triggered traffic — compare counts' },
+                  ...(liveEvents ? [{ value: 'check-again', label: '🔄 Triggered traffic — compare counts' }] : []),
                   { value: 'unavailable', label: '⏸️ Cannot validate now' },
                 ]
             : [
@@ -525,13 +567,17 @@ export default skill({
 
   .step('capture-live-events-after', {
     action: {
-      mapInput: ({ store }) => ({
-        spaceId: store.steps['validate-local']?.credentials?.contentful?.spaceId ?? '',
-        environmentId: store.steps['validate-local']?.credentials?.contentful?.environment ?? 'master',
-        ...(store.steps['validate-local']?.credentials?.contentful?.managementToken
-          ? { managementToken: store.steps['validate-local'].credentials.contentful.managementToken }
-          : {}),
-      }),
+      mapInput: ({ store }) => {
+        const credentials = store.steps['validate-local']?.credentials;
+        return {
+          spaceId: credentials?.contentful?.spaceId ?? '',
+          environmentId: credentials?.contentful?.environment ?? 'master',
+          ...(credentials?.contentful?.managementToken
+            ? { managementToken: credentials.contentful.managementToken }
+            : {}),
+          ...(managementTokenSource(credentials) ? { managementTokenSource: managementTokenSource(credentials) } : {}),
+        };
+      },
       run: checkOptimizationDoctor,
     },
     next: 'runtime-confirmation',

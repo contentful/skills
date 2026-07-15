@@ -2,6 +2,7 @@ import { type, action } from '@contentful/skill-kit';
 import { dirname, join, resolve } from 'node:path';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { CredentialsScanResult, type EnvVarInfo } from '../schemas.js';
+import { maskCredential } from '../validation/credentials.js';
 
 const PUBLIC_PREFIXES = ['NEXT_PUBLIC_', 'GATSBY_', 'REACT_APP_', 'VITE_', 'EXPO_PUBLIC_'] as const;
 
@@ -74,11 +75,6 @@ const KNOWN_ENV_VARS: KnownEnvVar[] = [
 interface EnvSource {
   label: string;
   values: Record<string, string>;
-}
-
-function maskValue(value: string): string {
-  if (value.length <= 8) return '****';
-  return value.slice(0, 8) + '****';
 }
 
 async function pathExists(path: string): Promise<boolean> {
@@ -220,7 +216,7 @@ export const scanCredentials = action({
       envVars.push({
         name: variable.name,
         status: 'set',
-        maskedValue: variable.secret ? maskValue(value) : value,
+        maskedValue: variable.secret ? maskCredential(value) : value,
         source: found.source,
       });
       detected[variable.name] = value;
