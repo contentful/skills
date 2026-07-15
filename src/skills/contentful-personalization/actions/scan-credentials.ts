@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { readdir, readFile } from 'node:fs/promises';
 import { CredentialsScanResult, type EnvVarInfo } from '../schemas.js';
 
-const FW_PREFIX = '(?:NEXT_PUBLIC_|GATSBY_|REACT_APP_|VITE_)?';
+const FW_PREFIX = '(?:NEXT_PUBLIC_|GATSBY_|REACT_APP_|VITE_|EXPO_PUBLIC_)?';
 
 const KNOWN_ENV_VARS: Array<{ name: string; secret: boolean; patterns: RegExp[] }> = [
   {

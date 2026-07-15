@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { runComposite, runSkill, mockModel } from '@contentful/skill-kit/test';
 import skill from './skill.js';
 import { derivePackagesToInstall } from './actions/install-packages.js';
+import { getOptimizationReferenceFiles } from './optimization-references.js';
 import doctorSkill, { resolveCredentials } from './subskills/doctor.js';
 import developSkill from './subskills/develop.js';
 import liveDebugSkill from './subskills/live-debug.js';
@@ -81,6 +82,8 @@ test('classify routes to develop for component tasks', async () => {
       'develop/analyze': {
         taskType: 'personalize-component',
         sdkInUse: 'ninetailed',
+        optimizationRuntime: 'unknown',
+        optimizationArchitecture: 'unknown',
         framework: 'nextjs-app',
         targetFiles: ['Hero.tsx'],
         analysis: 'Wrap Hero',
@@ -204,7 +207,9 @@ test('live-debug uses provided URL and finishes when runtime looks healthy', asy
             summary: 'Page-level event with basic page metadata',
           },
         ],
-        findings: [{ item: 'experience.ninetailed.co request', status: 'pass', detail: 'Observed one successful POST request.' }],
+        findings: [
+          { item: 'experience.ninetailed.co request', status: 'pass', detail: 'Observed one successful POST request.' },
+        ],
         recommendations: [],
         shouldRunDoctor: false,
       },
@@ -238,8 +243,20 @@ test('live-debug asks for URL when one was not provided', async () => {
         consoleSummary: 'No meaningful console issues.',
         requestCount: 0,
         requests: [],
-        findings: [{ item: 'experience.ninetailed.co request', status: 'warn', detail: 'No matching requests were detected during this check.' }],
-        recommendations: [{ priority: 'info', message: 'Retry the page with known personalized content if you expected network activity.', category: 'runtime' }],
+        findings: [
+          {
+            item: 'experience.ninetailed.co request',
+            status: 'warn',
+            detail: 'No matching requests were detected during this check.',
+          },
+        ],
+        recommendations: [
+          {
+            priority: 'info',
+            message: 'Retry the page with known personalized content if you expected network activity.',
+            category: 'runtime',
+          },
+        ],
         shouldRunDoctor: false,
       },
       report: { message: 'Done' },
@@ -281,7 +298,8 @@ test('live-debug recommends doctor when runtime looks suspicious', async () => {
         recommendations: [
           {
             priority: 'warning',
-            message: 'No requests to experience.ninetailed.co were observed. Check provider setup, middleware, and runtime SDK wiring.',
+            message:
+              'No requests to experience.ninetailed.co were observed. Check provider setup, middleware, and runtime SDK wiring.',
             category: 'runtime',
           },
         ],
@@ -322,7 +340,9 @@ test('doctor: modern SDK, clean programmatic checks → explore-code → review 
       },
       review: {
         overallStatus: 'fail',
-        recommendations: [{ priority: 'critical', message: 'Add OptimizationRoot to the root layout', category: 'provider' }],
+        recommendations: [
+          { priority: 'critical', message: 'Add OptimizationRoot to the root layout', category: 'provider' },
+        ],
         summary: 'Provider missing.',
       },
       report: { choice: 'no' },
@@ -525,7 +545,9 @@ test('doctor: drill-down → run-inspection (pass) → explore-code', async () =
       nt_experiences: [
         {
           sys: { id: 'exp1', contentType: { sys: { id: 'nt_experience' } } },
-          fields: { nt_variants: [{ sys: { id: 'v1', contentType: { sys: { id: 'hero' } } }, fields: { title: 'B' } }] },
+          fields: {
+            nt_variants: [{ sys: { id: 'v1', contentType: { sys: { id: 'hero' } } }, fields: { title: 'B' } }],
+          },
         },
       ],
     },
@@ -643,6 +665,8 @@ test('develop analyze → plan → implement path', async () => {
       analyze: {
         taskType: 'personalize-component',
         sdkInUse: 'ninetailed',
+        optimizationRuntime: 'unknown',
+        optimizationArchitecture: 'unknown',
         framework: 'nextjs-app',
         targetFiles: ['components/Hero.tsx', 'components/BlockRenderer.tsx'],
         analysis: 'Hero component needs Experience wrapper',
@@ -746,4 +770,75 @@ test('derivePackagesToInstall adds the node SDK for server-involved React optimi
     }),
     ['@contentful/optimization-react-web', '@contentful/optimization-node'],
   );
+});
+
+test('derivePackagesToInstall uses the React Native SDK and required quick-start peers', () => {
+  assert.deepEqual(
+    derivePackagesToInstall({
+      sdkChoice: 'optimization',
+      framework: 'react-native',
+      architecture: 'client-only',
+    }),
+    ['@contentful/optimization-react-native', '@react-native-async-storage/async-storage', 'contentful'],
+  );
+});
+
+test('derivePackagesToInstall rejects the legacy browser SDK for React Native', () => {
+  assert.throws(
+    () =>
+      derivePackagesToInstall({
+        sdkChoice: 'ninetailed',
+        framework: 'react-native',
+        architecture: 'client-only',
+      }),
+    /React Native onboarding requires/,
+  );
+});
+
+test('optimization reference routing selects runtime-specific and hybrid references', () => {
+  assert.deepEqual(getOptimizationReferenceFiles({ framework: 'nextjs-app', routerType: 'app' }), [
+    'optimization-shared.md',
+    'optimization-nextjs-app-router.md',
+  ]);
+  assert.deepEqual(getOptimizationReferenceFiles({ framework: 'nextjs-pages', routerType: 'pages' }), [
+    'optimization-shared.md',
+    'optimization-nextjs-pages-router.md',
+  ]);
+  assert.deepEqual(getOptimizationReferenceFiles({ framework: 'nextjs-hybrid', routerType: 'hybrid' }), [
+    'optimization-shared.md',
+    'optimization-nextjs-app-router.md',
+    'optimization-nextjs-pages-router.md',
+  ]);
+  assert.deepEqual(getOptimizationReferenceFiles({ framework: 'remix', architecture: 'hybrid-ssr' }), [
+    'optimization-shared.md',
+    'optimization-react-web.md',
+    'optimization-node.md',
+  ]);
+  assert.deepEqual(
+    getOptimizationReferenceFiles({
+      framework: 'remix',
+      runtime: 'react-web',
+      architecture: 'hybrid-ssr',
+    }),
+    ['optimization-shared.md', 'optimization-react-web.md', 'optimization-node.md'],
+  );
+  assert.deepEqual(
+    getOptimizationReferenceFiles({
+      framework: 'nextjs-hybrid',
+      runtime: 'nextjs-app-router',
+    }),
+    ['optimization-shared.md', 'optimization-nextjs-app-router.md', 'optimization-nextjs-pages-router.md'],
+  );
+  assert.deepEqual(getOptimizationReferenceFiles({ framework: 'express', architecture: 'server-only' }), [
+    'optimization-shared.md',
+    'optimization-node.md',
+  ]);
+  assert.deepEqual(getOptimizationReferenceFiles({ framework: 'vanilla' }), [
+    'optimization-shared.md',
+    'optimization-web.md',
+  ]);
+  assert.deepEqual(getOptimizationReferenceFiles({ framework: 'react-native' }), [
+    'optimization-shared.md',
+    'optimization-react-native.md',
+  ]);
 });

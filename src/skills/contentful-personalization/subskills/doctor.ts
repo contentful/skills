@@ -6,6 +6,7 @@ import { checkOptimizationDoctor } from '../actions/check-optimization-doctor.js
 import { surveyContent } from '../actions/survey-content.js';
 import { inspectContent } from '../actions/inspect-content.js';
 import { validateSetup } from '../actions/validate-setup.js';
+import { getOptimizationReferenceFiles } from '../optimization-references.js';
 import { PackagesResult, Recommendation, type Finding } from '../schemas.js';
 import { VERSION } from '../version.js';
 
@@ -68,10 +69,7 @@ export function resolveCredentials({
   };
 
   const previewToken = override(corrections?.contentful?.previewToken, scanned?.contentful?.previewToken);
-  const managementToken = override(
-    corrections?.contentful?.managementToken,
-    scanned?.contentful?.managementToken,
-  );
+  const managementToken = override(corrections?.contentful?.managementToken, scanned?.contentful?.managementToken);
 
   return {
     personalization: {
@@ -106,36 +104,81 @@ function sdkProfile(family: string | undefined): {
     case 'modern':
       return {
         name: '@contentful/optimization (modern SDK)',
-        provider: 'OptimizationRoot (with NextAppAutoPageTracker)',
-        component: 'ServerOptimizedEntry / sdk.resolveOptimizedEntry()',
-        clientEnv: 'NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID',
-        guide: 'sdk-next-guide.md',
+        provider: 'OptimizationRoot, createNextjs* factory, or ContentfulOptimization singleton',
+        component: 'OptimizedEntry / resolveOptimizedEntry()',
+        clientEnv: 'the project-specific OPTIMIZATION_CLIENT_ID alias passed to runtime config',
+        guide: 'optimization-overview.md',
       };
     case 'legacy':
       return {
         name: '@ninetailed/experience.js (legacy SDK)',
         provider: 'NinetailedProvider',
         component: '<Experience> / <Personalize>',
-        clientEnv: 'NEXT_PUBLIC_NINETAILED_CLIENT_ID',
+        clientEnv: 'the project-specific NINETAILED_API_KEY or NINETAILED_CLIENT_ID alias',
         guide: 'sdk-legacy-guide.md',
       };
     case 'both':
       return {
         name: 'both @ninetailed/experience.js and @contentful/optimization',
-        provider: 'NinetailedProvider and/or OptimizationRoot',
-        component: '<Experience> and/or ServerOptimizedEntry',
-        clientEnv: 'NEXT_PUBLIC_NINETAILED_CLIENT_ID or NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID',
-        guide: 'sdk-next-guide.md',
+        provider: 'NinetailedProvider and/or the runtime-specific Optimization root or factory',
+        component: '<Experience> and/or OptimizedEntry',
+        clientEnv: 'the SDK-specific client credential alias used by each runtime config',
+        guide: 'optimization-overview.md',
       };
     default:
       return {
         name: 'no personalization SDK detected',
-        provider: 'NinetailedProvider or OptimizationRoot',
-        component: 'Experience or ServerOptimizedEntry',
-        clientEnv: 'NEXT_PUBLIC_NINETAILED_CLIENT_ID or NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID',
-        guide: 'sdk-next-guide.md',
+        provider: 'NinetailedProvider or a runtime-specific Optimization root or factory',
+        component: 'Experience or OptimizedEntry',
+        clientEnv: 'the SDK-specific client credential alias used by the runtime config',
+        guide: 'optimization-overview.md',
       };
   }
+}
+
+function loadSdkReferences(
+  family: string | undefined,
+  framework: string,
+  load: (file: string) => string,
+  optimizationPackages?: ReadonlyArray<{ name?: string } | undefined>,
+): string {
+  const packageNames = new Set(
+    (optimizationPackages ?? []).map((pkg) => pkg?.name).filter((name): name is string => !!name),
+  );
+  const runtime = packageNames.has('@contentful/optimization-nextjs')
+    ? /hybrid/.test(framework)
+      ? ('unknown' as const)
+      : /pages/.test(framework)
+        ? ('nextjs-pages-router' as const)
+        : ('nextjs-app-router' as const)
+    : packageNames.has('@contentful/optimization-react-native')
+      ? ('react-native' as const)
+      : packageNames.has('@contentful/optimization-react-web')
+        ? ('react-web' as const)
+        : packageNames.has('@contentful/optimization-web')
+          ? ('web' as const)
+          : packageNames.has('@contentful/optimization-node')
+            ? ('node' as const)
+            : ('unknown' as const);
+  const modernFiles = getOptimizationReferenceFiles({ framework, runtime });
+
+  if (
+    packageNames.has('@contentful/optimization-node') &&
+    !packageNames.has('@contentful/optimization-nextjs') &&
+    !modernFiles.includes('optimization-node.md')
+  ) {
+    modernFiles.push('optimization-node.md');
+  }
+
+  const modernReference = modernFiles.map((file) => load(file)).join('\n\n---\n\n');
+
+  if (family === 'legacy') return load('sdk-legacy-guide.md');
+  if (family === 'modern') return modernReference;
+  if (family === 'both') {
+    return `${load('sdk-legacy-guide.md')}\n\n---\n\n${modernReference}`;
+  }
+
+  return `${load('sdk-selection.md')}\n\n---\n\n${load('optimization-overview.md')}`;
 }
 
 function findingsTable(findings: Finding[] | undefined): string {
@@ -192,8 +235,7 @@ export default skill({
       summary: 'string',
     }),
   },
-  })
-
+})
   // --- Programmatic phase: cheap checks before any code exploration ---
 
   .step('detect-sdk', {
@@ -208,7 +250,8 @@ export default skill({
         Report the framework and the absolute or relative project path. Nothing else.
       `,
     response: type({
-      framework: "'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'react' | 'other'",
+      framework:
+        "'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'react' | 'react-native' | 'other'",
       'frameworkVersion?': 'string',
       projectPath: 'string',
     }),
@@ -509,16 +552,11 @@ export default skill({
       // optimizationDoctor) NOT be an infra problem — a quiet 15-minute window is
       // not necessarily broken infra
       const missingCreds = !hasPersonalizationCred;
-      const hasInfraProblem =
-        missingCreds ||
-        apiFailed ||
-        surveyFailed ||
-        surveyWarned ||
-        optimizationDoctorFailed;
+      const hasInfraProblem = missingCreds || apiFailed || surveyFailed || surveyWarned || optimizationDoctorFailed;
 
       const credNote = hasPersonalizationCred
         ? `✅ ${profile.name} credentials are available.`
-        : `❌ No personalization credentials found — the connectivity and content checks could not run. The most likely problem is a missing or misnamed \`${profile.clientEnv}\`.`;
+        : `❌ No personalization credentials found — the connectivity and content checks could not run. The most likely problem is a missing or misnamed value for ${profile.clientEnv}.`;
 
       const apiNote =
         apiData?.status === 'pass'
@@ -664,7 +702,7 @@ export default skill({
         system`Fix infrastructure problems only — do NOT touch provider/middleware/component code here. Match the project's existing style. For content publishing problems, give the user clear Contentful UI steps; you cannot publish for them.`,
         prompt`
           Fix the infrastructure problems found by the programmatic checks. This project uses
-          ${profile.name}, so the personalization client ID env var should be \`${profile.clientEnv}\`.
+          ${profile.name}, so confirm ${profile.clientEnv}.
 
           Fix strategy:
           - **Missing / misnamed env vars** → use the writeEnvFile action. Confirm the correct value
@@ -800,6 +838,18 @@ export default skill({
   .step('explore-code', {
     prompt: ({ store, refs }) => {
       const profile = sdkProfile(store.project?.sdkFamily);
+      const framework = store.project?.framework ?? 'other';
+      const sdkReference = loadSdkReferences(
+        store.project?.sdkFamily,
+        framework,
+        (file) => refs.load(file),
+        store.project?.packages?.packages?.optimization,
+      );
+      const modernServerChecks = /nextjs-pages/.test(framework)
+        ? 'For the modern Pages Router SDK, check the separate client and server createNextjsPagesRouterOptimization factories plus the getServerSideProps state handoff; it does not use middleware or proxy.'
+        : /nextjs/.test(framework)
+          ? 'For the modern App Router SDK, check createNextjsAppRouterOptimization, its bound components, and the version-appropriate proxy.ts or middleware.ts request handler.'
+          : 'For the modern SDK, check the runtime-specific root or process singleton and its request or route boundary.';
       return prompt`
         The programmatic checks (credentials, API connectivity, content state) are done. Now
         explore the CODE to understand the personalization setup. Gather facts — do NOT diagnose
@@ -812,8 +862,8 @@ export default skill({
 
         2. **Middleware / SSR** — Look for middleware.ts/js, edge functions, or server-side
            personalization. ${
-             profile.guide === 'sdk-next-guide.md'
-               ? 'For the modern SDK, check for createNextjsOptimizationRequestHandler (cookie management) and getNextjsServerOptimizationData (server preflight), plus `export const dynamic = "force-dynamic"` on personalized routes.'
+             profile.guide === 'optimization-overview.md'
+               ? modernServerChecks
                : 'Check for preflight calls, cookie handling, and matcher config.'
            }
 
@@ -821,8 +871,8 @@ export default skill({
            personalizable components are wrapped and resolved.
 
         4. **Analytics** — How are page/track/identify events emitted? ${
-          profile.guide === 'sdk-next-guide.md'
-            ? 'For the modern SDK, this is built in via trackEntryInteraction / NextAppAutoPageTracker.'
+          profile.guide === 'optimization-overview.md'
+            ? 'For the modern SDK, check the runtime-specific auto tracker, OptimizedEntry interaction tracking, and accepted event streams.'
             : 'For the legacy SDK, look for the insights plugin.'
         }
 
@@ -832,7 +882,7 @@ export default skill({
         - Provider missing or wrapping the wrong subtree
         - Middleware matcher that catches static assets
         - Include depth too shallow for personalization entries
-        - Components that fetch their own data (breaks personalization)
+        - Entry fetching that bypasses the selected SDK's manual or managed resolution boundary
         - Hydration mismatch patterns
 
         For each area, note the specific file paths and what you found. If something looks wrong,
@@ -842,7 +892,7 @@ export default skill({
         ${refs.load('how-personalization-works.md')}
 
         ## Reference: SDK Guide
-        ${refs.load(profile.guide)}
+        ${sdkReference}
       `;
     },
     response: type({
@@ -855,9 +905,7 @@ export default skill({
       project: {
         explorationSummary: response.explorationSummary,
         concerns: response.concerns,
-        ...(response.personalizableCandidates
-          ? { personalizableCandidates: response.personalizableCandidates }
-          : {}),
+        ...(response.personalizableCandidates ? { personalizableCandidates: response.personalizableCandidates } : {}),
       },
     }),
     next: 'review',
@@ -866,6 +914,12 @@ export default skill({
   .step('review', {
     prompt: ({ store, refs }) => {
       const profile = sdkProfile(store.project?.sdkFamily);
+      const sdkReference = loadSdkReferences(
+        store.project?.sdkFamily,
+        store.project?.framework ?? 'other',
+        (file) => refs.load(file),
+        store.project?.packages?.packages?.optimization,
+      );
 
       const explorationView = store.project.explorationSummary
         ? [
@@ -971,7 +1025,7 @@ export default skill({
           ${refs.load('common-errors.md')}
 
           ## Reference: SDK Guide
-          ${refs.load(profile.guide)}
+          ${sdkReference}
         `;
     },
     response: type({
@@ -1074,10 +1128,7 @@ export default skill({
       const optimizationDoctor = store.steps['check-optimization-doctor'];
       if (optimizationDoctor) {
         sections.push(
-          render.section(
-            '🩺 Optimization doctor (live events last 15m)',
-            findingsTable(optimizationDoctor.findings),
-          ),
+          render.section('🩺 Optimization doctor (live events last 15m)', findingsTable(optimizationDoctor.findings)),
         );
       }
 
@@ -1086,7 +1137,9 @@ export default skill({
         const comparisonNote = content.entry?.comparison?.hasUnpublishedChanges
           ? '\n\n🔴 **Unpublished changes detected** — see recommendations below.'
           : '';
-        sections.push(render.section('📄 Single-Entry Inspection', `${findingsTable(content.findings)}${comparisonNote}`));
+        sections.push(
+          render.section('📄 Single-Entry Inspection', `${findingsTable(content.findings)}${comparisonNote}`),
+        );
       }
 
       const recommendations = diagnosis.recommendations!.filter((r): r is Recommendation => !!r);

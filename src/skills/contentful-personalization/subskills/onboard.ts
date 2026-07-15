@@ -3,10 +3,19 @@ import { checkPackages } from '../actions/check-packages.js';
 import { validateSetup } from '../actions/validate-setup.js';
 import { buildInstallCommand, derivePackagesToInstall, installPackages } from '../actions/install-packages.js';
 import { writeEnvFile } from '../actions/write-env-file.js';
+import { getOptimizationReferenceFiles } from '../optimization-references.js';
 import { PackagesResult, ReadinessStatus, type PackagesResult as PackagesResultData } from '../schemas.js';
 import { VERSION } from '../version.js';
 
-type InstallableFramework = 'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'react' | 'other';
+type InstallableFramework =
+  | 'nextjs-app'
+  | 'nextjs-pages'
+  | 'nextjs-hybrid'
+  | 'gatsby'
+  | 'remix'
+  | 'react'
+  | 'react-native'
+  | 'other';
 
 function getInstallableFramework(framework: string): InstallableFramework {
   if (
@@ -15,7 +24,8 @@ function getInstallableFramework(framework: string): InstallableFramework {
     framework === 'nextjs-hybrid' ||
     framework === 'gatsby' ||
     framework === 'remix' ||
-    framework === 'react'
+    framework === 'react' ||
+    framework === 'react-native'
   ) {
     return framework;
   }
@@ -137,7 +147,8 @@ export default skill({
         ${refs.load('framework-notes.md')}
       `,
     response: type({
-      framework: "'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'react' | 'other'",
+      framework:
+        "'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'react' | 'react-native' | 'other'",
       'frameworkVersion?': 'string',
       routerType: "'app' | 'pages' | 'hybrid' | 'none'",
       projectPath: 'string',
@@ -337,12 +348,16 @@ export default skill({
 
           **SDK choice:**
           - \`ninetailed\` — @ninetailed/experience.js (current default; battle-tested, more plugins)
-          - \`optimization\` — @contentful/optimization (modern, Contentful-native, simpler API; pre-release/alpha)
+          - \`optimization\` — @contentful/optimization (modern, Contentful-native, runtime-specific APIs)
 
           **Architecture:**
           - \`client-only\` — All personalization runs in the browser
           - \`hybrid-ssr\` — Server-side preflight + client hydration
           - \`server-only\` — Full server-side personalization (advanced)
+
+          React Native is a fixed exception: choose \`optimization\` with \`client-only\` because
+          this installer does not apply the legacy browser SDK or server-only architectures to a
+          native application.
 
           Present your recommendation clearly but do NOT ask the user to confirm —
           that happens automatically in the next step.
@@ -357,10 +372,10 @@ export default skill({
       architecture: "'client-only' | 'hybrid-ssr' | 'server-only'",
       reasoning: 'string',
     }),
-    save: ({ response }) => ({
+    save: ({ response, store }) => ({
       setup: {
-        sdkChoice: response.sdkChoice,
-        architecture: response.architecture,
+        sdkChoice: store.project.framework === 'react-native' ? 'optimization' : response.sdkChoice,
+        architecture: store.project.framework === 'react-native' ? 'client-only' : response.architecture,
       },
     }),
     next: 'confirm-choice',
@@ -383,7 +398,7 @@ export default skill({
             store.setup?.architecture === 'client-only'
               ? 'Client-only (browser-side personalization)'
               : store.setup?.architecture === 'hybrid-ssr'
-                ? 'Hybrid SSR (server preflight + client hydration)'
+                ? 'Hybrid SSR (server evaluation + browser takeover)'
                 : 'Server-only (full server-side)',
           Framework: store.project.framework,
         })}
@@ -428,52 +443,85 @@ export default skill({
 
   .step('plan', {
     prompt: ({ store, refs }) => {
+      const isOptimization = store.setup?.sdkChoice === 'optimization';
       const refSections: Array<{ label: string; content: string }> = [
         {
           label: 'Environment Variables',
           content: refs.load('env-var-spec.md'),
         },
-        {
-          label: 'Provider Patterns',
-          content: refs.load('provider-patterns.md'),
-        },
-        {
-          label: 'Rendering Pipeline',
-          content: refs.load('rendering-pipeline.md'),
-        },
       ];
 
-      if (store.setup?.architecture === 'hybrid-ssr') {
-        refSections.push({
-          label: 'Middleware Patterns',
-          content: refs.load('middleware-patterns.md'),
+      if (isOptimization) {
+        getOptimizationReferenceFiles({
+          framework: store.project.framework,
+          routerType: store.project.routerType,
+          architecture: store.setup?.architecture,
+        }).forEach((file) => {
+          refSections.push({
+            label: file === 'optimization-shared.md' ? 'Shared SDK Contract' : 'Runtime SDK Contract',
+            content: refs.load(file),
+          });
         });
-        refSections.push({
-          label: 'SSR Guide',
-          content: refs.load('ssr-guide.md'),
-        });
+      } else {
+        refSections.push(
+          {
+            label: 'Provider Patterns',
+            content: refs.load('provider-patterns.md'),
+          },
+          {
+            label: 'Rendering Pipeline',
+            content: refs.load('rendering-pipeline.md'),
+          },
+        );
+
+        if (store.setup?.architecture === 'hybrid-ssr') {
+          refSections.push(
+            {
+              label: 'Middleware Patterns',
+              content: refs.load('middleware-patterns.md'),
+            },
+            {
+              label: 'SSR Guide',
+              content: refs.load('ssr-guide.md'),
+            },
+          );
+        }
+
+        refSections.push(
+          {
+            label: 'Analytics & Preview',
+            content: refs.load('analytics-and-preview.md'),
+          },
+          {
+            label: 'Implementation Examples',
+            content: refs.load('implementation-examples.md'),
+          },
+        );
       }
 
-      refSections.push({
-        label: 'Analytics & Preview',
-        content: refs.load('analytics-and-preview.md'),
-      });
-      refSections.push({
-        label: 'Implementation Examples',
-        content: refs.load('implementation-examples.md'),
-      });
-
-      const steps = [
-        `📦 Install packages: ${store.setup?.sdkChoice === 'ninetailed' ? '@ninetailed/experience.js + plugins' : '@contentful/optimization SDK packages'}`,
-        '🔑 Configure environment variables with placeholder values',
-        '🔌 Add provider wrapper to the appropriate layout/app file',
-        '🧩 Wire components with Experience/Personalize wrappers and update component mapper',
-        ...(store.setup?.architecture === 'hybrid-ssr'
-          ? ['⚡ Set up middleware with preflight, cookie management, and matcher config']
-          : []),
-        ...(store.setup?.architecture !== 'server-only' ? ['📊 Configure analytics/insights plugin'] : []),
-        '✅ Verify setup and fix any issues',
-      ];
+      const steps = isOptimization
+        ? [
+            '📦 Install the application-facing Optimization SDK package',
+            '🔑 Configure environment variables with placeholder values',
+            '🔌 Create one runtime root or process-level factory at the correct boundary',
+            '🧩 Fetch and resolve one Contentful entry with baseline fallback',
+            ...(store.setup?.architecture === 'hybrid-ssr'
+              ? ['⚡ Wire server evaluation, request continuity, and browser takeover']
+              : []),
+            '🧭 Connect consent, identity, and page or screen tracking',
+            '✅ Verify accepted events, profile continuity, selected variants, and fallback',
+          ]
+        : [
+            '📦 Install packages: @ninetailed/experience.js + plugins',
+            '🔑 Configure environment variables with placeholder values',
+            '🔌 Add provider wrapper to the appropriate layout/app file',
+            '🧩 Wire components with Experience/Personalize wrappers and update component mapper',
+            ...(store.setup?.architecture === 'hybrid-ssr'
+              ? ['⚡ Set up middleware with preflight, cookie management, and matcher config']
+              : []),
+            ...(store.setup?.architecture !== 'server-only' ? ['📊 Configure analytics/insights plugin'] : []),
+            '✅ Verify setup and fix any issues',
+          ];
 
       return [
         prompt`
@@ -525,16 +573,19 @@ export default skill({
 
       return [
         'Present the install details below, then ask the user to approve the exact install command. Do not change the package list.',
-        view('Package Install', [
-          render.kv({
-            SDK: store.setup?.sdkChoice ?? 'unknown',
-            Architecture: store.setup?.architecture ?? 'unknown',
-            Framework: `${store.project.framework} (${store.project.routerType} router)`,
-            'Package manager': getInstallPackageManager(store.project?.packages?.packageManager),
-          }),
-          `Packages: ${packages.map((name) => `\`${name}\``).join(', ')}`,
-          `Exact command: \`${command}\``,
-        ].join('\n\n')),
+        view(
+          'Package Install',
+          [
+            render.kv({
+              SDK: store.setup?.sdkChoice ?? 'unknown',
+              Architecture: store.setup?.architecture ?? 'unknown',
+              Framework: `${store.project.framework} (${store.project.routerType} router)`,
+              'Package manager': getInstallPackageManager(store.project?.packages?.packageManager),
+            }),
+            `Packages: ${packages.map((name) => `\`${name}\``).join(', ')}`,
+            `Exact command: \`${command}\``,
+          ].join('\n\n'),
+        ),
         act.confirm({
           message: 'Run this exact package install command?',
           defaultAnswer: 'yes',
@@ -571,44 +622,54 @@ export default skill({
 
   .step('implement', {
     prompt: ({ store, system, refs }) => {
-      const refSections: Array<{ label: string; content: string }> = [
-        {
-          label: 'Provider Patterns',
-          content: refs.load('provider-patterns.md'),
-        },
-        {
-          label: 'Rendering Pipeline',
-          content: refs.load('rendering-pipeline.md'),
-        },
-        {
-          label: 'Component Patterns',
-          content: refs.load('component-patterns.md'),
-        },
-      ];
+      const isOptimization = store.setup?.sdkChoice === 'optimization';
+      const refSections: Array<{ label: string; content: string }> = [];
 
-      if (store.setup?.architecture === 'hybrid-ssr') {
-        refSections.push({
-          label: 'Middleware Patterns',
-          content: refs.load('middleware-patterns.md'),
-        });
-      }
-
-      if (store.setup?.sdkChoice === 'ninetailed') {
-        refSections.push({
-          label: 'SDK Reference (Legacy)',
-          content: refs.load('sdk-legacy-guide.md'),
+      if (isOptimization) {
+        getOptimizationReferenceFiles({
+          framework: store.project.framework,
+          routerType: store.project.routerType,
+          architecture: store.setup?.architecture,
+        }).forEach((file) => {
+          refSections.push({
+            label: file === 'optimization-shared.md' ? 'Shared SDK Contract' : 'Runtime SDK Contract',
+            content: refs.load(file),
+          });
         });
       } else {
-        refSections.push({
-          label: 'SDK Reference (Modern)',
-          content: refs.load('sdk-next-guide.md'),
-        });
-      }
+        refSections.push(
+          {
+            label: 'Provider Patterns',
+            content: refs.load('provider-patterns.md'),
+          },
+          {
+            label: 'Rendering Pipeline',
+            content: refs.load('rendering-pipeline.md'),
+          },
+          {
+            label: 'Component Patterns',
+            content: refs.load('component-patterns.md'),
+          },
+        );
 
-      refSections.push({
-        label: 'Implementation Examples',
-        content: refs.load('implementation-examples.md'),
-      });
+        if (store.setup?.architecture === 'hybrid-ssr') {
+          refSections.push({
+            label: 'Middleware Patterns',
+            content: refs.load('middleware-patterns.md'),
+          });
+        }
+
+        refSections.push(
+          {
+            label: 'SDK Reference (Legacy)',
+            content: refs.load('sdk-legacy-guide.md'),
+          },
+          {
+            label: 'Implementation Examples',
+            content: refs.load('implementation-examples.md'),
+          },
+        );
+      }
 
       return [
         system`Work through each checklist item methodically. After completing each one, update its status. Adapt all code to match the project's existing style — do not introduce a different coding style.`,
@@ -631,29 +692,53 @@ export default skill({
           ${refSections.map((r) => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
         `,
         act.checklist({
-          create: [
-            { title: '🔌 Provider wrapper setup', status: 'pending' as const },
-            {
-              title: '🧩 Component wiring (Experience/Personalize wrappers)',
-              status: 'pending' as const,
-            },
-            ...(store.setup?.architecture === 'hybrid-ssr'
-              ? [
-                  {
-                    title: '⚡ Middleware (preflight, cookies, matcher)',
-                    status: 'pending' as const,
-                  },
-                ]
-              : []),
-            {
-              title: '📊 Analytics plugin configuration',
-              status: 'pending' as const,
-            },
-            {
-              title: '🔄 Rendering pipeline adjustments',
-              status: 'pending' as const,
-            },
-          ],
+          create: isOptimization
+            ? [
+                { title: '🔌 Runtime root or factory setup', status: 'pending' as const },
+                {
+                  title: '🧩 Managed or manual OptimizedEntry wiring',
+                  status: 'pending' as const,
+                },
+                ...(store.setup?.architecture === 'hybrid-ssr'
+                  ? [
+                      {
+                        title: '⚡ Server evaluation and browser takeover',
+                        status: 'pending' as const,
+                      },
+                    ]
+                  : []),
+                {
+                  title: '🧭 Consent, identity, and route tracking',
+                  status: 'pending' as const,
+                },
+                {
+                  title: '✅ Accepted-event and baseline-fallback verification',
+                  status: 'pending' as const,
+                },
+              ]
+            : [
+                { title: '🔌 Provider wrapper setup', status: 'pending' as const },
+                {
+                  title: '🧩 Component wiring (Experience/Personalize wrappers)',
+                  status: 'pending' as const,
+                },
+                ...(store.setup?.architecture === 'hybrid-ssr'
+                  ? [
+                      {
+                        title: '⚡ Middleware (preflight, cookies, matcher)',
+                        status: 'pending' as const,
+                      },
+                    ]
+                  : []),
+                {
+                  title: '📊 Analytics plugin configuration',
+                  status: 'pending' as const,
+                },
+                {
+                  title: '🔄 Rendering pipeline adjustments',
+                  status: 'pending' as const,
+                },
+              ],
         }),
       ];
     },
@@ -671,11 +756,20 @@ export default skill({
 
         ## 🔍 Manual Verification Checklist
 
-        - [ ] Provider wraps the correct subtree (not too broad, not too narrow)
+        ${
+          store.setup?.sdkChoice === 'optimization'
+            ? `- [ ] Exactly one runtime root or process singleton owns the SDK
+        - [ ] The initial page or screen event is accepted and emitted once
+        - [ ] Profile identity remains continuous across the active runtimes
+        - [ ] Contentful fetching uses one locale and resolves experience/variant links
+        - [ ] Baseline fallback renders without being treated as a fetch error
+        - [ ] Next.js uses the router-specific factory and request boundary, when applicable`
+            : `- [ ] Provider wraps the correct subtree (not too broad, not too narrow)
         - [ ] No hydration mismatch patterns (client/server content divergence)
         - [ ] Page tracking fires once per navigation (not on re-renders)
         - [ ] Include depth is adequate for personalization entries
-        - [ ] Middleware matcher excludes static assets (/_next, images, etc.)
+        - [ ] Middleware matcher excludes static assets (/_next, images, etc.)`
+        }
 
         If you find issues, just report them — do NOT fix them here.
         The fix step handles repairs.

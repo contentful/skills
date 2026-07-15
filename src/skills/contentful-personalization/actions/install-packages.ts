@@ -7,7 +7,15 @@ import { InstallResult, type PackageInfo } from '../schemas.js';
 export type SupportedPackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';
 type SupportedSdkChoice = 'ninetailed' | 'optimization';
 type SupportedArchitecture = 'client-only' | 'hybrid-ssr' | 'server-only';
-type SupportedFramework = 'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'react' | 'other';
+type SupportedFramework =
+  | 'nextjs-app'
+  | 'nextjs-pages'
+  | 'nextjs-hybrid'
+  | 'gatsby'
+  | 'remix'
+  | 'react'
+  | 'react-native'
+  | 'other';
 
 const NINETAILED_EXPERIENCE_JS_PACKAGE = '@ninetailed/experience.js';
 const NINETAILED_EXPERIENCE_JS_NODE_PACKAGE = '@ninetailed/experience.js-node';
@@ -26,11 +34,14 @@ const CONTENTFUL_OPTIMIZATION_WEB_PACKAGE = '@contentful/optimization-web';
 const CONTENTFUL_OPTIMIZATION_REACT_WEB_PACKAGE = '@contentful/optimization-react-web';
 const CONTENTFUL_OPTIMIZATION_NEXTJS_PACKAGE = '@contentful/optimization-nextjs';
 const CONTENTFUL_OPTIMIZATION_NODE_PACKAGE = '@contentful/optimization-node';
+const CONTENTFUL_OPTIMIZATION_REACT_NATIVE_PACKAGE = '@contentful/optimization-react-native';
+const REACT_NATIVE_ASYNC_STORAGE_PACKAGE = '@react-native-async-storage/async-storage';
+const CONTENTFUL_PACKAGE = 'contentful';
 
 const SAFE_PACKAGE_NAME = /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/;
 
 function isReactFramework(framework: SupportedFramework): boolean {
-  return framework !== 'other';
+  return framework !== 'other' && framework !== 'react-native';
 }
 
 export function derivePackagesToInstall(options: {
@@ -39,6 +50,12 @@ export function derivePackagesToInstall(options: {
   architecture: SupportedArchitecture;
 }): string[] {
   if (options.sdkChoice === 'ninetailed') {
+    if (options.framework === 'react-native') {
+      throw new Error(
+        'React Native onboarding requires @contentful/optimization-react-native; the legacy web SDK installer is not compatible.',
+      );
+    }
+
     if (options.architecture === 'server-only') {
       return [NINETAILED_EXPERIENCE_JS_PACKAGE, NINETAILED_EXPERIENCE_JS_NODE_PACKAGE];
     }
@@ -58,11 +75,16 @@ export function derivePackagesToInstall(options: {
     return packages;
   }
 
-  // @contentful/optimization (recommended default)
+  // @contentful/optimization
+
+  if (options.framework === 'react-native') {
+    return [CONTENTFUL_OPTIMIZATION_REACT_NATIVE_PACKAGE, REACT_NATIVE_ASYNC_STORAGE_PACKAGE, CONTENTFUL_PACKAGE];
+  }
 
   // Next.js uses the dedicated adapter for every architecture. It composes the
-  // Node SDK (server) and React Web SDK (client) and exposes the /server,
-  // /client, and /request-handler subpaths application code imports from.
+  // Node SDK (server) and React Web SDK (client). Application code starts from
+  // the bound /app-router factory or the split /pages-router and
+  // /pages-router/server factories; /client and /server are lower-level paths.
   if (
     options.framework === 'nextjs-app' ||
     options.framework === 'nextjs-pages' ||

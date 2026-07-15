@@ -202,6 +202,13 @@ Quick-reference topics accessible without running the full workflow:
 - **common-errors**: Common failure modes with root causes and fixes
 - **ssr-guide**: SSR and edge-side personalization: patterns, anti-patterns, troubleshooting
 - **sdk-legacy-guide**: @ninetailed/experience.js complete SDK reference
-- **sdk-next-guide**: @contentful/optimization modern SDK reference (OptimizationRoot, hooks, Next.js adapter)
+- **sdk-next-guide**: @contentful/optimization modern SDK runtime chooser
+- **optimization-overview**: @contentful/optimization runtime and package chooser
+- **optimization-react-web**: @contentful/optimization React Web provider, hooks, entries, and routing
+- **optimization-nextjs-app-router**: @contentful/optimization Next.js App Router integration
+- **optimization-nextjs-pages-router**: @contentful/optimization Next.js Pages Router integration
+- **optimization-web**: @contentful/optimization imperative browser and Web Components integration
+- **optimization-node**: @contentful/optimization stateless Node request integration
+- **optimization-react-native**: @contentful/optimization React Native integration
 - **contentful-integration-guide**: Contentful CMS integration: content types, ExperienceMapper, publishing workflow
 - **implementation-examples**: Real code examples: providers, BlockRenderer, Experience component patterns

@@ -1,4 +1,5 @@
 import { skill, type, prompt, terminal, render } from '@contentful/skill-kit';
+import { getOptimizationReferenceFiles } from '../optimization-references.js';
 import { VERSION } from '../version.js';
 
 export default skill({
@@ -14,7 +15,7 @@ export default skill({
   }),
 })
   .step('analyze', {
-    prompt: ({ params, refs }) => prompt`
+    prompt: ({ params }) => prompt`
       Analyze the codebase to understand the existing personalization setup
       and determine what the user wants to accomplish.
 
@@ -35,16 +36,13 @@ export default skill({
       Just analyze and report what you find.
 
       ${params?.userQuery ? `\nUser's request: "${params.userQuery}"` : ''}
-
-      ## Reference: Component Patterns
-      ${refs.load('component-patterns.md')}
-
-      ## Reference: Implementation Examples
-      ${refs.load('implementation-examples.md')}
     `,
     response: type({
       taskType: "'personalize-component' | 'create-experiment' | 'add-analytics' | 'add-merge-tag' | 'other'",
       sdkInUse: "'ninetailed' | 'optimization' | 'unknown'",
+      optimizationRuntime:
+        "'react-web' | 'nextjs-app-router' | 'nextjs-pages-router' | 'web' | 'node' | 'react-native' | 'unknown'",
+      optimizationArchitecture: "'client-only' | 'hybrid-ssr' | 'server-only' | 'unknown'",
       framework: 'string',
       targetFiles: 'string[]',
       analysis: 'string',
@@ -54,18 +52,31 @@ export default skill({
 
   .step('plan', {
     prompt: ({ store, act, refs }) => {
-      const sdkRef =
-        store.steps.analyze.sdkInUse === 'optimization'
-          ? refs.load('sdk-next-guide.md')
-          : refs.load('sdk-legacy-guide.md');
+      const isOptimization = store.steps.analyze.sdkInUse === 'optimization';
+      const sdkReferenceFiles = isOptimization
+        ? getOptimizationReferenceFiles({
+            framework: store.steps.analyze.framework,
+            runtime: store.steps.analyze.optimizationRuntime,
+            architecture: store.steps.analyze.optimizationArchitecture,
+          })
+        : ['sdk-legacy-guide.md'];
+      const sdkRefs = sdkReferenceFiles.map((file) => refs.load(file)).join('\n\n---\n\n');
 
-      const taskDescriptions: Record<string, string> = {
-        'personalize-component': 'Add Experience/Personalize wrapper and update mapper',
-        'create-experiment': 'Set up A/B test with variant components and tracking',
-        'add-analytics': 'Wire analytics plugin and event tracking',
-        'add-merge-tag': 'Add merge tag support for dynamic content',
-        other: 'Implement the requested changes',
-      };
+      const taskDescriptions: Record<string, string> = isOptimization
+        ? {
+            'personalize-component': 'Resolve the entry through the runtime Optimization SDK',
+            'create-experiment': 'Wire variant resolution and verified interaction tracking',
+            'add-analytics': 'Forward accepted Optimization events with message-id deduplication',
+            'add-merge-tag': 'Resolve guarded merge-tag entries against the current profile',
+            other: 'Implement the requested Optimization SDK changes',
+          }
+        : {
+            'personalize-component': 'Add Experience/Personalize wrapper and update mapper',
+            'create-experiment': 'Set up A/B test with variant components and tracking',
+            'add-analytics': 'Wire analytics plugin and event tracking',
+            'add-merge-tag': 'Add merge tag support for dynamic content',
+            other: 'Implement the requested changes',
+          };
       const taskDesc = taskDescriptions[store.steps.analyze.taskType] ?? taskDescriptions['other'];
 
       return [
@@ -82,10 +93,9 @@ export default skill({
           })}
 
           ## SDK Reference
-          ${sdkRef}
+          ${sdkRefs}
 
-          ## Contentful Integration
-          ${refs.load('contentful-integration-guide.md')}
+          ${isOptimization ? '' : `## Contentful Integration\n${refs.load('contentful-integration-guide.md')}`}
         `,
         act.plan({
           summary: `${taskDesc} in ${store.steps.analyze.framework} project`,
@@ -112,23 +122,41 @@ export default skill({
 
   .step('implement', {
     prompt: ({ store, refs }) => {
-      const refSections: Array<{ label: string; content: string }> = [
-        {
+      const isOptimization = store.steps.analyze.sdkInUse === 'optimization';
+      const refSections: Array<{ label: string; content: string }> = [];
+
+      if (isOptimization) {
+        getOptimizationReferenceFiles({
+          framework: store.steps.analyze.framework,
+          runtime: store.steps.analyze.optimizationRuntime,
+          architecture: store.steps.analyze.optimizationArchitecture,
+        }).forEach((file) => {
+          refSections.push({
+            label: file === 'optimization-shared.md' ? 'Shared SDK Contract' : 'Runtime SDK Contract',
+            content: refs.load(file),
+          });
+        });
+      } else {
+        refSections.push({
+          label: 'Legacy SDK Reference',
+          content: refs.load('sdk-legacy-guide.md'),
+        });
+        refSections.push({
           label: 'Implementation Examples',
           content: refs.load('implementation-examples.md'),
-        },
-      ];
-      if (store.steps.analyze.taskType === 'add-analytics') {
-        refSections.push({
-          label: 'Analytics & Preview',
-          content: refs.load('analytics-and-preview.md'),
         });
-      }
-      if (store.steps.analyze.taskType === 'personalize-component') {
-        refSections.push({
-          label: 'Component Patterns',
-          content: refs.load('component-patterns.md'),
-        });
+        if (store.steps.analyze.taskType === 'add-analytics') {
+          refSections.push({
+            label: 'Analytics & Preview',
+            content: refs.load('analytics-and-preview.md'),
+          });
+        }
+        if (store.steps.analyze.taskType === 'personalize-component') {
+          refSections.push({
+            label: 'Component Patterns',
+            content: refs.load('component-patterns.md'),
+          });
+        }
       }
 
       return prompt`

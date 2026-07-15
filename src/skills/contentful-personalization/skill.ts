@@ -172,7 +172,14 @@ export default skill({
         | common-errors | Failure modes and fixes |
         | ssr-guide | Server-side patterns and anti-patterns |
         | sdk-legacy-guide | @ninetailed/experience.js API reference (current default) |
-        | sdk-next-guide | @contentful/optimization API reference (modern, next-gen) |
+        | optimization-overview | Choose the current @contentful/optimization runtime and package |
+        | optimization-react-web | React Web provider, hooks, entries, and router tracking |
+        | optimization-nextjs-app-router | Next.js App Router factory, proxy, server rendering, and browser takeover |
+        | optimization-nextjs-pages-router | Next.js Pages Router factories and getServerSideProps handoff |
+        | optimization-web | Imperative browser SDK and Web Components |
+        | optimization-node | Stateless Node request integration |
+        | optimization-react-native | React Native providers, screens, entries, and interactions |
+        | sdk-next-guide | Backward-compatible alias for the modern runtime chooser |
         | contentful-integration-guide | Content types, ExperienceMapper, publishing |
         | implementation-examples | Real implementation patterns and code |
       `,
@@ -232,8 +239,38 @@ export default skill({
     content: ({ refs }) => refs.load('sdk-legacy-guide.md'),
   })
   .topic('sdk-next-guide', {
-    label: '@contentful/optimization modern SDK reference (OptimizationRoot, hooks, Next.js adapter)',
-    content: ({ refs }) => refs.load('sdk-next-guide.md'),
+    label: '@contentful/optimization modern SDK runtime chooser',
+    content: ({ refs }) => refs.load('optimization-overview.md'),
+  })
+  .topic('optimization-overview', {
+    label: '@contentful/optimization runtime and package chooser',
+    content: ({ refs }) => refs.load('optimization-overview.md'),
+  })
+  .topic('optimization-react-web', {
+    label: '@contentful/optimization React Web provider, hooks, entries, and routing',
+    content: ({ refs }) => `${refs.load('optimization-shared.md')}\n\n${refs.load('optimization-react-web.md')}`,
+  })
+  .topic('optimization-nextjs-app-router', {
+    label: '@contentful/optimization Next.js App Router integration',
+    content: ({ refs }) =>
+      `${refs.load('optimization-shared.md')}\n\n${refs.load('optimization-nextjs-app-router.md')}`,
+  })
+  .topic('optimization-nextjs-pages-router', {
+    label: '@contentful/optimization Next.js Pages Router integration',
+    content: ({ refs }) =>
+      `${refs.load('optimization-shared.md')}\n\n${refs.load('optimization-nextjs-pages-router.md')}`,
+  })
+  .topic('optimization-web', {
+    label: '@contentful/optimization imperative browser and Web Components integration',
+    content: ({ refs }) => `${refs.load('optimization-shared.md')}\n\n${refs.load('optimization-web.md')}`,
+  })
+  .topic('optimization-node', {
+    label: '@contentful/optimization stateless Node request integration',
+    content: ({ refs }) => `${refs.load('optimization-shared.md')}\n\n${refs.load('optimization-node.md')}`,
+  })
+  .topic('optimization-react-native', {
+    label: '@contentful/optimization React Native integration',
+    content: ({ refs }) => `${refs.load('optimization-shared.md')}\n\n${refs.load('optimization-react-native.md')}`,
   })
   .topic('contentful-integration-guide', {
     label: 'Contentful CMS integration: content types, ExperienceMapper, publishing workflow',
