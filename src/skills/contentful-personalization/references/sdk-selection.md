@@ -1,98 +1,93 @@
 # SDK Selection
 
-Use this guide to choose between the current production `@ninetailed/experience.js` SDKs and the
-modern `@contentful/optimization` SDKs.
+Use this guide to decide whether a task should use `@contentful/optimization` or preserve an
+existing `@ninetailed/experience.js` integration.
 
-## Positioning
+## Default Policy
 
-- `@ninetailed/experience.js` is the **current default** customers should use today unless there is a
-  strong reason to adopt the new SDKs. It is production-proven and widely deployed.
-- `@contentful/optimization` is the **modern, next-gen** SDK family with a redesigned architecture
-  (React Web, Next.js adapter, Web, Node, React Native) and is the platform's forward direction.
-- Do not casually tell customers the current SDKs are deprecated or obsolete. They are still the
-  "now" path.
+- Use `@contentful/optimization` for every new personalization integration.
+- Continue using `@contentful/optimization` when it is already installed.
+- Use `@ninetailed/experience.js` guidance only when the repository already contains that SDK and
+  the task is to diagnose, repair, or extend that deployment.
+- Do not make migration a prerequisite for an urgent legacy fix or a scoped extension.
+- When the user wants to modernize an existing legacy deployment, recommend
+  `@contentful/optimization` and plan the migration explicitly.
+- Never choose the legacy SDK for greenfield work because its examples are more familiar, a plugin
+  exists, or a particular framework pattern was historically documented there.
 
-Read the target project's installed versions and lockfile before giving upgrade advice. Keep
-packages in the same dependency graph compatible; React Native can follow a different release
-cadence from the Web, React, Next.js, and Node packages.
+Read the target project's installed packages and lockfile before giving version or migration
+advice. Keep packages in the same dependency graph compatible; React Native can follow a different
+release cadence from the Web, React, Next.js, and Node packages.
 
-## Quick Decision Table
+## Decision Table
 
-| Scenario                                                                  | Recommended SDK family      | Why                                                       |
-| ------------------------------------------------------------------------- | --------------------------- | --------------------------------------------------------- |
-| Existing production project                                               | `@ninetailed/experience.js` | Lowest migration risk and best-known integration patterns |
-| New feature in an existing codebase already using Ninetailed packages     | `@ninetailed/experience.js` | Keep the stack consistent                                 |
-| Pages Router setup today                                                  | `@ninetailed/experience.js` | Mature provider, plugin, and mapper patterns              |
-| SSR or edge setup that must ship now                                      | `@ninetailed/experience.js` | Proven hybrid SSR and ESR patterns                        |
-| Forward-looking greenfield work                                           | `@contentful/optimization`  | Modern architecture and future platform direction         |
-| Team explicitly wants the new SDKs                                        | `@contentful/optimization`  | Aligns with customer intent                               |
-| Strong App Router-first investment and willingness to adopt evolving APIs | `@contentful/optimization`  | Dedicated Next.js adapter and newer primitives            |
+| Project state and task                                          | SDK to use                  | Guidance                                                   |
+| --------------------------------------------------------------- | --------------------------- | ---------------------------------------------------------- |
+| No personalization SDK installed                                | `@contentful/optimization`  | New integration; use the recommended SDK                   |
+| Optimization packages already installed                         | `@contentful/optimization`  | Follow the matching runtime reference                      |
+| Both SDK families; new work or no legacy target                 | `@contentful/optimization`  | Treat legacy code as a migration or compatibility boundary |
+| Both SDK families; task targets the existing Ninetailed side    | `@ninetailed/experience.js` | Diagnose, repair, or extend only that legacy boundary      |
+| Existing Ninetailed deployment has a bug                        | `@ninetailed/experience.js` | Diagnose and repair in place                               |
+| Existing Ninetailed deployment needs a scoped feature           | `@ninetailed/experience.js` | Extend the established deployment consistently             |
+| Existing Ninetailed deployment is intentionally being migrated  | `@contentful/optimization`  | Plan lifecycle, identity, consent, and tracking changes    |
+| New app or independent integration beside an old Ninetailed app | `@contentful/optimization`  | Do not copy the legacy choice into new work                |
+| React Native                                                    | `@contentful/optimization`  | Use the dedicated React Native package                     |
 
-## Current Production SDKs: `@ninetailed/experience.js`
+## Recommended SDK: `@contentful/optimization`
 
-- Rendering primitive: `<Experience>`
-- Provider pattern: `NinetailedProvider`
-- Contentful helpers: `@ninetailed/experience.js-utils-contentful`
-- Tracking model: plugins, `page()`, `track()`, `identify()`
-- Anonymous cookie: `ntaid`
-- Best fit today: current customer production setups
+Pick the application-facing package by runtime:
 
-Recommended add-ons:
+- React Web: `@contentful/optimization-react-web`
+- Next.js App Router or Pages Router: `@contentful/optimization-nextjs`
+- Browser without React: `@contentful/optimization-web`
+- Node.js and stateless server evaluation: `@contentful/optimization-node`
+- React Native: `@contentful/optimization-react-native`
 
-- `@ninetailed/experience.js-plugin-insights` for experiment and component measurement
-- `@ninetailed/experience.js-plugin-ssr` for SSR or edge profile continuity
-- `@ninetailed/experience.js-plugin-preview` for preview workflows
+The integration model is runtime-specific:
 
-See `sdk-legacy-guide.md` for the full API.
+- React Web uses `OptimizationRoot` or an explicitly owned instance with `OptimizationProvider`.
+- Next.js uses the bound factory for its router; do not assemble it from generic client and server
+  exports.
+- Web and Node use `ContentfulOptimization`; Node creates request-scoped evaluation with
+  `forRequest()`.
+- React Native uses its asynchronous root or an explicitly owned mobile instance.
 
-## Modern SDKs: `@contentful/optimization`
+Load `optimization-shared.md` together with exactly the runtime references selected by
+`optimization-overview.md`.
 
-- Rendering primitive: `<OptimizedEntry>` (React render prop)
-- React entry point: `OptimizationRoot` (owns SDK lifecycle); `OptimizationProvider` to inject an instance
-- Next.js App Router: bound factory from `@contentful/optimization-nextjs/app-router`
-- Next.js Pages Router: split factories from `/pages-router` and `/pages-router/server`
-- Next.js lower-level browser/server surfaces: `/client` and `/server`
-- Server path: `@contentful/optimization-node` (stateless, `forRequest()`)
-- Router tracking: subpath adapters — `@contentful/optimization-react-web/router/next-app`,
-  `/router/next-pages`, `/router/react-router`, `/router/tanstack-router`
-- React bound actions: `setConsent`, `flushEvents`, `identifyUser`, `trackPageView`, `resetUser`,
-  `trackScreen`, and `trackEvent`; SDK instance via `useOptimization()`
-- Consent: object-capable `consent({ events, persistence })` with blocked-event streams
-- Web-family browser continuity: `ctfl-opt-aid`, migrated from legacy `ntaid`; Node persistence is
-  application-owned and React Native uses AsyncStorage
-- Best fit: customers explicitly adopting the new platform direction
+## Existing Legacy Deployments: `@ninetailed/experience.js`
 
-Use the modern SDKs when:
+Legacy references exist to support deployed systems that still use:
 
-- the user explicitly asks for the new optimization SDKs
-- the project is greenfield and can absorb faster, pre-release API evolution
-- the team wants to build toward the newer platform model
+- `NinetailedProvider`
+- `<Experience>` or `<Personalize>`
+- `@ninetailed/experience.js-utils-contentful`
+- insights, SSR, preview, privacy, or destination plugins
+- the `ntaid` browser cookie and legacy page, track, or identify calls
 
-See `optimization-overview.md` for runtime routing and `package-versions.md` for package selection.
+For those systems, preserve compatible package majors and follow the project's established
+provider, plugin, and rendering patterns. Load `sdk-legacy-guide.md` only when old packages or APIs
+are present, or when the user explicitly asks about an existing legacy deployment.
+
+Do not describe the legacy deployment as broken merely because it has not migrated. Fix or extend
+it in place when that is the requested scope. A migration is a separate change because provider
+lifecycle, consent, identity, persistence, rendering, and tracking contracts differ.
 
 ## Architecture Guidance
 
-Choose architecture before choosing package details. The table applies to web and server-capable
-runtimes; React Native uses the stateful mobile/client path.
+Choose architecture after selecting the SDK and runtime.
 
-| Architecture                   | Recommendation                                                        | Notes                                                                        |
-| ------------------------------ | --------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Client-only                    | Either family                                                         | Simplest option when first-response personalized HTML is not required        |
-| Hybrid SSR or edge plus client | Prefer the current SDKs unless the user explicitly wants the new SDKs | Follow the selected runtime's server-evaluation and browser-handoff contract |
-| Server-only                    | Only when no client SDK is allowed                                    | Weak fit for experiment reporting and component insights                     |
+| Architecture                   | Default for new work                                    | Existing legacy deployment                               |
+| ------------------------------ | ------------------------------------------------------- | -------------------------------------------------------- |
+| Client-only                    | Use the matching Optimization browser or mobile runtime | Preserve the current provider and plugin pattern         |
+| Hybrid SSR or edge plus client | Use the framework adapter or Node plus browser handoff  | Preserve and repair the established SSR continuity model |
+| Server-only                    | Use Node only when no client runtime is allowed         | Keep only when the existing constraints require it       |
 
-## Decision Rule
+Server-only remains a weak fit when the product needs browser event collection, component
+insights, or reliable experiment reporting.
 
-Use `@ninetailed/experience.js` by default.
+## Communication Rule
 
-Move to `@contentful/optimization` when one of these is true:
-
-1. The user explicitly asks for it.
-2. The implementation is intentionally future-facing and greenfield.
-3. The team accepts the migration and verification work required by the newer runtime contracts.
-
-## What to Communicate to Customers
-
-- If you choose the current SDKs, frame them as the stable production recommendation.
-- If you choose the modern SDKs, frame them as the newer architecture with runtime-specific
-  contracts. Read versions from the target lockfile and validate the selected runtime end to end.
+Lead new work with `@contentful/optimization` without presenting both SDKs as equivalent choices.
+Mention `@ninetailed/experience.js` only when the detected codebase or the user's maintenance task
+makes it relevant.

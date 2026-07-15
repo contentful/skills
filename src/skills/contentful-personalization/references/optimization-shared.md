@@ -1,4 +1,4 @@
-<!-- Agent context: Shared behavioral contract for modern @contentful/optimization runtimes. Load one runtime-specific optimization-*.md reference as well. -->
+<!-- Agent context: Shared behavioral contract for @contentful/optimization runtimes. Load one runtime-specific optimization-*.md reference as well. -->
 
 # Optimization SDK shared contract
 

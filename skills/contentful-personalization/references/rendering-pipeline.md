@@ -64,13 +64,7 @@ const BlockRenderer = ({ block }) => {
     .map(ExperienceMapper.mapExperience);
 
   return (
-    <Experience
-      {...block}
-      id={block.sys.id}
-      component={ComponentRenderer}
-      experiences={experiences}
-      trackClicks
-    />
+    <Experience {...block} id={block.sys.id} component={ComponentRenderer} experiences={experiences} trackClicks />
   );
 };
 ```
@@ -98,7 +92,7 @@ If preview tooling is enabled, fetch:
 
 Preview setup is incomplete if the provider has no preview data to work with.
 
-## New SDK Mental Model
+## Optimization SDK Mental Model
 
 If the customer chooses `@contentful/optimization`, the personalized rendering primitive changes from `<Experience>` to `<OptimizedEntry>`.
 

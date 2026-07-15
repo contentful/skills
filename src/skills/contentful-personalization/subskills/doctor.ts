@@ -103,7 +103,7 @@ function sdkProfile(family: string | undefined): {
   switch (family) {
     case 'modern':
       return {
-        name: '@contentful/optimization (modern SDK)',
+        name: '@contentful/optimization',
         provider: 'OptimizationRoot, createNextjs* factory, or ContentfulOptimization singleton',
         component: 'OptimizedEntry / resolveOptimizedEntry()',
         clientEnv: 'the project-specific OPTIMIZATION_CLIENT_ID alias passed to runtime config',
@@ -320,7 +320,7 @@ export default skill({
           credRows.push({ Credential: 'Ninetailed environment', Value: scanned.personalization.environment });
         }
         if (scanned?.optimization?.clientId) {
-          credRows.push({ Credential: 'Optimization Client ID (modern SDK)', Value: scanned.optimization.clientId });
+          credRows.push({ Credential: 'Optimization Client ID', Value: scanned.optimization.clientId });
         }
         if (scanned?.optimization?.environment) {
           credRows.push({ Credential: 'Optimization environment', Value: scanned.optimization.environment });
@@ -846,10 +846,10 @@ export default skill({
         store.project?.packages?.packages?.optimization,
       );
       const modernServerChecks = /nextjs-pages/.test(framework)
-        ? 'For the modern Pages Router SDK, check the separate client and server createNextjsPagesRouterOptimization factories plus the getServerSideProps state handoff; it does not use middleware or proxy.'
+        ? 'For the Optimization Pages Router SDK, check the separate client and server createNextjsPagesRouterOptimization factories plus the getServerSideProps state handoff; it does not use middleware or proxy.'
         : /nextjs/.test(framework)
-          ? 'For the modern App Router SDK, check createNextjsAppRouterOptimization, its bound components, and the version-appropriate proxy.ts or middleware.ts request handler.'
-          : 'For the modern SDK, check the runtime-specific root or process singleton and its request or route boundary.';
+          ? 'For the Optimization App Router SDK, check createNextjsAppRouterOptimization, its bound components, and the version-appropriate proxy.ts or middleware.ts request handler.'
+          : 'For the Optimization SDK, check the runtime-specific root or process singleton and its request or route boundary.';
       return prompt`
         The programmatic checks (credentials, API connectivity, content state) are done. Now
         explore the CODE to understand the personalization setup. Gather facts — do NOT diagnose
@@ -872,7 +872,7 @@ export default skill({
 
         4. **Analytics** — How are page/track/identify events emitted? ${
           profile.guide === 'optimization-overview.md'
-            ? 'For the modern SDK, check the runtime-specific auto tracker, OptimizedEntry interaction tracking, and accepted event streams.'
+            ? 'For the Optimization SDK, check the runtime-specific auto tracker, OptimizedEntry interaction tracking, and accepted event streams.'
             : 'For the legacy SDK, look for the insights plugin.'
         }
 

@@ -3,6 +3,9 @@
 Set environment variables by runtime. Do not treat browser, server, preview, and edge requirements
 as interchangeable.
 
+Use Optimization variable conventions for new integrations. Use Ninetailed variables only when the
+repository already contains the legacy SDK.
+
 ## Where to Obtain Credentials
 
 The Client ID and environment slug come from the **Contentful Personalization app** installed in your
@@ -16,7 +19,7 @@ To find your credentials:
 3. Copy the **Client ID**.
 4. The **Environment** is also visible on this screen.
 
-## Current default SDKs: `@ninetailed/experience.js`
+## Existing legacy deployments: `@ninetailed/experience.js`
 
 ### Browser and Next.js
 
@@ -37,9 +40,9 @@ To find your credentials:
 
 Edge runtimes often do not use the `NEXT_PUBLIC_` naming pattern.
 
-## Modern SDKs: `@contentful/optimization`
+## Recommended SDKs: `@contentful/optimization`
 
-The new SDKs take `clientId` and `environment` directly and do not impose one official environment
+The Optimization SDKs take `clientId` and `environment` directly and do not impose one official environment
 variable naming scheme. Pick clear, project-local names and use them consistently.
 
 Suggested Next.js names:

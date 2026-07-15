@@ -2,6 +2,30 @@ import { skill, type, prompt, terminal, render } from '@contentful/skill-kit';
 import { getOptimizationReferenceFiles } from '../optimization-references.js';
 import { VERSION } from '../version.js';
 
+type DetectedSdk = 'ninetailed' | 'optimization' | 'both' | 'unknown';
+type DevelopmentSdk = 'ninetailed' | 'optimization';
+type DevelopmentScope = 'existing-integration' | 'new-integration';
+
+export function resolveDevelopmentSdk({
+  sdkInUse,
+  targetSdk,
+  workScope,
+}: {
+  sdkInUse: DetectedSdk;
+  targetSdk: DevelopmentSdk;
+  workScope: DevelopmentScope;
+}): DevelopmentSdk {
+  if (
+    workScope === 'existing-integration' &&
+    targetSdk === 'ninetailed' &&
+    (sdkInUse === 'ninetailed' || sdkInUse === 'both')
+  ) {
+    return 'ninetailed';
+  }
+
+  return 'optimization';
+}
+
 export default skill({
   name: 'develop',
   version: VERSION,
@@ -21,15 +45,22 @@ export default skill({
 
       ## What to investigate
 
-      1. **SDK in use** — Is it @ninetailed/experience.js or @contentful/optimization?
-      2. **Component mapper** — How does the project map content types to components?
+      1. **SDKs in use** — Is the repository using @ninetailed/experience.js,
+         @contentful/optimization, both, or neither?
+      2. **Work scope and target SDK** — Does the request modify an existing integration, or create
+         a new independent integration? Which SDK owns the target files?
+      3. **Component mapper** — How does the project map content types to components?
          (ContentTypeMap, BlockRenderer, etc.)
-      3. **Provider configuration** — Where is it? What plugins are registered?
-      4. **User's task** — What do they want? (personalize a component, add analytics,
+      4. **Provider configuration** — Where is it? What plugins are registered?
+      5. **User's task** — What do they want? (personalize a component, add analytics,
          create an experiment, add a merge tag)
-      5. **Target files** — Which specific files need to change?
+      6. **Target files** — Which specific files need to change?
 
       Focus on understanding the existing patterns so your changes will be consistent.
+      Choose a Ninetailed target only when the requested change acts on an existing Ninetailed
+      integration. If neither SDK is installed, or the work is a new independent integration, the
+      target is @contentful/optimization. When both families are present, use the target files to
+      identify which existing integration the task actually changes.
       Spend no more than a few minutes exploring — get the key facts and move on.
 
       Do NOT start making changes or create a plan. Do NOT ask the user questions.
@@ -39,7 +70,9 @@ export default skill({
     `,
     response: type({
       taskType: "'personalize-component' | 'create-experiment' | 'add-analytics' | 'add-merge-tag' | 'other'",
-      sdkInUse: "'ninetailed' | 'optimization' | 'unknown'",
+      sdkInUse: "'ninetailed' | 'optimization' | 'both' | 'unknown'",
+      targetSdk: "'ninetailed' | 'optimization'",
+      workScope: "'existing-integration' | 'new-integration'",
       optimizationRuntime:
         "'react-web' | 'nextjs-app-router' | 'nextjs-pages-router' | 'web' | 'node' | 'react-native' | 'unknown'",
       optimizationArchitecture: "'client-only' | 'hybrid-ssr' | 'server-only' | 'unknown'",
@@ -52,7 +85,12 @@ export default skill({
 
   .step('plan', {
     prompt: ({ store, act, refs }) => {
-      const isOptimization = store.steps.analyze.sdkInUse === 'optimization';
+      const targetSdk = resolveDevelopmentSdk({
+        sdkInUse: store.steps.analyze.sdkInUse,
+        targetSdk: store.steps.analyze.targetSdk,
+        workScope: store.steps.analyze.workScope,
+      });
+      const isOptimization = targetSdk === 'optimization';
       const sdkReferenceFiles = isOptimization
         ? getOptimizationReferenceFiles({
             framework: store.steps.analyze.framework,
@@ -88,7 +126,7 @@ export default skill({
 
           ${render.kv({
             Task: store.steps.analyze.taskType.replace(/-/g, ' '),
-            SDK: store.steps.analyze.sdkInUse,
+            SDK: targetSdk,
             Framework: store.steps.analyze.framework,
           })}
 
@@ -122,7 +160,12 @@ export default skill({
 
   .step('implement', {
     prompt: ({ store, refs }) => {
-      const isOptimization = store.steps.analyze.sdkInUse === 'optimization';
+      const targetSdk = resolveDevelopmentSdk({
+        sdkInUse: store.steps.analyze.sdkInUse,
+        targetSdk: store.steps.analyze.targetSdk,
+        workScope: store.steps.analyze.workScope,
+      });
+      const isOptimization = targetSdk === 'optimization';
       const refSections: Array<{ label: string; content: string }> = [];
 
       if (isOptimization) {
@@ -138,7 +181,7 @@ export default skill({
         });
       } else {
         refSections.push({
-          label: 'Legacy SDK Reference',
+          label: 'Existing Legacy Deployment Reference',
           content: refs.load('sdk-legacy-guide.md'),
         });
         refSections.push({
@@ -165,7 +208,7 @@ export default skill({
 
         ${render.kv({
           Task: store.steps.analyze.taskType.replace(/-/g, ' '),
-          SDK: store.steps.analyze.sdkInUse,
+          SDK: targetSdk,
           Files: store.steps.analyze.targetFiles.join(', '),
         })}
 

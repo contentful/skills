@@ -5,13 +5,13 @@
 Real-world implementation patterns for Contentful Personalization with Next.js, Contentful, and the
 SDK.
 
-Most setups use `@ninetailed/experience.js` — the **current default**. Those patterns are in the
-numbered sections below. The short modern section shows React Web only; use the runtime-specific
-`optimization-*.md` references for current Next.js, Web, Node, and React Native code.
+Use `@contentful/optimization` for new integrations and load the matching runtime-specific
+`optimization-*.md` references for authoritative code. The numbered Ninetailed sections remain for
+diagnosing, repairing, or extending repositories that already use the legacy SDK.
 
 ---
 
-## Modern: `@contentful/optimization`
+## Recommended: `@contentful/optimization`
 
 Verify package versions from the target project's lockfile before copying code.
 
@@ -57,7 +57,7 @@ function HeroEntry({ baselineEntry }) {
 }
 ```
 
-`baselineEntry` must include `nt_experiences` (fetch with `include: 10`). The new SDK resolves the
+`baselineEntry` must include `nt_experiences` (fetch with `include: 10`). The Optimization SDK resolves the
 same `nt_experiences` / `nt_variants` content model as the legacy SDK.
 
 ### Actions, state, and flags (hooks)
@@ -96,9 +96,9 @@ Do **not** pass all-locale (`withAllLocales` / `locale=*`) responses to `Optimiz
 
 ---
 
-## Current default: `@ninetailed/experience.js`
+## Existing legacy deployments: `@ninetailed/experience.js`
 
-The remaining patterns use the current production SDK and are the default for most setups.
+The remaining patterns apply only when maintaining a repository that already uses this SDK.
 
 ## Table of Contents
 
@@ -211,9 +211,9 @@ Key differences:
 
 ## 2. App Router Provider Setup
 
-For App Router, the `NinetailedProvider` from `@ninetailed/experience.js-next` does NOT auto-track page views (that is a Pages Router feature). You must handle page tracking manually or use the new SDK's auto-page trackers.
+For App Router, the `NinetailedProvider` from `@ninetailed/experience.js-next` does NOT auto-track page views (that is a Pages Router feature). You must handle page tracking manually in that legacy deployment. New integrations should use the Optimization SDK's router tracker.
 
-With the new SDK (`@contentful/optimization-react-web`):
+With the recommended SDK (`@contentful/optimization-react-web`):
 
 ```tsx
 import { OptimizationRoot } from '@contentful/optimization-react-web';

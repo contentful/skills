@@ -162,7 +162,7 @@ export default skill({
         | Key | Description |
         |-----|-------------|
         | how-personalization-works | Core concepts, content model, rendering flow |
-        | sdk-selection | Decision framework: current @ninetailed/experience.js vs modern @contentful/optimization |
+        | sdk-selection | @contentful/optimization default vs maintenance of existing legacy deployments |
         | provider-patterns | Provider placement, Pages/App Router, hydration |
         | middleware-patterns | Preflight, cookies, edge personalization |
         | component-patterns | ContentTypeMap, BlockRenderer, component isolation |
@@ -171,15 +171,15 @@ export default skill({
         | analytics-and-preview | Insights plugin, event tracking, preview mode |
         | common-errors | Failure modes and fixes |
         | ssr-guide | Server-side patterns and anti-patterns |
-        | sdk-legacy-guide | @ninetailed/experience.js API reference (current default) |
-        | optimization-overview | Choose the current @contentful/optimization runtime and package |
+        | sdk-legacy-guide | @ninetailed/experience.js reference for existing deployments |
+        | optimization-overview | Choose the recommended @contentful/optimization runtime and package |
         | optimization-react-web | React Web provider, hooks, entries, and router tracking |
         | optimization-nextjs-app-router | Next.js App Router factory, proxy, server rendering, and browser takeover |
         | optimization-nextjs-pages-router | Next.js Pages Router factories and getServerSideProps handoff |
         | optimization-web | Imperative browser SDK and Web Components |
         | optimization-node | Stateless Node request integration |
         | optimization-react-native | React Native providers, screens, entries, and interactions |
-        | sdk-next-guide | Backward-compatible alias for the modern runtime chooser |
+        | sdk-next-guide | Backward-compatible alias for the Optimization runtime chooser |
         | contentful-integration-guide | Content types, ExperienceMapper, publishing |
         | implementation-examples | Real implementation patterns and code |
       `,
@@ -199,7 +199,7 @@ export default skill({
     content: ({ refs }) => refs.load('how-personalization-works.md'),
   })
   .topic('sdk-selection', {
-    label: 'SDK decision framework: current @ninetailed/experience.js vs modern @contentful/optimization',
+    label: 'SDK decision framework: Optimization default vs legacy deployment maintenance',
     content: ({ refs }) => refs.load('sdk-selection.md'),
   })
   .topic('provider-patterns', {
@@ -235,11 +235,11 @@ export default skill({
     content: ({ refs }) => refs.load('ssr-guide.md'),
   })
   .topic('sdk-legacy-guide', {
-    label: '@ninetailed/experience.js complete SDK reference',
+    label: '@ninetailed/experience.js reference for debugging or extending existing deployments',
     content: ({ refs }) => refs.load('sdk-legacy-guide.md'),
   })
   .topic('sdk-next-guide', {
-    label: '@contentful/optimization modern SDK runtime chooser',
+    label: '@contentful/optimization SDK runtime chooser',
     content: ({ refs }) => refs.load('optimization-overview.md'),
   })
   .topic('optimization-overview', {

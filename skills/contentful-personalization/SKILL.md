@@ -192,7 +192,7 @@ Quick-reference topics accessible without running the full workflow:
 ```
 
 - **how-personalization-works**: Core concepts: content model, rendering flow, and how personalization works
-- **sdk-selection**: SDK decision framework: current @ninetailed/experience.js vs modern @contentful/optimization
+- **sdk-selection**: SDK decision framework: Optimization default vs legacy deployment maintenance
 - **provider-patterns**: Provider placement patterns for Pages Router, App Router, and both SDKs
 - **middleware-patterns**: Middleware and SSR/edge patterns: preflight, cookies, matcher config
 - **component-patterns**: Component architecture patterns: ContentTypeMap, BlockRenderer, isolation
@@ -201,8 +201,8 @@ Quick-reference topics accessible without running the full workflow:
 - **analytics-and-preview**: Analytics plugins (Insights, GTM, Segment) and preview configuration
 - **common-errors**: Common failure modes with root causes and fixes
 - **ssr-guide**: SSR and edge-side personalization: patterns, anti-patterns, troubleshooting
-- **sdk-legacy-guide**: @ninetailed/experience.js complete SDK reference
-- **sdk-next-guide**: @contentful/optimization modern SDK runtime chooser
+- **sdk-legacy-guide**: @ninetailed/experience.js reference for debugging or extending existing deployments
+- **sdk-next-guide**: @contentful/optimization SDK runtime chooser
 - **optimization-overview**: @contentful/optimization runtime and package chooser
 - **optimization-react-web**: @contentful/optimization React Web provider, hooks, entries, and routing
 - **optimization-nextjs-app-router**: @contentful/optimization Next.js App Router integration

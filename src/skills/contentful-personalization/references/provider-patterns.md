@@ -9,9 +9,9 @@ Use these patterns to avoid scope and hydration problems.
 - Keep provider initialization stable across navigation.
 - Avoid wrapping only a subset of pages unless that is intentional.
 
-## Modern SDKs: `@contentful/optimization`
+## Recommended SDKs: `@contentful/optimization`
 
-The lifecycle boundary is runtime-specific. Do not treat every modern integration as a client-only
+The lifecycle boundary is runtime-specific. Do not treat every Optimization integration as a client-only
 React provider:
 
 - React Web mounts one `OptimizationRoot` and one router tracker around the browser tree.
@@ -28,7 +28,10 @@ For exact provider or factory code, use the matching `optimization-<runtime>.md`
 with `optimization-shared.md`. Keep one root/factory, one initial page or screen owner, and one clear
 manual-or-managed entry boundary.
 
-## Current default SDKs: `@ninetailed/experience.js`
+## Existing legacy deployments: `@ninetailed/experience.js`
+
+Use the following patterns only when the repository already uses the Ninetailed SDK and the task is
+to diagnose, repair, or extend that deployment.
 
 ### Next.js Pages Router
 

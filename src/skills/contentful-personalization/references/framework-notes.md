@@ -2,13 +2,16 @@
 
 Guidance for personalization readiness by framework.
 
+Use the Optimization pattern for new integrations. Use the Ninetailed pattern only to repair or
+extend a detected legacy deployment.
+
 ## Next.js App Router (13.4+)
 
 ### Provider Placement
 
 Provider placement depends on the SDK family.
 
-**Current default — `@ninetailed/experience.js`:**
+**Existing legacy deployment — `@ninetailed/experience.js`:**
 
 Use a Client Component boundary, typically `app/providers.tsx`, and render it from
 `app/layout.tsx`.
@@ -31,7 +34,7 @@ export default function RootLayout({ children }) {
 }
 ```
 
-**Modern — `@contentful/optimization-nextjs`:**
+**Recommended — `@contentful/optimization-nextjs`:**
 
 Create one bound integration with `createNextjsAppRouterOptimization` from the `/app-router`
 subpath. Import its bound `OptimizationRoot`, `OptimizedEntry`, `NextAppAutoPageTracker`, and
@@ -41,7 +44,7 @@ takeover; browser-only hooks come from `/client`. Do not recreate the integratio
 
 ### Server Components
 
-Server Components cannot use browser hooks or context. With the modern App Router adapter, the
+Server Components cannot use browser hooks or context. With the Optimization App Router adapter, the
 bound `OptimizedEntry` can fetch and resolve an entry during server rendering; use a `/client`
 entry island only for browser-only live-update or loading controls. With the legacy SDK, fetch in a
 Server Component and pass the payload into a Client Component that renders `<Experience>`.

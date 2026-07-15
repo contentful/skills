@@ -1,10 +1,9 @@
-<!-- Agent context: Route modern @contentful/optimization work to the narrowest runtime reference. Load optimization-shared.md with that runtime file. -->
+<!-- Agent context: Route recommended @contentful/optimization work to the narrowest runtime reference. Load optimization-shared.md with that runtime file. -->
 
 # Optimization SDK runtime router
 
-Use this reference for the modern `@contentful/optimization-*` family. Keep the product-level
-decision between modern and legacy SDKs in `sdk-selection.md`; this file describes the current modern
-SDK surface.
+Use this reference for the recommended `@contentful/optimization-*` family. Keep legacy maintenance
+decisions in `sdk-selection.md`; this file describes the current runtime surfaces.
 
 ## Choose the application-facing package
 

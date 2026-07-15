@@ -1,9 +1,9 @@
 # SDK Packages
 
-Two SDK families exist. `@ninetailed/experience.js*` is the **current default** customers use today.
-`@contentful/optimization-*` is the **modern, next-gen** family for new, forward-looking work.
+Use `@contentful/optimization-*` for new integrations. The `@ninetailed/experience.js*` packages
+remain documented only for diagnosing, repairing, or extending repositories that already use them.
 
-## Modern: `@contentful/optimization-*`
+## Recommended: `@contentful/optimization-*`
 
 Read versions from the target project's lockfile. Keep packages in the same dependency graph
 compatible; do not force React Native to the same version as the Web family because it can use a
@@ -52,10 +52,10 @@ Install the narrowest package for your runtime:
 
 ---
 
-## Current default: `@ninetailed/experience.js`
+## Existing legacy deployments: `@ninetailed/experience.js`
 
-The production-proven family customers use today. Prefer these unless the user explicitly wants the
-modern SDKs or the project is greenfield. See `sdk-legacy-guide.md` for the full API.
+Install or change these packages only when maintaining a detected legacy deployment. Do not use
+them to start a new integration. See `sdk-legacy-guide.md` for the legacy API.
 
 ### Core SDK
 

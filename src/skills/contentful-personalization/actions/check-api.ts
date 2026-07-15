@@ -46,7 +46,7 @@ function buildEndpoints(input: {
     endpoints.push({
       sdk: 'modern',
       url: `https://experience.ninetailed.co/v2/organizations/${input.optimizationClientId}/environments/${input.optimizationEnvironment}/profiles`,
-      label: `modern SDK (client ID ${input.optimizationClientId.substring(0, 8)}…, env "${input.optimizationEnvironment}")`,
+      label: `Optimization SDK (client ID ${input.optimizationClientId.substring(0, 8)}…, env "${input.optimizationEnvironment}")`,
     });
   }
 
@@ -154,7 +154,7 @@ export const checkApiConnectivity = action({
             item: 'Experience API',
             status: 'skip' as const,
             detail:
-              'No personalization credentials available — need a legacy Ninetailed API key or a modern Optimization Client ID to check connectivity',
+              'No personalization credentials available — need a legacy Ninetailed API key or an Optimization Client ID to check connectivity',
           },
         ],
         reachable: false,

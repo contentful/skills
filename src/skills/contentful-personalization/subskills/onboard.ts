@@ -17,6 +17,8 @@ type InstallableFramework =
   | 'react-native'
   | 'other';
 
+type SdkChoice = 'ninetailed' | 'optimization';
+
 function getInstallableFramework(framework: string): InstallableFramework {
   if (
     framework === 'nextjs-app' ||
@@ -37,9 +39,8 @@ function getInstallPackageManager(packageManager: PackagesResultData['packageMan
   return packageManager === 'unknown' || !packageManager ? 'npm' : packageManager;
 }
 
-// Summarize which personalization SDK (if any) is already installed, so the assess and
-// recommend steps can weigh consistency vs. migration instead of treating every project
-// as greenfield. Accepts the loosely-typed store shape (deeply optional/readonly).
+// Summarize which personalization SDK (if any) is already installed, so the recommendation
+// can distinguish a new recommended setup from maintenance of an existing legacy deployment.
 function describeInstalledSdk(packages?: {
   packages?: {
     ninetailed?: ReadonlyArray<{ name?: string } | undefined>;
@@ -51,15 +52,45 @@ function describeInstalledSdk(packages?: {
   const ninetailed = names(packages?.packages?.ninetailed);
   const optimization = names(packages?.packages?.optimization);
   if (ninetailed.length > 0 && optimization.length > 0) {
-    return 'Both @ninetailed/experience.js AND @contentful/optimization packages are present — this is unusual and likely a migration in progress.';
+    return 'Both @ninetailed/experience.js AND @contentful/optimization packages are present — treat @contentful/optimization as the active default and inspect legacy usage only where the older deployment is still being maintained or migrated.';
   }
   if (optimization.length > 0) {
-    return `Already using the modern @contentful/optimization SDK (${optimization.join(', ')}). Prefer staying on this SDK unless the user explicitly wants to change.`;
+    return `Already using the recommended @contentful/optimization SDK (${optimization.join(', ')}). Continue with this SDK.`;
   }
   if (ninetailed.length > 0) {
-    return `Already using the legacy @ninetailed/experience.js SDK (${ninetailed.join(', ')}). Recommending @contentful/optimization would mean a migration — call that out and prefer consistency unless the user explicitly wants to migrate.`;
+    return `Already using the legacy @ninetailed/experience.js SDK (${ninetailed.join(', ')}). It is valid to repair or extend this existing deployment in place. For a new integration or an intentional migration, recommend @contentful/optimization and state the migration scope separately.`;
   }
-  return 'No personalization SDK is installed yet — this is a greenfield choice.';
+  return 'No personalization SDK is installed yet — this is a greenfield choice, so recommend @contentful/optimization.';
+}
+
+export function resolveRecommendedSdkChoice({
+  requestedChoice,
+  framework,
+  packages,
+  maintainsExistingLegacyDeployment,
+}: {
+  requestedChoice: SdkChoice;
+  framework: string;
+  packages?: {
+    packages?: {
+      ninetailed?: ReadonlyArray<unknown>;
+      optimization?: ReadonlyArray<unknown>;
+    };
+  };
+  maintainsExistingLegacyDeployment: boolean;
+}): SdkChoice {
+  const hasLegacySdk = (packages?.packages?.ninetailed?.length ?? 0) > 0;
+
+  if (
+    requestedChoice === 'ninetailed' &&
+    framework !== 'react-native' &&
+    hasLegacySdk &&
+    maintainsExistingLegacyDeployment
+  ) {
+    return 'ninetailed';
+  }
+
+  return 'optimization';
 }
 
 function getDerivedPackages(store: {
@@ -70,7 +101,7 @@ function getDerivedPackages(store: {
   };
 }) {
   return derivePackagesToInstall({
-    sdkChoice: store.setup?.sdkChoice ?? 'ninetailed',
+    sdkChoice: store.setup?.sdkChoice ?? 'optimization',
     framework: getInstallableFramework(store.project.framework),
     architecture: store.setup?.architecture ?? 'client-only',
   });
@@ -108,7 +139,7 @@ export default skill({
   },
 })
   .step('explore', {
-    prompt: ({ params, refs }) => prompt`
+    prompt: ({ params }) => prompt`
         Investigate this project to understand its structure, Contentful integration,
         and what personalization would look like here. You are gathering facts —
         do NOT make recommendations, produce a readiness verdict, or ask the user
@@ -139,12 +170,6 @@ export default skill({
         ${params?.userQuery ? `\nUser's request: "${params.userQuery}"` : ''}
         ${params?.readinessOnly ? '\nNote: The user only asked about readiness — keep that in mind but still explore fully.' : ''}
 
-        ## Reference Material
-        ${refs.load('how-personalization-works.md')}
-
-        ${refs.load('component-patterns.md')}
-
-        ${refs.load('framework-notes.md')}
       `,
     response: type({
       framework:
@@ -340,15 +365,25 @@ export default skill({
           ## Installed personalization SDK
           ${installedSdkNote}
 
-          Factor the installed SDK into your recommendation: if one is already in use, prefer
-          staying consistent with it unless the user explicitly wants to migrate, and if you do
-          recommend switching, name the migration cost explicitly.
+          Apply this product policy:
+
+          - \`@contentful/optimization\` is the recommended default for every new setup.
+          - Choose \`ninetailed\` only to debug, repair, or extend a detected existing
+            \`@ninetailed/experience.js\` deployment.
+          - Do not recommend a fresh legacy installation, including for Pages Router, SSR, plugin
+            availability, or familiarity with older examples.
+          - If an existing legacy project is intentionally migrating, recommend \`optimization\`
+            and name the migration cost explicitly. Do not make migration a prerequisite for an
+            urgent repair or a scoped extension of the existing deployment.
+          - Set \`maintainsExistingLegacyDeployment\` to true only when the requested change acts
+            on the detected Ninetailed integration itself. An unrelated new integration in the
+            same repository is not legacy maintenance.
 
           ## Your two decisions
 
           **SDK choice:**
-          - \`ninetailed\` — @ninetailed/experience.js (current default; battle-tested, more plugins)
-          - \`optimization\` — @contentful/optimization (modern, Contentful-native, runtime-specific APIs)
+          - \`optimization\` — @contentful/optimization (recommended default; runtime-specific APIs)
+          - \`ninetailed\` — @ninetailed/experience.js (maintenance of detected legacy deployments only)
 
           **Architecture:**
           - \`client-only\` — All personalization runs in the browser
@@ -370,11 +405,17 @@ export default skill({
     response: type({
       sdkChoice: "'ninetailed' | 'optimization'",
       architecture: "'client-only' | 'hybrid-ssr' | 'server-only'",
+      maintainsExistingLegacyDeployment: 'boolean',
       reasoning: 'string',
     }),
     save: ({ response, store }) => ({
       setup: {
-        sdkChoice: store.project.framework === 'react-native' ? 'optimization' : response.sdkChoice,
+        sdkChoice: resolveRecommendedSdkChoice({
+          requestedChoice: response.sdkChoice,
+          framework: store.project.framework,
+          packages: store.project.packages,
+          maintainsExistingLegacyDeployment: response.maintainsExistingLegacyDeployment,
+        }),
         architecture: store.project.framework === 'react-native' ? 'client-only' : response.architecture,
       },
     }),
@@ -392,8 +433,8 @@ export default skill({
         ${render.kv({
           SDK:
             store.setup?.sdkChoice === 'ninetailed'
-              ? '@ninetailed/experience.js (current default)'
-              : '@contentful/optimization (modern, Contentful-native)',
+              ? '@ninetailed/experience.js (existing legacy deployment)'
+              : '@contentful/optimization (recommended default)',
           Architecture:
             store.setup?.architecture === 'client-only'
               ? 'Client-only (browser-side personalization)'
@@ -512,7 +553,7 @@ export default skill({
             '✅ Verify accepted events, profile continuity, selected variants, and fallback',
           ]
         : [
-            '📦 Install packages: @ninetailed/experience.js + plugins',
+            '📦 Install any missing packages for the existing @ninetailed/experience.js deployment',
             '🔑 Configure environment variables with placeholder values',
             '🔌 Add provider wrapper to the appropriate layout/app file',
             '🧩 Wire components with Experience/Personalize wrappers and update component mapper',
@@ -661,7 +702,7 @@ export default skill({
 
         refSections.push(
           {
-            label: 'SDK Reference (Legacy)',
+            label: 'Existing Legacy Deployment Reference',
             content: refs.load('sdk-legacy-guide.md'),
           },
           {

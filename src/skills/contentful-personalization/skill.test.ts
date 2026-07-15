@@ -8,8 +8,9 @@ import skill from './skill.js';
 import { derivePackagesToInstall } from './actions/install-packages.js';
 import { getOptimizationReferenceFiles } from './optimization-references.js';
 import doctorSkill, { resolveCredentials } from './subskills/doctor.js';
-import developSkill from './subskills/develop.js';
+import developSkill, { resolveDevelopmentSdk } from './subskills/develop.js';
 import liveDebugSkill from './subskills/live-debug.js';
+import { resolveRecommendedSdkChoice } from './subskills/onboard.js';
 
 // --- Dispatcher routing tests ---
 
@@ -82,6 +83,8 @@ test('classify routes to develop for component tasks', async () => {
       'develop/analyze': {
         taskType: 'personalize-component',
         sdkInUse: 'ninetailed',
+        targetSdk: 'ninetailed',
+        workScope: 'existing-integration',
         optimizationRuntime: 'unknown',
         optimizationArchitecture: 'unknown',
         framework: 'nextjs-app',
@@ -665,6 +668,8 @@ test('develop analyze → plan → implement path', async () => {
       analyze: {
         taskType: 'personalize-component',
         sdkInUse: 'ninetailed',
+        targetSdk: 'ninetailed',
+        workScope: 'existing-integration',
         optimizationRuntime: 'unknown',
         optimizationArchitecture: 'unknown',
         framework: 'nextjs-app',
@@ -684,6 +689,28 @@ test('develop analyze → plan → implement path', async () => {
   });
 
   assert.deepEqual(result.path, ['analyze', 'plan', 'implement']);
+});
+
+test('develop defaults new integrations to Optimization even if legacy is requested', () => {
+  assert.equal(
+    resolveDevelopmentSdk({
+      sdkInUse: 'ninetailed',
+      targetSdk: 'ninetailed',
+      workScope: 'new-integration',
+    }),
+    'optimization',
+  );
+});
+
+test('develop can maintain the legacy side of a mixed-SDK repository', () => {
+  assert.equal(
+    resolveDevelopmentSdk({
+      sdkInUse: 'both',
+      targetSdk: 'ninetailed',
+      workScope: 'existing-integration',
+    }),
+    'ninetailed',
+  );
 });
 
 test('derivePackagesToInstall uses react package for React ninetailed installs', () => {
@@ -792,6 +819,54 @@ test('derivePackagesToInstall rejects the legacy browser SDK for React Native', 
         architecture: 'client-only',
       }),
     /React Native onboarding requires/,
+  );
+});
+
+test('new personalization setups always resolve to the recommended Optimization SDK', () => {
+  assert.equal(
+    resolveRecommendedSdkChoice({
+      requestedChoice: 'ninetailed',
+      framework: 'nextjs-pages',
+      packages: { packages: { ninetailed: [], optimization: [] } },
+      maintainsExistingLegacyDeployment: false,
+    }),
+    'optimization',
+  );
+});
+
+test('existing legacy deployments can stay on Ninetailed for repair or extension', () => {
+  assert.equal(
+    resolveRecommendedSdkChoice({
+      requestedChoice: 'ninetailed',
+      framework: 'nextjs-pages',
+      packages: { packages: { ninetailed: [{}], optimization: [] } },
+      maintainsExistingLegacyDeployment: true,
+    }),
+    'ninetailed',
+  );
+});
+
+test('unrelated new work defaults to Optimization even when legacy packages are installed', () => {
+  assert.equal(
+    resolveRecommendedSdkChoice({
+      requestedChoice: 'ninetailed',
+      framework: 'nextjs-app',
+      packages: { packages: { ninetailed: [{}], optimization: [] } },
+      maintainsExistingLegacyDeployment: false,
+    }),
+    'optimization',
+  );
+});
+
+test('a mixed-SDK repository can still target its existing legacy deployment', () => {
+  assert.equal(
+    resolveRecommendedSdkChoice({
+      requestedChoice: 'ninetailed',
+      framework: 'nextjs-app',
+      packages: { packages: { ninetailed: [{}], optimization: [{}] } },
+      maintainsExistingLegacyDeployment: true,
+    }),
+    'ninetailed',
   );
 });
 

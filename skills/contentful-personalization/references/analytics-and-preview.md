@@ -2,9 +2,12 @@
 
 Analytics and preview are part of setup, not afterthoughts.
 
+For new integrations, use the `@contentful/optimization` guidance. Apply the Ninetailed sections
+only when maintaining a repository that already uses the legacy SDK.
+
 ## Default Analytics Recommendation
 
-### `@ninetailed/experience.js` (current default)
+### Existing legacy deployments: `@ninetailed/experience.js`
 
 Use `@ninetailed/experience.js-plugin-insights` when the customer wants:
 
@@ -15,7 +18,7 @@ Use `@ninetailed/experience.js-plugin-insights` when the customer wants:
 Do not present `@ninetailed/experience.js-plugin-analytics` as the default built-in answer for these
 setups.
 
-### `@contentful/optimization` (modern)
+### Recommended: `@contentful/optimization`
 
 Analytics is **built in** — there is no separate insights plugin to install. Enable it through the
 SDK:
@@ -56,7 +59,7 @@ SDK:
 ### Identity (`identify()` / `identifyUser()`)
 
 - Use for external user IDs and traits.
-- Never identify using the anonymous profile ID (`ctfl-opt-aid` for the new SDK, `ntaid` for legacy).
+- Never identify using the anonymous profile ID (`ctfl-opt-aid` for Optimization, `ntaid` for legacy).
 
 ## Component View Tracking Notes
 
@@ -76,7 +79,7 @@ SDK:
 
 ## Preview Guidance
 
-### `@ninetailed/experience.js` (current default)
+### Existing legacy deployments: `@ninetailed/experience.js`
 
 Use the preview plugin only when the customer needs editor or QA tooling.
 
@@ -87,7 +90,7 @@ Requirements:
 3. Pass both into the preview plugin.
 4. Gate the plugin away from production unless the customer explicitly wants live preview behavior.
 
-### `@contentful/optimization` (modern)
+### Recommended: `@contentful/optimization`
 
 Use `@contentful/optimization-web-preview-panel` for author preview against an existing Web SDK
 instance. When the panel is open, live updates are forced on for all `OptimizedEntry` components so

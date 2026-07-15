@@ -24,9 +24,9 @@ primitive that:
 
 The primitive depends on the SDK:
 
-- **`@ninetailed/experience.js` (current default)** uses the `<Experience>` wrapper.
-- **`@contentful/optimization` (modern)** uses `<OptimizedEntry>` (a render prop
+- **`@contentful/optimization` (recommended for new work)** uses `<OptimizedEntry>` (a render prop
   that resolves the baseline entry to the selected variant).
+- **`@ninetailed/experience.js` (existing legacy deployments)** uses the `<Experience>` wrapper.
 
 Either way, this is why **component isolation** is the most important readiness
 factor — the component must render identically whether it receives baseline or
@@ -40,6 +40,7 @@ Three Contentful content types are installed by the Ninetailed app:
 ### nt_experience
 
 An experience defines the personalization rule:
+
 - Which **audience** to target (reference to `nt_audience`)
 - Which **variants** to show (references to your own content entries)
 - **Distribution** weights (e.g., 50/50 for A/B tests)
@@ -57,23 +58,24 @@ A merge tag is a content entry that maps a display name to a profile data
 path. Content editors create these in Contentful (e.g., "City of the visitor"
 → `location.city`). Fields:
 
-| Field | Purpose |
-|-------|---------|
-| `nt_name` | Display name (e.g., "First Name", "City of the visitor") |
+| Field            | Purpose                                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------- |
+| `nt_name`        | Display name (e.g., "First Name", "City of the visitor")                                                |
 | `nt_mergetag_id` | Dot-notation path into the visitor profile (e.g., `traits.firstName`, `location.city`, `session.count`) |
-| `nt_fallback` | Optional fallback text when the profile value is unavailable |
+| `nt_fallback`    | Optional fallback text when the profile value is unavailable                                            |
 
 Merge tags provide **inline personalization** — inserting visitor-specific
 values into content, as opposed to the `<Experience>` component which swaps
 entire component variants.
 
 Two usage paths:
+
 1. **In rich text** (CMS-authored): editors embed `nt_mergetag` entries
    inline in Contentful rich text fields. The rich text renderer detects
    embedded entries with content type `nt_mergetag` and renders a `<MergeTag>`
    component.
 2. **Direct in code** (developer-authored): use `<MergeTag id="traits.firstName"
-   fallback="friend" />` anywhere in JSX. This bypasses Contentful entries
+fallback="friend" />` anywhere in JSX. This bypasses Contentful entries
    entirely — just reads from the visitor profile.
 
 The `<MergeTag>` React component resolves the `id` path against the current
@@ -138,6 +140,7 @@ and the variant has `{ headline: "Willkommen" }`. The wrapper swaps which
 entry the component receives.
 
 This breaks if the component:
+
 - **Fetches its own data** — it ignores the variant data passed via props
 - **Has hardcoded content** — there's no entry to swap
 - **Depends on parent state** — can't be wrapped independently
@@ -227,6 +230,7 @@ to be republished. The doctor's content inspection automates this check.
 4. Client SDK hydrates for ongoing interactions
 
 Server-side requires:
+
 - Edge middleware (`middleware.ts`) or a Cloudflare Worker
 - The `@ninetailed/experience.js-plugin-ssr` package
 - Cookie management (`ntaid` cookie for profile identification)
@@ -238,6 +242,7 @@ required, but it's the path to the best user experience.
 ## The Provider
 
 `NinetailedProvider` is a React context provider that:
+
 - Initializes the Ninetailed SDK with the API key
 - Manages the visitor's profile state
 - Communicates with the Experience API to resolve variants
@@ -249,30 +254,30 @@ Router) or `app/layout.tsx` (App Router via a Client Component wrapper).
 
 ## Package Quick Reference
 
-| Package | What it does |
-|---------|-------------|
-| `@ninetailed/experience.js` | Core SDK — profile management, event tracking, variant resolution |
-| `@ninetailed/experience.js-react` | React integration — Provider, `<Experience>`, hooks |
-| `@ninetailed/experience.js-next` | Next.js auto-page-tracking, ESR support, re-exports React SDK |
-| `@ninetailed/experience.js-shared` | API client, event builders, type definitions |
-| `@ninetailed/experience.js-utils-contentful` | `ExperienceMapper`, `AudienceMapper` for Contentful entries |
-| `@ninetailed/experience.js-plugin-insights` | Tracks component views/clicks/hovers (required for experiment results) |
-| `@ninetailed/experience.js-plugin-preview` | Preview editor UI for testing audiences/experiences in-browser |
-| `@ninetailed/experience.js-plugin-ssr` | Server-side rendering support (cookie-based profile persistence) |
-| `@ninetailed/experience.js-plugin-privacy` | GDPR consent management — filters events based on consent state |
-| `@ninetailed/experience.js-plugin-google-tagmanager` | Pushes personalization events to GTM data layer |
-| `@ninetailed/experience.js-plugin-segment` | Forwards events to Segment CDP |
+| Package                                              | What it does                                                           |
+| ---------------------------------------------------- | ---------------------------------------------------------------------- |
+| `@ninetailed/experience.js`                          | Core SDK — profile management, event tracking, variant resolution      |
+| `@ninetailed/experience.js-react`                    | React integration — Provider, `<Experience>`, hooks                    |
+| `@ninetailed/experience.js-next`                     | Next.js auto-page-tracking, ESR support, re-exports React SDK          |
+| `@ninetailed/experience.js-shared`                   | API client, event builders, type definitions                           |
+| `@ninetailed/experience.js-utils-contentful`         | `ExperienceMapper`, `AudienceMapper` for Contentful entries            |
+| `@ninetailed/experience.js-plugin-insights`          | Tracks component views/clicks/hovers (required for experiment results) |
+| `@ninetailed/experience.js-plugin-preview`           | Preview editor UI for testing audiences/experiences in-browser         |
+| `@ninetailed/experience.js-plugin-ssr`               | Server-side rendering support (cookie-based profile persistence)       |
+| `@ninetailed/experience.js-plugin-privacy`           | GDPR consent management — filters events based on consent state        |
+| `@ninetailed/experience.js-plugin-google-tagmanager` | Pushes personalization events to GTM data layer                        |
+| `@ninetailed/experience.js-plugin-segment`           | Forwards events to Segment CDP                                         |
 
 ## Environment Variables
 
-| Variable | Purpose |
-|----------|---------|
-| `NEXT_PUBLIC_NINETAILED_CLIENT_ID` | API key for the Ninetailed Experience API |
-| `NEXT_PUBLIC_NINETAILED_ENVIRONMENT` | Environment slug (default: `main`) |
-| `NEXT_PUBLIC_CONTENTFUL_SPACE_ID` | Contentful Space ID |
-| `NEXT_PUBLIC_CONTENTFUL_TOKEN` | Contentful Delivery API token |
-| `NEXT_PUBLIC_CONTENTFUL_PREVIEW_TOKEN` | Contentful Preview API token (optional) |
-| `NEXT_PUBLIC_CONTENTFUL_ENVIRONMENT` | Contentful environment (default: `master`) |
+| Variable                               | Purpose                                    |
+| -------------------------------------- | ------------------------------------------ |
+| `NEXT_PUBLIC_NINETAILED_CLIENT_ID`     | API key for the Ninetailed Experience API  |
+| `NEXT_PUBLIC_NINETAILED_ENVIRONMENT`   | Environment slug (default: `main`)         |
+| `NEXT_PUBLIC_CONTENTFUL_SPACE_ID`      | Contentful Space ID                        |
+| `NEXT_PUBLIC_CONTENTFUL_TOKEN`         | Contentful Delivery API token              |
+| `NEXT_PUBLIC_CONTENTFUL_PREVIEW_TOKEN` | Contentful Preview API token (optional)    |
+| `NEXT_PUBLIC_CONTENTFUL_ENVIRONMENT`   | Contentful environment (default: `master`) |
 
 Variable prefix depends on framework: `NEXT_PUBLIC_` (Next.js), `GATSBY_`
 (Gatsby), or no prefix (server-only / Remix / plain React).
