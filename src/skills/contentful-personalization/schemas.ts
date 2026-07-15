@@ -177,6 +177,19 @@ export const WriteEnvResult = type({
 });
 export type WriteEnvResult = typeof WriteEnvResult.infer;
 
+// --- finished application presentation ---
+
+export const RuntimePresentationResult = type({
+  applicationUrl: 'string',
+  serverStatus: "'reused' | 'started' | 'user-required' | 'unavailable'",
+  browserStatus: "'opened-visible' | 'opened-headless' | 'user-required' | 'unavailable'",
+  liveEventsStatus: "'opened-visible' | 'opened-headless' | 'user-required' | 'not-applicable' | 'unavailable'",
+  summary: 'string',
+  checks: 'string[]',
+  issues: 'string[]',
+});
+export type RuntimePresentationResult = typeof RuntimePresentationResult.infer;
+
 // --- Recommendation (used by doctor review step) ---
 
 export const Recommendation = type({

@@ -9,9 +9,11 @@ import { buildInstallCommand, derivePackagesToInstall, installPackages } from '.
 import { writeEnvFile } from '../actions/write-env-file.js';
 import { getOptimizationReferenceFiles } from '../optimization-references.js';
 import { implementationGuidance, planPresentationGuidance } from '../implementation-guidance.js';
+import { finishedApplicationSummary, runtimePresentationInstructions } from '../runtime-presentation.js';
 import {
   PackagesResult,
   ReadinessStatus,
+  RuntimePresentationResult,
   ValidationSummary,
   type PackagesResult as PackagesResultData,
   type ValidationStageEvidence,
@@ -951,7 +953,7 @@ export default skill({
     },
     next: ({ actionResult, store }) => {
       if (actionResult?.status !== 'pass') return 'fix';
-      if (store.steps['review-credentials']?.choice === 'manual-only') return 'runtime-validation';
+      if (store.steps['review-credentials']?.choice === 'manual-only') return 'present-runtime';
       return credentialScansDiffer(store.steps['scan-credentials'], actionResult.credentials)
         ? 'review-validation-credentials'
         : 'check-connectivity';
@@ -965,7 +967,7 @@ export default skill({
       response.choice === 'rescan'
         ? 'verify'
         : response.choice === 'manual-only'
-          ? 'runtime-validation'
+          ? 'present-runtime'
           : 'check-connectivity',
   })
 
@@ -1022,6 +1024,27 @@ export default skill({
       },
       run: checkOptimizationDoctor,
     },
+    next: 'present-runtime',
+  })
+
+  .step('present-runtime', {
+    prompt: ({ store }) => {
+      const credentials = store.steps.verify?.credentials?.contentful;
+      const liveEventsUrl = buildLiveEventsUrl(credentials?.spaceId, credentials?.environment ?? 'master');
+      const scenario = store.steps['survey-content']?.testScenario;
+
+      return prompt`
+        ${runtimePresentationInstructions({
+          projectPath: store.project?.projectPath ?? '.',
+          packageManager: store.project?.packages?.packageManager ?? 'the detected package manager',
+          liveEventsUrl,
+          scenario: scenario?.summary ?? 'Use the known baseline route without inventing an audience trigger.',
+          evidenceTarget:
+            'The finished page, one correlated page event, baseline fallback, and a selected variant when a usable experience exists.',
+        })}
+      `;
+    },
+    response: RuntimePresentationResult,
     next: 'runtime-validation',
   })
 
@@ -1034,24 +1057,47 @@ export default skill({
       const liveEventsUrl = buildLiveEventsUrl(spaceId, environmentId);
       const findings = result?.findings ?? [];
       const scenario = store.steps['survey-content']?.testScenario;
+      const presentation = store.steps['present-runtime'];
 
       const statusMessage = !result
-        ? 'Automated API validation was skipped by request. Use the Live Events view for manual runtime evidence.'
+        ? 'Automated aggregate validation was skipped by request; use the browser and Live Events dashboard for runtime evidence.'
         : result.status === 'pass'
-          ? 'Recent events exist in the space-wide 15-minute window. Treat this only as a baseline: it is not yet correlated to this validation run.'
+          ? 'A space-wide aggregate baseline was captured before the finished application was presented. It is not evidence for this run until compared after the reload.'
           : result?.status === 'warn'
-            ? 'The endpoint is reachable, but it has not observed any events in the last 15 minutes.'
+            ? 'The aggregate endpoint was reachable and a pre-run baseline was captured.'
             : result?.status === 'skip'
               ? 'The automated live-event check was skipped because no management token was available.'
-              : 'The automated live-event check failed. Compare the masked credential, source, and target below, then use Live Events as independent runtime evidence.';
+              : 'The pre-run aggregate snapshot failed. Compare the masked credential, source, and target below, then use browser evidence and Live Events independently.';
 
       const requestRows = optimizationDoctorRequestRows(result);
       const sections = [
+        presentation
+          ? render.section(
+              'Finished application',
+              [
+                render.kv({
+                  URL: presentation.applicationUrl || 'unavailable',
+                  Server: presentation.serverStatus,
+                  Browser: presentation.browserStatus,
+                  'Live Events': presentation.liveEventsStatus,
+                }),
+                presentation.summary,
+                presentation.checks.length > 0
+                  ? `Checks:\n${presentation.checks.map((check) => `- ${check}`).join('\n')}`
+                  : '',
+                presentation.issues.length > 0
+                  ? `Issues:\n${presentation.issues.map((issue) => `- ${issue}`).join('\n')}`
+                  : '',
+              ]
+                .filter(Boolean)
+                .join('\n\n'),
+            )
+          : 'The finished application has not been presented yet.',
         statusMessage,
-        requestRows.length > 0
+        result?.status === 'fail' && requestRows.length > 0
           ? render.section('Automated Live Events request', render.table(requestRows, { columns: ['Field', 'Value'] }))
           : '',
-        findings.length > 0
+        result?.status === 'fail' && findings.length > 0
           ? render.table(
               findings.map((finding) => ({
                 Check: finding.item,
@@ -1060,7 +1106,7 @@ export default skill({
               })),
               { columns: ['Check', 'Status', 'Detail'] },
             )
-          : '*No automated live-event findings are available.*',
+          : '',
         liveEventsUrl
           ? `[Open Contentful Live Events](${liveEventsUrl})`
           : 'Open the Contentful Personalization app and navigate to **Analytics → Live Events**.',
@@ -1087,11 +1133,12 @@ export default skill({
             ? 'CMS requests were unavailable, so this workflow cannot conclude that the space is empty. Fix API access or use a known scenario, and do not claim an inventoried outcome from this survey.'
             : '',
         [
-          '1. Enable streaming in Live Events.',
-          '2. Open the application at the known baseline route. Use a query parameter only when that existing audience is actually authored for it.',
-          '3. Confirm a page event for this run.',
-          '4. When a usable experience exists, confirm the expected audience or all-visitors experience, selected variant, and rendered entry metadata.',
-          '5. Grant consent, navigate, or interact only when you intend those side effects.',
+          '1. Inspect the finished application at the URL above.',
+          '2. Enable streaming in Live Events.',
+          '3. Reload the application at the known baseline route. Use a query parameter only when that existing audience is actually authored for it.',
+          '4. Confirm a page event for this run.',
+          '5. When a usable experience exists, confirm the expected audience or all-visitors experience, selected variant, and rendered entry metadata.',
+          '6. Grant consent, navigate, or interact only when you intend those side effects.',
         ].join('\n'),
       ];
 
@@ -1099,16 +1146,13 @@ export default skill({
       const automatedApiChecksRan = result !== undefined || store.steps['survey-content'] !== undefined;
       const needsCmsSurvey = !hasInventoriedOutcome && automatedApiChecksRan;
       const validationOptions = [
-        ...(hasInventoriedOutcome
-          ? [
-              {
-                value: 'confirmed-end-to-end',
-                label: '✅ Variant confirmed end to end',
-                description:
-                  'A correlated page event, expected experience or audience, selected variant, and rendered result were confirmed',
-              },
-            ]
-          : []),
+        {
+          value: 'ready',
+          label: result?.liveEvents ? '🔄 App reloaded — compare evidence' : '✅ App checked — record result',
+          description: result?.liveEvents
+            ? 'Capture the post-run aggregate snapshot and compare it with the silent baseline'
+            : 'Continue to record the strongest browser and Live Events evidence observed',
+        },
         ...(needsCmsSurvey
           ? [
               {
@@ -1125,19 +1169,10 @@ export default skill({
             ]
           : []),
         {
-          value: 'confirmed-transport',
-          label: '📡 Page event confirmed',
-          description: 'Runtime transport works, but no specific personalization outcome could be confirmed',
+          value: 'retry-page',
+          label: '🖥️ Retry opening the app',
+          description: 'Start or reuse the server and present the finished page again',
         },
-        ...(result
-          ? [
-              {
-                value: 'check-again',
-                label: '🔄 I triggered traffic — compare counts',
-                description: 'Rerun the optional automated Live Events endpoint after the baseline snapshot',
-              },
-            ]
-          : []),
         {
           value: 'unavailable',
           label: '⏸️ Cannot validate now',
@@ -1147,32 +1182,33 @@ export default skill({
 
       return [
         prompt`
-          Present the runtime verification instructions below exactly as rendered, then ask how to
-          proceed. If the automated check returned HTTP 401, state only that the endpoint rejected
+          The pre-run aggregate snapshot has already been captured silently. Present the finished
+          application and runtime instructions below, then wait for the user to inspect or reload
+          the page before any post-run aggregate check. If the automated check returned HTTP 401,
+          state only that the endpoint rejected
           the exact request shown. Do not say the token is expired, incorrectly scoped, or missing
           access unless separate evidence establishes that diagnosis.
         `,
         view('📡 Runtime Verification', sections.join('\n\n')),
         act.askUser({
           type: 'structured',
-          question: 'How far did the live validation get?',
+          question: 'Is the finished application open and has the validation run been triggered?',
           options: validationOptions,
         }),
       ];
     },
     response: type({
-      choice: "'confirmed-end-to-end' | 'confirmed-transport' | 'check-again' | 'resurvey-content' | 'unavailable'",
+      choice: "'ready' | 'retry-page' | 'resurvey-content' | 'unavailable'",
     }),
     next: ({ response, store }) => {
-      const scenario = store.steps['survey-content']?.testScenario;
-      const hasInventoriedOutcome = hasInventoriedOutcomeScenario(scenario);
-      if (response.choice === 'confirmed-end-to-end' && !hasInventoriedOutcome) return 'runtime-validation';
       if (response.choice === 'resurvey-content') return 'survey-content';
-      return response.choice === 'check-again'
-        ? 'verify-live-events-after'
+      return response.choice === 'retry-page'
+        ? 'present-runtime'
         : response.choice === 'unavailable'
           ? 'validation-disposition'
-          : 'report';
+          : store.steps['verify-live-events']?.liveEvents
+            ? 'verify-live-events-after'
+            : 'runtime-confirmation';
     },
   })
 
@@ -1202,14 +1238,30 @@ export default skill({
       const scenario = store.steps['survey-content']?.testScenario;
       const hasInventoriedOutcome = hasInventoriedOutcomeScenario(scenario);
       const needsCmsSurvey = !hasInventoriedOutcome;
+      const presentation = store.steps['present-runtime'];
+      const hasComparison = before !== undefined && after !== undefined;
 
       return [
         prompt`
-          Present the before/after aggregate counts below. Explain that a positive delta is useful
-          supporting evidence but still needs the user's correlation with the page they just loaded.
-          Ask for the strongest result they actually observed; do not infer an outcome from counts.
+          Present the finished application URL and the before/after aggregate counts when available.
+          Explain that a positive delta is supporting evidence but still needs correlation with the
+          page the user just loaded. Ask for the strongest result actually observed; do not infer an
+          outcome from counts alone. Keep the application server running for the user after this step.
         `,
-        view('Live Events comparison', render.table(rows, { columns: ['Event', 'Baseline', 'Current', 'Delta'] })),
+        view(
+          'Finished application and runtime evidence',
+          [
+            presentation?.applicationUrl
+              ? `[Open the finished application](${presentation.applicationUrl})`
+              : 'The application URL is unavailable.',
+            hasComparison
+              ? render.section(
+                  'Live Events comparison',
+                  render.table(rows, { columns: ['Event', 'Baseline', 'Current', 'Delta'] }),
+                )
+              : 'Automated aggregate comparison was skipped.',
+          ].join('\n\n'),
+        ),
         act.askUser({
           type: 'structured',
           question: 'What did this run confirm?',
@@ -1243,7 +1295,9 @@ export default skill({
       const hasInventoriedOutcome = hasInventoriedOutcomeScenario(scenario);
       if (response.choice === 'confirmed-end-to-end' && !hasInventoriedOutcome) return 'runtime-confirmation';
       return response.choice === 'retry' && attempts < 3
-        ? 'verify-live-events'
+        ? store.steps['verify-live-events']?.liveEvents
+          ? 'verify-live-events'
+          : 'present-runtime'
         : response.choice === 'resurvey-content'
           ? 'survey-content'
           : response.choice === 'unavailable'
@@ -1394,6 +1448,11 @@ export default skill({
           }),
         ),
       );
+
+      const presentation = store.steps['present-runtime'];
+      if (presentation) {
+        sections.push(render.section('🖥️ Finished application', finishedApplicationSummary(presentation)));
+      }
 
       sections.push(
         render.section(

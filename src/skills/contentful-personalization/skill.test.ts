@@ -15,6 +15,16 @@ import extendExistingSkill, {
 import liveDebugSkill from './subskills/live-debug.js';
 import { buildLiveEventsUrl, hasInventoriedOutcomeScenario, resolveRecommendedSdkChoice } from './subskills/onboard.js';
 
+const finishedApplication = {
+  applicationUrl: 'http://localhost:3000/',
+  serverStatus: 'started' as const,
+  browserStatus: 'opened-visible' as const,
+  liveEventsStatus: 'opened-visible' as const,
+  summary: 'The finished application is open for inspection.',
+  checks: ['Initial page rendered'],
+  issues: [],
+};
+
 // --- Dispatcher routing tests ---
 
 test('onboard builds the Contentful Live Events URL for the verified space and environment', () => {
@@ -500,6 +510,8 @@ test('doctor: fix-infra → ask-fixed (working) → affected validation, no code
       },
       'ask-fixed': { working: true },
       'begin-cms-rerun': {},
+      're-present-runtime': finishedApplication,
+      're-run-runtime': { choice: 'ready' },
       're-confirm-runtime': { choice: 'confirmed-end-to-end' },
       'validation-report': {
         profile: 'diagnostic-repair',
@@ -515,6 +527,9 @@ test('doctor: fix-infra → ask-fixed (working) → affected validation, no code
   assert.ok(result.path.includes('ask-fixed'));
   assert.ok(result.path.includes('begin-cms-rerun'));
   assert.ok(result.path.includes('re-survey-content'));
+  assert.ok(result.path.includes('re-capture-live-events-baseline'));
+  assert.ok(result.path.includes('re-present-runtime'));
+  assert.ok(result.path.includes('re-run-runtime'));
   assert.ok(result.path.includes('re-capture-live-events'));
   assert.ok(result.path.includes('re-confirm-runtime'));
   assert.ok(result.path.includes('validation-report'));
@@ -629,6 +644,8 @@ test('doctor: drill-down confirms content problem → fix-infra → affected val
           changedStages: ['personalization-outcome'],
         },
         'ask-fixed': { working: true },
+        're-present-runtime': finishedApplication,
+        're-run-runtime': { choice: 'ready' },
         're-confirm-runtime': { choice: 'confirmed-end-to-end' },
         'validation-report': {
           profile: 'diagnostic-repair',
@@ -873,7 +890,9 @@ test('extend-existing analyze → plan → implement path', async () => {
           failures: [],
         },
         'review-credentials': { choice: 'continue' },
-        'runtime-validation': { choice: 'confirmed-end-to-end' },
+        'present-runtime': finishedApplication,
+        'runtime-validation': { choice: 'ready' },
+        'runtime-confirmation': { choice: 'confirmed-end-to-end' },
         report: {
           profile: 'component-extension',
           finalState: 'validated-end-to-end',
@@ -894,7 +913,9 @@ test('extend-existing analyze → plan → implement path', async () => {
       'review-credentials',
       'survey-content',
       'capture-live-events',
+      'present-runtime',
       'runtime-validation',
+      'runtime-confirmation',
       'report',
     ]);
     assert.deepEqual(result.response, {

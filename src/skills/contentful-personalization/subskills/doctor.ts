@@ -8,9 +8,11 @@ import { inspectContent } from '../actions/inspect-content.js';
 import { validateLocalSetup } from '../actions/validate-local-setup.js';
 import { getOptimizationReferenceFiles } from '../optimization-references.js';
 import { implementationGuidance, planPresentationGuidance } from '../implementation-guidance.js';
+import { finishedApplicationSummary, runtimePresentationInstructions } from '../runtime-presentation.js';
 import {
   PackagesResult,
   Recommendation,
+  RuntimePresentationResult,
   ValidationStage,
   ValidationSummary,
   type CredentialsScanResult,
@@ -56,7 +58,7 @@ function beginDoctorRerunStep(stages: ValidationStage[]): string {
     case 'runtime-transport':
       return 'begin-runtime-rerun';
     case 'personalization-outcome':
-      return 're-confirm-runtime';
+      return 're-capture-live-events-baseline';
     default:
       return 'validation-report';
   }
@@ -1489,10 +1491,10 @@ export default skill({
   .step('begin-runtime-rerun', {
     prompt: prompt`
       Continue immediately with the affected validation ladder, beginning with the optional
-      aggregate Live Events snapshot. Do not ask the user a question. Return {}.
+      aggregate Live Events baseline. Do not ask the user a question. Return {}.
     `,
     response: type({}),
-    next: 're-capture-live-events',
+    next: 're-capture-live-events-baseline',
   })
 
   .step('re-verify-code', {
@@ -1572,7 +1574,108 @@ export default skill({
       },
       run: surveyContent,
     },
-    next: 're-capture-live-events',
+    next: 're-capture-live-events-baseline',
+  })
+
+  .step('re-capture-live-events-baseline', {
+    action: {
+      mapInput: ({ store }) => {
+        const refreshed = store.steps['re-verify-local']?.credentials?.contentful;
+        const original = store.credentials?.contentful;
+        return {
+          spaceId: refreshed?.spaceId ?? original?.spaceId ?? '',
+          environmentId: refreshed?.environment ?? original?.environment ?? 'master',
+          ...(refreshed?.managementToken
+            ? { managementToken: refreshed.managementToken }
+            : original?.managementToken
+              ? { managementToken: original.managementToken }
+              : {}),
+        };
+      },
+      run: checkOptimizationDoctor,
+    },
+    next: 're-present-runtime',
+  })
+
+  .step('re-present-runtime', {
+    prompt: ({ store }) => {
+      const refreshed = store.steps['re-verify-local']?.credentials?.contentful;
+      const original = store.credentials?.contentful;
+      const liveEventsUrl = buildLiveEventsUrl(
+        refreshed?.spaceId ?? original?.spaceId,
+        refreshed?.environment ?? original?.environment ?? 'master',
+      );
+      const scenario = store.steps['re-survey-content']?.testScenario ?? store.steps['survey-content']?.testScenario;
+
+      return prompt`
+        ${runtimePresentationInstructions({
+          projectPath: store.project?.projectPath ?? '.',
+          packageManager: store.project?.packages?.packageManager ?? 'the detected package manager',
+          liveEventsUrl,
+          scenario:
+            scenario?.summary ?? 'Use the same route, profile state, and trigger that reproduced the original problem.',
+          evidenceTarget:
+            'The original symptom no longer reproduces, the repaired page renders correctly, and downstream runtime behavior still works.',
+        })}
+      `;
+    },
+    response: RuntimePresentationResult,
+    next: 're-run-runtime',
+  })
+
+  .step('re-run-runtime', {
+    prompt: ({ store }) => {
+      const presentation = store.steps['re-present-runtime'];
+      const refreshed = store.steps['re-verify-local']?.credentials?.contentful;
+      const original = store.credentials?.contentful;
+      const liveEventsUrl = buildLiveEventsUrl(
+        refreshed?.spaceId ?? original?.spaceId,
+        refreshed?.environment ?? original?.environment ?? 'master',
+      );
+      const scenario = store.steps['re-survey-content']?.testScenario ?? store.steps['survey-content']?.testScenario;
+
+      return [
+        prompt`
+          Present the finished application and regression instructions below. Wait for the user to
+          inspect or reload the page before collecting the post-run aggregate snapshot. Prefer the
+          known trigger or preview panel; do not invent query parameters. Consent changes,
+          navigation, and interactions must remain intentional user actions.
+        `,
+        view(
+          'Finished application regression run',
+          [
+            render.kv({
+              URL: presentation?.applicationUrl || 'unavailable',
+              Server: presentation?.serverStatus ?? 'unavailable',
+              Browser: presentation?.browserStatus ?? 'unavailable',
+              'Live Events': presentation?.liveEventsStatus ?? 'unavailable',
+            }),
+            presentation?.summary ?? 'The finished application has not been presented.',
+            liveEventsUrl
+              ? `[Open Contentful Live Events](${liveEventsUrl})`
+              : 'Open the Personalization app and navigate to Analytics → Live Events.',
+            scenario?.summary ?? 'Use the same route, profile state, and trigger that reproduced the original problem.',
+            'Inspect the page, enable Live Events streaming, then reload and reproduce the original path.',
+          ].join('\n\n'),
+        ),
+        act.askUser({
+          type: 'structured',
+          question: 'Is the finished application open and has the regression run been triggered?',
+          options: [
+            { value: 'ready', label: '🔄 App reloaded — compare evidence' },
+            { value: 'retry-page', label: '🖥️ Retry opening the app' },
+            { value: 'unavailable', label: '⏸️ Cannot validate now' },
+          ],
+        }),
+      ];
+    },
+    response: type({ choice: "'ready' | 'retry-page' | 'unavailable'" }),
+    next: ({ response }) =>
+      response.choice === 'retry-page'
+        ? 're-present-runtime'
+        : response.choice === 'unavailable'
+          ? 're-validation-disposition'
+          : 're-capture-live-events',
   })
 
   .step('re-capture-live-events', {
@@ -1605,23 +1708,25 @@ export default skill({
       );
       const scenario = store.steps['re-survey-content']?.testScenario ?? store.steps['survey-content']?.testScenario;
       const liveEventRows = liveEventsDeltaRows(
-        store.steps['check-optimization-doctor']?.liveEvents,
+        store.steps['re-capture-live-events-baseline']?.liveEvents,
         store.steps['re-capture-live-events']?.liveEvents,
       );
-      const liveEventComparison = store.steps['re-capture-live-events']
+      const presentation = store.steps['re-present-runtime'];
+      const hasLiveEventComparison =
+        store.steps['re-capture-live-events-baseline']?.liveEvents !== undefined &&
+        store.steps['re-capture-live-events']?.liveEvents !== undefined;
+      const liveEventComparison = hasLiveEventComparison
         ? render.section(
             'Before/after aggregate counts',
-            `${render.table(liveEventRows, { columns: ['Event', 'Baseline', 'Current', 'Delta'] })}\n\n${store.steps['check-optimization-doctor']?.status === 'fail' || store.steps['re-capture-live-events']?.status === 'fail' ? 'One or both aggregate endpoint calls failed, so unavailable cells are not observed zero-event counts. Fix endpoint access before comparing.' : 'These space-wide deltas are supporting evidence only; correlate them with the reproduction run.'}`,
+            `${render.table(liveEventRows, { columns: ['Event', 'Baseline', 'Current', 'Delta'] })}\n\n${store.steps['re-capture-live-events-baseline']?.status === 'fail' || store.steps['re-capture-live-events']?.status === 'fail' ? 'One or both aggregate endpoint calls failed, so unavailable cells are not observed zero-event counts. Fix endpoint access before comparing.' : 'These space-wide deltas are supporting evidence only; correlate them with the reproduction run.'}`,
           )
         : 'No automated before/after comparison was required for the affected evidence stages.';
 
       return [
         prompt`
-          Ask the user to reproduce the original symptom and validate the repaired path. Keep the
-          Live Events link for product context even when the automated endpoint worked. Prefer a
-          known existing trigger or preview panel; do not invent a query parameter for an audience
-          whose server-side rules are unknown. Consent changes, navigation, and interactions must
-          remain intentional user actions.
+          Present the finished application and post-run evidence. The user has already been asked to
+          reproduce the original path. Ask for the strongest result actually observed; do not infer
+          success from aggregate counts alone. Keep the application server running for the user.
         `,
         view(
           'Doctor regression validation',
@@ -1629,6 +1734,9 @@ export default skill({
             liveEventsUrl
               ? `[Open Contentful Live Events](${liveEventsUrl})`
               : 'Open the Personalization app and navigate to Analytics → Live Events.',
+            presentation?.applicationUrl
+              ? `[Open the finished application](${presentation.applicationUrl})`
+              : 'The application URL is unavailable.',
             scenario?.summary ?? 'Use the same route, profile state, and trigger that reproduced the original problem.',
             liveEventComparison,
           ].join('\n\n'),
@@ -1738,9 +1846,11 @@ export default skill({
         decision,
         requiredStages: rerunStages,
       });
+      const presentation = store.steps['re-present-runtime'];
       const sections = [
         `# ${describeValidationFinalState(finalState)}`,
         render.section('Fix applied', recordedDoctorFixSummary(store.steps)),
+        presentation ? render.section('Finished application', finishedApplicationSummary(presentation)) : '',
         render.section(
           'Rerun evidence',
           render.table(

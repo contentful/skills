@@ -5,7 +5,13 @@ import { surveyContent } from '../actions/survey-content.js';
 import { validateLocalSetup } from '../actions/validate-local-setup.js';
 import { getOptimizationReferenceFiles } from '../optimization-references.js';
 import { implementationGuidance, planPresentationGuidance } from '../implementation-guidance.js';
-import { ValidationSummary, type ValidationProfile, type ValidationStageEvidence } from '../schemas.js';
+import { finishedApplicationSummary, runtimePresentationInstructions } from '../runtime-presentation.js';
+import {
+  RuntimePresentationResult,
+  ValidationSummary,
+  type ValidationProfile,
+  type ValidationStageEvidence,
+} from '../schemas.js';
 import {
   aggregateLiveEventsEvidence,
   buildLiveEventsUrl,
@@ -58,7 +64,7 @@ function firstRemoteValidationStage(
   mergeTagAuthoring: 'cms' | 'code' | 'unknown',
 ): string {
   if (taskType === 'add-analytics' || taskType === 'other') return 'check-connectivity';
-  if (taskType === 'add-merge-tag' && mergeTagAuthoring === 'code') return 'runtime-validation';
+  if (taskType === 'add-merge-tag' && mergeTagAuthoring === 'code') return 'present-runtime';
   return 'survey-content';
 }
 
@@ -385,7 +391,7 @@ export default skill({
       response.choice === 'rescan'
         ? 'validate-local'
         : response.choice === 'manual-only'
-          ? 'runtime-validation'
+          ? 'present-runtime'
           : firstRemoteValidationStage(
               store.steps.analyze?.taskType ?? 'other',
               store.steps.analyze?.mergeTagAuthoring ?? 'unknown',
@@ -460,6 +466,42 @@ export default skill({
       },
       run: checkOptimizationDoctor,
     },
+    next: 'present-runtime',
+  })
+
+  .step('present-runtime', {
+    prompt: ({ store }) => {
+      const profile = resolveDevelopmentValidationProfile(
+        store.steps.analyze.taskType,
+        store.steps.analyze.mergeTagAuthoring,
+      );
+      const credentials = store.steps['validate-local']?.credentials?.contentful;
+      const liveEventsUrl = buildLiveEventsUrl(credentials?.spaceId, credentials?.environment ?? 'master');
+      const scenario = store.steps['survey-content']?.testScenario;
+      const evidenceTarget: Record<ValidationProfile, string> = {
+        'full-setup': 'A correlated page event plus the selected experience and rendered variant.',
+        'component-extension':
+          'The target component, selected experience or variant, rendered entry metadata, and component exposure after intentional consent.',
+        'analytics-extension': 'Every expected accepted event and each intended analytics destination.',
+        'experiment-authoring':
+          'The authored experience, audience or all-visitors qualification, selected variant, rendered result, and configured metric event.',
+        'merge-tag-extension': 'The CMS merge tag resolving against the current profile and its fallback.',
+        'merge-tag-code-extension':
+          'The code-authored merge tag resolving against the current profile and its fallback.',
+        'diagnostic-repair': 'The repaired symptom and its downstream regression evidence.',
+      };
+
+      return prompt`
+        ${runtimePresentationInstructions({
+          projectPath: store.steps.analyze?.projectPath ?? '.',
+          packageManager: store.steps['validate-local']?.packages?.packageManager ?? 'the detected package manager',
+          liveEventsUrl,
+          scenario: scenario?.summary ?? 'Use the existing target and its known trigger or preview panel.',
+          evidenceTarget: evidenceTarget[profile],
+        })}
+      `;
+    },
+    response: RuntimePresentationResult,
     next: 'runtime-validation',
   })
 
@@ -478,6 +520,7 @@ export default skill({
       const analyticsDestinations = store.steps.analyze.analyticsDestinations ?? [];
       const liveEvents = store.steps['capture-live-events'];
       const requestRows = optimizationDoctorRequestRows(liveEvents);
+      const presentation = store.steps['present-runtime'];
       const targetEvidence: Record<ValidationProfile, string> = {
         'full-setup': 'a correlated page event plus the selected experience and rendered variant',
         'component-extension':
@@ -494,6 +537,9 @@ export default skill({
       return [
         prompt`
           Present this validation target and ask the user to run the strongest practical check.
+          The finished application must already have been started and presented in the preceding
+          step. Wait for the user to inspect or reload that page before running any post-run
+          aggregate check.
           ${requiresRuntimeTransport ? 'Use Live Events as runtime context even when no Management token is available.' : 'Do not use Live Events for this profile because runtime event transport is not part of its evidence target.'}
           Do not imply that recent aggregate counts belong to this run, and do not force consent,
           navigation, clicks, audience changes, or CMS authoring. For merge tags, require both the
@@ -510,6 +556,28 @@ export default skill({
               'Evidence target': targetEvidence[profile],
               Scenario: scenario?.summary ?? 'Use the existing target and its known trigger or preview panel.',
             }),
+            presentation
+              ? render.section(
+                  'Finished application',
+                  [
+                    render.kv({
+                      URL: presentation.applicationUrl || 'unavailable',
+                      Server: presentation.serverStatus,
+                      Browser: presentation.browserStatus,
+                      'Live Events': presentation.liveEventsStatus,
+                    }),
+                    presentation.summary,
+                    presentation.checks.length > 0
+                      ? `Checks:\n${presentation.checks.map((check) => `- ${check}`).join('\n')}`
+                      : '',
+                    presentation.issues.length > 0
+                      ? `Issues:\n${presentation.issues.map((issue) => `- ${issue}`).join('\n')}`
+                      : '',
+                  ]
+                    .filter(Boolean)
+                    .join('\n\n'),
+                )
+              : 'The finished application has not been presented.',
             profile === 'analytics-extension'
               ? render.section(
                   'Analytics checklist',
@@ -525,9 +593,9 @@ export default skill({
                 ? `[Open Contentful Live Events](${liveEventsUrl})`
                 : 'Open the Personalization app and navigate to Analytics → Live Events.'
               : 'Live Events is not applicable. Validate both the resolved value and fallback in the rendered application.',
-            liveEvents
+            liveEvents?.status === 'fail'
               ? render.section(
-                  'Automated Live Events check',
+                  'Pre-run aggregate snapshot failure',
                   [
                     render.table(requestRows, { columns: ['Field', 'Value'] }),
                     render.table(
@@ -540,42 +608,41 @@ export default skill({
                     ),
                   ].join('\n\n'),
                 )
-              : 'Automated API validation was skipped by request.',
+              : liveEvents
+                ? 'A pre-run aggregate baseline was captured silently and will be compared only after the application is reloaded.'
+                : 'Automated aggregate validation was skipped by request.',
+            [
+              '1. Inspect the finished application at the URL above.',
+              ...(requiresRuntimeTransport ? ['2. Enable streaming in Live Events.'] : []),
+              `${requiresRuntimeTransport ? '3' : '2'}. Reload the application and perform only the intentional interaction needed for this validation target.`,
+            ].join('\n'),
           ].join('\n\n'),
         ),
         act.askUser({
           type: 'structured',
-          question: 'What did the scoped validation confirm?',
-          options: requiresRuntimeTransport
-            ? profile === 'analytics-extension'
-              ? [
-                  { value: 'confirmed-end-to-end', label: '✅ All events + destinations confirmed' },
-                  { value: 'confirmed-transport', label: '📡 SDK events only' },
-                  ...(liveEvents ? [{ value: 'check-again', label: '🔄 Triggered traffic — compare counts' }] : []),
-                  { value: 'unavailable', label: '⏸️ Cannot validate now' },
-                ]
-              : [
-                  { value: 'confirmed-end-to-end', label: '✅ Expected outcome confirmed' },
-                  { value: 'confirmed-transport', label: '📡 Runtime event only' },
-                  ...(liveEvents ? [{ value: 'check-again', label: '🔄 Triggered traffic — compare counts' }] : []),
-                  { value: 'unavailable', label: '⏸️ Cannot validate now' },
-                ]
-            : [
-                { value: 'confirmed-end-to-end', label: '✅ Value and fallback confirmed' },
-                { value: 'unavailable', label: '⏸️ Cannot validate both paths now' },
-              ],
+          question: 'Is the finished application open and has the scoped validation run been triggered?',
+          options: [
+            {
+              value: 'ready',
+              label: liveEvents?.liveEvents ? '🔄 App reloaded — compare evidence' : '✅ App checked — record result',
+            },
+            { value: 'retry-page', label: '🖥️ Retry opening the app' },
+            { value: 'unavailable', label: '⏸️ Cannot validate now' },
+          ],
         }),
       ];
     },
     response: type({
-      choice: "'confirmed-end-to-end' | 'confirmed-transport' | 'check-again' | 'unavailable'",
+      choice: "'ready' | 'retry-page' | 'unavailable'",
     }),
-    next: ({ response }) =>
-      response.choice === 'check-again'
-        ? 'capture-live-events-after'
+    next: ({ response, store }) =>
+      response.choice === 'retry-page'
+        ? 'present-runtime'
         : response.choice === 'unavailable'
           ? 'validation-disposition'
-          : 'report',
+          : store.steps['capture-live-events']?.liveEvents
+            ? 'capture-live-events-after'
+            : 'runtime-confirmation',
   })
 
   .step('capture-live-events-after', {
@@ -601,10 +668,25 @@ export default skill({
       const before = store.steps['capture-live-events']?.liveEvents;
       const after = store.steps['capture-live-events-after']?.liveEvents;
       const rows = liveEventsDeltaRows(before, after);
+      const presentation = store.steps['present-runtime'];
+      const hasComparison = before !== undefined && after !== undefined;
 
       return [
-        'Explain that these space-wide deltas are supporting evidence and require correlation with the run the user just performed.',
-        view('Live Events comparison', render.table(rows, { columns: ['Event', 'Baseline', 'Current', 'Delta'] })),
+        'Present the finished application URL and aggregate comparison when available. Explain that space-wide deltas are supporting evidence and require correlation with the run the user just performed. Keep the application server running for the user.',
+        view(
+          'Finished application and scoped runtime evidence',
+          [
+            presentation?.applicationUrl
+              ? `[Open the finished application](${presentation.applicationUrl})`
+              : 'The application URL is unavailable.',
+            hasComparison
+              ? render.section(
+                  'Live Events comparison',
+                  render.table(rows, { columns: ['Event', 'Baseline', 'Current', 'Delta'] }),
+                )
+              : 'Automated aggregate comparison was skipped.',
+          ].join('\n\n'),
+        ),
         act.askUser({
           type: 'structured',
           question: 'What did this run confirm?',
@@ -620,9 +702,11 @@ export default skill({
     response: type({
       choice: "'confirmed-end-to-end' | 'confirmed-transport' | 'retry' | 'unavailable'",
     }),
-    next: ({ response, attempts }) =>
+    next: ({ response, attempts, store }) =>
       response.choice === 'retry' && attempts < 3
-        ? 'capture-live-events'
+        ? store.steps['capture-live-events']?.liveEvents
+          ? 'capture-live-events'
+          : 'present-runtime'
         : response.choice === 'unavailable'
           ? 'validation-disposition'
           : 'report',
@@ -719,10 +803,12 @@ export default skill({
       const finalState = deriveValidationFinalState({ profile, evidence: applicableEvidence, decision });
       const credentials = store.steps['validate-local']?.credentials?.contentful;
       const liveEventsUrl = buildLiveEventsUrl(credentials?.spaceId, credentials?.environment ?? 'master');
+      const presentation = store.steps['present-runtime'];
 
       const sections = [
         `# ${describeValidationFinalState(finalState)}`,
         store.steps.implement?.summary ?? 'The scoped implementation was completed.',
+        presentation ? render.section('Finished application', finishedApplicationSummary(presentation)) : '',
         render.section(
           'Validation evidence',
           render.table(
