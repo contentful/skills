@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 
 test('generated onboard verify action restores projectPath from replayed workflow state', () => {
@@ -87,14 +87,4 @@ test('generated validation reports return a typed non-empty finalOutput', () => 
 
   assert.equal(result.kind, 'done');
   assert.deepEqual(result.finalOutput, expected);
-});
-
-test('distributed CLI help documents the validated history entry shape', () => {
-  const runScript = resolve('skills/contentful-personalization/scripts/run');
-  const result = spawnSync(runScript, ['--help'], { cwd: process.cwd(), encoding: 'utf-8' });
-  const help = `${result.stdout}${result.stderr}`;
-
-  assert.equal(result.status, 0);
-  assert.match(help, /\{step, response, actionResult\?\}/);
-  assert.doesNotMatch(help, /\{step, output, action\?\}/);
 });

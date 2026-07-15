@@ -15,14 +15,4 @@ if [ "$NODE_VERSION" -lt 24 ] 2>/dev/null; then
 fi
 
 export SKILL_DIR
-
-# skill-kit 1.6.6's composite help printer uses legacy history field names even
-# though the protocol validates {step, response, actionResult?}. Keep this
-# distributed wrapper truthful until the upstream help text is corrected.
-if [[ " ${*:-} " == *" --help "* ]]; then
-  node "$SKILL_DIR/bin/contentful-personalization.mjs" "$@" 2>&1 \
-    | sed 's/{step, output, action?}/{step, response, actionResult?}/g' >&2
-  exit "${PIPESTATUS[0]}"
-fi
-
 exec node "$SKILL_DIR/bin/contentful-personalization.mjs" "$@"
