@@ -8,6 +8,7 @@ import { validateLocalSetup } from '../actions/validate-local-setup.js';
 import { buildInstallCommand, derivePackagesToInstall, installPackages } from '../actions/install-packages.js';
 import { writeEnvFile } from '../actions/write-env-file.js';
 import { getOptimizationReferenceFiles } from '../optimization-references.js';
+import { implementationGuidance } from '../implementation-guidance.js';
 import {
   PackagesResult,
   ReadinessStatus,
@@ -639,6 +640,12 @@ export default skill({
           framework, and architecture. Do NOT ask to install specific package names
           and do NOT include package lists in your response.
 
+          ## Source and scope rules
+          ${implementationGuidance({
+            sdk: isOptimization ? 'optimization' : 'ninetailed',
+            workflowOwnsSetup: true,
+          })}
+
           Do NOT begin implementing. This is the planning step only.
 
           ${render.kv({
@@ -678,7 +685,7 @@ export default skill({
       );
 
       return [
-        'Present the install details below, then ask the user to approve the exact install command. Do not change the package list.',
+        'Present the install details below, then ask the user to approve the exact install command. Approval runs the command through the workflow action, so do not run it yourself before or after advancing. Do not change the package list.',
         view(
           'Package Install',
           [
@@ -739,6 +746,8 @@ export default skill({
       The package installation and environment checkpoint found blocking local issues.
       Fix only those package, environment, or credential-exposure problems now, before editing
       the personalization implementation. Do not begin the main implementation yet.
+      The workflow actions have already attempted package installation and environment-file updates.
+      Work only from the findings below; do not repeat a successful action or inspect SDK internals.
 
       Project: ${store.project.projectPath}
 
@@ -819,6 +828,12 @@ export default skill({
 
           Work through the checklist below. For each item, read the relevant
           reference material, make the code changes, then mark it complete.
+
+          ## Source and scope rules
+          ${implementationGuidance({
+            sdk: isOptimization ? 'optimization' : 'ninetailed',
+            workflowOwnsSetup: true,
+          })}
 
           Do NOT ask the user questions during implementation.
           If you hit an ambiguous decision, use the reference material to make the best choice.

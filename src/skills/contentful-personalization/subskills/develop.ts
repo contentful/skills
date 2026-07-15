@@ -4,6 +4,7 @@ import { checkOptimizationDoctor } from '../actions/check-optimization-doctor.js
 import { surveyContent } from '../actions/survey-content.js';
 import { validateLocalSetup } from '../actions/validate-local-setup.js';
 import { getOptimizationReferenceFiles } from '../optimization-references.js';
+import { implementationGuidance } from '../implementation-guidance.js';
 import { ValidationSummary, type ValidationProfile, type ValidationStageEvidence } from '../schemas.js';
 import {
   aggregateLiveEventsEvidence,
@@ -208,6 +209,9 @@ export default skill({
 
           Do NOT start implementing. This is the planning step only.
 
+          ## Source and scope rules
+          ${implementationGuidance({ sdk: isOptimization ? 'optimization' : 'ninetailed' })}
+
           ${render.kv({
             Task: store.steps.analyze.taskType.replace(/-/g, ' '),
             SDK: targetSdk,
@@ -297,6 +301,9 @@ export default skill({
         })}
 
         ${store.steps.plan?.plan ? `\n**Plan:** ${store.steps.plan.plan}` : ''}
+
+        ## Source and scope rules
+        ${implementationGuidance({ sdk: isOptimization ? 'optimization' : 'ninetailed' })}
 
         After making changes, briefly summarize what you did and list all modified files.
 

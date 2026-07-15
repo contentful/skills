@@ -7,6 +7,7 @@ import { surveyContent } from '../actions/survey-content.js';
 import { inspectContent } from '../actions/inspect-content.js';
 import { validateLocalSetup } from '../actions/validate-local-setup.js';
 import { getOptimizationReferenceFiles } from '../optimization-references.js';
+import { implementationGuidance } from '../implementation-guidance.js';
 import {
   PackagesResult,
   Recommendation,
@@ -1259,6 +1260,20 @@ export default skill({
 
       const refSections: Array<{ label: string; content: string }> = [];
       const categories = new Set(recs.map((r) => r.category));
+      const hasCodeFix = ['provider', 'middleware', 'components', 'analytics'].some((category) =>
+        categories.has(category),
+      );
+      if (hasCodeFix) {
+        refSections.push({
+          label: 'SDK Contract',
+          content: loadSdkReferences(
+            store.project?.sdkFamily,
+            store.project?.framework ?? 'other',
+            (file) => refs.load(file),
+            store.project?.packages?.packages?.optimization,
+          ),
+        });
+      }
       if (categories.has('provider'))
         refSections.push({
           label: 'Provider Patterns',
@@ -1297,6 +1312,18 @@ export default skill({
 
           Do NOT start implementing — this is the planning step only.
 
+          ## Source and scope rules
+          ${implementationGuidance({
+            sdk:
+              store.project?.sdkFamily === 'modern'
+                ? 'optimization'
+                : store.project?.sdkFamily === 'legacy'
+                  ? 'ninetailed'
+                  : store.project?.sdkFamily === 'both'
+                    ? 'mixed'
+                    : 'unknown',
+          })}
+
           ${render.kv({
             Framework: store.project.framework,
             Project: store.project.projectPath,
@@ -1332,6 +1359,20 @@ export default skill({
 
       const categories = new Set(recs.map((r) => r.category));
       const refSections: Array<{ label: string; content: string }> = [];
+      const hasCodeFix = ['provider', 'middleware', 'components', 'analytics'].some((category) =>
+        categories.has(category),
+      );
+      if (hasCodeFix) {
+        refSections.push({
+          label: 'SDK Contract',
+          content: loadSdkReferences(
+            store.project?.sdkFamily,
+            store.project?.framework ?? 'other',
+            (file) => refs.load(file),
+            store.project?.packages?.packages?.optimization,
+          ),
+        });
+      }
       if (categories.has('packages') || categories.has('env'))
         refSections.push({
           label: 'Env Var Spec',
@@ -1374,6 +1415,18 @@ export default skill({
 
           ${fixPlan ? `**Plan:** ${fixPlan}` : ''}
           ${fixFiles?.length ? `**Files to modify:** ${fixFiles.join(', ')}` : ''}
+
+          ## Source and scope rules
+          ${implementationGuidance({
+            sdk:
+              store.project?.sdkFamily === 'modern'
+                ? 'optimization'
+                : store.project?.sdkFamily === 'legacy'
+                  ? 'ninetailed'
+                  : store.project?.sdkFamily === 'both'
+                    ? 'mixed'
+                    : 'unknown',
+          })}
 
           ## Reference Material
           ${refSections.map((r) => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
