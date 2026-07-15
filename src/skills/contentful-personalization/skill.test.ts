@@ -49,6 +49,7 @@ test('classify routes to onboard for setup requests', async () => {
         frameworkVersion: '14.0.0',
         explorationSummary: 'Next.js project',
         personalizableCandidates: [],
+        renderingBoundaries: ['src/components/renderer/SectionRenderer.tsx'],
         existingSetup: 'none',
         readinessOnly: true,
       },
@@ -117,6 +118,7 @@ test('classify routes to extend-existing for a scoped task on a working setup', 
         mergeTagAuthoring: 'unknown',
         analyticsEvents: [],
         analyticsDestinations: [],
+        renderingBoundaries: ['components/BlockRenderer.tsx'],
         targetFiles: ['Hero.tsx'],
         analysis: 'Wrap Hero',
       },
@@ -151,6 +153,7 @@ test('bare implement-personalization requests cannot enter extend-existing', asy
         frameworkVersion: '14.0.0',
         explorationSummary: 'Next.js project with no established personalization setup',
         personalizableCandidates: [],
+        renderingBoundaries: ['src/components/renderer/SectionRenderer.tsx'],
         existingSetup: 'none',
         readinessOnly: true,
       },
@@ -451,6 +454,7 @@ test('doctor: modern SDK, clean programmatic checks → explore-code → review 
       'explore-code': {
         explorationSummary: 'OptimizationRoot is missing from the root layout',
         concerns: ['OptimizationRoot provider not found'],
+        renderingBoundaries: ['app/layout.tsx'],
       },
       review: {
         overallStatus: 'fail',
@@ -538,6 +542,7 @@ test('doctor: fix-infra → ask-fixed (not working) → explore-code', async () 
       'explore-code': {
         explorationSummary: 'Middleware matcher catches static assets',
         concerns: ['Middleware matcher too broad'],
+        renderingBoundaries: ['components/BlockRenderer.tsx'],
       },
       review: {
         overallStatus: 'warn',
@@ -657,7 +662,11 @@ test('doctor: drill-down → fix-infra → ask-fixed (not working) → explore-c
       model: makeDrillDownModel(projectPath, {
         'fix-infra': { summary: 'Republished, but issue persists', filesModified: [] },
         'ask-fixed': { working: false },
-        'explore-code': { explorationSummary: 'Provider looks fine', concerns: [] },
+        'explore-code': {
+          explorationSummary: 'Provider looks fine',
+          concerns: [],
+          renderingBoundaries: ['components/BlockRenderer.tsx'],
+        },
         review: { overallStatus: 'warn', recommendations: [], summary: 'Inconclusive.' },
         report: { choice: 'no' },
         done: { message: 'Ok' },
@@ -704,7 +713,11 @@ test('doctor: drill-down → run-inspection (pass) → explore-code', async () =
       model: makeDrillDownModel(projectPath, {
         'choose-entry': { entryId: 'abc123', skip: false },
         'programmatic-gate': { choice: 'inspect-entry', problemDescription: 'One page is wrong' },
-        'explore-code': { explorationSummary: 'Setup looks correct', concerns: [] },
+        'explore-code': {
+          explorationSummary: 'Setup looks correct',
+          concerns: [],
+          renderingBoundaries: ['components/BlockRenderer.tsx'],
+        },
         review: { overallStatus: 'warn', recommendations: [], summary: 'Entry healthy; check code.' },
         report: { choice: 'no' },
         done: { message: 'Ok' },
@@ -840,6 +853,7 @@ test('extend-existing analyze → plan → implement path', async () => {
           mergeTagAuthoring: 'unknown',
           analyticsEvents: [],
           analyticsDestinations: [],
+          renderingBoundaries: ['components/BlockRenderer.tsx', 'components/RichTextRenderer.tsx'],
           targetFiles: ['components/Hero.tsx', 'components/BlockRenderer.tsx'],
           analysis: 'Hero component needs Experience wrapper',
         },

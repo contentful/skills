@@ -8,7 +8,9 @@ test('Optimization implementation guidance keeps agents on public references and
   assert.match(guidance, /authoritative contract/);
   assert.match(guidance, /Do not inspect node_modules/);
   assert.match(guidance, /concrete build or type error/);
-  assert.match(guidance, /Default to one shared renderer or component-mapper/);
+  assert.match(guidance, /Discover every shared content-rendering boundary/);
+  assert.match(guidance, /rich-text renderers/);
+  assert.match(guidance, /wrapping each compatible boundary/);
   assert.match(guidance, /document any exclusions/);
   assert.match(guidance, /application-fetched `baselineEntry`/);
   assert.match(guidance, /do not invent a new consent control/i);

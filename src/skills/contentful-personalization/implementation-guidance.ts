@@ -5,7 +5,7 @@ export function implementationGuidance(options: { sdk: SdkChoice; workflowOwnsSe
     'Treat the bundled Reference Material as the authoritative contract for the SDK public API and integration pattern.',
     "Implement from those references first, then run the project's build or typecheck. Do not inspect node_modules, dependency source, build output, or declaration files merely to rediscover APIs already documented here.",
     "Inspect an installed package's public declarations only after a concrete build or type error indicates that the installed version differs from the bundled contract. Do not depend on private or unexported internals.",
-    'Default to one shared renderer or component-mapper personalization boundary so every compatible content component is personalizable. Narrow that boundary only for a concrete architectural or safety reason, or when the user explicitly requests a smaller scope; document any exclusions.',
+    'Discover every shared content-rendering boundary, including component or block mappers, section or page dispatchers, and rich-text renderers. Default to wrapping each compatible boundary so all supported content components are personalizable. Narrow the coverage only for a concrete architectural or safety reason, or when the user explicitly requests a smaller scope; document any exclusions.',
     'Keep the approved scope and do not add unrelated product UI or behavior.',
     "Preserve the application's ownership of consent, identity, and tracking. Reuse an existing consent source or UI when present; do not invent a new consent control unless the user explicitly approved one.",
   ];

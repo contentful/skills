@@ -279,6 +279,7 @@ export default skill({
       'explorationSummary?': 'string',
       'concerns?': 'string[]',
       'personalizableCandidates?': 'string[]',
+      'renderingBoundaries?': 'string[]',
       packages: PackagesResult,
     }),
     credentials: type({
@@ -927,8 +928,10 @@ export default skill({
                : 'Check for preflight calls, cookie handling, and matcher config.'
            }
 
-        3. **Component wiring** — Search for ${profile.component}, the component mapper, and how
-           personalizable components are wrapped and resolved.
+        3. **Component wiring and rendering boundaries** — Search for ${profile.component}, then
+           enumerate every shared component or block mapper, section or page dispatcher, rich-text
+           renderer, and direct entry renderer. Record which boundaries are wrapped and which
+           compatible content paths remain outside personalization.
 
         4. **Analytics** — How are page/track/identify events emitted? ${
           profile.guide === 'optimization-overview.md'
@@ -959,12 +962,14 @@ export default skill({
       explorationSummary: 'string',
       concerns: 'string[]',
       'personalizableCandidates?': 'string[]',
+      renderingBoundaries: 'string[]',
     }),
     save: ({ response }) => ({
       step: response,
       project: {
         explorationSummary: response.explorationSummary,
         concerns: response.concerns,
+        renderingBoundaries: response.renderingBoundaries,
         ...(response.personalizableCandidates ? { personalizableCandidates: response.personalizableCandidates } : {}),
       },
     }),
@@ -1328,6 +1333,7 @@ export default skill({
             Framework: store.project.framework,
             Project: store.project.projectPath,
             SDK: sdkProfile(store.project?.sdkFamily).name,
+            'Rendering boundaries': store.project.renderingBoundaries?.join(', ') || 'none found',
           })}
 
           ## Reference Material

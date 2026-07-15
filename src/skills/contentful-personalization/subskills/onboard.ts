@@ -169,6 +169,7 @@ export default skill({
       projectPath: 'string',
       'explorationSummary?': 'string',
       'personalizableCandidates?': 'string[]',
+      'renderingBoundaries?': 'string[]',
       'existingSetup?': "'none' | 'partial' | 'configured'",
       'packages?': PackagesResult,
     }),
@@ -194,8 +195,10 @@ export default skill({
         2. **Contentful integration** — Find the Contentful client. How is content fetched?
            What include depth? Where are env vars configured? Is there a preview client?
 
-        3. **Component architecture** — Find the component mapper (ContentTypeMap, BlockRenderer,
-           ComponentRenderer). Are components isolated (props in, JSX out) or do they fetch data?
+        3. **Content rendering boundaries** — Find every shared boundary that turns Contentful
+           content into UI: component or block mappers, section or page dispatchers, rich-text
+           renderers, and any direct entry renderers. Record the file and the content that passes
+           through each boundary. Are components isolated (props in, JSX out) or do they fetch data?
 
         4. **Rendering pipeline** — Page-level or component-level fetching? SSR, SSG, ISR, client?
            Any existing middleware?
@@ -225,6 +228,7 @@ export default skill({
       projectPath: 'string',
       explorationSummary: 'string',
       personalizableCandidates: 'string[]',
+      renderingBoundaries: 'string[]',
       existingSetup: "'none' | 'partial' | 'configured'",
       readinessOnly: 'boolean',
     }),
@@ -236,6 +240,7 @@ export default skill({
         projectPath: response.projectPath,
         explorationSummary: response.explorationSummary,
         personalizableCandidates: response.personalizableCandidates,
+        renderingBoundaries: response.renderingBoundaries,
         existingSetup: response.existingSetup,
         packages: actionResult,
       },
@@ -272,6 +277,10 @@ export default skill({
             }),
             '',
             store.project.explorationSummary,
+            '',
+            (store.project.renderingBoundaries?.length ?? 0) > 0
+              ? `**Shared rendering boundaries:** ${store.project.renderingBoundaries!.join(', ')}`
+              : '**Shared rendering boundaries:** none found',
             '',
             (store.project.personalizableCandidates?.length ?? 0) > 0
               ? `**Personalization candidates:** ${store.project.personalizableCandidates!.join(', ')}`
@@ -611,7 +620,7 @@ export default skill({
             '📦 Install the application-facing Optimization SDK package',
             '🔑 Configure environment variables with placeholder values',
             '🔌 Create one runtime root or process-level factory at the correct boundary',
-            '🧩 Fetch and resolve one Contentful entry with baseline fallback',
+            '🧩 Wrap every compatible shared content-rendering boundary with baseline fallback',
             ...(store.setup?.architecture === 'hybrid-ssr'
               ? ['⚡ Wire server evaluation, request continuity, and browser takeover']
               : []),
@@ -622,7 +631,7 @@ export default skill({
             '📦 Install any missing packages for the existing @ninetailed/experience.js deployment',
             '🔑 Configure environment variables with placeholder values',
             '🔌 Add provider wrapper to the appropriate layout/app file',
-            '🧩 Wire components with Experience/Personalize wrappers and update component mapper',
+            '🧩 Wire every compatible shared content-rendering boundary with Experience/Personalize',
             ...(store.setup?.architecture === 'hybrid-ssr'
               ? ['⚡ Set up middleware with preflight, cookie management, and matcher config']
               : []),
@@ -652,6 +661,7 @@ export default skill({
             SDK: store.setup?.sdkChoice ?? 'TBD',
             Architecture: store.setup?.architecture ?? 'TBD',
             Framework: `${store.project.framework} (${store.project.routerType} router)`,
+            'Rendering boundaries': store.project.renderingBoundaries?.join(', ') || 'none found',
           })}
 
           ## Reference Material
@@ -846,7 +856,7 @@ export default skill({
             ? [
                 { title: '🔌 Runtime root or factory setup', status: 'pending' as const },
                 {
-                  title: '🧩 Managed or manual OptimizedEntry wiring',
+                  title: '🧩 OptimizedEntry wiring across compatible rendering boundaries',
                   status: 'pending' as const,
                 },
                 ...(store.setup?.architecture === 'hybrid-ssr'
@@ -869,7 +879,7 @@ export default skill({
             : [
                 { title: '🔌 Provider wrapper setup', status: 'pending' as const },
                 {
-                  title: '🧩 Component wiring (Experience/Personalize wrappers)',
+                  title: '🧩 Rendering-boundary wiring (Experience/Personalize wrappers)',
                   status: 'pending' as const,
                 },
                 ...(store.setup?.architecture === 'hybrid-ssr'

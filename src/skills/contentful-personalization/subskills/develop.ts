@@ -107,8 +107,9 @@ export default skill({
          @contentful/optimization, both, or neither?
       2. **Work scope and target SDK** — Does the request modify an existing integration, or create
          a new independent integration? Which SDK owns the target files?
-      3. **Component mapper** — How does the project map content types to components?
-         (ContentTypeMap, BlockRenderer, etc.)
+      3. **Content rendering boundaries** — Find every shared component or block mapper, section
+         or page dispatcher, rich-text renderer, and direct entry renderer. Record the file and the
+         content that passes through each boundary.
       4. **Provider configuration** — Where is it? What plugins are registered?
       5. **User's task** — What do they want? (personalize a component, add analytics,
          create an experiment, add a merge tag)
@@ -146,6 +147,7 @@ export default skill({
       'targetMergeTagId?': 'string',
       analyticsEvents: 'string[]',
       analyticsDestinations: 'string[]',
+      renderingBoundaries: 'string[]',
       targetFiles: 'string[]',
       analysis: 'string',
     }),
@@ -216,6 +218,7 @@ export default skill({
             Task: store.steps.analyze.taskType.replace(/-/g, ' '),
             SDK: targetSdk,
             Framework: store.steps.analyze.framework,
+            'Rendering boundaries': store.steps.analyze.renderingBoundaries.join(', ') || 'none found',
           })}
 
           ## SDK Reference
