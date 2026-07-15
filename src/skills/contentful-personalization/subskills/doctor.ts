@@ -382,8 +382,7 @@ export default skill({
             user — show the environment variable table and the detected credentials table exactly
             as rendered. Then let the user confirm, correct, or skip.
 
-            The user-facing table shows masked previews. Do not imply that this presentation creates
-            a security boundary around workflow state. Do not repeat raw credential values in prose:
+            The table shows masked previews. Do not repeat raw credential values in prose:
 
             - If the user confirms the detected values are correct → set runCredentialChecks = true
               and DO NOT include any corrections. The real scanned values will be used automatically.

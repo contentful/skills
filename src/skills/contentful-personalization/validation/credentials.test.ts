@@ -2,10 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createOptimizationDoctorRequestContext,
+  credentialReviewPrompt,
   credentialScansDiffer,
   detectedCredentialRows,
   optimizationDoctorRequestRows,
 } from './credentials.js';
+
+test('credential review copy stays concise and user-facing', () => {
+  const serialized = JSON.stringify(credentialReviewPrompt({ envVars: [] }));
+  assert.match(serialized, /These are the credentials detected in this project; secret values are masked\./);
+  assert.doesNotMatch(serialized, /security boundary|replay state|connectivity checks/i);
+});
 
 test('credential drift compares exact selected values and sources without exposing them', () => {
   const initial = {

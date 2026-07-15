@@ -72,11 +72,9 @@ export function credentialReviewPrompt(credentials?: CredentialsScanResult) {
   const rows = detectedCredentialRows(credentials);
   return [
     prompt`
-      Present the detected credential table exactly as rendered. Explain that credential values
-      are masked in this user-facing summary, the source is where the scanner selected each value,
-      and this checkpoint identifies what the upcoming automated validation will use. Do not claim
-      that detection proves a credential is valid or that masking the table creates a security
-      boundary around the workflow's runtime or replay state.
+      Present the detected credential table exactly as rendered. Add only this sentence:
+      "These are the credentials detected in this project; secret values are masked."
+      Do not explain the columns or add other caveats.
     `,
     view(
       '🔑 Detected credentials for validation',
@@ -86,22 +84,22 @@ export function credentialReviewPrompt(credentials?: CredentialsScanResult) {
     ),
     act.askUser({
       type: 'structured',
-      question: 'How should validation continue?',
+      question: 'Use these detected credentials?',
       options: [
         {
           value: 'continue',
           label: '✅ Use these credentials',
-          description: 'Run the GET-only Contentful checks and credential connectivity checks with these values',
+          description: 'Continue with automated validation',
         },
         {
           value: 'rescan',
           label: '🔄 I corrected the environment',
-          description: 'Scan again before any automated API validation',
+          description: 'Scan the environment again before continuing',
         },
         {
           value: 'manual-only',
           label: '⏭️ Skip automated API checks',
-          description: 'Continue to manual runtime validation without using the detected credentials',
+          description: 'Continue without automated checks',
         },
       ],
     }),
