@@ -4,5 +4,5 @@ overrides:
   hono: 4.12.27
   ip-address: 10.2.0
 
-onlyBuiltDependencies:
-  - esbuild
+allowBuilds:
+  esbuild: true
