@@ -24,7 +24,8 @@ SDK:
   (Web SDK) to capture views, clicks, and hovers on `OptimizedEntry` elements.
 - `OptimizedEntry` emits the `data-ctfl-*` attributes the Web SDK observes; resolved entries are
   tracked automatically when interaction tracking is on.
-- Use `track()` (via `useOptimizationActions()` or the SDK instance) for business/conversion events.
+- In React, call `trackEvent()` from `useOptimizationActions()`. On the SDK instance itself, call
+  `track()`.
 - Events flow to the Insights API for experiment and component measurement.
 
 ```tsx
@@ -38,21 +39,21 @@ SDK:
 
 ## Event Responsibilities
 
-### `page()`
+### Page events (`page()` / `trackPageView()`)
 
 - Send once per route change.
 - `@contentful/optimization`: use the router tracker subpath for the router in use
-  (`NextAppAutoPageTracker`, `NextPagesAutoPageTracker`, React Router, TanStack). The Next.js adapter
-  wires the client tracker for you.
+  (`NextAppAutoPageTracker`, `NextPagesAutoPageTracker`, React Router, TanStack). A Next.js bound
+  factory exports the matching tracker; the application still mounts it.
 - `@ninetailed/experience.js`: Pages Router with `NinetailedProvider` wires this for navigation; App
   Router needs a manual tracker.
 
-### `track()`
+### Business events (`track()` / `trackEvent()`)
 
 - Use for business and conversion events such as signup completion or purchase.
 - Keep event names consistent and human-readable.
 
-### `identify()`
+### Identity (`identify()` / `identifyUser()`)
 
 - Use for external user IDs and traits.
 - Never identify using the anonymous profile ID (`ctfl-opt-aid` for the new SDK, `ntaid` for legacy).
@@ -60,7 +61,8 @@ SDK:
 ## Component View Tracking Notes
 
 - Component view tracking depends on the personalized component actually reaching the viewport.
-- The default in-view threshold is typically `2000` ms.
+- Visibility and dwell thresholds are runtime-specific; check the active runtime reference before
+  changing them.
 - If the customer wants experiment results, the client-side measurement path matters — a client SDK
   must run after render.
 

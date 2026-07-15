@@ -11,66 +11,22 @@ Use these patterns to avoid scope and hydration problems.
 
 ## Modern SDKs: `@contentful/optimization`
 
-Mount `OptimizationRoot` once near the app root. It owns the Web SDK lifecycle (creation,
-initialization, teardown). Use the router tracker subpath for the router in use.
+The lifecycle boundary is runtime-specific. Do not treat every modern integration as a client-only
+React provider:
 
-Recommended pattern:
+- React Web mounts one `OptimizationRoot` and one router tracker around the browser tree.
+- Next.js App Router creates bound components with `createNextjsAppRouterOptimization` from
+  `@contentful/optimization-nextjs/app-router`; the bound `OptimizationRoot` owns server evaluation
+  and browser takeover.
+- Next.js Pages Router creates separate client and server bindings with
+  `createNextjsPagesRouterOptimization` from `/pages-router` and `/pages-router/server`.
+- Web and Node create imperative `ContentfulOptimization` singletons; Node calls `forRequest()` for
+  each request.
+- React Native mounts one asynchronous `OptimizationRoot` or injects an explicitly owned instance.
 
-1. Put `OptimizationRoot` at the app root with `clientId` and `environment`.
-2. Mount the matching router tracker inside `OptimizationRoot`.
-3. Render personalized entries with `OptimizedEntry` (render prop).
-4. Keep the provider instance stable across route changes.
-
-Checklist:
-
-- App Router: `NextAppAutoPageTracker` from `@contentful/optimization-react-web/router/next-app`.
-- Pages Router: `NextPagesAutoPageTracker` from `@contentful/optimization-react-web/router/next-pages`.
-- React Router / TanStack: the corresponding `/router/*` subpath.
-- For full Next.js server + client + request-handler integration, prefer the
-  `@contentful/optimization-nextjs` adapter (see below).
-
-### React (non-Next)
-
-```tsx
-import { OptimizationRoot } from '@contentful/optimization-react-web';
-import { ReactRouterAutoPageTracker } from '@contentful/optimization-react-web/router/react-router';
-
-function App() {
-  return (
-    <OptimizationRoot clientId={import.meta.env.VITE_OPTIMIZATION_CLIENT_ID} environment="main">
-      <ReactRouterAutoPageTracker />
-      <Routes>{/* ... */}</Routes>
-    </OptimizationRoot>
-  );
-}
-```
-
-### Next.js App Router (via the adapter)
-
-Use the `@contentful/optimization-nextjs` adapter so the server and client share one configuration.
-
-```tsx
-// app/providers.tsx
-'use client';
-
-import { NextAppAutoPageTracker, OptimizationRoot } from '@contentful/optimization-nextjs/client';
-
-export function Providers({ children }: { children: React.ReactNode }) {
-  return (
-    <OptimizationRoot
-      clientId={process.env.NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID!}
-      environment={process.env.NEXT_PUBLIC_OPTIMIZATION_ENVIRONMENT ?? 'main'}
-    >
-      {/* Use initialPageEvent="skip" only when the server already called page() for this route */}
-      <NextAppAutoPageTracker />
-      {children}
-    </OptimizationRoot>
-  );
-}
-```
-
-Wrap `children` with `<Providers>` in `app/layout.tsx`. Keep the root layout server-first and the
-provider in a client component.
+For exact provider or factory code, use the matching `optimization-<runtime>.md` reference together
+with `optimization-shared.md`. Keep one root/factory, one initial page or screen owner, and one clear
+manual-or-managed entry boundary.
 
 ## Current default SDKs: `@ninetailed/experience.js`
 
