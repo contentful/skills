@@ -7,7 +7,7 @@ import { surveyContent } from '../actions/survey-content.js';
 import { inspectContent } from '../actions/inspect-content.js';
 import { validateLocalSetup } from '../actions/validate-local-setup.js';
 import { getOptimizationReferenceFiles } from '../optimization-references.js';
-import { implementationGuidance } from '../implementation-guidance.js';
+import { implementationGuidance, planPresentationGuidance } from '../implementation-guidance.js';
 import {
   PackagesResult,
   Recommendation,
@@ -1310,6 +1310,9 @@ export default skill({
           Create a plan to fix the ${recs.length} issue${recs.length !== 1 ? 's' : ''} found during diagnosis.
           For each fix, explain what file(s) you'll change and why.
           Be specific about your approach.
+
+          ## Plan presentation
+          ${planPresentationGuidance()}
 
           For **content** category issues (unpublished entries, missing nt_experiences field, etc.),
           these cannot be fixed in code — provide step-by-step instructions for what the user

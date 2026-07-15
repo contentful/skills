@@ -4,7 +4,7 @@ import { checkOptimizationDoctor } from '../actions/check-optimization-doctor.js
 import { surveyContent } from '../actions/survey-content.js';
 import { validateLocalSetup } from '../actions/validate-local-setup.js';
 import { getOptimizationReferenceFiles } from '../optimization-references.js';
-import { implementationGuidance } from '../implementation-guidance.js';
+import { implementationGuidance, planPresentationGuidance } from '../implementation-guidance.js';
 import { ValidationSummary, type ValidationProfile, type ValidationStageEvidence } from '../schemas.js';
 import {
   aggregateLiveEventsEvidence,
@@ -208,6 +208,9 @@ export default skill({
         prompt`
           Create an implementation plan for this task. For each file that needs
           to change, explain WHAT will change and WHY — not just the filename.
+
+          ## Plan presentation
+          ${planPresentationGuidance()}
 
           Do NOT start implementing. This is the planning step only.
 

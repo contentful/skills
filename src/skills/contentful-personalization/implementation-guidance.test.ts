@@ -1,6 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { implementationGuidance } from './implementation-guidance.js';
+import { implementationGuidance, planPresentationGuidance } from './implementation-guidance.js';
+
+test('plan presentation guidance requires readable Markdown and multiline code', () => {
+  const guidance = planPresentationGuidance();
+
+  assert.match(guidance, /short \*\*Decisions\*\* section/);
+  assert.match(guidance, /own Markdown heading/);
+  assert.match(guidance, /Leave a blank line/);
+  assert.match(guidance, /Never squeeze a full function call/);
+  assert.match(guidance, /language-labelled fenced code block/);
+  assert.match(guidance, /real line breaks/);
+});
 
 test('Optimization implementation guidance keeps agents on public references and one entry path', () => {
   const guidance = implementationGuidance({ sdk: 'optimization', workflowOwnsSetup: true });

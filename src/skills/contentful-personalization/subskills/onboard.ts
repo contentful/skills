@@ -8,7 +8,7 @@ import { validateLocalSetup } from '../actions/validate-local-setup.js';
 import { buildInstallCommand, derivePackagesToInstall, installPackages } from '../actions/install-packages.js';
 import { writeEnvFile } from '../actions/write-env-file.js';
 import { getOptimizationReferenceFiles } from '../optimization-references.js';
-import { implementationGuidance } from '../implementation-guidance.js';
+import { implementationGuidance, planPresentationGuidance } from '../implementation-guidance.js';
 import {
   PackagesResult,
   ReadinessStatus,
@@ -644,6 +644,9 @@ export default skill({
           Review the implementation plan below and present it to the user for approval.
           Expand each step with specific file paths based on what was found during exploration.
           Be concrete — name the actual files that will be created or modified.
+
+          ## Plan presentation
+          ${planPresentationGuidance()}
 
           Package installation is derived automatically from the selected SDK,
           framework, and architecture. Do NOT ask to install specific package names
