@@ -1,11 +1,11 @@
 ---
 name: contentful-personalization
-description: 'Implement, extend, and debug Contentful personalization. Use onboarding for new, project-wide, or unknown setups; use extend-existing only for scoped work on an explicitly working integration. Trigger keywords: personalization, optimization, ninetailed, A/B test, experiment, multivariate test, targeting, audience targeting, segments, variants, content variants, set up personalization, implement personalization, enable personalization, personalization not working, personalization broken, personalize this component, am I ready for personalization, experience API, Contentful Experiences, Experiences SDK, Studio Experiences, personalization in Next.js, @contentful/optimization, @ninetailed/experience.js, run an experiment, check this URL, debug this live page, inspect network requests, check console errors, experience.ninetailed.co'
+description: "Implement, extend, and debug Contentful personalization. Use onboarding for new, project-wide, or unknown setups; use extend-existing only for scoped work on an explicitly working integration. Trigger keywords: personalization, optimization, ninetailed, A/B test, experiment, multivariate test, targeting, audience targeting, segments, variants, content variants, set up personalization, implement personalization, enable personalization, personalization not working, personalization broken, personalize this component, am I ready for personalization, experience API, Contentful Experiences, Experiences SDK, Studio Experiences, personalization in Next.js, @contentful/optimization, @ninetailed/experience.js, run an experiment, check this URL, debug this live page, inspect network requests, check console errors, experience.ninetailed.co"
 metadata:
-  version: '2.3.6'
-argument-hint: '[question or topic]'
-allowed-tools: 'Bash(scripts/run *) Read mcp__contentful-personalization__start mcp__contentful-personalization__advance mcp__contentful-personalization__topic mcp__contentful-personalization__topics mcp__contentful-mcp__* mcp__chrome-devtools__* mcp__plugin_*chrome-devtools*__* mcp__plugin_contentful_contentful-mcp__* mcp__plugin_contentful_contentful-personalization__*'
-license: 'MIT'
+  version: "2.3.6"
+argument-hint: "[question or topic]"
+allowed-tools: "Bash(scripts/run *) Read mcp__contentful-personalization__start mcp__contentful-personalization__advance mcp__contentful-personalization__topic mcp__contentful-personalization__topics mcp__contentful-mcp__* mcp__chrome-devtools__* mcp__plugin_*chrome-devtools*__* mcp__plugin_contentful_contentful-mcp__* mcp__plugin_contentful_contentful-personalization__*"
+license: "MIT"
 ---
 
 # contentful-personalization
@@ -71,7 +71,6 @@ In the examples below, `<skill>/scripts/run` is a placeholder for this absolute 
 ### Detect your host
 
 Determine which agent host you are running in, and pass it as `--host`:
-
 - Claude Code: `--host claude-code`
 - Codex: `--host codex`
 - OpenCode: `--host opencode`
@@ -155,10 +154,11 @@ contains the skill's result. Present it to the user.
 ## Steps in this skill
 
 - **classify**: Classify the user's request into one of the categories below.
-  Read only the user's message — do N...
+Read only the user's message — do N...
 - **gather-context**: You were not confident enough to classify the user's request.
-  Silently explore the project to gat...
+Silently explore the project to gat...
 - **pick-topic**: (dynamic)
+
 
 ## Sub-skills
 
