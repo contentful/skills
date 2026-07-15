@@ -1,11 +1,42 @@
 import { skill, type, prompt, render, act, view, terminal } from '@contentful/skill-kit';
 import { checkPackages } from '../actions/check-packages.js';
-import { validateSetup } from '../actions/validate-setup.js';
+import { checkApiConnectivity } from '../actions/check-api.js';
+import { checkOptimizationDoctor } from '../actions/check-optimization-doctor.js';
+import { surveyContent } from '../actions/survey-content.js';
+import { validateLocalSetup } from '../actions/validate-local-setup.js';
 import { buildInstallCommand, derivePackagesToInstall, installPackages } from '../actions/install-packages.js';
 import { writeEnvFile } from '../actions/write-env-file.js';
 import { getOptimizationReferenceFiles } from '../optimization-references.js';
-import { PackagesResult, ReadinessStatus, type PackagesResult as PackagesResultData } from '../schemas.js';
+import {
+  PackagesResult,
+  ReadinessStatus,
+  ValidationSummary,
+  type PackagesResult as PackagesResultData,
+  type ValidationStageEvidence,
+} from '../schemas.js';
 import { VERSION } from '../version.js';
+import {
+  aggregateLiveEventsEvidence,
+  buildLiveEventsUrl,
+  cmsGraphEvidence,
+  connectivityEvidence,
+  localSetupEvidence,
+  liveEventsDeltaRows,
+  manualRuntimeEvidence,
+} from '../validation/evidence.js';
+import {
+  deriveValidationFinalState,
+  describeValidationFinalState,
+  getEvidenceRerunStages,
+} from '../validation/policy.js';
+
+export { buildLiveEventsUrl } from '../validation/evidence.js';
+
+export function hasInventoriedOutcomeScenario(scenario?: {
+  kind: 'all-visitors' | 'existing-targeted' | 'preview-only' | 'fixture-needed' | 'unavailable';
+}): boolean {
+  return scenario !== undefined && scenario.kind !== 'fixture-needed' && scenario.kind !== 'unavailable';
+}
 
 type InstallableFramework =
   | 'nextjs-app'
@@ -460,6 +491,12 @@ export default skill({
         Guide the user through the Contentful app installation. These are steps
         the user must perform in the Contentful web UI — you cannot do them.
 
+        Before the walkthrough, mention that the runtime setup needs a Delivery API token and
+        Optimization SDK credential. A Preview API token and a server-only Management token are
+        optional, but having them available in the project or process environment makes draft
+        graph checks and automated Live Events validation much smoother. Do not request either
+        optional token and never suggest exposing a Management token through a public env prefix.
+
         Present the setup guide below as a clear, friendly walkthrough. Emphasize
         that this is a one-time setup they do in their browser.
 
@@ -659,7 +696,36 @@ export default skill({
       }),
       run: writeEnvFile,
     },
-    next: 'implement',
+    next: 'validate-prerequisites',
+  })
+
+  .step('validate-prerequisites', {
+    action: {
+      mapInput: ({ store }) => ({ projectPath: store.project?.projectPath ?? '.' }),
+      run: validateLocalSetup,
+    },
+    next: ({ actionResult }) => (actionResult?.status === 'pass' ? 'implement' : 'fix-prerequisites'),
+  })
+
+  .step('fix-prerequisites', {
+    prompt: ({ store }) => prompt`
+      The package installation and environment checkpoint found blocking local issues.
+      Fix only those package, environment, or credential-exposure problems now, before editing
+      the personalization implementation. Do not begin the main implementation yet.
+
+      Project: ${store.project.projectPath}
+
+      Findings:
+      ${render.table(
+        (store.steps['validate-prerequisites']?.findings ?? []).map((finding) => ({
+          Check: finding.item,
+          Status: finding.status,
+          Detail: finding.detail,
+        })),
+        { columns: ['Check', 'Status', 'Detail'] },
+      )}
+    `,
+    next: 'validate-prerequisites',
   })
 
   .step('implement', {
@@ -788,50 +854,329 @@ export default skill({
       filesModified: 'string[]',
       summary: 'string',
     }),
-    next: 'verify',
+    next: 'verify-code',
+  })
+
+  .step('verify-code', {
+    prompt: ({ store, refs }) => prompt`
+      Validate the implementation you just made. Use the project's own non-destructive commands
+      when available: build, typecheck, tests, and lint. Also inspect the changed code against the
+      SDK checklist below. Do not fix failures in this step; report them precisely so the next step
+      can repair them.
+
+      Required static checks:
+      - exactly one SDK runtime owner at the correct boundary
+      - correct runtime-specific package and factory/provider
+      - environment variables flow into the intended server or browser runtime without exposing CMA credentials
+      - content fetching preserves locale and resolves experience/variant links
+      - page or screen tracking has one owner
+      - baseline fallback remains valid when no optimization is selected
+
+      Project path: ${store.project.projectPath}
+
+      Common failure reference:
+      ${refs.load('common-errors.md')}
+    `,
+    response: type({
+      projectPath: 'string',
+      status: "'pass' | 'fail'",
+      summary: 'string',
+      checksRun: 'string[]',
+      failures: 'string[]',
+    }),
+    next: ({ response }) => (response.status === 'pass' ? 'verify' : 'fix'),
   })
 
   .step('verify', {
-    prompt: ({ store, refs }) => prompt`
-        Verify the personalization setup. Confirm the project path so the
-        automated validation can run, then also manually check these items:
-
-        ## 🔍 Manual Verification Checklist
-
-        ${
-          store.setup?.sdkChoice === 'optimization'
-            ? `- [ ] Exactly one runtime root or process singleton owns the SDK
-        - [ ] The initial page or screen event is accepted and emitted once
-        - [ ] Profile identity remains continuous across the active runtimes
-        - [ ] Contentful fetching uses one locale and resolves experience/variant links
-        - [ ] Baseline fallback renders without being treated as a fetch error
-        - [ ] Next.js uses the router-specific factory and request boundary, when applicable`
-            : `- [ ] Provider wraps the correct subtree (not too broad, not too narrow)
-        - [ ] No hydration mismatch patterns (client/server content divergence)
-        - [ ] Page tracking fires once per navigation (not on re-renders)
-        - [ ] Include depth is adequate for personalization entries
-        - [ ] Middleware matcher excludes static assets (/_next, images, etc.)`
-        }
-
-        If you find issues, just report them — do NOT fix them here.
-        The fix step handles repairs.
-
-        ## Reference: Common Errors
-        ${refs.load('common-errors.md')}
-
-        Project path: ${store.project.projectPath}
-      `,
     action: {
-      run: validateSetup,
+      mapInput: ({ store }) => ({
+        projectPath: store.project?.projectPath ?? '.',
+      }),
+      run: validateLocalSetup,
     },
-    save: ({ actionResult }) => ({
-      step: actionResult,
+    next: ({ actionResult }) => (actionResult?.status === 'pass' ? 'check-connectivity' : 'fix'),
+  })
+
+  .step('check-connectivity', {
+    action: {
+      mapInput: ({ store }) => ({
+        ...(store.steps.verify?.credentials?.personalization?.apiKey
+          ? { apiKey: store.steps.verify.credentials.personalization.apiKey }
+          : {}),
+        ninetailedEnvironment: store.steps.verify?.credentials?.personalization?.environment ?? 'main',
+        ...(store.steps.verify?.credentials?.optimization?.clientId
+          ? { optimizationClientId: store.steps.verify.credentials.optimization.clientId }
+          : {}),
+        optimizationEnvironment: store.steps.verify?.credentials?.optimization?.environment ?? 'main',
+      }),
+      run: checkApiConnectivity,
+    },
+    next: 'survey-content',
+  })
+
+  .step('survey-content', {
+    action: {
+      mapInput: ({ store }) => ({
+        spaceId: store.steps.verify?.credentials?.contentful?.spaceId ?? '',
+        environment: store.steps.verify?.credentials?.contentful?.environment ?? 'master',
+        ...(store.steps.verify?.credentials?.contentful?.accessToken
+          ? { accessToken: store.steps.verify.credentials.contentful.accessToken }
+          : {}),
+        ...(store.steps.verify?.credentials?.contentful?.previewToken
+          ? { previewToken: store.steps.verify.credentials.contentful.previewToken }
+          : {}),
+      }),
+      run: surveyContent,
+    },
+    next: 'verify-live-events',
+  })
+
+  .step('verify-live-events', {
+    action: {
+      mapInput: ({ store }) => {
+        const credentials = store.steps.verify?.credentials?.contentful;
+        const spaceId = credentials?.spaceId ?? '';
+        const environmentId = credentials?.environment ?? 'master';
+        const managementToken = credentials?.managementToken;
+
+        return {
+          spaceId,
+          environmentId,
+          ...(managementToken ? { managementToken } : {}),
+        };
+      },
+      run: checkOptimizationDoctor,
+    },
+    next: 'runtime-validation',
+  })
+
+  .step('runtime-validation', {
+    prompt: ({ store }) => {
+      const result = store.steps['verify-live-events'];
+      const credentials = store.steps.verify?.credentials?.contentful;
+      const spaceId = credentials?.spaceId;
+      const environmentId = credentials?.environment ?? 'master';
+      const liveEventsUrl = buildLiveEventsUrl(spaceId, environmentId);
+      const findings = result?.findings ?? [];
+      const scenario = store.steps['survey-content']?.testScenario;
+
+      const statusMessage =
+        result?.status === 'pass'
+          ? 'Recent events exist in the space-wide 15-minute window. Treat this only as a baseline: it is not yet correlated to this validation run.'
+          : result?.status === 'warn'
+            ? 'The endpoint is reachable, but it has not observed any events in the last 15 minutes.'
+            : result?.status === 'skip'
+              ? 'The automated live-event check was skipped because no management token was available.'
+              : 'The automated live-event check failed. Use the Live Events view to distinguish an authentication problem from missing runtime events.';
+
+      const sections = [
+        statusMessage,
+        findings.length > 0
+          ? render.table(
+              findings.map((finding) => ({
+                Check: finding.item,
+                Status: finding.status,
+                Detail: finding.detail,
+              })),
+              { columns: ['Check', 'Status', 'Detail'] },
+            )
+          : '*No automated live-event findings are available.*',
+        liveEventsUrl
+          ? `[Open Contentful Live Events](${liveEventsUrl})`
+          : 'Open the Contentful Personalization app and navigate to **Analytics → Live Events**.',
+        scenario
+          ? render.kv({
+              'Suggested scenario': scenario.kind,
+              Experience: scenario.experienceName ?? scenario.experienceId ?? 'none',
+              Audience:
+                scenario.audienceName ??
+                scenario.audienceId ??
+                (scenario.kind === 'all-visitors' ? 'All visitors' : 'unknown'),
+              Guidance: scenario.summary,
+            })
+          : 'No CMS scenario inventory is available.',
+        scenario?.kind === 'fixture-needed'
+          ? [
+              '**To enable deterministic end-to-end validation:**',
+              '1. In the Contentful Personalization app, create a test audience with an explicit query-parameter condition such as `ctfl_personalization_test=<unique-value>`.',
+              '2. Create one obvious variant and attach the experience to a known baseline entry.',
+              '3. Publish dependencies in order: variant, audience, experience, then the baseline entry.',
+              '4. Return here and choose **Fixture published — resurvey CMS** before claiming an outcome.',
+            ].join('\n')
+          : scenario?.kind === 'unavailable'
+            ? 'CMS requests were unavailable, so this workflow cannot conclude that the space is empty. Fix API access or use a known scenario, and do not claim an inventoried outcome from this survey.'
+            : '',
+        [
+          '1. Enable streaming in Live Events.',
+          '2. Open the application at the known baseline route. Use a query parameter only when that existing audience is actually authored for it.',
+          '3. Confirm a page event for this run.',
+          '4. When a usable experience exists, confirm the expected audience or all-visitors experience, selected variant, and rendered entry metadata.',
+          '5. Grant consent, navigate, or interact only when you intend those side effects.',
+        ].join('\n'),
+      ];
+
+      const hasInventoriedOutcome = hasInventoriedOutcomeScenario(scenario);
+      const needsCmsSurvey = !hasInventoriedOutcome;
+      const validationOptions = [
+        ...(hasInventoriedOutcome
+          ? [
+              {
+                value: 'confirmed-end-to-end',
+                label: '✅ Variant confirmed end to end',
+                description:
+                  'A correlated page event, expected experience or audience, selected variant, and rendered result were confirmed',
+              },
+            ]
+          : []),
+        ...(needsCmsSurvey
+          ? [
+              {
+                value: 'resurvey-content',
+                label:
+                  scenario?.kind === 'fixture-needed'
+                    ? '🧩 Fixture published — resurvey CMS'
+                    : '🔄 Retry CMS inventory',
+                description:
+                  scenario?.kind === 'fixture-needed'
+                    ? 'Inventory the newly authored audience, experience, variants, and baseline link before validation'
+                    : 'Retry the GET-only inventory before claiming a CMS-backed outcome',
+              },
+            ]
+          : []),
+        {
+          value: 'confirmed-transport',
+          label: '📡 Page event confirmed',
+          description: 'Runtime transport works, but no specific personalization outcome could be confirmed',
+        },
+        {
+          value: 'check-again',
+          label: '🔄 I triggered traffic — compare counts',
+          description: 'Rerun the optional automated Live Events endpoint after the baseline snapshot',
+        },
+        {
+          value: 'unavailable',
+          label: '⏸️ Cannot validate now',
+          description: 'Choose whether live validation is deferred or blocked in the next step',
+        },
+      ];
+
+      return [
+        'Present the runtime verification instructions below exactly as rendered, then ask how to proceed.',
+        view('📡 Runtime Verification', sections.join('\n\n')),
+        act.askUser({
+          type: 'structured',
+          question: 'How far did the live validation get?',
+          options: validationOptions,
+        }),
+      ];
+    },
+    response: type({
+      choice: "'confirmed-end-to-end' | 'confirmed-transport' | 'check-again' | 'resurvey-content' | 'unavailable'",
     }),
-    next: ({ actionResult, attempts }) => {
-      if (actionResult?.overallStatus === 'pass') return 'report';
-      if (attempts >= 3) return 'report';
-      return 'fix';
+    next: ({ response, store }) => {
+      const scenario = store.steps['survey-content']?.testScenario;
+      const hasInventoriedOutcome = hasInventoriedOutcomeScenario(scenario);
+      if (response.choice === 'confirmed-end-to-end' && !hasInventoriedOutcome) return 'runtime-validation';
+      if (response.choice === 'resurvey-content') return 'survey-content';
+      return response.choice === 'check-again'
+        ? 'verify-live-events-after'
+        : response.choice === 'unavailable'
+          ? 'validation-disposition'
+          : 'report';
     },
+  })
+
+  .step('verify-live-events-after', {
+    action: {
+      mapInput: ({ store }) => ({
+        spaceId: store.steps.verify?.credentials?.contentful?.spaceId ?? '',
+        environmentId: store.steps.verify?.credentials?.contentful?.environment ?? 'master',
+        ...(store.steps.verify?.credentials?.contentful?.managementToken
+          ? { managementToken: store.steps.verify.credentials.contentful.managementToken }
+          : {}),
+      }),
+      run: checkOptimizationDoctor,
+    },
+    next: 'runtime-confirmation',
+  })
+
+  .step('runtime-confirmation', {
+    prompt: ({ store }) => {
+      const before = store.steps['verify-live-events']?.liveEvents;
+      const after = store.steps['verify-live-events-after']?.liveEvents;
+      const rows = liveEventsDeltaRows(before, after);
+      const scenario = store.steps['survey-content']?.testScenario;
+      const hasInventoriedOutcome = hasInventoriedOutcomeScenario(scenario);
+      const needsCmsSurvey = !hasInventoriedOutcome;
+
+      return [
+        prompt`
+          Present the before/after aggregate counts below. Explain that a positive delta is useful
+          supporting evidence but still needs the user's correlation with the page they just loaded.
+          Ask for the strongest result they actually observed; do not infer an outcome from counts.
+        `,
+        view('Live Events comparison', render.table(rows, { columns: ['Event', 'Baseline', 'Current', 'Delta'] })),
+        act.askUser({
+          type: 'structured',
+          question: 'What did this run confirm?',
+          options: [
+            ...(hasInventoriedOutcome
+              ? [{ value: 'confirmed-end-to-end', label: '✅ Variant confirmed end to end' }]
+              : []),
+            { value: 'confirmed-transport', label: '📡 Page event confirmed' },
+            { value: 'retry', label: '🔄 Try one more run' },
+            ...(needsCmsSurvey
+              ? [
+                  {
+                    value: 'resurvey-content',
+                    label:
+                      scenario?.kind === 'fixture-needed'
+                        ? '🧩 Fixture published — resurvey CMS'
+                        : '🔄 Retry CMS inventory',
+                  },
+                ]
+              : []),
+            { value: 'unavailable', label: '⏸️ Cannot validate now' },
+          ],
+        }),
+      ];
+    },
+    response: type({
+      choice: "'confirmed-end-to-end' | 'confirmed-transport' | 'retry' | 'resurvey-content' | 'unavailable'",
+    }),
+    next: ({ response, attempts, store }) => {
+      const scenario = store.steps['survey-content']?.testScenario;
+      const hasInventoriedOutcome = hasInventoriedOutcomeScenario(scenario);
+      if (response.choice === 'confirmed-end-to-end' && !hasInventoriedOutcome) return 'runtime-confirmation';
+      return response.choice === 'retry' && attempts < 3
+        ? 'verify-live-events'
+        : response.choice === 'resurvey-content'
+          ? 'survey-content'
+          : response.choice === 'unavailable'
+            ? 'validation-disposition'
+            : 'report';
+    },
+  })
+
+  .step('validation-disposition', {
+    prompt: act.askUser({
+      type: 'structured',
+      question: 'Why is live validation unavailable?',
+      options: [
+        {
+          value: 'defer',
+          label: '⏭️ Defer by choice',
+          description: 'Implementation can finish while live evidence remains explicitly unresolved',
+        },
+        {
+          value: 'blocked',
+          label: '🚧 Authoring or publishing blocked',
+          description: 'Permissions, ownership, publishing, or organizational constraints prevent the test',
+        },
+      ],
+    }),
+    response: type({ choice: "'defer' | 'blocked'" }),
+    next: 'report',
   })
 
   .step('fix', {
@@ -856,13 +1201,78 @@ export default skill({
         ## Reference: Common Errors & Fixes
         ${refs.load('common-errors.md')}
       `,
-    next: 'verify',
+    next: 'verify-code',
   })
 
   .step('report', {
     prompt: ({ store }) => {
       const sections: string[] = [];
-      sections.push('# 🎉 Personalization Setup Complete\n');
+      const evidence: ValidationStageEvidence[] = [];
+
+      if (store.steps.verify) {
+        const local = localSetupEvidence(store.steps.verify);
+        const code = store.steps['verify-code'];
+        if (code) {
+          local.findings.push({
+            item: 'Project build and static wiring',
+            status: code.status,
+            detail: code.summary,
+          });
+          local.summary = `${local.summary.replace(/[.!?]+$/, '')}. ${code.summary}`;
+          if (code.status === 'fail') local.status = 'fail';
+        }
+        evidence.push(local);
+      }
+      if (store.steps['check-connectivity']) {
+        evidence.push(connectivityEvidence(store.steps['check-connectivity']));
+      }
+      if (store.steps['survey-content']) {
+        evidence.push(cmsGraphEvidence(store.steps['survey-content']));
+      }
+
+      const runtimeChoice =
+        store.steps['validation-disposition']?.choice ??
+        store.steps['runtime-confirmation']?.choice ??
+        store.steps['runtime-validation']?.choice;
+      if (runtimeChoice === 'confirmed-end-to-end') {
+        evidence.push(...manualRuntimeEvidence('end-to-end', 'full-setup'));
+      } else if (runtimeChoice === 'confirmed-transport') {
+        evidence.push(...manualRuntimeEvidence('transport-only', 'full-setup'));
+      } else if (runtimeChoice === 'defer') {
+        evidence.push(...manualRuntimeEvidence('deferred', 'full-setup'));
+      } else if (runtimeChoice === 'blocked') {
+        evidence.push(...manualRuntimeEvidence('blocked', 'full-setup'));
+      } else {
+        const aggregate = store.steps['verify-live-events-after'] ?? store.steps['verify-live-events'];
+        if (aggregate) evidence.push(aggregateLiveEventsEvidence(aggregate));
+        evidence.push({
+          stage: 'personalization-outcome',
+          status: 'unavailable',
+          source: 'manual-confirmation',
+          summary: 'No correlated personalization outcome was confirmed.',
+          findings: [],
+        });
+      }
+
+      const decision =
+        runtimeChoice === 'blocked'
+          ? ('cannot-author-or-trigger' as const)
+          : runtimeChoice === 'defer'
+            ? ('defer-live-validation' as const)
+            : ('continue' as const);
+      const finalState = deriveValidationFinalState({ profile: 'full-setup', evidence, decision });
+      const finalLabel = describeValidationFinalState(finalState);
+      const stateIcon =
+        finalState === 'validated-end-to-end'
+          ? '✅'
+          : finalState === 'validation-failed'
+            ? '❌'
+            : finalState === 'blocked-by-cms-authoring-or-publishing' ||
+                finalState === 'blocked-by-validation-constraints'
+              ? '🚧'
+              : '⏳';
+
+      sections.push(`# ${stateIcon} ${finalLabel}\n`);
 
       const implementResult = store.steps.implement;
       if (implementResult?.summary) {
@@ -891,35 +1301,61 @@ export default skill({
         ),
       );
 
-      const verifyResult = store.steps.verify;
-      if (verifyResult?.overallStatus) {
-        const statusIcon =
-          verifyResult.overallStatus === 'pass' ? '✅' : verifyResult.overallStatus === 'warn' ? '⚠️' : '❌';
-        sections.push(
-          render.section(
-            `🔍 Verification: ${statusIcon} ${verifyResult.overallStatus.toUpperCase()}`,
-            verifyResult.summary ?? '',
+      sections.push(
+        render.section(
+          '🔍 Validation evidence',
+          render.table(
+            evidence.map((item) => ({
+              Stage: item.stage,
+              Status: item.status,
+              Source: item.source,
+              Summary: item.summary,
+            })),
+            { columns: ['Stage', 'Status', 'Source', 'Summary'] },
           ),
-        );
-      }
+        ),
+      );
+
+      const credentials = store.steps.verify?.credentials?.contentful;
+      const liveEventsUrl = buildLiveEventsUrl(credentials?.spaceId, credentials?.environment ?? 'master');
+      const scenario = store.steps['survey-content']?.testScenario;
 
       sections.push(
         render.section(
           '🚀 Next Steps',
           [
-            '1. **Create experiences** — Open the Personalization app in Contentful and create your first audience + experience',
-            '2. **Publish content** — Add personalization variants to your content entries',
-            '3. **Test in preview** — Use preview mode to verify experiences render correctly',
-            '4. **Go live & monitor** — Publish and watch analytics for experiment results',
+            liveEventsUrl
+              ? `1. [Open Contentful Live Events](${liveEventsUrl}) whenever you resume runtime validation.`
+              : '1. Open the Personalization app and navigate to Analytics → Live Events when runtime validation is possible.',
+            scenario && scenario.kind !== 'fixture-needed' && scenario.kind !== 'unavailable'
+              ? `2. Resume with this CMS scenario: ${scenario.summary}`
+              : '2. Inventory a usable published experience or publish the deterministic fixture before outcome validation.',
+            finalState === 'validation-failed'
+              ? '3. Run the doctor workflow against the failed evidence stage, then rerun that stage and its downstream checks.'
+              : finalState === 'blocked-by-cms-authoring-or-publishing'
+                ? '3. Resume after the required authoring, publishing, permission, or organizational decision is available.'
+                : finalState === 'validated-end-to-end'
+                  ? '3. Keep the deterministic validation route and expected IDs documented for future regression checks.'
+                  : '3. When practical, confirm a correlated page event, expected experience or audience, selected variant, and rendered result.',
           ].join('\n'),
         ),
       );
 
+      const machineResult = {
+        profile: 'full-setup' as const,
+        finalState,
+        evidence,
+        rerunStages: getEvidenceRerunStages('full-setup', evidence),
+        summary: finalLabel,
+      };
+
       return [
-        'Present the setup completion report below to the user exactly as rendered. Add a brief, celebratory closing message.',
-        view('Setup Report', sections.join('\n\n')),
+        'Present the evidence-based setup report below exactly as rendered. Do not describe the setup as fully validated unless the final state says so.',
+        view('Setup and validation report', sections.join('\n\n')),
+        `After presenting the report, return this exact structured result to the workflow protocol without changing its values:\n${JSON.stringify(machineResult)}`,
       ];
     },
+    response: ValidationSummary,
     next: terminal,
   })
 
