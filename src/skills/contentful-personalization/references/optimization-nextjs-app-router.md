@@ -213,6 +213,26 @@ props such as `trackViews`, `trackClicks`, `trackHovers`, and `clickable` for lo
   request binding, page-event emission, cookie persistence, tracking attributes, managed-entry
   handoff, and `serverOptimizationState` transfer.
 
+### Do not mix static-generation directives with a personalized dynamic route
+
+A route that resolves personalization server-side must render per request. Do not leave
+`generateStaticParams`, `export const dynamic = 'force-static'`, or a `revalidate` (ISR) directive
+on that route while also expecting per-request personalization — the intent is contradictory.
+
+- Prefer to let the route bail to dynamic naturally: reading `cookies()`/`headers()` (which the
+  consent-aware layout already does) opts the route out of static generation. Adding an explicit
+  `export const dynamic = 'force-dynamic'` is a clear, self-documenting way to state the same
+  intent.
+- If a route still declares `generateStaticParams` alongside `force-dynamic`, `next build` may
+  print it with the `●` (SSG) marker even though nothing is prerendered. Verify actual behavior via
+  an empty `prerender-manifest.json` (`routes: []`, `dynamicRoutes: []`) and the absence of
+  prerendered `.html`/`.rsc` artifacts, rather than trusting the build-summary symbol. To avoid the
+  confusion entirely, remove `generateStaticParams` from a route that is meant to personalize per
+  request.
+- A route that must stay statically cached cannot run the server preflight for its own markup. Keep
+  personalization on that route client-only (accepting the baseline flash), or move it to a dynamic
+  route.
+
 ## Validation and failure diagnosis
 
 Verify a variant targeted to all visitors appears in View Source and remains unchanged after
