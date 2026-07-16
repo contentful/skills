@@ -548,10 +548,35 @@ export default skill({
           - \`optimization\` — @contentful/optimization (recommended default; runtime-specific APIs)
           - \`ninetailed\` — @ninetailed/experience.js (maintenance of detected legacy deployments only)
 
-          **Architecture:**
-          - \`client-only\` — All personalization runs in the browser
-          - \`hybrid-ssr\` — Server-side preflight + client hydration
-          - \`server-only\` — Full server-side personalization (advanced)
+          **Architecture** — choose from the project's actual rendering model, not a default:
+
+          - \`client-only\` — Personalization is evaluated in the browser after hydration. The page
+            first renders the baseline (unpersonalized) content, then swaps to the selected variant.
+            That means a visible flash of baseline content, or a hidden/skeleton slot until it
+            resolves. Acceptable when personalization is below the fold or non-critical, when the app
+            fetches only in the browser and the user wants the smaller change, or when the framework
+            is client-only (Gatsby, Create React App, Vite React, React Native).
+          - \`hybrid-ssr\` — The server runs a personalization preflight and sends already-resolved
+            markup; the client hydrates and takes over. This avoids the flash of baseline content
+            while preserving a cacheable/ISR HTML profile through the framework adapter. This is the
+            better fit whenever the framework can render on the server (Next.js App or Pages Router,
+            Remix) AND the app already fetches content at the page or server level — especially when
+            any personalized content is above the fold.
+          - \`server-only\` — Full server-side personalization with no client runtime. Advanced;
+            a weak fit when the product needs browser event collection, component insights, or
+            reliable experiment reporting, so avoid it unless a client runtime is genuinely
+            disallowed.
+
+          Decision rule: prefer \`hybrid-ssr\` when the framework supports server rendering and the
+          project's existing pipeline already fetches on the server or at the page level — call out
+          that it avoids the flash of baseline content while keeping the current cacheable HTML
+          profile. Choose \`client-only\` for client-only frameworks, for a purely browser-fetched
+          app where the user wants the smaller change, or when the personalized surface is not
+          critical — and when you do, state plainly that it renders the baseline first. Do not push
+          a client-fetched app to convert to SSR as part of this setup; recommend the architecture
+          that fits what the project does today and name the tradeoff honestly. Ground your
+          \`reasoning\` in the project's real rendering model (fetching location, caching/ISR,
+          server vs client boundaries) rather than a generic rule.
 
           React Native is a fixed exception: choose \`optimization\` with \`client-only\` because
           this installer does not apply the legacy browser SDK or server-only architectures to a
@@ -608,12 +633,17 @@ export default skill({
               : '@contentful/optimization (recommended default)',
           Architecture:
             store.setup?.architecture === 'client-only'
-              ? 'Client-only (browser-side personalization)'
+              ? 'Client-only — evaluated in the browser; renders baseline content first, then swaps to the variant (a visible flash, or a hidden slot until it resolves)'
               : store.setup?.architecture === 'hybrid-ssr'
-                ? 'Hybrid SSR (server evaluation + browser takeover)'
-                : 'Server-only (full server-side)',
+                ? 'Hybrid SSR — server preflight resolves personalization before markup is sent, avoiding the baseline flash, then the browser hydrates and takes over (keeps cacheable/ISR HTML)'
+                : 'Server-only — full server-side personalization, no client runtime (advanced)',
           Framework: store.project.framework,
         })}
+
+        State the architecture tradeoff in one sentence so the user confirms knowingly: client-only
+        renders the baseline first and swaps after hydration; hybrid SSR avoids that flash while
+        keeping cacheable HTML. Do not oversell — a below-the-fold or non-critical surface may not
+        need hybrid.
       `,
       act.confirm({
         message: 'Proceed with this SDK and architecture choice?',
@@ -1651,6 +1681,16 @@ export default skill({
       const liveEventsUrl = buildLiveEventsUrl(credentials?.spaceId, credentials?.environment ?? 'master');
       const scenario = store.steps['survey-content']?.testScenario;
 
+      // A client-only setup renders the baseline before swapping to the variant. If the framework
+      // can render on the server, offer the path to remove that flash later — as an optional
+      // follow-up, not something this setup should have forced.
+      const framework = store.project.framework;
+      const ssrCapable = /^(nextjs-app|nextjs-pages|nextjs-hybrid|remix)$/.test(framework);
+      const clientOnlyFlashNote =
+        store.setup?.architecture === 'client-only' && ssrCapable
+          ? '4. This client-only setup renders the baseline content first and swaps to the variant after hydration (a brief flash). When you want to remove it, move personalization evaluation server-side with a hybrid SSR preflight — re-run this skill and choose the hybrid architecture, or ask the doctor to help migrate the existing wiring.'
+          : undefined;
+
       sections.push(
         render.section(
           '🚀 Next Steps',
@@ -1668,6 +1708,7 @@ export default skill({
                 : finalState === 'validated-end-to-end'
                   ? '3. Keep the deterministic validation route and expected IDs documented for future regression checks.'
                   : '3. When practical, confirm a correlated page event, expected experience or audience, selected variant, and rendered result.',
+            ...(clientOnlyFlashNote ? [clientOnlyFlashNote] : []),
           ].join('\n'),
         ),
       );

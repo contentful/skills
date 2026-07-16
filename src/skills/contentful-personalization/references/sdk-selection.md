@@ -75,13 +75,39 @@ lifecycle, consent, identity, persistence, rendering, and tracking contracts dif
 
 ## Architecture Guidance
 
-Choose architecture after selecting the SDK and runtime.
+Choose architecture after selecting the SDK and runtime, from the project's real rendering model.
 
 | Architecture                   | Default for new work                                    | Existing legacy deployment                               |
 | ------------------------------ | ------------------------------------------------------- | -------------------------------------------------------- |
 | Client-only                    | Use the matching Optimization browser or mobile runtime | Preserve the current provider and plugin pattern         |
 | Hybrid SSR or edge plus client | Use the framework adapter or Node plus browser handoff  | Preserve and repair the established SSR continuity model |
 | Server-only                    | Use Node only when no client runtime is allowed         | Keep only when the existing constraints require it       |
+
+### The client-only tradeoff
+
+Client-only evaluates personalization in the browser after hydration, so the page renders the
+baseline (unpersonalized) content first and then swaps to the selected variant. The visitor sees
+either a flash of baseline content or a hidden/skeleton slot until evaluation resolves. This matters
+more for personalization than for a small A/B tweak, because the whole point is to show the right
+content — and it is most visible above the fold.
+
+### Prefer server-side where the framework and pipeline support it
+
+Lean toward hybrid SSR (server preflight resolves the variant before markup is sent, then the client
+hydrates and takes over) when both are true:
+
+- the framework can render on the server (Next.js App or Pages Router, Remix), and
+- the app already fetches content at the page or server level.
+
+In that case hybrid SSR removes the baseline flash while preserving the cacheable/ISR HTML profile,
+and the framework adapter handles the server-to-client handoff — so it is usually a small step, not
+a rewrite.
+
+Choose client-only when the framework is client-only (Gatsby, Create React App, Vite React, React
+Native), when the app fetches only in the browser and the smaller change is preferred, or when the
+personalized surface is below the fold or non-critical. Do not push a client-fetched app to convert
+to SSR purely for this setup — recommend what fits the app today, name the flash tradeoff honestly,
+and note that moving to a server-rendered fetch later is the path to eliminate it.
 
 Server-only remains a weak fit when the product needs browser event collection, component
 insights, or reliable experiment reporting.
