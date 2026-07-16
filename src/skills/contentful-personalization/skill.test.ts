@@ -43,14 +43,16 @@ test('onboard only accepts end-to-end outcome confirmation for an inventoried CM
   assert.equal(hasInventoriedOutcomeScenario({ kind: 'existing-targeted' }), true);
 });
 
-test('classify routes to onboard for setup requests', async () => {
+test('classify routes a readiness-only question to onboard and stops at the gate', async () => {
   const result = await runComposite(skill, {
     model: mockModel({
       classify: {
         intent: 'onboard',
         setupContext: 'not-established',
         confidence: 0.95,
-        reasoning: 'User wants to set up personalization',
+        userQuery: 'Am I ready for personalization?',
+        readinessOnly: true,
+        reasoning: 'User is only asking whether the project is ready',
       },
       'onboard/explore': {
         framework: 'nextjs-app',
@@ -63,7 +65,6 @@ test('classify routes to onboard for setup requests', async () => {
         existingSetup: 'none',
         readinessOnly: true,
       },
-      'onboard/review-credentials': { choice: 'continue' },
       'onboard/assess': {
         readinessStatus: 'ready',
         report: 'All good',
@@ -77,8 +78,11 @@ test('classify routes to onboard for setup requests', async () => {
   assert.equal(result.redirectedTo?.kind, 'subskill');
   assert.equal(result.redirectedTo?.name, 'onboard');
   assert.ok(result.path.includes('classify'));
-  assert.ok(result.path.indexOf('onboard/scan-credentials') < result.path.indexOf('onboard/review-credentials'));
-  assert.ok(result.path.indexOf('onboard/review-credentials') < result.path.indexOf('onboard/assess'));
+  // Readiness-only never touches credential review; it stops at the terminal gate.
+  assert.ok(result.path.indexOf('onboard/scan-credentials') < result.path.indexOf('onboard/assess'));
+  assert.ok(result.path.indexOf('onboard/assess') < result.path.indexOf('onboard/gate'));
+  assert.ok(!result.path.includes('onboard/review-readiness'));
+  assert.ok(!result.path.includes('onboard/recommend'));
 });
 
 test('classify routes to doctor for debugging requests', async () => {
@@ -167,7 +171,6 @@ test('bare implement-personalization requests cannot enter extend-existing', asy
         existingSetup: 'none',
         readinessOnly: true,
       },
-      'onboard/review-credentials': { choice: 'continue' },
       'onboard/assess': {
         readinessStatus: 'ready',
         report: 'Ready for project-wide implementation',

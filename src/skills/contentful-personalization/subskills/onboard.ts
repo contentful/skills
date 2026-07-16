@@ -15,6 +15,7 @@ import {
   ReadinessStatus,
   RuntimePresentationResult,
   ValidationSummary,
+  type CredentialsScanResult,
   type PackagesResult as PackagesResultData,
   type ValidationStageEvidence,
 } from '../schemas.js';
@@ -25,13 +26,13 @@ import {
   cmsGraphEvidence,
   connectivityEvidence,
   localSetupEvidence,
-  liveEventsDeltaRows,
   manualRuntimeEvidence,
 } from '../validation/evidence.js';
 import {
   CredentialReviewResponse,
   credentialScansDiffer,
   credentialReviewPrompt,
+  detectedCredentialRows,
   managementTokenSource,
   optimizationDoctorRequestRows,
 } from '../validation/credentials.js';
@@ -149,6 +150,57 @@ function getDerivedPackages(store: {
   });
 }
 
+// The credential scan the review should reflect: a user-triggered rescan wins over the initial
+// automatic scan, so a corrected environment is shown after "I corrected the environment".
+function effectiveScannedCredentials(steps: {
+  'scan-credentials'?: CredentialsScanResult;
+  'rescan-credentials'?: CredentialsScanResult;
+}): CredentialsScanResult | undefined {
+  return steps['rescan-credentials'] ?? steps['scan-credentials'];
+}
+
+interface ReadinessStatusPresentation {
+  icon: string;
+  label: string;
+  detail: string;
+}
+
+function readinessStatusPresentation(readinessStatus: string | undefined): ReadinessStatusPresentation {
+  const statusConfig: Record<string, ReadinessStatusPresentation> = {
+    ready: { icon: '✅', label: 'Ready', detail: 'All systems go' },
+    'minor-changes': { icon: '🟡', label: 'Almost Ready', detail: 'A few small things to address' },
+    'needs-work': { icon: '🟠', label: 'Needs Work', detail: 'Moderate changes required before setup' },
+    'not-ready': { icon: '🔴', label: 'Not Ready', detail: 'Significant work needed first' },
+  };
+  return statusConfig[readinessStatus ?? 'not-ready'] ?? statusConfig['not-ready'];
+}
+
+// Build the readiness report body shared by the terminal gate and the setup review. Returns
+// undefined when no assessment is available so callers can present a fallback message.
+function renderReadinessReport(assess?: {
+  report?: string;
+  readinessStatus?: string;
+  prerequisites?: string[];
+}): string | undefined {
+  if (!assess?.report) return undefined;
+
+  const status = readinessStatusPresentation(assess.readinessStatus);
+  const sections: string[] = [
+    `# ${status.icon} Readiness Report: ${status.label}\n`,
+    `*${status.detail}*\n`,
+    '---\n',
+    assess.report,
+  ];
+
+  if ((assess.prerequisites?.length ?? 0) > 0) {
+    sections.push(
+      render.section('📋 Prerequisites', assess.prerequisites!.map((p, i) => `${i + 1}. ${p}`).join('\n')),
+    );
+  }
+
+  return sections.join('\n\n');
+}
+
 export default skill({
   name: 'onboard',
   version: VERSION,
@@ -179,6 +231,10 @@ export default skill({
       'sdkChoice?': "'ninetailed' | 'optimization'",
       'architecture?': "'client-only' | 'hybrid-ssr' | 'server-only'",
       'envVars?': 'Record<string, string>',
+      // Free-text steering the user gave when rejecting the recommendation or the plan, so the
+      // re-prompt can actually change instead of regenerating the same output.
+      'choiceFeedback?': 'string',
+      'planFeedback?': 'string',
     }),
   },
 })
@@ -259,17 +315,11 @@ export default skill({
       mapInput: ({ store }) => ({ projectPath: store.project?.projectPath ?? '.' }),
       run: scanCredentials,
     },
-    next: 'review-credentials',
-  })
-
-  .step('review-credentials', {
-    prompt: ({ store }) => credentialReviewPrompt(store.steps['scan-credentials']),
-    response: CredentialReviewResponse,
-    next: ({ response }) => (response.choice === 'rescan' ? 'scan-credentials' : 'assess'),
+    next: 'assess',
   })
 
   .step('assess', {
-    prompt: ({ store, refs }) => {
+    prompt: ({ store, refs, params }) => {
       const explorationView = store.project.explorationSummary
         ? [
             render.kv({
@@ -306,7 +356,7 @@ export default skill({
           ) || '*No packages found*'
         : 'No package data available';
 
-      const readinessOnly = store.steps.explore.readinessOnly;
+      const readinessOnly = params?.readinessOnly === true || store.steps.explore.readinessOnly;
       const installedSdkNote = describeInstalledSdk(store.project.packages);
 
       return prompt`
@@ -332,7 +382,7 @@ export default skill({
           Do NOT make SDK or architecture recommendations — that happens in the next step.
           Do NOT ask the user any questions.
 
-          ${readinessOnly ? 'The user is only asking about readiness, not requesting a full setup. Set readinessOnly to true.' : 'Set readinessOnly to false unless the exploration data suggests the user only wanted a readiness check.'}
+          ${readinessOnly ? 'The user is only asking about readiness, not requesting a full setup. Set readinessOnly to true.' : 'The user asked to set personalization up, not merely to check readiness. Set readinessOnly to false unless the exploration data clearly shows they only wanted a readiness check.'}
 
           ## Readiness Rubric
           ${refs.load('readiness-criteria.md')}
@@ -354,14 +404,14 @@ export default skill({
       const status = response.readinessStatus;
       if (status === 'not-ready' || status === 'needs-work') return 'gate';
       if (response.readinessOnly) return 'gate';
-      return 'recommend';
+      return 'review-readiness';
     },
   })
 
   .step('gate', {
     prompt: ({ store }) => {
-      const assessReport = store.steps.assess.report;
-      if (!assessReport) {
+      const report = renderReadinessReport(store.steps.assess);
+      if (!report) {
         return [
           'Present a brief message explaining that assessment data was unavailable.',
           view('⚠️ No assessment data available. Please re-run the readiness check.'),
@@ -369,62 +419,104 @@ export default skill({
       }
 
       const readinessStatus = store.steps.assess.readinessStatus;
-      const statusConfig: Record<string, { icon: string; label: string; detail: string }> = {
-        ready: { icon: '✅', label: 'Ready', detail: 'All systems go' },
-        'minor-changes': {
-          icon: '🟡',
-          label: 'Almost Ready',
-          detail: 'A few small things to address',
-        },
-        'needs-work': {
-          icon: '🟠',
-          label: 'Needs Work',
-          detail: 'Moderate changes required before setup',
-        },
-        'not-ready': {
-          icon: '🔴',
-          label: 'Not Ready',
-          detail: 'Significant work needed first',
-        },
-      };
-      const status = statusConfig[readinessStatus ?? 'not-ready'] ?? statusConfig['not-ready'];
-
-      const sections: string[] = [];
-      sections.push(`# ${status.icon} Readiness Report: ${status.label}\n`);
-      sections.push(`*${status.detail}*\n`);
-      sections.push('---\n');
-      sections.push(assessReport);
-
-      const prerequisites = store.steps.assess.prerequisites;
-      if ((prerequisites?.length ?? 0) > 0) {
-        sections.push(
-          render.section('📋 Prerequisites', prerequisites.map((p: string, i: number) => `${i + 1}. ${p}`).join('\n')),
-        );
-      }
-
-      if (readinessStatus === 'ready' || readinessStatus === 'minor-changes') {
-        sections.push(
-          '\n---\n\n🎉 Your project is ready for personalization! Run this skill again when you want to start setup.',
-        );
-      } else {
-        sections.push('\n---\n\n💡 Address the items above, then run this skill again to re-check readiness.');
-      }
+      const closing =
+        readinessStatus === 'ready' || readinessStatus === 'minor-changes'
+          ? '\n---\n\n🎉 Your project is ready for personalization! Run this skill again when you want to start setup.'
+          : '\n---\n\n💡 Address the items above, then run this skill again to re-check readiness.';
 
       return [
         'Present the readiness report below to the user exactly as rendered. Add a brief, warm closing sentence.',
-        view('Readiness Report', sections.join('\n\n')),
+        view('Readiness Report', `${report}\n\n${closing}`),
       ];
     },
     next: terminal,
   })
 
+  // First user-facing interaction of a real setup: present the readiness report and the credentials
+  // we'll validate with together, so the user is oriented before any decision. Also the natural
+  // place to surface a browser-exposed management-token warning early.
+  .step('review-readiness', {
+    prompt: ({ store }) => {
+      const report =
+        renderReadinessReport(store.steps.assess) ??
+        '# ✅ Readiness Report\n\nExploration completed. Continuing with setup.';
+      const scanned = effectiveScannedCredentials(store.steps);
+      const credentialRows = detectedCredentialRows(scanned);
+      const exposureWarning = scanned?.envVars?.find((variable) => variable.warning)?.warning;
+
+      const credentialsView =
+        credentialRows.length > 0
+          ? render.table(credentialRows, { columns: ['Credential', 'Variable', 'Value', 'Source'] })
+          : '*No credentials were detected yet. You can add them before setup, or continue and skip the automated API checks later.*';
+
+      return [
+        prompt`
+          This is the first decision point of setup. Present the readiness report and the detected
+          credentials below exactly as rendered, in that order. Give a short, warm one-sentence
+          orientation before the report (what you found and that you're ready to set personalization
+          up), and one sentence between the report and the credential table explaining that these are
+          the credentials you'll use for the automated validation checks later. Secret values are
+          masked. Do not explain the table columns or add other caveats.
+          ${
+            exposureWarning
+              ? `\nCall out this credential-exposure warning clearly as something to fix: "${exposureWarning}"`
+              : ''
+          }
+          Then ask the user how they'd like to proceed.
+        `,
+        view(
+          '🚦 Readiness & credentials',
+          [report, render.section('🔑 Credentials for validation', credentialsView)].join('\n\n'),
+        ),
+        act.askUser({
+          type: 'structured',
+          question: 'Ready to set up personalization with these credentials?',
+          options: [
+            {
+              value: 'continue',
+              label: '✅ Continue setup',
+              description: 'Proceed with these detected credentials for later validation',
+            },
+            {
+              value: 'rescan',
+              label: '🔄 I corrected the environment',
+              description: 'Rescan credentials before continuing',
+            },
+            {
+              value: 'manual-only',
+              label: '⏭️ Continue, skip automated API checks',
+              description: 'Set up without automated connectivity and content checks',
+            },
+          ],
+        }),
+      ];
+    },
+    response: CredentialReviewResponse,
+    next: ({ response }) => (response.choice === 'rescan' ? 'rescan-credentials' : 'recommend'),
+  })
+
+  // Re-scan the environment after the user reports a correction, then return to the review.
+  .step('rescan-credentials', {
+    action: {
+      mapInput: ({ store }) => ({ projectPath: store.project?.projectPath ?? '.' }),
+      run: scanCredentials,
+    },
+    next: 'review-readiness',
+  })
+
   .step('recommend', {
     prompt: ({ store, refs }) => {
       const installedSdkNote = describeInstalledSdk(store.project.packages);
+      const priorFeedback = store.setup?.choiceFeedback;
       return prompt`
           Recommend a specific SDK and architecture for this project.
           Explain your reasoning conversationally — help the user understand WHY
           this choice fits their project, not just WHAT the choice is.
+          ${
+            priorFeedback
+              ? `\nThe user rejected the previous recommendation with this feedback — take it into account and address it directly:\n"${priorFeedback}"\n`
+              : ''
+          }
 
           ## Project Context
           ${render.kv({
@@ -491,6 +583,11 @@ export default skill({
       },
     }),
     next: 'confirm-choice',
+    // Both confirm-choice rejection and a plan-level "revisit the SDK" rewind land here. Bound the
+    // re-recommendation loop so repeated back-and-forth moves forward with the last recommendation
+    // instead of ping-ponging with confirm-choice or tripping the engine's cycle guard.
+    maxVisits: 5,
+    onMaxVisits: 'cms-setup',
   })
 
   .step('confirm-choice', {
@@ -498,6 +595,9 @@ export default skill({
       prompt`
         Present the SDK and architecture recommendation below, then ask the user
         to confirm. Keep it brief — the reasoning was already explained.
+        If the user declines and says why (e.g. they want a different architecture),
+        capture their reason verbatim in the \`feedback\` field so the next recommendation
+        can address it.
 
         ## 📦 Recommendation Summary
 
@@ -520,7 +620,12 @@ export default skill({
         defaultAnswer: 'yes',
       }),
     ],
-    response: type({ approved: 'boolean' }),
+    // When the user declines, capture what they said in `feedback` so the next recommendation can
+    // respond to it instead of repeating the same choice.
+    response: type({ approved: 'boolean', 'feedback?': 'string' }),
+    save: ({ response }) => ({
+      setup: { choiceFeedback: response.approved ? undefined : (response.feedback ?? '') },
+    }),
     next: ({ response }) => (response.approved ? 'cms-setup' : 'recommend'),
   })
 
@@ -641,14 +746,26 @@ export default skill({
             '✅ Verify setup and fix any issues',
           ];
 
+      const priorFeedback = store.setup?.planFeedback;
+
       return [
         prompt`
           Review the implementation plan below and present it to the user for approval.
           Expand each step with specific file paths based on what was found during exploration.
           Be concrete — name the actual files that will be created or modified.
+          ${
+            priorFeedback
+              ? `\nThe user rejected the previous plan with this feedback — revise the plan to address it directly:\n"${priorFeedback}"\n`
+              : ''
+          }
 
           ## Plan presentation
           ${planPresentationGuidance()}
+
+          The SDK and architecture were already chosen and approved. If the user's feedback is about
+          the plan's approach, revise the plan here. Only if they want to change the SDK or
+          architecture itself should they revisit that earlier decision — capture that intent in
+          \`revisitChoice\` when they reject.
 
           Package installation is derived automatically from the selected SDK,
           framework, and architecture. Do NOT ask to install specific package names
@@ -682,13 +799,29 @@ export default skill({
       approved: 'boolean',
       envVars: 'Record<string, string>',
       plan: 'string',
+      // On rejection: what the user wants changed, and whether that means revisiting the
+      // already-approved SDK/architecture (revisitChoice) rather than just re-planning.
+      'feedback?': 'string',
+      'revisitChoice?': 'boolean',
     }),
     save: ({ response }) => ({
       setup: {
         envVars: response.envVars,
+        ...(response.approved
+          ? { planFeedback: undefined }
+          : response.revisitChoice
+            ? // Revisiting the SDK/architecture: route the note to the recommendation, clear plan note.
+              { choiceFeedback: response.feedback ?? '', planFeedback: undefined }
+            : { planFeedback: response.feedback ?? '' }),
       },
     }),
-    next: ({ response }) => (response.approved ? 'confirm-install' : 'recommend'),
+    // A rejected plan re-plans by default (keeping the approved SDK/architecture). Only a request to
+    // change the SDK/architecture itself rewinds to the recommendation step.
+    next: ({ response }) => (response.approved ? 'confirm-install' : response.revisitChoice ? 'recommend' : 'plan'),
+    // Bound the re-plan loop so repeated rejections eventually move forward to the install
+    // confirmation (which the user still gates) instead of tripping the engine's cycle guard.
+    maxVisits: 5,
+    onMaxVisits: 'confirm-install',
   })
 
   .step('confirm-install', {
@@ -753,7 +886,11 @@ export default skill({
       mapInput: ({ store }) => ({ projectPath: store.project?.projectPath ?? '.' }),
       run: validateLocalSetup,
     },
-    next: ({ actionResult }) => (actionResult?.status === 'pass' ? 'implement' : 'fix-prerequisites'),
+    // Fix blocking local issues, but do not loop forever on something the workflow cannot repair
+    // (e.g. a credential exposure the model cannot move). After a few attempts, proceed to the
+    // implementation anyway — the later verify step and final report record any residual failure.
+    next: ({ actionResult, attempts }) =>
+      actionResult?.status === 'pass' ? 'implement' : attempts < 3 ? 'fix-prerequisites' : 'implement',
   })
 
   .step('fix-prerequisites', {
@@ -763,6 +900,8 @@ export default skill({
       the personalization implementation. Do not begin the main implementation yet.
       The workflow actions have already attempted package installation and environment-file updates.
       Work only from the findings below; do not repeat a successful action or inspect SDK internals.
+      If a finding cannot be resolved from here (for example a credential you cannot access), say so
+      briefly rather than retrying the same action — the workflow will continue and record it.
 
       Project: ${store.project.projectPath}
 
@@ -941,7 +1080,11 @@ export default skill({
       checksRun: 'string[]',
       failures: 'string[]',
     }),
-    next: ({ response }) => (response.status === 'pass' ? 'verify' : 'fix'),
+    // Repair static failures, but bound the fix loop: after a few attempts, move on to the local
+    // verify action so the run can still reach the runtime steps and report the residual failure
+    // instead of looping on an unfixable build/wiring error.
+    next: ({ response, attempts }) =>
+      response.status === 'pass' ? 'verify' : attempts < 3 ? 'fix' : 'verify',
   })
 
   .step('verify', {
@@ -951,10 +1094,12 @@ export default skill({
       }),
       run: validateLocalSetup,
     },
-    next: ({ actionResult, store }) => {
-      if (actionResult?.status !== 'pass') return 'fix';
-      if (store.steps['review-credentials']?.choice === 'manual-only') return 'present-runtime';
-      return credentialScansDiffer(store.steps['scan-credentials'], actionResult.credentials)
+    next: ({ actionResult, store, attempts }) => {
+      // Bound the verify ↔ fix ↔ verify-code triangle. Once local integrity cannot be repaired in
+      // a few attempts, proceed to the runtime presentation; the final report captures the failure.
+      if (actionResult?.status !== 'pass') return attempts < 3 ? 'fix' : 'present-runtime';
+      if (store.steps['review-readiness']?.choice === 'manual-only') return 'present-runtime';
+      return credentialScansDiffer(effectiveScannedCredentials(store.steps), actionResult.credentials)
         ? 'review-validation-credentials'
         : 'check-connectivity';
     },
@@ -1059,21 +1204,13 @@ export default skill({
       const scenario = store.steps['survey-content']?.testScenario;
       const presentation = store.steps['present-runtime'];
 
-      const statusMessage = !result
-        ? 'Automated aggregate validation was skipped by request; use the browser and Live Events dashboard for runtime evidence.'
-        : result.status === 'pass'
-          ? 'A space-wide aggregate baseline was captured before the finished application was presented. It is not evidence for this run until compared after the reload.'
-          : result?.status === 'warn'
-            ? 'The aggregate endpoint was reachable and a pre-run baseline was captured.'
-            : result?.status === 'skip'
-              ? 'The automated live-event check was skipped because no management token was available.'
-              : 'The pre-run aggregate snapshot failed. Compare the masked credential, source, and target below, then use browser evidence and Live Events independently.';
-
       const requestRows = optimizationDoctorRequestRows(result);
+      const canCompareLiveEvents = result?.liveEvents !== undefined;
+
       const sections = [
         presentation
           ? render.section(
-              'Finished application',
+              'Your app is running',
               [
                 render.kv({
                   URL: presentation.applicationUrl || 'unavailable',
@@ -1092,55 +1229,67 @@ export default skill({
                 .filter(Boolean)
                 .join('\n\n'),
             )
-          : 'The finished application has not been presented yet.',
-        statusMessage,
-        result?.status === 'fail' && requestRows.length > 0
-          ? render.section('Automated Live Events request', render.table(requestRows, { columns: ['Field', 'Value'] }))
-          : '',
-        result?.status === 'fail' && findings.length > 0
-          ? render.table(
-              findings.map((finding) => ({
-                Check: finding.item,
-                Status: finding.status,
-                Detail: finding.detail,
-              })),
-              { columns: ['Check', 'Status', 'Detail'] },
-            )
+          : 'The app has not been opened yet.',
+        // A failed automated check is worth showing; a healthy/skipped one is internal plumbing the
+        // user does not need to reason about, so keep the happy path free of aggregate jargon.
+        result?.status === 'fail'
+          ? [
+              "⚠️ The optional automated Live Events check couldn't run (details below). This does not block you — you can still verify personalization directly in the browser and the Live Events dashboard.",
+              requestRows.length > 0
+                ? render.section('Automated check request', render.table(requestRows, { columns: ['Field', 'Value'] }))
+                : '',
+              findings.length > 0
+                ? render.table(
+                    findings.map((finding) => ({
+                      Check: finding.item,
+                      Status: finding.status,
+                      Detail: finding.detail,
+                    })),
+                    { columns: ['Check', 'Status', 'Detail'] },
+                  )
+                : '',
+            ]
+              .filter(Boolean)
+              .join('\n\n')
           : '',
         liveEventsUrl
-          ? `[Open Contentful Live Events](${liveEventsUrl})`
-          : 'Open the Contentful Personalization app and navigate to **Analytics → Live Events**.',
-        scenario
-          ? render.kv({
-              'Suggested scenario': scenario.kind,
-              Experience: scenario.experienceName ?? scenario.experienceId ?? 'none',
-              Audience:
-                scenario.audienceName ??
-                scenario.audienceId ??
-                (scenario.kind === 'all-visitors' ? 'All visitors' : 'unknown'),
-              Guidance: scenario.summary,
-            })
-          : 'No CMS scenario inventory is available.',
+          ? `**Live Events dashboard:** [open it here](${liveEventsUrl}) — this is where you'll watch events arrive in real time.`
+          : 'Open the Contentful Personalization app and go to **Analytics → Live Events** to watch events arrive.',
+        scenario && scenario.kind !== 'unavailable' && scenario.kind !== 'fixture-needed'
+          ? render.section(
+              'What to look for',
+              render.kv({
+                Experience: scenario.experienceName ?? scenario.experienceId ?? 'none',
+                Audience:
+                  scenario.audienceName ??
+                  scenario.audienceId ??
+                  (scenario.kind === 'all-visitors' ? 'All visitors' : 'unknown'),
+                How: scenario.summary,
+              }),
+            )
+          : '',
         scenario?.kind === 'fixture-needed'
           ? [
-              '**To enable deterministic end-to-end validation:**',
-              '1. In the Contentful Personalization app, create a test audience with an explicit query-parameter condition such as `ctfl_personalization_test=<unique-value>`.',
-              '2. Create one obvious variant and attach the experience to a known baseline entry.',
-              '3. Publish dependencies in order: variant, audience, experience, then the baseline entry.',
-              '4. Return here and choose **Fixture published — resurvey CMS** before claiming an outcome.',
+              "**Heads up:** there's no published experience to test against yet, so you can confirm events flow but not that a variant renders. To test a full variant end to end, set up a quick throwaway experience:",
+              '1. In the Contentful Personalization app, create a test audience with a query-parameter condition such as `ctfl_personalization_test=<unique-value>`.',
+              '2. Create one obvious variant and attach the experience to a known page entry.',
+              '3. Publish in order: variant, audience, experience, then the page entry.',
+              '4. Come back and choose **I published a test experience** to re-check.',
             ].join('\n')
           : scenario?.kind === 'unavailable'
-            ? 'CMS requests were unavailable, so this workflow cannot conclude that the space is empty. Fix API access or use a known scenario, and do not claim an inventoried outcome from this survey.'
+            ? "The CMS inventory couldn't be read, so I can't suggest a specific thing to look for. Fix API access or use a page you already know personalizes, and I won't assume the space is empty."
             : '',
-        [
-          '1. Inspect the finished application at the URL above.',
-          '2. Enable streaming in Live Events.',
-          '3. Reload the application at the known baseline route. Use a query parameter only when that existing audience is actually authored for it.',
-          '4. Confirm a page event for this run.',
-          '5. When a usable experience exists, confirm the expected audience or all-visitors experience, selected variant, and rendered entry metadata.',
-          '6. Grant consent, navigate, or interact only when you intend those side effects.',
-        ].join('\n'),
-      ];
+        render.section(
+          'Do this, then come back',
+          [
+            '1. Open your app at the URL above (or reload it if it is already open).',
+            '2. Open the Live Events dashboard in another tab and turn on streaming.',
+            '3. Reload the app page once so it sends a fresh event.',
+            '4. Watch for the page load to show up in Live Events.',
+            '5. Only click, accept consent, or navigate if you actually want those things to happen.',
+          ].join('\n'),
+        ),
+      ].filter(Boolean);
 
       const hasInventoriedOutcome = hasInventoriedOutcomeScenario(scenario);
       const automatedApiChecksRan = result !== undefined || store.steps['survey-content'] !== undefined;
@@ -1148,10 +1297,10 @@ export default skill({
       const validationOptions = [
         {
           value: 'ready',
-          label: result?.liveEvents ? '🔄 App reloaded — compare evidence' : '✅ App checked — record result',
-          description: result?.liveEvents
-            ? 'Capture the post-run aggregate snapshot and compare it with the silent baseline'
-            : 'Continue to record the strongest browser and Live Events evidence observed',
+          label: '✅ Done — I reloaded the app',
+          description: canCompareLiveEvents
+            ? "I'll check what changed in Live Events and ask what you saw"
+            : "I'll ask what you saw in the browser and Live Events",
         },
         ...(needsCmsSurvey
           ? [
@@ -1159,40 +1308,46 @@ export default skill({
                 value: 'resurvey-content',
                 label:
                   scenario?.kind === 'fixture-needed'
-                    ? '🧩 Fixture published — resurvey CMS'
-                    : '🔄 Retry CMS inventory',
+                    ? '🧩 I published a test experience'
+                    : '🔄 Re-check the CMS for experiences',
                 description:
                   scenario?.kind === 'fixture-needed'
-                    ? 'Inventory the newly authored audience, experience, variants, and baseline link before validation'
-                    : 'Retry the GET-only inventory before claiming a CMS-backed outcome',
+                    ? 'Re-read the audience, experience, variants, and page link you just published'
+                    : 'Look again for a published experience to test against',
               },
             ]
           : []),
         {
           value: 'retry-page',
-          label: '🖥️ Retry opening the app',
-          description: 'Start or reuse the server and present the finished page again',
+          label: '🖥️ Re-open the app for me',
+          description: 'Start or reuse the dev server and open the page again',
         },
         {
           value: 'unavailable',
-          label: '⏸️ Cannot validate now',
-          description: 'Choose whether live validation is deferred or blocked in the next step',
+          label: "⏸️ I can't test right now",
+          description: 'Pause live testing — the setup stays in place',
         },
       ];
 
       return [
         prompt`
-          The pre-run aggregate snapshot has already been captured silently. Present the finished
-          application and runtime instructions below, then wait for the user to inspect or reload
-          the page before any post-run aggregate check. If the automated check returned HTTP 401,
-          state only that the endpoint rejected
-          the exact request shown. Do not say the token is expired, incorrectly scoped, or missing
-          access unless separate evidence establishes that diagnosis.
+          The finished app has already been started and opened, and a silent pre-reload snapshot of
+          the Live Events counts was already captured for later comparison — do NOT mention that
+          snapshot mechanism to the user; it is internal. Present the view below as-is and wait for
+          the user to actually reload the page before continuing.
+
+          Keep your own words plain and encouraging. This step only asks the user to open, stream,
+          and reload — the "what did you see" question comes next, so do not ask them to judge the
+          outcome yet.
+
+          If the automated check failed with HTTP 401, say only that the endpoint rejected the
+          request; do not claim the token is expired, wrongly scoped, or missing access unless other
+          evidence shows that.
         `,
-        view('📡 Runtime Verification', sections.join('\n\n')),
+        view('📡 Let’s watch it work', sections.join('\n\n')),
         act.askUser({
           type: 'structured',
-          question: 'Is the finished application open and has the validation run been triggered?',
+          question: 'Have you opened the app and reloaded the page?',
           options: validationOptions,
         }),
       ];
@@ -1234,55 +1389,73 @@ export default skill({
     prompt: ({ store }) => {
       const before = store.steps['verify-live-events']?.liveEvents;
       const after = store.steps['verify-live-events-after']?.liveEvents;
-      const rows = liveEventsDeltaRows(before, after);
       const scenario = store.steps['survey-content']?.testScenario;
       const hasInventoriedOutcome = hasInventoriedOutcomeScenario(scenario);
       const needsCmsSurvey = !hasInventoriedOutcome;
       const presentation = store.steps['present-runtime'];
       const hasComparison = before !== undefined && after !== undefined;
 
+      // Interpret the before/after delta for the user rather than handing them the raw table.
+      const pageDelta = hasComparison ? (after?.numPageEvents ?? 0) - (before?.numPageEvents ?? 0) : undefined;
+      const deltaReading =
+        pageDelta === undefined
+          ? 'No automated event comparison was available, so rely on what you saw in the browser and Live Events.'
+          : pageDelta > 0
+            ? `Live Events recorded ${pageDelta} new page event(s) since you reloaded — a good sign the app is sending data. It confirms events are flowing, though not on its own which page produced them, so tell me what you actually saw.`
+            : 'Live Events did not record a new page event since the reload. That can happen with timing or consent — tell me what you saw in the browser and dashboard.';
+
       return [
         prompt`
-          Present the finished application URL and the before/after aggregate counts when available.
-          Explain that a positive delta is supporting evidence but still needs correlation with the
-          page the user just loaded. Ask for the strongest result actually observed; do not infer an
-          outcome from counts alone. Keep the application server running for the user after this step.
+          You already asked the user to reload the app; now find out what they actually observed.
+          Present the plain-language reading of the Live Events change below and the app link. Ask
+          what they saw and map it to one option. Do not conclude an outcome from event counts alone
+          — the user's observation is what decides it. Keep the dev server running for them.
+          ${
+            hasComparison
+              ? '\nThe exact before/after counts are available if the user asks, but lead with the plain reading, not the raw table.'
+              : ''
+          }
         `,
         view(
-          'Finished application and runtime evidence',
+          'What did you see?',
           [
             presentation?.applicationUrl
-              ? `[Open the finished application](${presentation.applicationUrl})`
-              : 'The application URL is unavailable.',
-            hasComparison
-              ? render.section(
-                  'Live Events comparison',
-                  render.table(rows, { columns: ['Event', 'Baseline', 'Current', 'Delta'] }),
-                )
-              : 'Automated aggregate comparison was skipped.',
+              ? `[Open your app again](${presentation.applicationUrl}) if you want another look.`
+              : 'The app URL is unavailable.',
+            deltaReading,
           ].join('\n\n'),
         ),
         act.askUser({
           type: 'structured',
-          question: 'What did this run confirm?',
+          question: 'What happened when you loaded the page?',
           options: [
             ...(hasInventoriedOutcome
-              ? [{ value: 'confirmed-end-to-end', label: '✅ Variant confirmed end to end' }]
+              ? [
+                  {
+                    value: 'confirmed-end-to-end',
+                    label: '✅ I saw the personalized variant',
+                    description: 'The expected experience/variant rendered on the page',
+                  },
+                ]
               : []),
-            { value: 'confirmed-transport', label: '📡 Page event confirmed' },
-            { value: 'retry', label: '🔄 Try one more run' },
+            {
+              value: 'confirmed-transport',
+              label: '📡 The page load showed up in Live Events',
+              description: 'Events are reaching Contentful, even if no variant was visible',
+            },
+            { value: 'retry', label: '🔄 Nothing yet — let me try again' },
             ...(needsCmsSurvey
               ? [
                   {
                     value: 'resurvey-content',
                     label:
                       scenario?.kind === 'fixture-needed'
-                        ? '🧩 Fixture published — resurvey CMS'
-                        : '🔄 Retry CMS inventory',
+                        ? '🧩 I published a test experience'
+                        : '🔄 Re-check the CMS for experiences',
                   },
                 ]
               : []),
-            { value: 'unavailable', label: '⏸️ Cannot validate now' },
+            { value: 'unavailable', label: "⏸️ I can't test right now" },
           ],
         }),
       ];
@@ -1293,7 +1466,12 @@ export default skill({
     next: ({ response, attempts, store }) => {
       const scenario = store.steps['survey-content']?.testScenario;
       const hasInventoriedOutcome = hasInventoriedOutcomeScenario(scenario);
-      if (response.choice === 'confirmed-end-to-end' && !hasInventoriedOutcome) return 'runtime-confirmation';
+      // An end-to-end claim is only meaningful when a CMS scenario backs it. If it comes back
+      // without one, re-ask once or twice, then fall through to the report (which downgrades the
+      // unsupported claim) rather than looping forever on an option that was never offered.
+      if (response.choice === 'confirmed-end-to-end' && !hasInventoriedOutcome) {
+        return attempts < 3 ? 'runtime-confirmation' : 'report';
+      }
       return response.choice === 'retry' && attempts < 3
         ? store.steps['verify-live-events']?.liveEvents
           ? 'verify-live-events'

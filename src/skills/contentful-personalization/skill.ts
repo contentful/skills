@@ -113,6 +113,16 @@ export default skill({
       - \`explicit-broken\` — the user clearly describes an existing broken integration
       - \`not-established\` — setup state is absent or only implied
 
+      Set \`userQuery\` to the user's request in their own words — a concise restatement of what
+      they asked for. This is threaded into the downstream setup, analysis, and diagnostic steps,
+      so preserve the concrete details (component names, framework hints, the specific task). Use
+      an empty string only when there is genuinely no request to carry.
+
+      Set \`readinessOnly\` to true ONLY when the user is asking whether their project is *ready*
+      for personalization — a pre-check or prerequisite question ("am I ready?", "can my project
+      support this?", "what do I need before I start?") — and is NOT asking you to actually set it
+      up. Leave it false for any request to implement, install, or enable personalization.
+
       If the request is otherwise ambiguous, set intent to "unclear" and confidence below 0.6.
     `,
     response: type({
@@ -121,6 +131,8 @@ export default skill({
       confidence: 'number',
       'requestedUrl?': 'string',
       'topic?': 'string',
+      'userQuery?': 'string',
+      'readinessOnly?': 'boolean',
       reasoning: 'string',
     }),
     next: ({ response }) => {
@@ -160,11 +172,14 @@ export default skill({
       one of these five categories.
 
       If the user included a live URL for browser inspection, set the \`requestedUrl\` field.
+      Set \`userQuery\` to the user's request in their own words so the downstream setup, analysis,
+      and diagnostic steps keep the concrete details (component names, framework hints, the task).
     `,
     response: type({
       intent: "'onboard' | 'live-debug' | 'doctor' | 'extend-existing' | 'reference'",
       'requestedUrl?': 'string',
       'topic?': 'string',
+      'userQuery?': 'string',
       reasoning: 'string',
     }),
     next: ({ response }) => {
@@ -311,12 +326,13 @@ export default skill({
   // --- Sub-skills ---
 
   .subskill('onboard', onboardSkill, {
-    params: (output) => ({
-      userQuery: '',
-      readinessOnly:
-        (output as { intent?: string })?.intent === 'onboard' &&
-        /ready|readiness|can.*support|prerequisite|pre-check/i.test(''),
-    }),
+    params: (output) => {
+      const routing = output as { userQuery?: string; readinessOnly?: boolean };
+      return {
+        userQuery: routing?.userQuery ?? '',
+        readinessOnly: routing?.readinessOnly ?? false,
+      };
+    },
   })
   .subskill('live-debug', liveDebugSkill, {
     params: (output) => ({
@@ -324,12 +340,14 @@ export default skill({
     }),
   })
   .subskill('doctor', doctorSkill, {
-    params: () => ({
-      userQuery: '',
+    params: (output) => ({
+      userQuery: (output as { userQuery?: string })?.userQuery ?? '',
     }),
   })
   .subskill('extend-existing', extendExistingSkill, {
-    params: () => ({ userQuery: '' }),
+    params: (output) => ({
+      userQuery: (output as { userQuery?: string })?.userQuery ?? '',
+    }),
   })
 
   .build();
