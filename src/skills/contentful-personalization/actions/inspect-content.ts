@@ -34,9 +34,13 @@ function analyzeEntry(json: Record<string, unknown>): {
 } {
   const sys = json.sys as Record<string, unknown> | undefined;
   const fields = json.fields as Record<string, unknown> | undefined;
-  const contentTypeId = (sys?.contentType as Record<string, unknown>)?.sys
-    ? (((sys?.contentType as Record<string, unknown>).sys as Record<string, unknown>).id as string)
-    : undefined;
+  const contentType = sys?.contentType;
+  const contentTypeSys =
+    typeof contentType === 'object' && contentType !== null ? (contentType as Record<string, unknown>).sys : undefined;
+  const contentTypeId =
+    typeof contentTypeSys === 'object' && contentTypeSys !== null
+      ? ((contentTypeSys as Record<string, unknown>).id as string | undefined)
+      : undefined;
 
   if (!fields) {
     return {
@@ -124,6 +128,11 @@ function synthesizeFindings(
   if (cdaError) findings.push(cdaError);
   if (cpaError) findings.push(cpaError);
 
+  // A failed request is not evidence about the entry or its content type. Keep the
+  // connectivity/authentication findings, but do not turn missing API responses into
+  // claims that nt_experiences is absent or that the content type was not extended.
+  if (!cda && !cpa) return findings;
+
   const hasBothApis = cda && cpa;
   const cdaFound = cda?.state.found ?? false;
   const cpaFound = cpa?.state.found ?? false;
@@ -180,7 +189,7 @@ function synthesizeFindings(
       status: 'fail',
       detail: `Published content has ${cdaCount} experience(s) but preview has ${cpaCount}. Republish the entry to include the new experiences.`,
     });
-  } else if (!cdaHasField && !cpaHasField) {
+  } else if ((cda || cpa) && !cdaHasField && !cpaHasField) {
     const source = cda ? 'published content' : 'preview content';
     findings.push({
       item: 'Content type extension',

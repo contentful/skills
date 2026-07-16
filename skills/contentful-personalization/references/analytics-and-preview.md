@@ -2,9 +2,12 @@
 
 Analytics and preview are part of setup, not afterthoughts.
 
+For new integrations, use the `@contentful/optimization` guidance. Apply the Ninetailed sections
+only when maintaining a repository that already uses the legacy SDK.
+
 ## Default Analytics Recommendation
 
-### `@ninetailed/experience.js` (current default)
+### Existing legacy deployments: `@ninetailed/experience.js`
 
 Use `@ninetailed/experience.js-plugin-insights` when the customer wants:
 
@@ -15,7 +18,7 @@ Use `@ninetailed/experience.js-plugin-insights` when the customer wants:
 Do not present `@ninetailed/experience.js-plugin-analytics` as the default built-in answer for these
 setups.
 
-### `@contentful/optimization` (modern)
+### Recommended: `@contentful/optimization`
 
 Analytics is **built in** — there is no separate insights plugin to install. Enable it through the
 SDK:
@@ -24,7 +27,8 @@ SDK:
   (Web SDK) to capture views, clicks, and hovers on `OptimizedEntry` elements.
 - `OptimizedEntry` emits the `data-ctfl-*` attributes the Web SDK observes; resolved entries are
   tracked automatically when interaction tracking is on.
-- Use `track()` (via `useOptimizationActions()` or the SDK instance) for business/conversion events.
+- In React, call `trackEvent()` from `useOptimizationActions()`. On the SDK instance itself, call
+  `track()`.
 - Events flow to the Insights API for experiment and component measurement.
 
 ```tsx
@@ -38,29 +42,30 @@ SDK:
 
 ## Event Responsibilities
 
-### `page()`
+### Page events (`page()` / `trackPageView()`)
 
 - Send once per route change.
 - `@contentful/optimization`: use the router tracker subpath for the router in use
-  (`NextAppAutoPageTracker`, `NextPagesAutoPageTracker`, React Router, TanStack). The Next.js adapter
-  wires the client tracker for you.
+  (`NextAppAutoPageTracker`, `NextPagesAutoPageTracker`, React Router, TanStack). A Next.js bound
+  factory exports the matching tracker; the application still mounts it.
 - `@ninetailed/experience.js`: Pages Router with `NinetailedProvider` wires this for navigation; App
   Router needs a manual tracker.
 
-### `track()`
+### Business events (`track()` / `trackEvent()`)
 
 - Use for business and conversion events such as signup completion or purchase.
 - Keep event names consistent and human-readable.
 
-### `identify()`
+### Identity (`identify()` / `identifyUser()`)
 
 - Use for external user IDs and traits.
-- Never identify using the anonymous profile ID (`ctfl-opt-aid` for the new SDK, `ntaid` for legacy).
+- Never identify using the anonymous profile ID (`ctfl-opt-aid` for Optimization, `ntaid` for legacy).
 
 ## Component View Tracking Notes
 
 - Component view tracking depends on the personalized component actually reaching the viewport.
-- The default in-view threshold is typically `2000` ms.
+- Visibility and dwell thresholds are runtime-specific; check the active runtime reference before
+  changing them.
 - If the customer wants experiment results, the client-side measurement path matters — a client SDK
   must run after render.
 
@@ -74,7 +79,7 @@ SDK:
 
 ## Preview Guidance
 
-### `@ninetailed/experience.js` (current default)
+### Existing legacy deployments: `@ninetailed/experience.js`
 
 Use the preview plugin only when the customer needs editor or QA tooling.
 
@@ -85,7 +90,7 @@ Requirements:
 3. Pass both into the preview plugin.
 4. Gate the plugin away from production unless the customer explicitly wants live preview behavior.
 
-### `@contentful/optimization` (modern)
+### Recommended: `@contentful/optimization`
 
 Use `@contentful/optimization-web-preview-panel` for author preview against an existing Web SDK
 instance. When the panel is open, live updates are forced on for all `OptimizedEntry` components so

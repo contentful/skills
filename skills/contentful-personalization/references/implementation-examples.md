@@ -5,15 +5,15 @@
 Real-world implementation patterns for Contentful Personalization with Next.js, Contentful, and the
 SDK.
 
-Most setups use `@ninetailed/experience.js` — the **current default**. Those patterns are in the
-numbered sections below. A **modern** `@contentful/optimization` section is shown first for new,
-forward-looking work.
+Use `@contentful/optimization` for new integrations and load the matching runtime-specific
+`optimization-*.md` references for authoritative code. The numbered Ninetailed sections remain for
+diagnosing, repairing, or extending repositories that already use the legacy SDK.
 
 ---
 
-## Modern: `@contentful/optimization`
+## Recommended: `@contentful/optimization`
 
-> Pre-release (alpha): pin versions and keep all `@contentful/optimization-*` packages aligned.
+Verify package versions from the target project's lockfile before copying code.
 
 ### Provider setup (React)
 
@@ -37,63 +37,11 @@ export function App() {
 
 ### Next.js App Router (adapter)
 
-Client providers:
-
-```tsx
-// app/providers.tsx
-'use client';
-
-import { NextAppAutoPageTracker, OptimizationRoot } from '@contentful/optimization-nextjs/client';
-
-export function Providers({ children }: { children: React.ReactNode }) {
-  return (
-    <OptimizationRoot
-      clientId={process.env.NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID!}
-      environment={process.env.NEXT_PUBLIC_OPTIMIZATION_ENVIRONMENT ?? 'main'}
-    >
-      <NextAppAutoPageTracker />
-      {children}
-    </OptimizationRoot>
-  );
-}
-```
-
-Server-rendered, resolved entry (first paint without flicker):
-
-```tsx
-// app/[slug]/page.tsx
-import {
-  ServerOptimizedEntry,
-  createNextjsOptimization,
-  getNextjsServerOptimizationData,
-} from '@contentful/optimization-nextjs/server';
-import { cookies, headers } from 'next/headers';
-
-const sdk = createNextjsOptimization({
-  clientId: process.env.OPTIMIZATION_CLIENT_ID!,
-  environment: 'main',
-});
-
-export default async function Page() {
-  const entry = await getPage(/* ... include: 10 ... */);
-  const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
-
-  const { data } = await getNextjsServerOptimizationData(sdk, {
-    consent: { events: true, persistence: true },
-    cookies: cookieStore,
-    headers: headerStore,
-    locale: 'en-US',
-  });
-
-  const resolvedData = sdk.resolveOptimizedEntry(entry, data?.selectedOptimizations);
-
-  return (
-    <ServerOptimizedEntry baselineEntry={entry} resolvedData={resolvedData}>
-      {resolvedData.entry.fields.title}
-    </ServerOptimizedEntry>
-  );
-}
-```
+Use `createNextjsAppRouterOptimization` from `@contentful/optimization-nextjs/app-router` and
+consume the bound root, entry, tracker, and request handler from one application module. For Pages
+Router, use the separate `/pages-router` and `/pages-router/server` factories. Do not copy a generic
+`/client` plus `/server` composition. Load the matching Next.js runtime reference for the canonical
+topology.
 
 ### OptimizedEntry (client render prop)
 
@@ -109,25 +57,21 @@ function HeroEntry({ baselineEntry }) {
 }
 ```
 
-`baselineEntry` must include `nt_experiences` (fetch with `include: 10`). The new SDK resolves the
+`baselineEntry` must include `nt_experiences` (fetch with `include: 10`). The Optimization SDK resolves the
 same `nt_experiences` / `nt_variants` content model as the legacy SDK.
 
 ### Actions, state, and flags (hooks)
 
 ```tsx
-import {
-  useOptimization,
-  useOptimizationActions,
-  useProfileState,
-} from '@contentful/optimization-react-web';
+import { useOptimization, useOptimizationActions, useProfileState } from '@contentful/optimization-react-web';
 
 function Cta() {
-  const { track } = useOptimizationActions();              // destructurable actions
-  return <button onClick={() => track({ event: 'purchase' })}>Buy now</button>;
+  const { trackEvent } = useOptimizationActions(); // destructurable actions
+  return <button onClick={() => trackEvent({ event: 'purchase' })}>Buy now</button>;
 }
 
 function Debug() {
-  const optimization = useOptimization();                  // SDK instance — do NOT destructure
+  const optimization = useOptimization(); // SDK instance — do NOT destructure
   const profile = useProfileState();
   const flag = optimization.getFlag('dark-mode');
   return <pre>{JSON.stringify({ profile, flag }, null, 2)}</pre>;
@@ -152,9 +96,9 @@ Do **not** pass all-locale (`withAllLocales` / `locale=*`) responses to `Optimiz
 
 ---
 
-## Current default: `@ninetailed/experience.js`
+## Existing legacy deployments: `@ninetailed/experience.js`
 
-The remaining patterns use the current production SDK and are the default for most setups.
+The remaining patterns apply only when maintaining a repository that already uses this SDK.
 
 ## Table of Contents
 
@@ -207,6 +151,7 @@ function CustomApp({ Component, pageProps }: AppProps) {
 ```
 
 Key details:
+
 - The `onError` callback fires when the Ninetailed API is unavailable or returns an error.
 - `pageProps.ninetailed?.preview.allExperiences` is populated by `getStaticProps`.
 - The SSR plugin persists the anonymous ID in a cookie for server-side rendering.
@@ -257,6 +202,7 @@ const MyApp = ({ Component, pageProps }: AppProps<CustomPageProps>) => {
 ```
 
 Key differences:
+
 - Uses `NinetailedInsightsPlugin` (analytics) instead of `NinetailedSsrPlugin`
 - Preview plugin configured with `nonce` for CSP support
 - Typed `CustomPageProps` interface
@@ -265,12 +211,13 @@ Key differences:
 
 ## 2. App Router Provider Setup
 
-For App Router, the `NinetailedProvider` from `@ninetailed/experience.js-next` does NOT auto-track page views (that is a Pages Router feature). You must handle page tracking manually or use the new SDK's auto-page trackers.
+For App Router, the `NinetailedProvider` from `@ninetailed/experience.js-next` does NOT auto-track page views (that is a Pages Router feature). You must handle page tracking manually in that legacy deployment. New integrations should use the Optimization SDK's router tracker.
 
-With the new SDK (`@contentful/optimization-react-web`):
+With the recommended SDK (`@contentful/optimization-react-web`):
 
 ```tsx
-import { OptimizationRoot, NextAppAutoPageTracker } from '@contentful/optimization-react-web';
+import { OptimizationRoot } from '@contentful/optimization-react-web';
+import { NextAppAutoPageTracker } from '@contentful/optimization-react-web/router/next-app';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -298,7 +245,11 @@ export function Providers({ children, ninetailed }: ProvidersProps) {
     <NinetailedProvider
       clientId={process.env.NEXT_PUBLIC_NINETAILED_CLIENT_ID || ''}
       environment={process.env.NEXT_PUBLIC_NINETAILED_ENVIRONMENT}
-      plugins={[/* ... */]}
+      plugins={
+        [
+          /* ... */
+        ]
+      }
     >
       {children}
     </NinetailedProvider>
@@ -575,9 +526,7 @@ export const getAllAudiences = async () => {
       content_type: 'nt_audience',
       include: 1,
     });
-    return entries.items
-      .filter(AudienceMapper.isAudienceEntry)
-      .map(AudienceMapper.mapAudience);
+    return entries.items.filter(AudienceMapper.isAudienceEntry).map(AudienceMapper.mapAudience);
   } catch (error) {
     console.error(error);
     return [];
@@ -672,23 +621,16 @@ Key: `holdout` controls the holdout percentage (0 = no holdout, 100 = all baseli
 
 ```typescript
 import { ExperienceConfiguration } from '@ninetailed/experience.js';
-import {
-  BaselineWithExperiencesEntry,
-  ExperienceMapper,
-} from '@ninetailed/experience.js-utils-contentful';
+import { BaselineWithExperiencesEntry, ExperienceMapper } from '@ninetailed/experience.js-utils-contentful';
 
-export const experienceMapper = (
-  entry: BaselineWithExperiencesEntry
-): ExperienceConfiguration<any>[] =>
-  entry.fields.nt_experiences
-    .filter(ExperienceMapper.isExperienceEntry)
-    .map((experience) =>
-      ExperienceMapper.mapCustomExperience(experience, (variant) => ({
-        ...variant.fields,
-        id: variant.sys.id,
-        hidden: false,
-      }))
-    );
+export const experienceMapper = (entry: BaselineWithExperiencesEntry): ExperienceConfiguration<any>[] =>
+  entry.fields.nt_experiences.filter(ExperienceMapper.isExperienceEntry).map((experience) =>
+    ExperienceMapper.mapCustomExperience(experience, (variant) => ({
+      ...variant.fields,
+      id: variant.sys.id,
+      hidden: false,
+    })),
+  );
 ```
 
 ### mapExperience vs. mapCustomExperience
@@ -707,7 +649,7 @@ const experiences = entry.fields.nt_experiences.map((ctfExperience) =>
   ExperienceMapper.mapCustomExperience(ctfExperience, (variant) => ({
     id: variant.sys.id,
     ...variant.fields,
-  }))
+  })),
 );
 ```
 
@@ -798,6 +740,7 @@ export const Variable: React.FC = () => {
 ```
 
 Key patterns:
+
 - Generic type parameter `<{ padding: string; color: string }>` defines the flag value shape
 - Second argument is the fallback/default value
 - `flag.status` can be `'loading'` -- always handle this state
@@ -854,6 +797,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 ```
 
 Key patterns:
+
 - `fallback: true` -- pages not pre-rendered at build time are generated on first request (shows loading state)
 - `revalidate: 5` -- stale-while-revalidate with 5-second window
 - Slug normalization: empty slug array becomes `'/'` for the homepage
@@ -939,25 +883,25 @@ Key: `ESRLoadingComponent` renders the pre-resolved variant immediately from the
 
 ### Standard Next.js Setup
 
-| Variable | Usage | Required |
-|----------|-------|----------|
-| `NEXT_PUBLIC_NINETAILED_CLIENT_ID` | Ninetailed API key | Yes |
-| `NEXT_PUBLIC_NINETAILED_ENVIRONMENT` | Ninetailed environment slug | No (default: `'main'`) |
-| `NEXT_PUBLIC_CONTENTFUL_SPACE_ID` | Contentful space ID | Yes |
-| `NEXT_PUBLIC_CONTENTFUL_TOKEN` | Contentful Delivery API token | Yes |
-| `NEXT_PUBLIC_CONTENTFUL_PREVIEW_TOKEN` | Contentful Preview API token | For preview mode |
-| `NEXT_PUBLIC_CONTENTFUL_ENVIRONMENT` | Contentful environment | No (default: `'master'`) |
-| `NEXT_PUBLIC_GTM_ID` | Google Tag Manager container ID | No |
+| Variable                               | Usage                           | Required                 |
+| -------------------------------------- | ------------------------------- | ------------------------ |
+| `NEXT_PUBLIC_NINETAILED_CLIENT_ID`     | Ninetailed API key              | Yes                      |
+| `NEXT_PUBLIC_NINETAILED_ENVIRONMENT`   | Ninetailed environment slug     | No (default: `'main'`)   |
+| `NEXT_PUBLIC_CONTENTFUL_SPACE_ID`      | Contentful space ID             | Yes                      |
+| `NEXT_PUBLIC_CONTENTFUL_TOKEN`         | Contentful Delivery API token   | Yes                      |
+| `NEXT_PUBLIC_CONTENTFUL_PREVIEW_TOKEN` | Contentful Preview API token    | For preview mode         |
+| `NEXT_PUBLIC_CONTENTFUL_ENVIRONMENT`   | Contentful environment          | No (default: `'master'`) |
+| `NEXT_PUBLIC_GTM_ID`                   | Google Tag Manager container ID | No                       |
 
 ### Server-Side Only Setup (SSR/ESR)
 
 When env vars are only used server-side, omit the `NEXT_PUBLIC_` prefix:
 
-| Variable | Usage |
-|----------|-------|
-| `CONTENTFUL_SPACE_ID` | Contentful space ID |
-| `CONTENTFUL_TOKEN` | Contentful Delivery API token |
-| `CONTENTFUL_PREVIEW_TOKEN` | Contentful Preview API token |
+| Variable                   | Usage                         |
+| -------------------------- | ----------------------------- |
+| `CONTENTFUL_SPACE_ID`      | Contentful space ID           |
+| `CONTENTFUL_TOKEN`         | Contentful Delivery API token |
+| `CONTENTFUL_PREVIEW_TOKEN` | Contentful Preview API token  |
 
 ---
 
@@ -979,7 +923,7 @@ export const getAllExperiences = async () => {
       .map(ExperienceMapper.mapExperience);
   } catch (error) {
     console.error(error);
-    return [];  // graceful degradation: no experiences = baseline content
+    return []; // graceful degradation: no experiences = baseline content
   }
 };
 ```
@@ -1022,14 +966,14 @@ Handles the `fallback: true` case where page data has not loaded yet.
 
 ### Package Import Reference
 
-| Package | Used For | Import Example |
-|---------|----------|----------------|
-| `@ninetailed/experience.js-next` | Next.js SDK | `import { NinetailedProvider, Experience, useProfile } from '@ninetailed/experience.js-next'` |
-| `@ninetailed/experience.js-react` | React-only hooks | `import { useFlagWithManualTracking, EntryAnalytics } from '@ninetailed/experience.js-react'` |
-| `@ninetailed/experience.js-utils-contentful` | Contentful mappers | `import { ExperienceMapper, AudienceMapper } from '@ninetailed/experience.js-utils-contentful'` |
-| `@ninetailed/experience.js-shared` | Shared constants/types | `import { NINETAILED_ANONYMOUS_ID_COOKIE, NinetailedApiClient } from '@ninetailed/experience.js-shared'` |
-| `@ninetailed/experience.js-node` | Server-side SDK | `import { NinetailedAPIClient } from '@ninetailed/experience.js-node'` |
-| `@ninetailed/experience.js` | Core types | `import { ExperienceConfiguration } from '@ninetailed/experience.js'` |
-| `@ninetailed/experience.js-plugin-preview` | Preview widget | `import { NinetailedPreviewPlugin } from '@ninetailed/experience.js-plugin-preview'` |
-| `@ninetailed/experience.js-plugin-ssr` | SSR plugin | `import { NinetailedSsrPlugin } from '@ninetailed/experience.js-plugin-ssr'` |
-| `@ninetailed/experience.js-plugin-insights` | Analytics plugin | `import { NinetailedInsightsPlugin } from '@ninetailed/experience.js-plugin-insights'` |
+| Package                                      | Used For               | Import Example                                                                                           |
+| -------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------- |
+| `@ninetailed/experience.js-next`             | Next.js SDK            | `import { NinetailedProvider, Experience, useProfile } from '@ninetailed/experience.js-next'`            |
+| `@ninetailed/experience.js-react`            | React-only hooks       | `import { useFlagWithManualTracking, EntryAnalytics } from '@ninetailed/experience.js-react'`            |
+| `@ninetailed/experience.js-utils-contentful` | Contentful mappers     | `import { ExperienceMapper, AudienceMapper } from '@ninetailed/experience.js-utils-contentful'`          |
+| `@ninetailed/experience.js-shared`           | Shared constants/types | `import { NINETAILED_ANONYMOUS_ID_COOKIE, NinetailedApiClient } from '@ninetailed/experience.js-shared'` |
+| `@ninetailed/experience.js-node`             | Server-side SDK        | `import { NinetailedAPIClient } from '@ninetailed/experience.js-node'`                                   |
+| `@ninetailed/experience.js`                  | Core types             | `import { ExperienceConfiguration } from '@ninetailed/experience.js'`                                    |
+| `@ninetailed/experience.js-plugin-preview`   | Preview widget         | `import { NinetailedPreviewPlugin } from '@ninetailed/experience.js-plugin-preview'`                     |
+| `@ninetailed/experience.js-plugin-ssr`       | SSR plugin             | `import { NinetailedSsrPlugin } from '@ninetailed/experience.js-plugin-ssr'`                             |
+| `@ninetailed/experience.js-plugin-insights`  | Analytics plugin       | `import { NinetailedInsightsPlugin } from '@ninetailed/experience.js-plugin-insights'`                   |

@@ -5,9 +5,81 @@ import { checkApiConnectivity } from '../actions/check-api.js';
 import { checkOptimizationDoctor } from '../actions/check-optimization-doctor.js';
 import { surveyContent } from '../actions/survey-content.js';
 import { inspectContent } from '../actions/inspect-content.js';
-import { validateSetup } from '../actions/validate-setup.js';
-import { PackagesResult, Recommendation, type Finding } from '../schemas.js';
+import { validateLocalSetup } from '../actions/validate-local-setup.js';
+import { getOptimizationReferenceFiles } from '../optimization-references.js';
+import { implementationGuidance, planPresentationGuidance } from '../implementation-guidance.js';
+import { finishedApplicationSummary, runtimePresentationInstructions } from '../runtime-presentation.js';
+import {
+  PackagesResult,
+  Recommendation,
+  RuntimePresentationResult,
+  ValidationStage,
+  ValidationSummary,
+  type CredentialsScanResult,
+  type Finding,
+  type ValidationStageEvidence,
+} from '../schemas.js';
+import {
+  aggregateLiveEventsEvidence,
+  buildLiveEventsUrl,
+  cmsGraphEvidence,
+  connectivityEvidence,
+  localSetupEvidence,
+  liveEventsDeltaRows,
+  manualRuntimeEvidence,
+} from '../validation/evidence.js';
+import {
+  detectedCredentialRows,
+  managementTokenSource,
+  optimizationDoctorRequestRows,
+} from '../validation/credentials.js';
+import {
+  deriveValidationFinalState,
+  describeValidationFinalState,
+  getRerunStages,
+  VALIDATION_STAGES,
+} from '../validation/policy.js';
 import { VERSION } from '../version.js';
+
+export function resolveDoctorRerunStages(changedStages: ValidationStage[]): ValidationStage[] {
+  const affected = new Set(changedStages.flatMap((stage) => getRerunStages(stage)));
+  return VALIDATION_STAGES.filter((stage) => affected.has(stage));
+}
+
+function beginDoctorRerunStep(stages: ValidationStage[]): string {
+  const first = VALIDATION_STAGES.find((stage) => stages.includes(stage));
+  switch (first) {
+    case 'local-integrity':
+      return 'begin-local-rerun';
+    case 'credential-connectivity':
+      return 'begin-connectivity-rerun';
+    case 'cms-graph':
+      return 'begin-cms-rerun';
+    case 'runtime-transport':
+      return 'begin-runtime-rerun';
+    case 'personalization-outcome':
+      return 're-capture-live-events-baseline';
+    default:
+      return 'validation-report';
+  }
+}
+
+function recordedDoctorChangedStages(steps: unknown): ValidationStage[] {
+  const records = steps as {
+    fix?: { changedStages?: ValidationStage[] };
+    'fix-infra'?: { changedStages?: ValidationStage[] };
+  };
+  const changed = records.fix?.changedStages ?? records['fix-infra']?.changedStages;
+  return changed && changed.length > 0 ? changed : ['local-integrity'];
+}
+
+function recordedDoctorFixSummary(steps: unknown): string {
+  const records = steps as {
+    fix?: { summary?: string };
+    'fix-infra'?: { summary?: string };
+  };
+  return records.fix?.summary ?? records['fix-infra']?.summary ?? 'No fix summary was captured.';
+}
 
 // Shape of credentials extracted by scan-credentials and (optionally) corrected by the user.
 export interface CredentialBlocks {
@@ -34,7 +106,7 @@ export interface ResolvedCredentials {
   };
 }
 
-// Merge scanned credentials with user corrections, keeping secrets out of the model's hands.
+// Merge scanned credentials with user corrections without accepting masked previews as values.
 //
 // `scanned` is the source of truth — it came straight from the .env files and never passed
 // through the LLM. A correction only wins when the user supplied a real, non-masked override.
@@ -68,10 +140,7 @@ export function resolveCredentials({
   };
 
   const previewToken = override(corrections?.contentful?.previewToken, scanned?.contentful?.previewToken);
-  const managementToken = override(
-    corrections?.contentful?.managementToken,
-    scanned?.contentful?.managementToken,
-  );
+  const managementToken = override(corrections?.contentful?.managementToken, scanned?.contentful?.managementToken);
 
   return {
     personalization: {
@@ -105,37 +174,82 @@ function sdkProfile(family: string | undefined): {
   switch (family) {
     case 'modern':
       return {
-        name: '@contentful/optimization (modern SDK)',
-        provider: 'OptimizationRoot (with NextAppAutoPageTracker)',
-        component: 'ServerOptimizedEntry / sdk.resolveOptimizedEntry()',
-        clientEnv: 'NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID',
-        guide: 'sdk-next-guide.md',
+        name: '@contentful/optimization',
+        provider: 'OptimizationRoot, createNextjs* factory, or ContentfulOptimization singleton',
+        component: 'OptimizedEntry / resolveOptimizedEntry()',
+        clientEnv: 'the project-specific OPTIMIZATION_CLIENT_ID alias passed to runtime config',
+        guide: 'optimization-overview.md',
       };
     case 'legacy':
       return {
         name: '@ninetailed/experience.js (legacy SDK)',
         provider: 'NinetailedProvider',
         component: '<Experience> / <Personalize>',
-        clientEnv: 'NEXT_PUBLIC_NINETAILED_CLIENT_ID',
+        clientEnv: 'the project-specific NINETAILED_API_KEY or NINETAILED_CLIENT_ID alias',
         guide: 'sdk-legacy-guide.md',
       };
     case 'both':
       return {
         name: 'both @ninetailed/experience.js and @contentful/optimization',
-        provider: 'NinetailedProvider and/or OptimizationRoot',
-        component: '<Experience> and/or ServerOptimizedEntry',
-        clientEnv: 'NEXT_PUBLIC_NINETAILED_CLIENT_ID or NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID',
-        guide: 'sdk-next-guide.md',
+        provider: 'NinetailedProvider and/or the runtime-specific Optimization root or factory',
+        component: '<Experience> and/or OptimizedEntry',
+        clientEnv: 'the SDK-specific client credential alias used by each runtime config',
+        guide: 'optimization-overview.md',
       };
     default:
       return {
         name: 'no personalization SDK detected',
-        provider: 'NinetailedProvider or OptimizationRoot',
-        component: 'Experience or ServerOptimizedEntry',
-        clientEnv: 'NEXT_PUBLIC_NINETAILED_CLIENT_ID or NEXT_PUBLIC_OPTIMIZATION_CLIENT_ID',
-        guide: 'sdk-next-guide.md',
+        provider: 'NinetailedProvider or a runtime-specific Optimization root or factory',
+        component: 'Experience or OptimizedEntry',
+        clientEnv: 'the SDK-specific client credential alias used by the runtime config',
+        guide: 'optimization-overview.md',
       };
   }
+}
+
+function loadSdkReferences(
+  family: string | undefined,
+  framework: string,
+  load: (file: string) => string,
+  optimizationPackages?: ReadonlyArray<{ name?: string } | undefined>,
+): string {
+  const packageNames = new Set(
+    (optimizationPackages ?? []).map((pkg) => pkg?.name).filter((name): name is string => !!name),
+  );
+  const runtime = packageNames.has('@contentful/optimization-nextjs')
+    ? /hybrid/.test(framework)
+      ? ('unknown' as const)
+      : /pages/.test(framework)
+        ? ('nextjs-pages-router' as const)
+        : ('nextjs-app-router' as const)
+    : packageNames.has('@contentful/optimization-react-native')
+      ? ('react-native' as const)
+      : packageNames.has('@contentful/optimization-react-web')
+        ? ('react-web' as const)
+        : packageNames.has('@contentful/optimization-web')
+          ? ('web' as const)
+          : packageNames.has('@contentful/optimization-node')
+            ? ('node' as const)
+            : ('unknown' as const);
+  const modernFiles = getOptimizationReferenceFiles({ framework, runtime });
+
+  if (
+    packageNames.has('@contentful/optimization-node') &&
+    !packageNames.has('@contentful/optimization-nextjs') &&
+    !modernFiles.includes('optimization-node.md')
+  ) {
+    modernFiles.push('optimization-node.md');
+  }
+
+  const modernReference = modernFiles.map((file) => load(file)).join('\n\n---\n\n');
+
+  if (family === 'legacy') return load('sdk-legacy-guide.md');
+  if (family === 'modern') return modernReference;
+  if (family === 'both') {
+    return `${load('sdk-legacy-guide.md')}\n\n---\n\n${modernReference}`;
+  }
+
+  return `${load('sdk-selection.md')}\n\n---\n\n${load('optimization-overview.md')}`;
 }
 
 function findingsTable(findings: Finding[] | undefined): string {
@@ -167,6 +281,7 @@ export default skill({
       'explorationSummary?': 'string',
       'concerns?': 'string[]',
       'personalizableCandidates?': 'string[]',
+      'renderingBoundaries?': 'string[]',
       packages: PackagesResult,
     }),
     credentials: type({
@@ -192,8 +307,7 @@ export default skill({
       summary: 'string',
     }),
   },
-  })
-
+})
   // --- Programmatic phase: cheap checks before any code exploration ---
 
   .step('detect-sdk', {
@@ -208,7 +322,8 @@ export default skill({
         Report the framework and the absolute or relative project path. Nothing else.
       `,
     response: type({
-      framework: "'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'react' | 'other'",
+      framework:
+        "'nextjs-app' | 'nextjs-pages' | 'nextjs-hybrid' | 'gatsby' | 'remix' | 'react' | 'react-native' | 'other'",
       'frameworkVersion?': 'string',
       projectPath: 'string',
     }),
@@ -249,13 +364,6 @@ export default skill({
       const family = store.project?.sdkFamily;
       const profile = sdkProfile(family);
 
-      const hasPersonalization = !!scanned?.personalization?.apiKey;
-      const hasOptimization = !!scanned?.optimization?.clientId;
-      const hasContentful = !!(
-        scanned?.contentful?.spaceId &&
-        (scanned?.contentful?.accessToken || scanned?.contentful?.previewToken)
-      );
-
       const envTable = render.table(
         envVars.map((ev: { name: string; status: string; maskedValue?: string }) => ({
           Variable: ev.name,
@@ -265,43 +373,12 @@ export default skill({
         { columns: ['Variable', 'Status', 'Value'] },
       );
 
-      const hasAnyCreds = hasPersonalization || hasOptimization || hasContentful;
+      const hasAnyCreds = detectedCredentialRows(scanned).length > 0;
 
       if (hasAnyCreds) {
-        const mask = (v: string) => (v.length <= 8 ? '****' : v.slice(0, 8) + '****');
-        const credRows: Array<{ Credential: string; Value: string }> = [];
-        if (scanned?.personalization?.apiKey) {
-          credRows.push({ Credential: 'Ninetailed API key (legacy SDK)', Value: mask(scanned.personalization.apiKey) });
-        }
-        if (scanned?.personalization?.environment) {
-          credRows.push({ Credential: 'Ninetailed environment', Value: scanned.personalization.environment });
-        }
-        if (scanned?.optimization?.clientId) {
-          credRows.push({ Credential: 'Optimization Client ID (modern SDK)', Value: scanned.optimization.clientId });
-        }
-        if (scanned?.optimization?.environment) {
-          credRows.push({ Credential: 'Optimization environment', Value: scanned.optimization.environment });
-        }
-        if (scanned?.contentful?.spaceId) {
-          credRows.push({ Credential: 'Contentful Space ID', Value: scanned.contentful.spaceId });
-        }
-        if (scanned?.contentful?.accessToken) {
-          credRows.push({ Credential: 'CDA token', Value: mask(scanned.contentful.accessToken) });
-        }
-        if (scanned?.contentful?.previewToken) {
-          credRows.push({ Credential: 'CPA token', Value: mask(scanned.contentful.previewToken) });
-        }
-        if (scanned?.contentful?.managementToken) {
-          credRows.push({
-            Credential: 'CMA token / CFPAT (for optimization-doctor)',
-            Value: mask(scanned.contentful.managementToken),
-          });
-        }
-        if (scanned?.contentful?.environment) {
-          credRows.push({ Credential: 'Contentful environment', Value: scanned.contentful.environment });
-        }
-
-        const credTable = render.table(credRows, { columns: ['Credential', 'Value'] });
+        const credTable = render.table(detectedCredentialRows(scanned), {
+          columns: ['Credential', 'Variable', 'Value', 'Source'],
+        });
 
         return [
           prompt`
@@ -309,8 +386,7 @@ export default skill({
             user — show the environment variable table and the detected credentials table exactly
             as rendered. Then let the user confirm, correct, or skip.
 
-            The full credential values are already captured securely from the scan — the table
-            shows masked previews only. Your response must NOT carry credential values:
+            The table shows masked previews. Do not repeat raw credential values in prose:
 
             - If the user confirms the detected values are correct → set runCredentialChecks = true
               and DO NOT include any corrections. The real scanned values will be used automatically.
@@ -473,10 +549,16 @@ export default skill({
     action: {
       mapInput: ({ store }) => {
         const creds = store.credentials;
+        const confirmed = store.steps['confirm-credentials'] as { corrections?: CredentialBlocks } | undefined;
+        const scanned = store.steps['scan-credentials'] as CredentialsScanResult | undefined;
+        const tokenSource = confirmed?.corrections?.contentful?.managementToken
+          ? 'user-provided correction'
+          : managementTokenSource(scanned);
         return {
           spaceId: creds?.contentful?.spaceId ?? '',
           environmentId: creds?.contentful?.environment ?? 'master',
           ...(creds?.contentful?.managementToken ? { managementToken: creds.contentful.managementToken } : {}),
+          ...(tokenSource ? { managementTokenSource: tokenSource } : {}),
         };
       },
       run: checkOptimizationDoctor,
@@ -509,16 +591,11 @@ export default skill({
       // optimizationDoctor) NOT be an infra problem — a quiet 15-minute window is
       // not necessarily broken infra
       const missingCreds = !hasPersonalizationCred;
-      const hasInfraProblem =
-        missingCreds ||
-        apiFailed ||
-        surveyFailed ||
-        surveyWarned ||
-        optimizationDoctorFailed;
+      const hasInfraProblem = missingCreds || apiFailed || surveyFailed || surveyWarned || optimizationDoctorFailed;
 
       const credNote = hasPersonalizationCred
         ? `✅ ${profile.name} credentials are available.`
-        : `❌ No personalization credentials found — the connectivity and content checks could not run. The most likely problem is a missing or misnamed \`${profile.clientEnv}\`.`;
+        : `❌ No personalization credentials found — the connectivity and content checks could not run. The most likely problem is a missing or misnamed value for ${profile.clientEnv}.`;
 
       const apiNote =
         apiData?.status === 'pass'
@@ -528,22 +605,25 @@ export default skill({
             : '❌ Experience API connectivity failed.';
 
       const surveyNote =
-        survey?.status === 'pass'
-          ? '✅ Personalization content looks healthy.'
-          : survey?.status === 'skip'
-            ? '⏭️ Content survey was skipped (no Contentful tokens).'
-            : survey?.status === 'warn'
-              ? '⚠️ Content survey found something worth attention.'
-              : '❌ Content survey found published/preview inconsistencies.';
+        survey?.testScenario.kind === 'unavailable'
+          ? '❌ The CMS survey could not retrieve content. No graph, authoring, or publishing conclusion can be drawn until Content API connectivity is restored.'
+          : survey?.status === 'pass'
+            ? '✅ The published inventory and baseline-link checks passed.'
+            : survey?.status === 'skip'
+              ? '⏭️ Content survey was skipped (no Contentful tokens).'
+              : survey?.status === 'warn'
+                ? '⚠️ Content survey found something worth attention.'
+                : '❌ Content survey found published/preview inconsistencies.';
 
       const optimizationDoctorNote =
         optimizationDoctor?.status === 'pass'
-          ? '✅ Optimization-doctor endpoint returned live-event counts for the last 15 minutes.'
+          ? '✅ Optimization-doctor returned recent space-wide counts. They are not correlated to this diagnostic run.'
           : optimizationDoctor?.status === 'warn'
             ? '⚠️ Optimization-doctor endpoint reachable but no live events observed in the last 15 minutes.'
             : optimizationDoctor?.status === 'skip'
               ? '⏭️ Optimization-doctor check skipped (no CONTENTFUL_MANAGEMENT_TOKEN available).'
               : '❌ Optimization-doctor endpoint call failed.';
+      const optimizationDoctorRequest = optimizationDoctorRequestRows(optimizationDoctor);
 
       const sections: string[] = [];
       sections.push(render.kv({ SDK: profile.name }));
@@ -553,7 +633,13 @@ export default skill({
       sections.push(
         render.section(
           '🩺 Optimization doctor (live events last 15m)',
-          `${optimizationDoctorNote}\n\n${findingsTable(optimizationDoctor?.findings)}`,
+          [
+            optimizationDoctorNote,
+            optimizationDoctorRequest.length > 0
+              ? render.table(optimizationDoctorRequest, { columns: ['Field', 'Value'] })
+              : '',
+            findingsTable(optimizationDoctor?.findings),
+          ].join('\n\n'),
         ),
       );
 
@@ -600,6 +686,15 @@ export default skill({
           - **Never tell the user their content is healthy or rule out their concern based on these
             checks alone.** If the survey passed, say only that the checks it can run did not find a
             problem — not that content is fine.
+          - A successful synthetic Experience API probe proves credential/destination connectivity,
+            not that the application runtime sends events.
+          - Non-zero optimization-doctor counts are space-wide aggregate evidence and cannot prove
+            that this page, profile, or validation run produced them without a before/after delta
+            plus user correlation.
+          - An HTTP 401 proves only that the endpoint rejected this exact request. Do not say the
+            token is expired, incorrectly scoped, or missing space access unless separate evidence
+            establishes that diagnosis. First compare the masked token, source, space, environment,
+            and endpoint shown in the request table.
 
           If the user has described a specific symptom (especially a content or publishing
           suspicion), take it seriously: do NOT argue it away on the strength of this summary.
@@ -664,7 +759,7 @@ export default skill({
         system`Fix infrastructure problems only — do NOT touch provider/middleware/component code here. Match the project's existing style. For content publishing problems, give the user clear Contentful UI steps; you cannot publish for them.`,
         prompt`
           Fix the infrastructure problems found by the programmatic checks. This project uses
-          ${profile.name}, so the personalization client ID env var should be \`${profile.clientEnv}\`.
+          ${profile.name}, so confirm ${profile.clientEnv}.
 
           Fix strategy:
           - **Missing / misnamed env vars** → use the writeEnvFile action. Confirm the correct value
@@ -677,6 +772,8 @@ export default skill({
             entries first, then experience entries, then republish the baseline entries.
 
           Do NOT explore or modify application code in this step.
+          In your structured result, record which shared evidence stages changed so the doctor can
+          rerun that stage and its downstream dependencies.
 
           ## Current environment variables
           ${envView}
@@ -716,6 +813,7 @@ export default skill({
     response: type({
       summary: 'string',
       filesModified: 'string[]',
+      'changedStages?': ValidationStage.array(),
     }),
     next: 'ask-fixed',
   })
@@ -733,7 +831,10 @@ export default skill({
       }),
     ],
     response: type({ working: 'boolean' }),
-    next: ({ response }) => (response.working ? 'done' : 'explore-code'),
+    next: ({ response, store }) =>
+      response.working
+        ? beginDoctorRerunStep(resolveDoctorRerunStages(recordedDoctorChangedStages(store.steps)))
+        : 'explore-code',
   })
 
   // --- Optional drill-down: inspect one specific entry in depth ---
@@ -800,6 +901,18 @@ export default skill({
   .step('explore-code', {
     prompt: ({ store, refs }) => {
       const profile = sdkProfile(store.project?.sdkFamily);
+      const framework = store.project?.framework ?? 'other';
+      const sdkReference = loadSdkReferences(
+        store.project?.sdkFamily,
+        framework,
+        (file) => refs.load(file),
+        store.project?.packages?.packages?.optimization,
+      );
+      const modernServerChecks = /nextjs-pages/.test(framework)
+        ? 'For the Optimization Pages Router SDK, check the separate client and server createNextjsPagesRouterOptimization factories plus the getServerSideProps state handoff; it does not use middleware or proxy.'
+        : /nextjs/.test(framework)
+          ? 'For the Optimization App Router SDK, check createNextjsAppRouterOptimization, its bound components, and the version-appropriate proxy.ts or middleware.ts request handler.'
+          : 'For the Optimization SDK, check the runtime-specific root or process singleton and its request or route boundary.';
       return prompt`
         The programmatic checks (credentials, API connectivity, content state) are done. Now
         explore the CODE to understand the personalization setup. Gather facts — do NOT diagnose
@@ -812,17 +925,19 @@ export default skill({
 
         2. **Middleware / SSR** — Look for middleware.ts/js, edge functions, or server-side
            personalization. ${
-             profile.guide === 'sdk-next-guide.md'
-               ? 'For the modern SDK, check for createNextjsOptimizationRequestHandler (cookie management) and getNextjsServerOptimizationData (server preflight), plus `export const dynamic = "force-dynamic"` on personalized routes.'
+             profile.guide === 'optimization-overview.md'
+               ? modernServerChecks
                : 'Check for preflight calls, cookie handling, and matcher config.'
            }
 
-        3. **Component wiring** — Search for ${profile.component}, the component mapper, and how
-           personalizable components are wrapped and resolved.
+        3. **Component wiring and rendering boundaries** — Search for ${profile.component}, then
+           enumerate every shared component or block mapper, section or page dispatcher, rich-text
+           renderer, and direct entry renderer. Record which boundaries are wrapped and which
+           compatible content paths remain outside personalization.
 
         4. **Analytics** — How are page/track/identify events emitted? ${
-          profile.guide === 'sdk-next-guide.md'
-            ? 'For the modern SDK, this is built in via trackEntryInteraction / NextAppAutoPageTracker.'
+          profile.guide === 'optimization-overview.md'
+            ? 'For the Optimization SDK, check the runtime-specific auto tracker, OptimizedEntry interaction tracking, and accepted event streams.'
             : 'For the legacy SDK, look for the insights plugin.'
         }
 
@@ -832,7 +947,7 @@ export default skill({
         - Provider missing or wrapping the wrong subtree
         - Middleware matcher that catches static assets
         - Include depth too shallow for personalization entries
-        - Components that fetch their own data (breaks personalization)
+        - Entry fetching that bypasses the selected SDK's manual or managed resolution boundary
         - Hydration mismatch patterns
 
         For each area, note the specific file paths and what you found. If something looks wrong,
@@ -842,22 +957,22 @@ export default skill({
         ${refs.load('how-personalization-works.md')}
 
         ## Reference: SDK Guide
-        ${refs.load(profile.guide)}
+        ${sdkReference}
       `;
     },
     response: type({
       explorationSummary: 'string',
       concerns: 'string[]',
       'personalizableCandidates?': 'string[]',
+      renderingBoundaries: 'string[]',
     }),
     save: ({ response }) => ({
       step: response,
       project: {
         explorationSummary: response.explorationSummary,
         concerns: response.concerns,
-        ...(response.personalizableCandidates
-          ? { personalizableCandidates: response.personalizableCandidates }
-          : {}),
+        renderingBoundaries: response.renderingBoundaries,
+        ...(response.personalizableCandidates ? { personalizableCandidates: response.personalizableCandidates } : {}),
       },
     }),
     next: 'review',
@@ -866,6 +981,12 @@ export default skill({
   .step('review', {
     prompt: ({ store, refs }) => {
       const profile = sdkProfile(store.project?.sdkFamily);
+      const sdkReference = loadSdkReferences(
+        store.project?.sdkFamily,
+        store.project?.framework ?? 'other',
+        (file) => refs.load(file),
+        store.project?.packages?.packages?.optimization,
+      );
 
       const explorationView = store.project.explorationSummary
         ? [
@@ -971,7 +1092,7 @@ export default skill({
           ${refs.load('common-errors.md')}
 
           ## Reference: SDK Guide
-          ${refs.load(profile.guide)}
+          ${sdkReference}
         `;
     },
     response: type({
@@ -1076,7 +1197,10 @@ export default skill({
         sections.push(
           render.section(
             '🩺 Optimization doctor (live events last 15m)',
-            findingsTable(optimizationDoctor.findings),
+            [
+              render.table(optimizationDoctorRequestRows(optimizationDoctor), { columns: ['Field', 'Value'] }),
+              findingsTable(optimizationDoctor.findings),
+            ].join('\n\n'),
           ),
         );
       }
@@ -1086,7 +1210,9 @@ export default skill({
         const comparisonNote = content.entry?.comparison?.hasUnpublishedChanges
           ? '\n\n🔴 **Unpublished changes detected** — see recommendations below.'
           : '';
-        sections.push(render.section('📄 Single-Entry Inspection', `${findingsTable(content.findings)}${comparisonNote}`));
+        sections.push(
+          render.section('📄 Single-Entry Inspection', `${findingsTable(content.findings)}${comparisonNote}`),
+        );
       }
 
       const recommendations = diagnosis.recommendations!.filter((r): r is Recommendation => !!r);
@@ -1141,6 +1267,20 @@ export default skill({
 
       const refSections: Array<{ label: string; content: string }> = [];
       const categories = new Set(recs.map((r) => r.category));
+      const hasCodeFix = ['provider', 'middleware', 'components', 'analytics'].some((category) =>
+        categories.has(category),
+      );
+      if (hasCodeFix) {
+        refSections.push({
+          label: 'SDK Contract',
+          content: loadSdkReferences(
+            store.project?.sdkFamily,
+            store.project?.framework ?? 'other',
+            (file) => refs.load(file),
+            store.project?.packages?.packages?.optimization,
+          ),
+        });
+      }
       if (categories.has('provider'))
         refSections.push({
           label: 'Provider Patterns',
@@ -1173,16 +1313,32 @@ export default skill({
           For each fix, explain what file(s) you'll change and why.
           Be specific about your approach.
 
+          ## Plan presentation
+          ${planPresentationGuidance()}
+
           For **content** category issues (unpublished entries, missing nt_experiences field, etc.),
           these cannot be fixed in code — provide step-by-step instructions for what the user
           needs to do in the Contentful web UI, including publishing order.
 
           Do NOT start implementing — this is the planning step only.
 
+          ## Source and scope rules
+          ${implementationGuidance({
+            sdk:
+              store.project?.sdkFamily === 'modern'
+                ? 'optimization'
+                : store.project?.sdkFamily === 'legacy'
+                  ? 'ninetailed'
+                  : store.project?.sdkFamily === 'both'
+                    ? 'mixed'
+                    : 'unknown',
+          })}
+
           ${render.kv({
             Framework: store.project.framework,
             Project: store.project.projectPath,
             SDK: sdkProfile(store.project?.sdkFamily).name,
+            'Rendering boundaries': store.project.renderingBoundaries?.join(', ') || 'none found',
           })}
 
           ## Reference Material
@@ -1214,6 +1370,20 @@ export default skill({
 
       const categories = new Set(recs.map((r) => r.category));
       const refSections: Array<{ label: string; content: string }> = [];
+      const hasCodeFix = ['provider', 'middleware', 'components', 'analytics'].some((category) =>
+        categories.has(category),
+      );
+      if (hasCodeFix) {
+        refSections.push({
+          label: 'SDK Contract',
+          content: loadSdkReferences(
+            store.project?.sdkFamily,
+            store.project?.framework ?? 'other',
+            (file) => refs.load(file),
+            store.project?.packages?.packages?.optimization,
+          ),
+        });
+      }
       if (categories.has('packages') || categories.has('env'))
         refSections.push({
           label: 'Env Var Spec',
@@ -1249,9 +1419,25 @@ export default skill({
           - **Content issues** (unpublished entries, missing fields) → provide Contentful UI instructions
 
           After all fixes, the setup will be re-verified automatically.
+          In your structured result, list the evidence stages changed by the fix. Environment,
+          package, or source changes are local-integrity; SDK destination changes are
+          credential-connectivity; Contentful entry/publish work is cms-graph; browser/event
+          changes are runtime-transport; targeting/rendering changes are personalization-outcome.
 
           ${fixPlan ? `**Plan:** ${fixPlan}` : ''}
           ${fixFiles?.length ? `**Files to modify:** ${fixFiles.join(', ')}` : ''}
+
+          ## Source and scope rules
+          ${implementationGuidance({
+            sdk:
+              store.project?.sdkFamily === 'modern'
+                ? 'optimization'
+                : store.project?.sdkFamily === 'legacy'
+                  ? 'ninetailed'
+                  : store.project?.sdkFamily === 'both'
+                    ? 'mixed'
+                    : 'unknown',
+          })}
 
           ## Reference Material
           ${refSections.map((r) => `### ${r.label}\n${r.content}`).join('\n\n---\n\n')}
@@ -1264,43 +1450,456 @@ export default skill({
         }),
       ];
     },
-    next: 're-verify',
+    response: type({
+      summary: 'string',
+      changedStages: ValidationStage.array(),
+    }),
+    next: ({ response }) =>
+      beginDoctorRerunStep(
+        resolveDoctorRerunStages(response.changedStages.length > 0 ? response.changedStages : ['local-integrity']),
+      ),
   })
 
-  .step('re-verify', {
+  .step('begin-local-rerun', {
+    prompt: prompt`
+      Continue immediately with the affected validation ladder, beginning at local integrity.
+      Do not ask the user a question. Return the acknowledgement object so the deterministic
+      checks can run in sequence. Return {}.
+    `,
+    response: type({}),
+    next: 're-verify-code',
+  })
+
+  .step('begin-connectivity-rerun', {
+    prompt: prompt`
+      Continue immediately with the affected validation ladder, beginning at credential and
+      destination connectivity. Do not ask the user a question. Return {}.
+    `,
+    response: type({}),
+    next: 're-check-api',
+  })
+
+  .step('begin-cms-rerun', {
+    prompt: prompt`
+      Continue immediately with the affected validation ladder, beginning with the GET-only CMS
+      graph survey. Do not ask the user a question. Return {}.
+    `,
+    response: type({}),
+    next: 're-survey-content',
+  })
+
+  .step('begin-runtime-rerun', {
+    prompt: prompt`
+      Continue immediately with the affected validation ladder, beginning with the optional
+      aggregate Live Events baseline. Do not ask the user a question. Return {}.
+    `,
+    response: type({}),
+    next: 're-capture-live-events-baseline',
+  })
+
+  .step('re-verify-code', {
+    prompt: ({ store }) => prompt`
+      Re-run the project's relevant build, typecheck, test, and lint commands after the doctor fix.
+      Verify the repaired static wiring and the original symptom's regression path. Do not claim
+      success from code inspection alone, and do not fix failures in this step.
+
+      Project: ${store.project?.projectPath ?? '.'}
+      Fix: ${recordedDoctorFixSummary(store.steps)}
+    `,
+    response: type({
+      status: "'pass' | 'fail'",
+      summary: 'string',
+      checksRun: 'string[]',
+      failures: 'string[]',
+    }),
+    next: ({ response, attempts }) => (response.status === 'fail' && attempts < 3 ? 'fix' : 're-verify-local'),
+  })
+
+  .step('re-verify-local', {
     action: {
       mapInput: ({ store }) => ({
         projectPath: store.project?.projectPath ?? '.',
       }),
-      run: validateSetup,
+      run: validateLocalSetup,
     },
-    next: ({ actionResult, attempts }) => {
-      if (actionResult?.overallStatus === 'pass') return 'done';
-      if (attempts >= 3) return 'done';
-      return 'fix';
+    next: 're-check-api',
+  })
+
+  .step('re-check-api', {
+    action: {
+      mapInput: ({ store }) => {
+        const refreshed = store.steps['re-verify-local']?.credentials;
+        const original = store.credentials;
+        return {
+          ...(refreshed?.personalization?.apiKey
+            ? { apiKey: refreshed.personalization.apiKey }
+            : original?.personalization?.apiKey
+              ? { apiKey: original.personalization.apiKey }
+              : {}),
+          ninetailedEnvironment:
+            refreshed?.personalization?.environment ?? original?.personalization?.environment ?? 'main',
+          ...(refreshed?.optimization?.clientId
+            ? { optimizationClientId: refreshed.optimization.clientId }
+            : original?.optimization?.clientId
+              ? { optimizationClientId: original.optimization.clientId }
+              : {}),
+          optimizationEnvironment:
+            refreshed?.optimization?.environment ?? original?.optimization?.environment ?? 'main',
+        };
+      },
+      run: checkApiConnectivity,
     },
+    next: 're-survey-content',
+  })
+
+  .step('re-survey-content', {
+    action: {
+      mapInput: ({ store }) => {
+        const refreshed = store.steps['re-verify-local']?.credentials?.contentful;
+        const original = store.credentials?.contentful;
+        return {
+          spaceId: refreshed?.spaceId ?? original?.spaceId ?? '',
+          environment: refreshed?.environment ?? original?.environment ?? 'master',
+          ...(refreshed?.accessToken
+            ? { accessToken: refreshed.accessToken }
+            : original?.accessToken
+              ? { accessToken: original.accessToken }
+              : {}),
+          ...(refreshed?.previewToken
+            ? { previewToken: refreshed.previewToken }
+            : original?.previewToken
+              ? { previewToken: original.previewToken }
+              : {}),
+        };
+      },
+      run: surveyContent,
+    },
+    next: 're-capture-live-events-baseline',
+  })
+
+  .step('re-capture-live-events-baseline', {
+    action: {
+      mapInput: ({ store }) => {
+        const refreshed = store.steps['re-verify-local']?.credentials?.contentful;
+        const original = store.credentials?.contentful;
+        return {
+          spaceId: refreshed?.spaceId ?? original?.spaceId ?? '',
+          environmentId: refreshed?.environment ?? original?.environment ?? 'master',
+          ...(refreshed?.managementToken
+            ? { managementToken: refreshed.managementToken }
+            : original?.managementToken
+              ? { managementToken: original.managementToken }
+              : {}),
+        };
+      },
+      run: checkOptimizationDoctor,
+    },
+    next: 're-present-runtime',
+  })
+
+  .step('re-present-runtime', {
+    prompt: ({ store }) => {
+      const refreshed = store.steps['re-verify-local']?.credentials?.contentful;
+      const original = store.credentials?.contentful;
+      const liveEventsUrl = buildLiveEventsUrl(
+        refreshed?.spaceId ?? original?.spaceId,
+        refreshed?.environment ?? original?.environment ?? 'master',
+      );
+      const scenario = store.steps['re-survey-content']?.testScenario ?? store.steps['survey-content']?.testScenario;
+
+      return prompt`
+        ${runtimePresentationInstructions({
+          projectPath: store.project?.projectPath ?? '.',
+          packageManager: store.project?.packages?.packageManager ?? 'the detected package manager',
+          liveEventsUrl,
+          scenario:
+            scenario?.summary ?? 'Use the same route, profile state, and trigger that reproduced the original problem.',
+          evidenceTarget:
+            'The original symptom no longer reproduces, the repaired page renders correctly, and downstream runtime behavior still works.',
+        })}
+      `;
+    },
+    response: RuntimePresentationResult,
+    next: 're-run-runtime',
+  })
+
+  .step('re-run-runtime', {
+    prompt: ({ store }) => {
+      const presentation = store.steps['re-present-runtime'];
+      const refreshed = store.steps['re-verify-local']?.credentials?.contentful;
+      const original = store.credentials?.contentful;
+      const liveEventsUrl = buildLiveEventsUrl(
+        refreshed?.spaceId ?? original?.spaceId,
+        refreshed?.environment ?? original?.environment ?? 'master',
+      );
+      const scenario = store.steps['re-survey-content']?.testScenario ?? store.steps['survey-content']?.testScenario;
+
+      return [
+        prompt`
+          Present the finished application and regression instructions below. Wait for the user to
+          inspect or reload the page before collecting the post-run aggregate snapshot. Prefer the
+          known trigger or preview panel; do not invent query parameters. Consent changes,
+          navigation, and interactions must remain intentional user actions.
+        `,
+        view(
+          'Finished application regression run',
+          [
+            render.kv({
+              URL: presentation?.applicationUrl || 'unavailable',
+              Server: presentation?.serverStatus ?? 'unavailable',
+              Browser: presentation?.browserStatus ?? 'unavailable',
+              'Live Events': presentation?.liveEventsStatus ?? 'unavailable',
+            }),
+            presentation?.summary ?? 'The finished application has not been presented.',
+            liveEventsUrl
+              ? `[Open Contentful Live Events](${liveEventsUrl})`
+              : 'Open the Personalization app and navigate to Analytics → Live Events.',
+            scenario?.summary ?? 'Use the same route, profile state, and trigger that reproduced the original problem.',
+            'Inspect the page, enable Live Events streaming, then reload and reproduce the original path.',
+          ].join('\n\n'),
+        ),
+        act.askUser({
+          type: 'structured',
+          question: 'Is the finished application open and has the regression run been triggered?',
+          options: [
+            { value: 'ready', label: '🔄 App reloaded — compare evidence' },
+            { value: 'retry-page', label: '🖥️ Retry opening the app' },
+            { value: 'unavailable', label: '⏸️ Cannot validate now' },
+          ],
+        }),
+      ];
+    },
+    response: type({ choice: "'ready' | 'retry-page' | 'unavailable'" }),
+    next: ({ response }) =>
+      response.choice === 'retry-page'
+        ? 're-present-runtime'
+        : response.choice === 'unavailable'
+          ? 're-validation-disposition'
+          : 're-capture-live-events',
+  })
+
+  .step('re-capture-live-events', {
+    action: {
+      mapInput: ({ store }) => {
+        const refreshed = store.steps['re-verify-local']?.credentials?.contentful;
+        const original = store.credentials?.contentful;
+        return {
+          spaceId: refreshed?.spaceId ?? original?.spaceId ?? '',
+          environmentId: refreshed?.environment ?? original?.environment ?? 'master',
+          ...(refreshed?.managementToken
+            ? { managementToken: refreshed.managementToken }
+            : original?.managementToken
+              ? { managementToken: original.managementToken }
+              : {}),
+        };
+      },
+      run: checkOptimizationDoctor,
+    },
+    next: 're-confirm-runtime',
+  })
+
+  .step('re-confirm-runtime', {
+    prompt: ({ store }) => {
+      const refreshed = store.steps['re-verify-local']?.credentials?.contentful;
+      const original = store.credentials?.contentful;
+      const liveEventsUrl = buildLiveEventsUrl(
+        refreshed?.spaceId ?? original?.spaceId,
+        refreshed?.environment ?? original?.environment ?? 'master',
+      );
+      const scenario = store.steps['re-survey-content']?.testScenario ?? store.steps['survey-content']?.testScenario;
+      const liveEventRows = liveEventsDeltaRows(
+        store.steps['re-capture-live-events-baseline']?.liveEvents,
+        store.steps['re-capture-live-events']?.liveEvents,
+      );
+      const presentation = store.steps['re-present-runtime'];
+      const hasLiveEventComparison =
+        store.steps['re-capture-live-events-baseline']?.liveEvents !== undefined &&
+        store.steps['re-capture-live-events']?.liveEvents !== undefined;
+      const liveEventComparison = hasLiveEventComparison
+        ? render.section(
+            'Before/after aggregate counts',
+            `${render.table(liveEventRows, { columns: ['Event', 'Baseline', 'Current', 'Delta'] })}\n\n${store.steps['re-capture-live-events-baseline']?.status === 'fail' || store.steps['re-capture-live-events']?.status === 'fail' ? 'One or both aggregate endpoint calls failed, so unavailable cells are not observed zero-event counts. Fix endpoint access before comparing.' : 'These space-wide deltas are supporting evidence only; correlate them with the reproduction run.'}`,
+          )
+        : 'No automated before/after comparison was required for the affected evidence stages.';
+
+      return [
+        prompt`
+          Present the finished application and post-run evidence. The user has already been asked to
+          reproduce the original path. Ask for the strongest result actually observed; do not infer
+          success from aggregate counts alone. Keep the application server running for the user.
+        `,
+        view(
+          'Doctor regression validation',
+          [
+            liveEventsUrl
+              ? `[Open Contentful Live Events](${liveEventsUrl})`
+              : 'Open the Personalization app and navigate to Analytics → Live Events.',
+            presentation?.applicationUrl
+              ? `[Open the finished application](${presentation.applicationUrl})`
+              : 'The application URL is unavailable.',
+            scenario?.summary ?? 'Use the same route, profile state, and trigger that reproduced the original problem.',
+            liveEventComparison,
+          ].join('\n\n'),
+        ),
+        act.askUser({
+          type: 'structured',
+          question: 'What did the regression run prove?',
+          options: [
+            { value: 'confirmed-end-to-end', label: '✅ Original symptom fixed end to end' },
+            { value: 'confirmed-transport', label: '📡 Runtime event confirmed only' },
+            { value: 'failed', label: '❌ Original symptom still reproduces' },
+            { value: 'unavailable', label: '⏸️ Cannot validate now' },
+          ],
+        }),
+      ];
+    },
+    response: type({
+      choice: "'confirmed-end-to-end' | 'confirmed-transport' | 'failed' | 'unavailable'",
+    }),
+    next: ({ response }) => (response.choice === 'unavailable' ? 're-validation-disposition' : 'validation-report'),
+  })
+
+  .step('re-validation-disposition', {
+    prompt: act.askUser({
+      type: 'structured',
+      question: 'Why is the regression run unavailable?',
+      options: [
+        {
+          value: 'defer',
+          label: '⏭️ Defer by choice',
+          description: 'Keep the repaired implementation while live regression evidence remains unresolved',
+        },
+        {
+          value: 'blocked',
+          label: '🚧 Authoring or publishing blocked',
+          description: 'Permissions, ownership, publishing, or organizational constraints prevent reproduction',
+        },
+      ],
+    }),
+    response: type({ choice: "'defer' | 'blocked'" }),
+    next: 'validation-report',
+  })
+
+  .step('validation-report', {
+    prompt: ({ store }) => {
+      const rerunStages = resolveDoctorRerunStages(recordedDoctorChangedStages(store.steps));
+      const evidence: ValidationStageEvidence[] = [];
+
+      if (rerunStages.includes('local-integrity') && store.steps['re-verify-local']) {
+        const local = localSetupEvidence(store.steps['re-verify-local']);
+        if (store.steps['re-verify-code']) {
+          local.findings.push({
+            item: 'Doctor build and static regression',
+            status: store.steps['re-verify-code'].status,
+            detail: store.steps['re-verify-code'].summary,
+          });
+          if (store.steps['re-verify-code'].status === 'fail') local.status = 'fail';
+        }
+        evidence.push(local);
+      }
+      if (rerunStages.includes('credential-connectivity') && store.steps['re-check-api']) {
+        evidence.push(connectivityEvidence(store.steps['re-check-api']));
+      }
+      if (rerunStages.includes('cms-graph') && store.steps['re-survey-content']) {
+        evidence.push(cmsGraphEvidence(store.steps['re-survey-content']));
+      }
+
+      const choice = store.steps['re-validation-disposition']?.choice ?? store.steps['re-confirm-runtime']?.choice;
+      if (choice === 'confirmed-end-to-end') {
+        evidence.push(...manualRuntimeEvidence('end-to-end', 'diagnostic-repair'));
+      } else if (choice === 'confirmed-transport') {
+        evidence.push(...manualRuntimeEvidence('transport-only', 'diagnostic-repair'));
+      } else if (choice === 'defer') {
+        evidence.push(...manualRuntimeEvidence('deferred', 'diagnostic-repair'));
+      } else if (choice === 'blocked') {
+        evidence.push(...manualRuntimeEvidence('blocked', 'diagnostic-repair'));
+      } else if (choice === 'failed') {
+        evidence.push(
+          {
+            stage: 'runtime-transport',
+            status: 'fail',
+            source: 'manual-confirmation',
+            summary: 'The user reproduced the original runtime symptom after the fix.',
+            findings: [],
+          },
+          {
+            stage: 'personalization-outcome',
+            status: 'fail',
+            source: 'manual-confirmation',
+            summary: 'The expected repaired personalization outcome was not observed.',
+            findings: [],
+          },
+        );
+      } else if (store.steps['re-capture-live-events']) {
+        evidence.push(aggregateLiveEventsEvidence(store.steps['re-capture-live-events']));
+      }
+
+      const decision =
+        choice === 'blocked'
+          ? ('cannot-author-or-trigger' as const)
+          : choice === 'defer'
+            ? ('defer-live-validation' as const)
+            : ('continue' as const);
+      const finalState = deriveValidationFinalState({
+        profile: 'diagnostic-repair',
+        evidence,
+        decision,
+        requiredStages: rerunStages,
+      });
+      const presentation = store.steps['re-present-runtime'];
+      const sections = [
+        `# ${describeValidationFinalState(finalState)}`,
+        render.section('Fix applied', recordedDoctorFixSummary(store.steps)),
+        presentation ? render.section('Finished application', finishedApplicationSummary(presentation)) : '',
+        render.section(
+          'Rerun evidence',
+          render.table(
+            evidence.map((item) => ({
+              Stage: item.stage,
+              Status: item.status,
+              Source: item.source,
+              Summary: item.summary,
+            })),
+            { columns: ['Stage', 'Status', 'Source', 'Summary'] },
+          ),
+        ),
+        finalState === 'validated-end-to-end'
+          ? 'The original repair and its affected downstream evidence were validated.'
+          : 'The report keeps the exact failed, blocked, deferred, or unavailable evidence as the resume point.',
+      ];
+      const machineResult = {
+        profile: 'diagnostic-repair' as const,
+        finalState,
+        evidence,
+        rerunStages,
+        summary: describeValidationFinalState(finalState),
+      };
+
+      return [
+        'Present the doctor validation report exactly as rendered. Do not call the repair successful when required rerun evidence is unresolved.',
+        view('Doctor validation report', sections.join('\n\n')),
+        `After presenting the report, return this exact structured result to the workflow protocol without changing its values:\n${JSON.stringify(machineResult)}`,
+      ];
+    },
+    response: ValidationSummary,
+    next: terminal,
   })
 
   .step('done', {
     prompt: ({ store }) => {
       const diagnosis = store.diagnosis;
-
       const askFixed = store.steps['ask-fixed'];
-      const reVerifyResult = store.steps['re-verify'];
-      const reVerifyStatus = reVerifyResult?.overallStatus;
-      const reVerifySummary = reVerifyResult?.summary;
 
-      // Infra fix resolved it — user confirmed working, no code work needed.
       if (askFixed?.working) {
         return prompt`
-          The user confirmed personalization is working after the infrastructure fixes.
-          Celebrate briefly (2-3 sentences) and mention they can re-run the doctor anytime.
-          Do NOT repeat the findings.
+          The user manually confirmed that the original symptom stopped after the infrastructure
+          fix. State that concrete result without upgrading it to a full end-to-end validation.
+          Mention that they can run the same evidence ladder later for CMS graph, runtime transport,
+          and personalization outcome proof. Keep it brief.
         `;
       }
 
-      // Reached "done" straight from the programmatic gate (no code review ran).
-      if (!diagnosis && !reVerifyResult) {
+      if (!diagnosis) {
         return prompt`
           The user has the programmatic check results and chose to stop here. Thank them warmly
           and mention they can re-run the doctor, investigate the code, or come back anytime.
@@ -1308,10 +1907,8 @@ export default skill({
         `;
       }
 
-      const recs = (diagnosis?.recommendations ?? []).filter((r): r is Recommendation => !!r);
-
-      const cameFromReport = !store.steps['plan-fix'] && !reVerifyResult;
-      const cameFromPlanFix = store.steps['plan-fix'] && !store.steps['plan-fix']?.approved && !reVerifyResult;
+      const cameFromReport = !store.steps['plan-fix'];
+      const cameFromPlanFix = store.steps['plan-fix'] && !store.steps['plan-fix']?.approved;
 
       if (cameFromReport) {
         return prompt`
@@ -1331,39 +1928,10 @@ export default skill({
         `;
       }
 
-      // Fixes applied — show before/after.
-      const statusIcon = reVerifyStatus === 'pass' ? '✅' : reVerifyStatus === 'warn' ? '⚠️' : '❌';
-
-      const sections: string[] = [];
-      sections.push(`# 🩺 Doctor Summary\n`);
-      sections.push(render.section('Before', `Status: ${diagnosis?.overallStatus ?? 'unknown'}`));
-
-      if (reVerifyStatus) {
-        sections.push(
-          render.section(
-            `After: ${statusIcon} ${reVerifyStatus.toUpperCase()}`,
-            reVerifySummary ?? 'No verification summary',
-          ),
-        );
-      }
-
-      if (recs.length > 0) {
-        sections.push(render.section('🔧 Fixes Applied', recs.map((r) => `- ${r.message}`).join('\n')));
-      }
-
-      if (reVerifyStatus !== 'pass') {
-        sections.push(
-          render.section(
-            '💡 Remaining Issues',
-            'Some issues may remain. Consider running the doctor again after addressing any manual steps above.',
-          ),
-        );
-      }
-
-      return [
-        'Present the final summary below to the user. Be warm and encouraging. If everything passed, celebrate briefly. If issues remain, be honest but constructive.',
-        view('Doctor Summary', sections.join('\n\n')),
-      ];
+      return prompt`
+        The diagnostic flow ended without applying an approved fix. State that no repair was
+        validated and keep the report's unresolved evidence available as the resume point.
+      `;
     },
     next: terminal,
   })

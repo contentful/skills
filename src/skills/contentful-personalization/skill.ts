@@ -2,18 +2,26 @@ import { skill, type, prompt, act } from '@contentful/skill-kit';
 import onboardSkill from './subskills/onboard.js';
 import liveDebugSkill from './subskills/live-debug.js';
 import doctorSkill from './subskills/doctor.js';
-import developSkill from './subskills/develop.js';
+import extendExistingSkill from './subskills/develop.js';
 import { VERSION } from './version.js';
+
+type InitialIntent = 'onboard' | 'live-debug' | 'doctor' | 'extend-existing' | 'reference' | 'unclear';
+type SetupContext = 'explicit-working' | 'explicit-broken' | 'not-established';
+
+export function resolveInitialIntent(intent: InitialIntent, setupContext: SetupContext): InitialIntent {
+  if (intent === 'extend-existing' && setupContext !== 'explicit-working') {
+    return 'onboard';
+  }
+
+  return intent;
+}
 
 export default skill({
   name: 'contentful-personalization',
   version: VERSION,
   description:
-    'Set up, debug, and build with Contentful personalization and optimization. ' +
-    'Covers readiness, SDK install guidance, static diagnostics, live browser debugging, ' +
-    'development help, and reference patterns. Use for personalization, optimization, ' +
-    'ninetailed, A/B testing, experiments, audience targeting, Contentful Experiences, ' +
-    'Experiences SDK, Studio Experiences, and the experience API.',
+    'Implement, extend, and debug Contentful personalization. Use onboarding for new, project-wide, ' +
+    'or unknown setups; use extend-existing only for scoped work on an explicitly working integration.',
   triggers: [
     'personalization',
     'optimization',
@@ -27,6 +35,8 @@ export default skill({
     'variants',
     'content variants',
     'set up personalization',
+    'implement personalization',
+    'enable personalization',
     'personalization not working',
     'personalization broken',
     'personalize this component',
@@ -59,7 +69,7 @@ export default skill({
   package: {
     name: '@contentful/skill-contentful-personalization',
     description:
-      'Unified Contentful personalization skill covering readiness, setup, live and static diagnostics, development, and reference documentation',
+      'Unified Contentful personalization skill for new setup, existing-integration extensions, diagnostics, and reference documentation',
     license: 'MIT',
     files: ['SKILL.md', 'scripts/**', 'bin/**', 'references/**'],
   },
@@ -72,8 +82,10 @@ export default skill({
 
       ## Categories
 
-      🚀 **onboard** — First-time setup
-      "Set up personalization", "install the SDK", "am I ready?", "get started"
+      🚀 **onboard** — Implement personalization project-wide, or set it up when the current state
+      is not explicitly established as working
+      "Implement personalization", "set up personalization", "enable personalization",
+      "install the SDK", "am I ready?", "get started"
 
       🌐 **live-debug** — Browser/runtime verification for a live page
       "Check this URL", "debug this live page", "inspect network requests", "check the console"
@@ -81,8 +93,14 @@ export default skill({
       🩺 **doctor** — Broken or misconfigured setup
       "Not working", "broken", "debug", "check my setup", "fix my personalization"
 
-      🛠️ **develop** — Build on a working setup
-      "Personalize this component", "add A/B test", "create experiment", "wire analytics"
+      🛠️ **extend-existing** — Make a scoped change to an explicitly existing, working integration
+      "Using our existing OptimizationRoot, personalize this component",
+      "add an A/B test to our current setup", "wire analytics into the installed SDK"
+
+      Never infer a working setup from verbs such as "implement", "build", "add", or
+      "personalize". Choose **extend-existing** only when the user's message itself establishes
+      that personalization is already installed and working. If setup state is unstated, a
+      project-wide implementation request is **onboard**.
 
       📖 **reference** — Look something up
       "How does X work?", "show me a pattern", "what's the API for Y?"
@@ -90,21 +108,41 @@ export default skill({
 
       If the user includes a live URL for browser inspection, set the \`requestedUrl\` field.
 
-      If the request is ambiguous, set intent to "unclear" and confidence below 0.6.
+      Set \`setupContext\` from the user's message only:
+      - \`explicit-working\` — the user clearly states an existing integration works
+      - \`explicit-broken\` — the user clearly describes an existing broken integration
+      - \`not-established\` — setup state is absent or only implied
+
+      Set \`userQuery\` to the user's request in their own words — a concise restatement of what
+      they asked for. This is threaded into the downstream setup, analysis, and diagnostic steps,
+      so preserve the concrete details (component names, framework hints, the specific task). Use
+      an empty string only when there is genuinely no request to carry.
+
+      Set \`readinessOnly\` to true ONLY when the user is asking whether their project is *ready*
+      for personalization — a pre-check or prerequisite question ("am I ready?", "can my project
+      support this?", "what do I need before I start?") — and is NOT asking you to actually set it
+      up. Leave it false for any request to implement, install, or enable personalization.
+
+      If the request is otherwise ambiguous, set intent to "unclear" and confidence below 0.6.
     `,
     response: type({
-      intent: "'onboard' | 'live-debug' | 'doctor' | 'develop' | 'reference' | 'unclear'",
+      intent: "'onboard' | 'live-debug' | 'doctor' | 'extend-existing' | 'reference' | 'unclear'",
+      setupContext: "'explicit-working' | 'explicit-broken' | 'not-established'",
       confidence: 'number',
       'requestedUrl?': 'string',
       'topic?': 'string',
+      'userQuery?': 'string',
+      'readinessOnly?': 'boolean',
       reasoning: 'string',
     }),
     next: ({ response }) => {
+      const intent = resolveInitialIntent(response.intent, response.setupContext);
+      if (response.intent === 'extend-existing' && intent === 'onboard') return 'subskill:onboard';
       if (response.confidence < 0.6 || response.intent === 'unclear') return 'gather-context';
-      if (response.intent === 'live-debug') return 'subskill:live-debug';
-      if (response.intent === 'reference' && response.topic) return `topic:${response.topic}`;
-      if (response.intent === 'reference') return 'pick-topic';
-      return `subskill:${response.intent}`;
+      if (intent === 'live-debug') return 'subskill:live-debug';
+      if (intent === 'reference' && response.topic) return `topic:${response.topic}`;
+      if (intent === 'reference') return 'pick-topic';
+      return `subskill:${intent}`;
     },
   })
 
@@ -125,7 +163,8 @@ export default skill({
       - User explicitly asks to inspect a live URL, browser traffic, console, or runtime requests
         → **live-debug**
       - SDK **installed** but provider missing or broken config → likely **doctor**
-      - SDK **installed** and working (provider present, components wired) → likely **develop**
+      - SDK **installed** and working (provider present, components wired) and the request is a
+        scoped change to that integration → likely **extend-existing**
       - User asking conceptual/reference questions → likely **reference**
 
       Base your classification on what you find in the code. If evidence is still thin,
@@ -133,11 +172,14 @@ export default skill({
       one of these five categories.
 
       If the user included a live URL for browser inspection, set the \`requestedUrl\` field.
+      Set \`userQuery\` to the user's request in their own words so the downstream setup, analysis,
+      and diagnostic steps keep the concrete details (component names, framework hints, the task).
     `,
     response: type({
-      intent: "'onboard' | 'live-debug' | 'doctor' | 'develop' | 'reference'",
+      intent: "'onboard' | 'live-debug' | 'doctor' | 'extend-existing' | 'reference'",
       'requestedUrl?': 'string',
       'topic?': 'string',
+      'userQuery?': 'string',
       reasoning: 'string',
     }),
     next: ({ response }) => {
@@ -162,7 +204,7 @@ export default skill({
         | Key | Description |
         |-----|-------------|
         | how-personalization-works | Core concepts, content model, rendering flow |
-        | sdk-selection | Decision framework: current @ninetailed/experience.js vs modern @contentful/optimization |
+        | sdk-selection | @contentful/optimization default vs maintenance of existing legacy deployments |
         | provider-patterns | Provider placement, Pages/App Router, hydration |
         | middleware-patterns | Preflight, cookies, edge personalization |
         | component-patterns | ContentTypeMap, BlockRenderer, component isolation |
@@ -171,8 +213,15 @@ export default skill({
         | analytics-and-preview | Insights plugin, event tracking, preview mode |
         | common-errors | Failure modes and fixes |
         | ssr-guide | Server-side patterns and anti-patterns |
-        | sdk-legacy-guide | @ninetailed/experience.js API reference (current default) |
-        | sdk-next-guide | @contentful/optimization API reference (modern, next-gen) |
+        | sdk-legacy-guide | @ninetailed/experience.js reference for existing deployments |
+        | optimization-overview | Choose the recommended @contentful/optimization runtime and package |
+        | optimization-react-web | React Web provider, hooks, entries, and router tracking |
+        | optimization-nextjs-app-router | Next.js App Router factory, proxy, server rendering, and browser takeover |
+        | optimization-nextjs-pages-router | Next.js Pages Router factories and getServerSideProps handoff |
+        | optimization-web | Imperative browser SDK and Web Components |
+        | optimization-node | Stateless Node request integration |
+        | optimization-react-native | React Native providers, screens, entries, and interactions |
+        | sdk-next-guide | Backward-compatible alias for the Optimization runtime chooser |
         | contentful-integration-guide | Content types, ExperienceMapper, publishing |
         | implementation-examples | Real implementation patterns and code |
       `,
@@ -192,7 +241,7 @@ export default skill({
     content: ({ refs }) => refs.load('how-personalization-works.md'),
   })
   .topic('sdk-selection', {
-    label: 'SDK decision framework: current @ninetailed/experience.js vs modern @contentful/optimization',
+    label: 'SDK decision framework: Optimization default vs legacy deployment maintenance',
     content: ({ refs }) => refs.load('sdk-selection.md'),
   })
   .topic('provider-patterns', {
@@ -228,12 +277,42 @@ export default skill({
     content: ({ refs }) => refs.load('ssr-guide.md'),
   })
   .topic('sdk-legacy-guide', {
-    label: '@ninetailed/experience.js complete SDK reference',
+    label: '@ninetailed/experience.js reference for debugging or extending existing deployments',
     content: ({ refs }) => refs.load('sdk-legacy-guide.md'),
   })
   .topic('sdk-next-guide', {
-    label: '@contentful/optimization modern SDK reference (OptimizationRoot, hooks, Next.js adapter)',
-    content: ({ refs }) => refs.load('sdk-next-guide.md'),
+    label: '@contentful/optimization SDK runtime chooser',
+    content: ({ refs }) => refs.load('optimization-overview.md'),
+  })
+  .topic('optimization-overview', {
+    label: '@contentful/optimization runtime and package chooser',
+    content: ({ refs }) => refs.load('optimization-overview.md'),
+  })
+  .topic('optimization-react-web', {
+    label: '@contentful/optimization React Web provider, hooks, entries, and routing',
+    content: ({ refs }) => `${refs.load('optimization-shared.md')}\n\n${refs.load('optimization-react-web.md')}`,
+  })
+  .topic('optimization-nextjs-app-router', {
+    label: '@contentful/optimization Next.js App Router integration',
+    content: ({ refs }) =>
+      `${refs.load('optimization-shared.md')}\n\n${refs.load('optimization-nextjs-app-router.md')}`,
+  })
+  .topic('optimization-nextjs-pages-router', {
+    label: '@contentful/optimization Next.js Pages Router integration',
+    content: ({ refs }) =>
+      `${refs.load('optimization-shared.md')}\n\n${refs.load('optimization-nextjs-pages-router.md')}`,
+  })
+  .topic('optimization-web', {
+    label: '@contentful/optimization imperative browser and Web Components integration',
+    content: ({ refs }) => `${refs.load('optimization-shared.md')}\n\n${refs.load('optimization-web.md')}`,
+  })
+  .topic('optimization-node', {
+    label: '@contentful/optimization stateless Node request integration',
+    content: ({ refs }) => `${refs.load('optimization-shared.md')}\n\n${refs.load('optimization-node.md')}`,
+  })
+  .topic('optimization-react-native', {
+    label: '@contentful/optimization React Native integration',
+    content: ({ refs }) => `${refs.load('optimization-shared.md')}\n\n${refs.load('optimization-react-native.md')}`,
   })
   .topic('contentful-integration-guide', {
     label: 'Contentful CMS integration: content types, ExperienceMapper, publishing workflow',
@@ -247,12 +326,13 @@ export default skill({
   // --- Sub-skills ---
 
   .subskill('onboard', onboardSkill, {
-    params: (output) => ({
-      userQuery: '',
-      readinessOnly:
-        (output as { intent?: string })?.intent === 'onboard' &&
-        /ready|readiness|can.*support|prerequisite|pre-check/i.test(''),
-    }),
+    params: (output) => {
+      const routing = output as { userQuery?: string; readinessOnly?: boolean };
+      return {
+        userQuery: routing?.userQuery ?? '',
+        readinessOnly: routing?.readinessOnly ?? false,
+      };
+    },
   })
   .subskill('live-debug', liveDebugSkill, {
     params: (output) => ({
@@ -260,12 +340,14 @@ export default skill({
     }),
   })
   .subskill('doctor', doctorSkill, {
-    params: () => ({
-      userQuery: '',
+    params: (output) => ({
+      userQuery: (output as { userQuery?: string })?.userQuery ?? '',
     }),
   })
-  .subskill('develop', developSkill, {
-    params: () => ({ userQuery: '' }),
+  .subskill('extend-existing', extendExistingSkill, {
+    params: (output) => ({
+      userQuery: (output as { userQuery?: string })?.userQuery ?? '',
+    }),
   })
 
   .build();

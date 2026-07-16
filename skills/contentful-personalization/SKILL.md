@@ -1,6 +1,6 @@
 ---
 name: contentful-personalization
-description: "Set up, debug, and build with Contentful personalization and optimization. Covers readiness, SDK install guidance, static diagnostics, live browser debugging, development help, and reference patterns. Use for personalization, optimization, ninetailed, A/B testing, experiments, audience targeting, Contentful Experiences, Experiences SDK, Studio Experiences, and the experience API. Trigger keywords: personalization, optimization, ninetailed, A/B test, experiment, multivariate test, targeting, audience targeting, segments, variants, content variants, set up personalization, personalization not working, personalization broken, personalize this component, am I ready for personalization, experience API, Contentful Experiences, Experiences SDK, Studio Experiences, personalization in Next.js, @contentful/optimization, @ninetailed/experience.js, run an experiment, check this URL, debug this live page, inspect network requests, check console errors, experience.ninetailed.co"
+description: "Implement, extend, and debug Contentful personalization. Use onboarding for new, project-wide, or unknown setups; use extend-existing only for scoped work on an explicitly working integration. Trigger keywords: personalization, optimization, ninetailed, A/B test, experiment, multivariate test, targeting, audience targeting, segments, variants, content variants, set up personalization, implement personalization, enable personalization, personalization not working, personalization broken, personalize this component, am I ready for personalization, experience API, Contentful Experiences, Experiences SDK, Studio Experiences, personalization in Next.js, @contentful/optimization, @ninetailed/experience.js, run an experiment, check this URL, debug this live page, inspect network requests, check console errors, experience.ninetailed.co"
 metadata:
   version: "2.3.6"
 argument-hint: "[question or topic]"
@@ -177,10 +177,10 @@ Sub-skill step names are prefixed: `<subskill>/<step>` (e.g., `doctor/diagnose`)
 
 ### Available sub-skills
 
-- **onboard**: Assess readiness and guide Contentful personalization setup end-to-end. Explores the codebase, checks readiness, helps choose SDK and architecture, installs packages, and guides implementation. — params: `readinessOnly` (boolean), `userQuery` (string)
+- **onboard**: Default workflow for implementing, setting up, or enabling Contentful personalization project-wide, including when the existing setup state is unknown. Explores the codebase, checks readiness, chooses SDK and architecture, installs packages, implements, and validates. Use extend-existing only for a scoped change to an explicitly working integration. — params: `readinessOnly` (boolean), `userQuery` (string)
 - **live-debug**: Inspect a live URL with Chrome DevTools MCP for runtime personalization issues. Checks console problems, observes ninetailed.co requests, and reports whether the next step should be static doctor diagnosis. — params: `requestedUrl` (string)
 - **doctor**: Diagnose and fix Contentful personalization issues. Runs programmatic checks first (credentials, API connectivity, content state), fixes infrastructure problems, and only then explores the codebase. — params: `userQuery` (string)
-- **develop**: Day-to-day development companion for building with Contentful personalization. Helps add personalization to components, create experiments, and wire analytics. — params: `userQuery` (string)
+- **extend-existing**: Extend an explicitly existing, working Contentful personalization integration. Use only for scoped changes such as personalizing another component, adding an experiment, or wiring analytics into the installed SDK. Not for first-time, project-wide, or unknown-state implementation requests; use onboard for those. — params: `userQuery` (string)
 
 ## Reference topics
 
@@ -192,7 +192,7 @@ Quick-reference topics accessible without running the full workflow:
 ```
 
 - **how-personalization-works**: Core concepts: content model, rendering flow, and how personalization works
-- **sdk-selection**: SDK decision framework: current @ninetailed/experience.js vs modern @contentful/optimization
+- **sdk-selection**: SDK decision framework: Optimization default vs legacy deployment maintenance
 - **provider-patterns**: Provider placement patterns for Pages Router, App Router, and both SDKs
 - **middleware-patterns**: Middleware and SSR/edge patterns: preflight, cookies, matcher config
 - **component-patterns**: Component architecture patterns: ContentTypeMap, BlockRenderer, isolation
@@ -201,7 +201,14 @@ Quick-reference topics accessible without running the full workflow:
 - **analytics-and-preview**: Analytics plugins (Insights, GTM, Segment) and preview configuration
 - **common-errors**: Common failure modes with root causes and fixes
 - **ssr-guide**: SSR and edge-side personalization: patterns, anti-patterns, troubleshooting
-- **sdk-legacy-guide**: @ninetailed/experience.js complete SDK reference
-- **sdk-next-guide**: @contentful/optimization modern SDK reference (OptimizationRoot, hooks, Next.js adapter)
+- **sdk-legacy-guide**: @ninetailed/experience.js reference for debugging or extending existing deployments
+- **sdk-next-guide**: @contentful/optimization SDK runtime chooser
+- **optimization-overview**: @contentful/optimization runtime and package chooser
+- **optimization-react-web**: @contentful/optimization React Web provider, hooks, entries, and routing
+- **optimization-nextjs-app-router**: @contentful/optimization Next.js App Router integration
+- **optimization-nextjs-pages-router**: @contentful/optimization Next.js Pages Router integration
+- **optimization-web**: @contentful/optimization imperative browser and Web Components integration
+- **optimization-node**: @contentful/optimization stateless Node request integration
+- **optimization-react-native**: @contentful/optimization React Native integration
 - **contentful-integration-guide**: Contentful CMS integration: content types, ExperienceMapper, publishing workflow
 - **implementation-examples**: Real code examples: providers, BlockRenderer, Experience component patterns

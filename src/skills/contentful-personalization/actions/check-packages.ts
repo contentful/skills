@@ -1,5 +1,5 @@
 import { type, action } from '@contentful/skill-kit';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { readFile, access } from 'node:fs/promises';
 import { PackagesResult, type PackageInfo } from '../schemas.js';
 
@@ -49,22 +49,56 @@ async function readFileSafe(path: string): Promise<string | null> {
   }
 }
 
-async function detectPackageManager(root: string): Promise<'pnpm' | 'yarn' | 'bun' | 'npm' | 'unknown'> {
+type PackageManager = 'pnpm' | 'yarn' | 'bun' | 'npm' | 'unknown';
+
+function packageManagerFromField(value: unknown): Exclude<PackageManager, 'unknown'> | undefined {
+  if (typeof value !== 'string') return undefined;
+  const name = value.split('@')[0];
+  return name === 'pnpm' || name === 'yarn' || name === 'bun' || name === 'npm' ? name : undefined;
+}
+
+export async function detectPackageManager(root: string): Promise<PackageManager> {
   const checks: Array<[string, 'pnpm' | 'yarn' | 'bun' | 'npm']> = [
     ['pnpm-lock.yaml', 'pnpm'],
+    ['pnpm-workspace.yaml', 'pnpm'],
     ['yarn.lock', 'yarn'],
+    ['bun.lock', 'bun'],
     ['bun.lockb', 'bun'],
     ['package-lock.json', 'npm'],
   ];
-  for (const [file, pm] of checks) {
-    try {
-      await access(join(root, file));
-      return pm;
-    } catch {
-      /* continue */
+
+  let current = resolve(root);
+  while (true) {
+    const packageJson = await readFileSafe(join(current, 'package.json'));
+    if (packageJson) {
+      try {
+        const declared = packageManagerFromField(JSON.parse(packageJson).packageManager);
+        if (declared) return declared;
+      } catch {
+        /* invalid JSON; lockfile detection can still succeed */
+      }
     }
+
+    for (const [file, pm] of checks) {
+      try {
+        await access(join(current, file));
+        return pm;
+      } catch {
+        /* continue */
+      }
+    }
+
+    try {
+      await access(join(current, '.git'));
+      return 'unknown';
+    } catch {
+      /* continue to the parent */
+    }
+
+    const parent = dirname(current);
+    if (parent === current) return 'unknown';
+    current = parent;
   }
-  return 'unknown';
 }
 
 export const checkPackages = action({

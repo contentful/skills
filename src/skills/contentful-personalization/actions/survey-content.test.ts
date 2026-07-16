@@ -16,6 +16,9 @@ interface FixtureHost {
   experiences: string[];
   // baseline IDs returned by links_to_entry={expId}, keyed by experience ID
   linksTo?: Record<string, string[]>;
+  experienceEntries?: Array<{ sys: { id: string }; fields: Record<string, unknown> }>;
+  audienceEntries?: Array<{ sys: { id: string }; fields: Record<string, unknown> }>;
+  mergeTagEntries?: Array<{ sys: { id: string }; fields: Record<string, unknown> }>;
 }
 
 // Build a fetch stub serving distinct CDA (cdn) and CPA (preview) fixtures based on query params.
@@ -30,7 +33,24 @@ function stubFetch(cda: FixtureHost, cpa?: FixtureHost) {
       return entryList(host.linksTo?.[linksTo] ?? []);
     }
     if (url.searchParams.get('content_type') === 'nt_experience') {
-      return entryList(host.experiences);
+      return host.experienceEntries
+        ? new Response(JSON.stringify({ items: host.experienceEntries }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        : entryList(host.experiences);
+    }
+    if (url.searchParams.get('content_type') === 'nt_audience') {
+      return new Response(JSON.stringify({ items: host.audienceEntries ?? [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    if (url.searchParams.get('content_type') === 'nt_mergetag') {
+      return new Response(JSON.stringify({ items: host.mergeTagEntries ?? [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
     return new Response('Not Found', { status: 404 });
   };
@@ -43,6 +63,29 @@ test('survey: skips cleanly when no tokens are available', async () => {
   });
   assert.equal(result.status, 'skip');
   assert.equal(result.findings[0].status, 'skip');
+  assert.equal(result.testScenario.kind, 'unavailable');
+});
+
+test('survey: does not infer an empty CMS when all inventory requests fail', async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw new Error('network unavailable');
+  };
+
+  try {
+    const result = await surveyContent.run({
+      input: { spaceId: 'space1', environment: 'master', accessToken: 'cda', previewToken: 'cpa' },
+      signal: controller.signal,
+    });
+
+    assert.equal(result.status, 'fail');
+    assert.equal(result.testScenario.kind, 'unavailable');
+    assert.match(result.testScenario.summary, /Do not infer/);
+    assert.ok(!result.findings.some((finding) => finding.item.includes('Published experiences')));
+    assert.ok(!result.findings.some((finding) => finding.item.includes('Unpublished experiences')));
+  } finally {
+    globalThis.fetch = original;
+  }
 });
 
 test('survey: flags a published baseline that links only in preview (the real bug)', async () => {
@@ -128,6 +171,106 @@ test('survey: caps the reverse-link pass and reports how many were checked', asy
     const capNote = result.findings.find((f) => f.item.includes('partial'));
     assert.ok(capNote, 'expected a partial-check notice');
     assert.ok(capNote.detail.includes('20 of 25'));
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test('survey: prefers an existing all-visitors experience as the deterministic scenario', async () => {
+  const original = globalThis.fetch;
+  const experienceEntries = [
+    {
+      sys: { id: 'experience-entry' },
+      fields: {
+        nt_experience_id: 'experience-api-id',
+        nt_name: 'Homepage test',
+        nt_audience: null,
+        nt_variants: [{ sys: { id: 'variant-entry' } }],
+      },
+    },
+  ];
+  globalThis.fetch = stubFetch(
+    { experiences: ['experience-entry'], experienceEntries, linksTo: { 'experience-entry': ['hero'] } },
+    { experiences: ['experience-entry'], experienceEntries, linksTo: { 'experience-entry': ['hero'] } },
+  );
+
+  try {
+    const result = await surveyContent.run({
+      input: { spaceId: 'space1', environment: 'master', accessToken: 'cda', previewToken: 'cpa' },
+      signal: controller.signal,
+    });
+
+    assert.equal(result.testScenario.kind, 'all-visitors');
+    assert.equal(result.testScenario.experienceId, 'experience-api-id');
+    assert.deepEqual(result.testScenario.variantEntryIds, ['variant-entry']);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test('survey: inventories targeted audiences but does not invent their server-side rules', async () => {
+  const original = globalThis.fetch;
+  const experienceEntries = [
+    {
+      sys: { id: 'experience-entry' },
+      fields: {
+        nt_experience_id: 'experience-api-id',
+        nt_name: 'Known customers',
+        nt_audience: { sys: { id: 'audience-entry' } },
+        nt_variants: [{ sys: { id: 'variant-entry' } }],
+      },
+    },
+  ];
+  const audienceEntries = [
+    {
+      sys: { id: 'audience-entry' },
+      fields: { nt_audience_id: 'audience-api-id', nt_name: 'Customers' },
+    },
+  ];
+  globalThis.fetch = stubFetch(
+    {
+      experiences: ['experience-entry'],
+      experienceEntries,
+      audienceEntries,
+      linksTo: { 'experience-entry': ['hero'] },
+    },
+    {
+      experiences: ['experience-entry'],
+      experienceEntries,
+      audienceEntries,
+      linksTo: { 'experience-entry': ['hero'] },
+    },
+  );
+
+  try {
+    const result = await surveyContent.run({
+      input: { spaceId: 'space1', environment: 'master', accessToken: 'cda', previewToken: 'cpa' },
+      signal: controller.signal,
+    });
+
+    assert.equal(result.publishedAudienceCount, 1);
+    assert.equal(result.testScenario.kind, 'existing-targeted');
+    assert.equal(result.testScenario.audienceId, 'audience-api-id');
+    assert.match(result.testScenario.summary, /server-side audience rules cannot be derived/);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test('survey: inventories merge tags independently from experiences', async () => {
+  const original = globalThis.fetch;
+  const mergeTagEntries = [{ sys: { id: 'merge-tag-entry' }, fields: { nt_mergetag_id: 'profile.location.city' } }];
+  globalThis.fetch = stubFetch({ experiences: [], mergeTagEntries }, { experiences: [], mergeTagEntries });
+
+  try {
+    const result = await surveyContent.run({
+      input: { spaceId: 'space1', environment: 'master', accessToken: 'cda', previewToken: 'cpa' },
+      signal: controller.signal,
+    });
+
+    assert.equal(result.publishedExperienceCount, 0);
+    assert.equal(result.publishedMergeTagCount, 1);
+    assert.deepEqual(result.publishedMergeTagIdentifiers, ['merge-tag-entry', 'profile.location.city']);
   } finally {
     globalThis.fetch = original;
   }

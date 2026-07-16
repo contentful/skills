@@ -21,9 +21,9 @@ Symptoms:
 
 Fix:
 
-- `@ninetailed/experience.js` (current default): use `@ninetailed/experience.js-plugin-insights` for
+- Existing `@ninetailed/experience.js` deployment: use `@ninetailed/experience.js-plugin-insights` for
   built-in measurement and component insights.
-- `@contentful/optimization` (modern): analytics is built in — there is no separate insights plugin.
+- `@contentful/optimization` (recommended for new work): analytics is built in — there is no separate insights plugin.
   Enable `trackEntryInteraction` (or `autoTrackEntryInteraction` on the Web SDK) and confirm consent
   is granted so events are not blocked.
 

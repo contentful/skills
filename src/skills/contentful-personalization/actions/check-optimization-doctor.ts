@@ -1,12 +1,8 @@
 import { type, action } from '@contentful/skill-kit';
-import {
-  OptimizationDoctorCheckResult,
-  OptimizationDoctorResponse,
-  type Finding,
-} from '../schemas.js';
+import { OptimizationDoctorCheckResult, OptimizationDoctorResponse, type Finding } from '../schemas.js';
+import { createOptimizationDoctorRequestContext } from '../validation/credentials.js';
 
 const API_TIMEOUT_MS = 10_000;
-const ANALYTICS_API_HOST = 'analytics.ninetailed.co';
 
 function eventFinding(label: string, count: number): Finding {
   return {
@@ -25,18 +21,21 @@ export const checkOptimizationDoctor = action({
     spaceId: 'string',
     environmentId: 'string',
     'managementToken?': 'string',
+    'managementTokenSource?': 'string',
   }),
   output: OptimizationDoctorCheckResult,
   run: async ({ input, signal }) => {
+    const request = createOptimizationDoctorRequestContext(input);
+
     if (!input.spaceId || !input.environmentId || !input.managementToken) {
       return {
         status: 'skip' as const,
+        request,
         findings: [
           {
             item: 'Optimization doctor',
             status: 'skip' as const,
-            detail:
-              'No Contentful Management token (CFPAT) available — cannot call the /optimization-doctor endpoint',
+            detail: 'No Contentful Management token (CFPAT) available — cannot call the /optimization-doctor endpoint',
           },
         ],
       };
@@ -46,7 +45,7 @@ export const checkOptimizationDoctor = action({
     const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
     signal.addEventListener('abort', () => controller.abort());
 
-    const url = `https://${ANALYTICS_API_HOST}/v1/spaces/${input.spaceId}/environments/${input.environmentId}/optimization-doctor`;
+    const url = request.endpoint;
 
     try {
       const res = await fetch(url, {
@@ -61,11 +60,15 @@ export const checkOptimizationDoctor = action({
       if (res.status === 401 || res.status === 403) {
         return {
           status: 'fail' as const,
+          request,
           findings: [
             {
               item: 'Optimization doctor',
               status: 'fail' as const,
-              detail: `Rejected (HTTP ${res.status}) — verify the CONTENTFUL_MANAGEMENT_TOKEN (CFPAT) has access to space "${input.spaceId}"`,
+              detail:
+                res.status === 401
+                  ? 'The endpoint rejected this request with HTTP 401. This response alone does not prove that the token is expired, incorrectly scoped, or missing space access; compare the masked credential, source, and request target shown with this result.'
+                  : 'The endpoint rejected this request with HTTP 403. Compare the masked credential, source, and request target shown with this result before diagnosing an authorization or endpoint issue.',
             },
           ],
           error: `HTTP ${res.status}`,
@@ -75,6 +78,7 @@ export const checkOptimizationDoctor = action({
       if (res.status === 404) {
         return {
           status: 'fail' as const,
+          request,
           findings: [
             {
               item: 'Optimization doctor',
@@ -89,6 +93,7 @@ export const checkOptimizationDoctor = action({
       if (!res.ok) {
         return {
           status: 'fail' as const,
+          request,
           findings: [
             {
               item: 'Optimization doctor',
@@ -104,6 +109,7 @@ export const checkOptimizationDoctor = action({
       if (parsed instanceof type.errors) {
         return {
           status: 'fail' as const,
+          request,
           findings: [
             {
               item: 'Optimization doctor',
@@ -124,10 +130,7 @@ export const checkOptimizationDoctor = action({
       ];
 
       const totalEvents =
-        counts.numTrackEvents +
-        counts.numPageEvents +
-        counts.numComponentEvents +
-        counts.numIdentifyEvents;
+        counts.numTrackEvents + counts.numPageEvents + counts.numComponentEvents + counts.numIdentifyEvents;
 
       // Page events without component events usually means personalizable components aren't wired up.
       if (counts.numPageEvents > 0 && counts.numComponentEvents === 0) {
@@ -141,6 +144,7 @@ export const checkOptimizationDoctor = action({
 
       return {
         status: totalEvents > 0 ? ('pass' as const) : ('warn' as const),
+        request,
         findings,
         liveEvents: counts,
       };
@@ -148,6 +152,7 @@ export const checkOptimizationDoctor = action({
       clearTimeout(timeout);
       return {
         status: 'fail' as const,
+        request,
         findings: [
           {
             item: 'Optimization doctor',

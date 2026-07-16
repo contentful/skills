@@ -1,20 +1,23 @@
 import { type, action } from '@contentful/skill-kit';
+import { randomUUID } from 'node:crypto';
 import { ApiCheckResult, type Finding } from '../schemas.js';
 
 const API_TIMEOUT_MS = 10_000;
 
-const PROBE_EVENT = {
-  events: [
-    {
-      type: 'track' as const,
-      channel: 'web' as const,
-      messageId: 'doctor-connectivity-check',
-      event: 'doctor-check',
-      properties: {},
-      context: { library: { name: 'skill-kit-doctor', version: '1.0.0' } },
-    },
-  ],
-};
+function buildProbeEvent() {
+  return {
+    events: [
+      {
+        type: 'track' as const,
+        channel: 'web' as const,
+        messageId: `skill-connectivity-check-${randomUUID()}`,
+        event: 'skill-credential-connectivity-check',
+        properties: { diagnostic: true },
+        context: { library: { name: 'contentful-personalization-skill', version: '1.0.0' } },
+      },
+    ],
+  };
+}
 
 interface Endpoint {
   sdk: 'legacy' | 'modern';
@@ -46,7 +49,7 @@ function buildEndpoints(input: {
     endpoints.push({
       sdk: 'modern',
       url: `https://experience.ninetailed.co/v2/organizations/${input.optimizationClientId}/environments/${input.optimizationEnvironment}/profiles`,
-      label: `modern SDK (client ID ${input.optimizationClientId.substring(0, 8)}…, env "${input.optimizationEnvironment}")`,
+      label: `Optimization SDK (client ID ${input.optimizationClientId.substring(0, 8)}…, env "${input.optimizationEnvironment}")`,
     });
   }
 
@@ -67,7 +70,7 @@ async function probeEndpoint(
       method: 'POST',
       signal: controller.signal,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(PROBE_EVENT),
+      body: JSON.stringify(buildProbeEvent()),
     });
     clearTimeout(timeout);
     const elapsed = Date.now() - start;
@@ -77,7 +80,7 @@ async function probeEndpoint(
         finding: {
           item: `Experience API ${endpoint.label}`,
           status: 'pass' as const,
-          detail: `Reachable (${elapsed}ms)`,
+          detail: `Credential and destination accepted a synthetic diagnostic event (${elapsed}ms). This does not prove that the application runtime sends events.`,
         },
         reachable: true,
         responseTimeMs: elapsed,
@@ -154,7 +157,7 @@ export const checkApiConnectivity = action({
             item: 'Experience API',
             status: 'skip' as const,
             detail:
-              'No personalization credentials available — need a legacy Ninetailed API key or a modern Optimization Client ID to check connectivity',
+              'No personalization credentials available — need a legacy Ninetailed API key or an Optimization Client ID to check connectivity',
           },
         ],
         reachable: false,
