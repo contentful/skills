@@ -91,23 +91,39 @@ either a flash of baseline content or a hidden/skeleton slot until evaluation re
 more for personalization than for a small A/B tweak, because the whole point is to show the right
 content — and it is most visible above the fold.
 
+### The flash-vs-caching tradeoff
+
+The two architectures trade off flash against caching; neither gives both:
+
+- **Client-only** keeps the page HTML static and CDN-cacheable — the server does no per-visitor
+  work — but flashes the baseline before the variant resolves.
+- **Hybrid SSR** removes the flash by resolving the variant on the server, but a route that resolves
+  personalization server-side reads request headers/cookies and therefore renders dynamically per
+  request. That route is not shared-CDN-cacheable across visitors and is not compatible with
+  static/ISR output. Only the personalized resolution is per-request: routes that are not
+  personalized, and the raw baseline Contentful data, can still follow an application cache policy.
+  (See the "Server and cache boundaries" section of the App Router runtime reference.)
+
 ### Prefer server-side where the framework and pipeline support it
 
 Lean toward hybrid SSR (server preflight resolves the variant before markup is sent, then the client
-hydrates and takes over) when both are true:
+hydrates and takes over) when all of these hold:
 
-- the framework can render on the server (Next.js App or Pages Router, Remix), and
-- the app already fetches content at the page or server level.
+- the framework can render on the server (Next.js App or Pages Router, Remix),
+- the app already fetches content at the page or server level, and
+- rendering the personalized routes per request (rather than serving shared cached HTML) is
+  acceptable.
 
-In that case hybrid SSR removes the baseline flash while preserving the cacheable/ISR HTML profile,
-and the framework adapter handles the server-to-client handoff — so it is usually a small step, not
-a rewrite.
+In that case the framework adapter handles the server-to-client handoff, so it is usually a small
+step rather than a rewrite — you are trading the personalized routes' shared cacheability for the
+removal of the flash.
 
 Choose client-only when the framework is client-only (Gatsby, Create React App, Vite React, React
-Native), when the app fetches only in the browser and the smaller change is preferred, or when the
-personalized surface is below the fold or non-critical. Do not push a client-fetched app to convert
-to SSR purely for this setup — recommend what fits the app today, name the flash tradeoff honestly,
-and note that moving to a server-rendered fetch later is the path to eliminate it.
+Native), when the app fetches only in the browser and the smaller change is preferred, when the
+personalized surface is below the fold or non-critical, or when the route's CDN cacheability must be
+preserved. Do not push a client-fetched app to convert to SSR purely for this setup — recommend what
+fits the app today, name the flash-vs-caching tradeoff honestly, and note that moving personalization
+resolution server-side later is the path to eliminate the flash.
 
 Server-only remains a weak fit when the product needs browser event collection, component
 insights, or reliable experiment reporting.

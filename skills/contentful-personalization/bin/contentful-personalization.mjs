@@ -325,26 +325,36 @@ ${e.project.explorationSummary}`:""}
           - \`client-only\` — Personalization is evaluated in the browser after hydration. The page
             first renders the baseline (unpersonalized) content, then swaps to the selected variant.
             That means a visible flash of baseline content, or a hidden/skeleton slot until it
-            resolves. Acceptable when personalization is below the fold or non-critical, when the app
-            fetches only in the browser and the user wants the smaller change, or when the framework
-            is client-only (Gatsby, Create React App, Vite React, React Native).
+            resolves. Its upside: the page HTML stays static/CDN-cacheable because the server does no
+            per-visitor work. Acceptable when personalization is below the fold or non-critical, when
+            the app fetches only in the browser and the user wants the smaller change, or when the
+            framework is client-only (Gatsby, Create React App, Vite React, React Native).
           - \`hybrid-ssr\` — The server runs a personalization preflight and sends already-resolved
-            markup; the client hydrates and takes over. This avoids the flash of baseline content
-            while preserving a cacheable/ISR HTML profile through the framework adapter. This is the
-            better fit whenever the framework can render on the server (Next.js App or Pages Router,
-            Remix) AND the app already fetches content at the page or server level — especially when
-            any personalized content is above the fold.
+            markup; the client hydrates and takes over. This removes the flash of baseline content.
+            The tradeoff is caching: a route that resolves personalization on the server reads
+            request headers/cookies and therefore renders dynamically per request — it is not
+            shared-CDN-cacheable across visitors, and it is not compatible with static/ISR output for
+            that route. Routes that are not personalized, and the raw baseline Contentful data, can
+            still be cached; only the personalized resolution is per-request. It is the better fit
+            whenever the framework can render on the server (Next.js App or Pages Router, Remix), the
+            app already fetches content at the page or server level, and per-request rendering on the
+            personalized routes is acceptable — especially when personalized content is above the
+            fold.
           - \`server-only\` — Full server-side personalization with no client runtime. Advanced;
             a weak fit when the product needs browser event collection, component insights, or
             reliable experiment reporting, so avoid it unless a client runtime is genuinely
             disallowed.
 
-          Decision rule: prefer \`hybrid-ssr\` when the framework supports server rendering and the
-          project's existing pipeline already fetches on the server or at the page level — call out
-          that it avoids the flash of baseline content while keeping the current cacheable HTML
-          profile. Choose \`client-only\` for client-only frameworks, for a purely browser-fetched
-          app where the user wants the smaller change, or when the personalized surface is not
-          critical — and when you do, state plainly that it renders the baseline first. Do not push
+          The core tradeoff is flash vs. caching: client-only keeps cacheable HTML but flashes the
+          baseline; hybrid-ssr removes the flash but makes the personalized routes render per request.
+
+          Decision rule: prefer \`hybrid-ssr\` when the framework supports server rendering, the
+          project's existing pipeline already fetches on the server or at the page level, and giving
+          up shared caching on the personalized routes is acceptable — call out that it removes the
+          flash but that those routes become dynamic. Choose \`client-only\` for client-only
+          frameworks, for a purely browser-fetched app where the user wants the smaller change, when
+          the personalized surface is not critical, or when the route's CDN cacheability must be
+          preserved — and when you do, state plainly that it renders the baseline first. Do not push
           a client-fetched app to convert to SSR as part of this setup; recommend the architecture
           that fits what the project does today and name the tradeoff honestly. Ground your
           \`reasoning\` in the project's real rendering model (fetching location, caching/ISR,
@@ -369,12 +379,13 @@ ${e.project.explorationSummary}`:""}
 
         ## 📦 Recommendation Summary
 
-        ${E.kv({SDK:e.setup?.sdkChoice==="ninetailed"?"@ninetailed/experience.js (existing legacy deployment)":"@contentful/optimization (recommended default)",Architecture:e.setup?.architecture==="client-only"?"Client-only \u2014 evaluated in the browser; renders baseline content first, then swaps to the variant (a visible flash, or a hidden slot until it resolves)":e.setup?.architecture==="hybrid-ssr"?"Hybrid SSR \u2014 server preflight resolves personalization before markup is sent, avoiding the baseline flash, then the browser hydrates and takes over (keeps cacheable/ISR HTML)":"Server-only \u2014 full server-side personalization, no client runtime (advanced)",Framework:e.project.framework})}
+        ${E.kv({SDK:e.setup?.sdkChoice==="ninetailed"?"@ninetailed/experience.js (existing legacy deployment)":"@contentful/optimization (recommended default)",Architecture:e.setup?.architecture==="client-only"?"Client-only \u2014 evaluated in the browser; renders baseline content first, then swaps to the variant (a visible flash, or a hidden slot until it resolves). Keeps the page HTML static/CDN-cacheable.":e.setup?.architecture==="hybrid-ssr"?"Hybrid SSR \u2014 server preflight resolves personalization before markup is sent (no baseline flash), then the browser hydrates and takes over. The personalized routes render per request, so they are not shared-CDN-cacheable; other routes and raw baseline data still cache.":"Server-only \u2014 full server-side personalization, no client runtime (advanced)",Framework:e.project.framework})}
 
         State the architecture tradeoff in one sentence so the user confirms knowingly: client-only
-        renders the baseline first and swaps after hydration; hybrid SSR avoids that flash while
-        keeping cacheable HTML. Do not oversell — a below-the-fold or non-critical surface may not
-        need hybrid.
+        keeps cacheable HTML but renders the baseline first and swaps after hydration; hybrid SSR
+        removes that flash but makes the personalized routes render per request (not CDN-cacheable).
+        Do not oversell hybrid — a below-the-fold or non-critical surface, or a route whose CDN
+        caching matters, may be better left client-only.
       `,ge.confirm({message:"Proceed with this SDK and architecture choice?",defaultAnswer:"yes"})],response:x({approved:"boolean","feedback?":"string"}),save:({response:e})=>({setup:{choiceFeedback:e.approved?void 0:e.feedback??""}}),next:({response:e})=>e.approved?"cms-setup":"recommend"}).step("cms-setup",{prompt:({refs:e})=>[q`
         Guide the user through the Contentful app installation. These are steps
         the user must perform in the Contentful web UI — you cannot do them.
