@@ -1,6 +1,6 @@
 {
   "name": "contentful",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "description": "Agent skills for Contentful apps, APIs, migrations, and personalization",
   "homepage": "https://github.com/contentful/skills",
   "repository": "https://github.com/contentful/skills",
