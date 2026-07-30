@@ -1,6 +1,6 @@
 {
   "name": "@contentful/skill-contentful-guide",
-  "version": "2.4.10",
+  "version": "2.4.11",
   "description": "Contentful concepts and routing guide for choosing skills and docs",
   "license": "MIT",
   "files": [
