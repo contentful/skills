@@ -27,7 +27,7 @@
   "devDependencies": {
     "@contentful/skill-kit": "^1.6.6",
     "@release-it/bumper": "^7.0.5",
-    "@release-it/conventional-changelog": "^11.0.0",
+    "@release-it/conventional-changelog": "^12.0.0",
     "@types/node": "^25.2.3",
     "oxlint": "^1.61.0",
     "prettier": "^3.8.3",
