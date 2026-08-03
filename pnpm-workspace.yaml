@@ -1,5 +1,5 @@
 overrides:
-  basic-ftp: 6.0.2
+  basic-ftp: 6.1.0
   express-rate-limit: 8.6.1
   hono: 4.12.33
   ip-address: 10.4.0
