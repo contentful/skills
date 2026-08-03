@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Skills for Contentful apps, APIs, migrations, personalization, and analytics",
-    "version": "2.4.14"
+    "version": "2.4.15"
   },
   "plugins": [
     {
