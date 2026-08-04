@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  basic-ftp: 6.1.0
+  basic-ftp: 6.2.0
   express-rate-limit: 8.6.1
   hono: 4.12.33
   ip-address: 10.4.0
@@ -928,8 +928,8 @@ packages:
   async-retry@1.3.3:
     resolution: {integrity: sha512-wfr/jstw9xNi/0teMHrRW7dsz3Lt5ARhYNZ2ewpadnhaIp5mbALhOAP+EAdsC7t4Z6wqsDVv9+W6gm1Dk9mEyw==}
 
-  basic-ftp@6.1.0:
-    resolution: {integrity: sha512-g/feoL2nTNU15EsU1az9xMRhnaIlG3QUMLUSRl6qDr7LmiYafOrokfd5Hb8LCveELjkiihVUCY/jROXat2FpFQ==}
+  basic-ftp@6.2.0:
+    resolution: {integrity: sha512-H8eLjhoYPbOI717FLP8fGE7XInkMI7Ucj/ft0fp1avABtSiV5Bb2kYzScnOqlvJZs/KJZypr9Mp5zJmhaPFAEg==}
     engines: {node: '>=10.0.0'}
 
   before-after-hook@4.0.0:
@@ -2564,7 +2564,7 @@ snapshots:
     dependencies:
       retry: 0.13.1
 
-  basic-ftp@6.1.0: {}
+  basic-ftp@6.2.0: {}
 
   before-after-hook@4.0.0: {}
 
@@ -3038,7 +3038,7 @@ snapshots:
 
   get-uri@8.0.1:
     dependencies:
-      basic-ftp: 6.1.0
+      basic-ftp: 6.2.0
       data-uri-to-buffer: 8.0.0
       debug: 4.4.3
     transitivePeerDependencies:
