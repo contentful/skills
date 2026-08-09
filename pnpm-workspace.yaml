@@ -1,7 +1,7 @@
 overrides:
   basic-ftp: 6.2.0
   express-rate-limit: 8.6.1
-  hono: 4.13.0
+  hono: 4.13.1
   ip-address: 10.4.0
 
 allowBuilds:
