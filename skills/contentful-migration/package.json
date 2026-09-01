@@ -1,6 +1,6 @@
 {
   "name": "@contentful/skill-contentful-migration",
-  "version": "2.4.33",
+  "version": "2.4.34",
   "description": "Write and run Contentful content model migration scripts",
   "license": "MIT",
   "files": [
