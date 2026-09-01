@@ -1,6 +1,6 @@
 {
   "name": "@contentful/skill-contentful-nextjs",
-  "version": "2.4.34",
+  "version": "2.4.35",
   "description": "Integrate Contentful with Next.js including draft preview flows",
   "license": "MIT",
   "files": [
