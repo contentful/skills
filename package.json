@@ -15,7 +15,7 @@
   "engines": {
     "node": ">=24"
   },
-  "packageManager": "pnpm@12.3.3",
+  "packageManager": "pnpm@12.3.4",
   "scripts": {
     "lint": "oxlint",
     "typecheck": "tsc --noEmit",
