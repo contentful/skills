@@ -67,6 +67,7 @@ Use [conventional commits](https://www.conventionalcommits.org/) with a Jira tic
 **Types**: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `build`, `ci`, `deps`, `perf`, `style`, `revert`
 
 **Examples**:
+
 ```
 feat(optimization): add readiness skill [NT-2950]
 fix(contentful-personalization): correct SDK version detection [NT-2955]
@@ -83,6 +84,7 @@ Some skills are built with [`@contentful/skill-kit`](https://github.com/contentf
 - **Output**: `skills/<skill-name>/` — generated SKILL.md, JS bundle, references
 
 Build maps source to distribution:
+
 ```
 skill-kit build src/skills/contentful-personalization/skill.ts -o skills/contentful-personalization --mode node
 ```
@@ -116,3 +118,45 @@ Skills follow the [agentskills.io](https://agentskills.io) open specification. K
 - **SKILL.md body**: recommended under 500 lines; heavy content goes in `references/`
 - **Scripts**: non-interactive, JSON to stdout, diagnostics to stderr, `--help` flag required
 - **Independence**: no cross-skill imports; shared code becomes a separate npm package
+
+## Claude Code Compatibility
+
+Internal contributor skills live in `.agents/skills/` and are symlinked at `.claude/skills` for
+Claude Code discovery. Claude users can invoke `/skill-authoring` for guidance on creating,
+modifying, or reviewing skills.
+
+Claude Code supports these frontmatter extensions beyond the base agentskills.io specification:
+
+| Field                      | Description                                                                        |
+| -------------------------- | ---------------------------------------------------------------------------------- |
+| `disable-model-invocation` | `true` prevents automatic loading; the user must invoke the skill                  |
+| `user-invocable`           | `false` hides the skill from the user menu while retaining automatic model loading |
+| `context`                  | `fork` runs the skill in an isolated subagent                                      |
+| `agent`                    | Subagent type used with `context: fork`                                            |
+| `model`                    | Model override while the skill is active                                           |
+| `effort`                   | Effort-level override                                                              |
+| `argument-hint`            | Autocomplete hint such as `[issue-number]`                                         |
+| `hooks`                    | Hooks scoped to the skill lifecycle                                                |
+
+Claude substitutions include `$ARGUMENTS`, positional arguments such as `$0`,
+`${CLAUDE_SESSION_ID}`, and `${CLAUDE_SKILL_DIR}`. In a Claude-targeted `SKILL.md`, the
+`` !`command` `` form injects dynamic command output before the skill content is sent to the model.
+
+## Skill Kit Contributor Workflow
+
+Use these commands when changing a Skill Kit-backed skill:
+
+- `pnpm install` — install dependencies
+- `pnpm run typecheck` — type-check TypeScript source
+- `pnpm run test` — run all skill tests
+- `pnpm run build` — regenerate distributed skill output
+
+Source lives under `src/skills/<skill-name>/`; generated output lives under
+`skills/<skill-name>/`. Keep `skill.ts`, tests, schemas, actions, references, generated `SKILL.md`,
+runtime bundle, wrapper, and copied references aligned.
+
+`skill-kit build` merges into an existing `package.json` or creates one. Set repository package
+metadata through the skill definition's `package` field. Each Skill Kit-backed skill keeps its
+version in `src/skills/<skill-name>/version.ts`; release-it updates those files through
+`.release-it.json`, and the subsequent build propagates the version. Before committing a newly
+added skill, confirm that its generated `package.json` version matches the source version.
