@@ -2,7 +2,7 @@ overrides:
   basic-ftp: 6.2.1
   express-rate-limit: 8.7.0
   hono: 4.13.8
-  ip-address: 10.7.0
+  ip-address: 10.7.2
 
 allowBuilds:
   esbuild: true
