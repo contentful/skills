@@ -13,7 +13,7 @@
 
 [![version](https://img.shields.io/badge/v1.5.1-0286FF?style=flat&label=version)](https://github.com/contentful/skills/releases)
 [![license](https://img.shields.io/badge/MIT-grey?style=flat&label=license)](LICENSE)
-[![skills](https://img.shields.io/badge/4_skills-0286FF?style=flat&label=)](skills/)
+[![skills](https://img.shields.io/badge/5_skills-0286FF?style=flat&label=)](skills/)
 [![platforms](https://img.shields.io/badge/35%2B_platforms-0286FF?style=flat&label=)](https://agentskills.io)
 
 </div>
@@ -24,7 +24,7 @@ AI coding agents write great code but know nothing about your content model, you
 
 ## Quickstart — Claude Code
 
-Two commands. You get four skills plus live MCP connections to your Contentful spaces.
+Two commands. You get five skills plus live MCP connections to your Contentful spaces.
 
 ```
 /plugin marketplace add contentful/skills
@@ -45,6 +45,7 @@ Run `/reload-plugins` to activate. This registers two MCP servers:
 | **[contentful-nextjs](#contentful-nextjs)** | Integrates Contentful into a Next.js project — SDK setup, content fetching, Draft Mode previews. |
 | **[contentful-migration](#contentful-migration)** | Writes and runs content model migration scripts — fields, validations, transforms, editor interfaces. |
 | **[contentful-personalization](#contentful-personalization)** | Sets up, debugs, and develops personalization and A/B testing with the Experiences SDK. |
+| **[exo-content-bindings](#exo-content-bindings)** | Creates Data Assemblies (content bindings) that connect entries to Experience Orchestration components. |
 
 ---
 
@@ -87,7 +88,7 @@ Skills auto-discover from `.agents/skills/` when added to your project. Use `/sk
 npx skills add contentful/skills --skill contentful-personalization
 ```
 
-Available: `contentful-guide`, `contentful-nextjs`, `contentful-migration`, `contentful-personalization`
+Available: `contentful-guide`, `contentful-nextjs`, `contentful-migration`, `contentful-personalization`, `exo-content-bindings`
 
 </details>
 
@@ -175,6 +176,26 @@ Set up, debug, and develop with Contentful personalization and A/B testing. A st
 **Reference library:** SDK guides, component patterns, SSR/middleware patterns, provider patterns, analytics setup, environment variables, error resolution, and more.
 
 Built with [@contentful/skill-kit](https://github.com/contentful/skill-kit) — a structured state machine with MCP server integration.
+
+</details>
+
+### exo-content-bindings
+
+Create Data Assemblies — the content-binding recipes that connect existing entries to Experience Orchestration component types. Covers classifying coded vs. composite components, judging content vs. design properties, public/private (hoisted) properties, and slot vs. content-binding scope, then designing, creating, linking, and publishing Data Assemblies via the CMA.
+
+<details>
+<summary>Triggers and details</summary>
+
+<br />
+
+**Activates on:** "create Data Assemblies", "content binding", "data assembly", "prebinding", "bind entries to components", "hydrate a component", "set up a Binding Set"
+
+**Covers:**
+- Space introspection and coded vs. composite component classification
+- The content-property vs. design-property test, and the public/private hoisting rule
+- Resolver patterns — entity, collection, nested Data Assembly, asset/Media fields, deep binding, polymorphic branching
+- RichText handling, GraphQL query conventions, and the content-type-field-to-content-property type mapping
+- A complete worked example, plus binding-set and DA-reuse guidance
 
 </details>
 
