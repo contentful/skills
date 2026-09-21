@@ -5,6 +5,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: true
+
 permissions:
   id-token: write
 
@@ -65,6 +69,9 @@ jobs:
         run: pnpm install --frozen-lockfile
         env:
           NODE_AUTH_TOKEN: ${{ steps.vault.outputs.GITHUB_PACKAGES_WRITE_TOKEN }}
+
+      - name: Sync with main
+        run: git pull --rebase origin main
 
       - name: Release
         run: pnpm exec release-it --ci
