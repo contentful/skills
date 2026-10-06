@@ -17,6 +17,14 @@ mkdir -p .agents
 ln -sn "$(pwd)/local-skills/skills" .agents/skills
 ```
 
+To test the Claude plugin locally from this repository root:
+
+```sh
+claude --plugin-dir "$PWD"
+```
+
+This loads the local plugin directly without installing it from a marketplace.
+
 ## Validate your changes
 
 Run the checks before opening a PR:
@@ -39,6 +47,10 @@ pnpm run update-licenses
 - Use conventional commits where possible.
 - Update docs when behavior or usage changes.
 - Do not include secrets or credentials.
+
+## Contribution license
+
+By submitting a contribution to this project, you agree that your contribution is licensed under the MIT License that applies to this repository.
 
 ## Code of conduct
 

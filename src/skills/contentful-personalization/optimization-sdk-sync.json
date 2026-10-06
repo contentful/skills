@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/contentful/optimization.git",
+  "resolvedRef": "main",
+  "commit": "a4423eb1620e669d848c9cab3ab7d006bd7b20b5",
+  "generatedAt": "2026-07-15T10:22:53Z",
+  "sourceMode": "remote",
+  "sourceDirty": false,
+  "validation": [
+    {
+      "command": "pnpm knowledge:check",
+      "status": "passed",
+      "summary": "747 source pointers checked across 8 fact files; 25 files scanned for ESCALATE markers"
+    },
+    {
+      "command": "pnpm guides:check",
+      "status": "passed",
+      "summary": "6 blueprints and 88 planned sections validated"
+    }
+  ],
+  "generatedReferences": {
+    "references/optimization-overview.md": [
+      "documentation/guides/choosing-the-right-sdk.md",
+      "documentation/internal/sdk-knowledge/README.md",
+      "packages/node/node-sdk/package.json",
+      "packages/react-native-sdk/package.json",
+      "packages/web/frameworks/nextjs-sdk/package.json",
+      "packages/web/frameworks/react-web-sdk/package.json",
+      "packages/web/web-sdk/package.json"
+    ],
+    "references/optimization-shared.md": [
+      "documentation/internal/sdk-knowledge/shared/concepts.md",
+      "documentation/internal/sdk-knowledge/shared/vocabulary.md",
+      "documentation/concepts/consent-management-in-the-optimization-sdk-suite.md",
+      "documentation/concepts/entry-personalization-and-variant-resolution.md",
+      "documentation/concepts/profile-synchronization-between-client-and-server.md",
+      "packages/universal/core-sdk/src"
+    ],
+    "references/optimization-react-web.md": [
+      "documentation/internal/sdk-knowledge/web/react-web.md",
+      "documentation/authoring/blueprints/react-web.md",
+      "documentation/guides/integrating-the-react-web-sdk-in-a-react-app.md",
+      "packages/web/frameworks/react-web-sdk/src",
+      "packages/web/preview-panel/src",
+      "implementations/react-web-sdk",
+      "implementations/web-sdk_react"
+    ],
+    "references/optimization-nextjs-app-router.md": [
+      "documentation/internal/sdk-knowledge/web/nextjs-app-router.md",
+      "documentation/authoring/blueprints/nextjs-app-router.md",
+      "documentation/guides/integrating-the-optimization-sdk-in-a-nextjs-app-router-app.md",
+      "packages/web/frameworks/nextjs-sdk/src",
+      "packages/web/frameworks/react-web-sdk/src/hooks/useOptimizationActions.ts",
+      "implementations/nextjs-sdk_app-router"
+    ],
+    "references/optimization-nextjs-pages-router.md": [
+      "documentation/internal/sdk-knowledge/web/nextjs-pages-router.md",
+      "documentation/authoring/blueprints/nextjs-pages-router.md",
+      "documentation/guides/integrating-the-optimization-sdk-in-a-nextjs-pages-router-app.md",
+      "packages/web/frameworks/nextjs-sdk/src",
+      "packages/web/frameworks/react-web-sdk/src/hooks/useOptimizationActions.ts",
+      "implementations/nextjs-sdk_pages-router"
+    ],
+    "references/optimization-web.md": [
+      "documentation/internal/sdk-knowledge/web/web.md",
+      "documentation/authoring/blueprints/web.md",
+      "documentation/guides/integrating-the-web-sdk-in-a-web-app.md",
+      "packages/web/web-sdk/src",
+      "packages/web/preview-panel/src",
+      "implementations/web-sdk"
+    ],
+    "references/optimization-node.md": [
+      "documentation/internal/sdk-knowledge/node/node.md",
+      "documentation/authoring/blueprints/node.md",
+      "documentation/guides/integrating-the-node-sdk-in-a-node-app.md",
+      "packages/node/node-sdk/src",
+      "implementations/node-sdk",
+      "implementations/node-sdk+web-sdk"
+    ],
+    "references/optimization-react-native.md": [
+      "documentation/internal/sdk-knowledge/native/react-native.md",
+      "documentation/authoring/blueprints/react-native.md",
+      "documentation/guides/integrating-the-react-native-sdk-in-a-react-native-app.md",
+      "packages/react-native-sdk/src",
+      "implementations/react-native-sdk"
+    ]
+  }
+}

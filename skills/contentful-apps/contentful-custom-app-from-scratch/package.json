@@ -1,0 +1,10 @@
+{
+  "name": "@contentful/skill-contentful-custom-app-from-scratch",
+  "version": "2.0.0",
+  "description": "Design, scaffold, build, and validate new Contentful App Framework custom apps",
+  "license": "MIT",
+  "files": [
+    "SKILL.md",
+    "references/**"
+  ]
+}

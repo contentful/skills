@@ -2,7 +2,8 @@
 
 # Legacy SDK Reference: @ninetailed/experience.js
 
-Complete API reference for the Ninetailed legacy SDK packages.
+Complete API reference for diagnosing, repairing, or extending deployments that already use the
+Ninetailed legacy SDK packages. Do not use this reference to start a new integration.
 
 ---
 
@@ -21,22 +22,22 @@ Complete API reference for the Ninetailed legacy SDK packages.
 
 ## 1. Package Ecosystem
 
-| Package | Purpose |
-|---------|---------|
-| `@ninetailed/experience.js` | Core SDK (browser) |
-| `@ninetailed/experience.js-react` | React bindings (Provider, hooks, components) |
-| `@ninetailed/experience.js-next` | Next.js integration (auto page tracking, re-exports React + SSR) |
-| `@ninetailed/experience.js-shared` | Shared types, NinetailedApiClient, event builders |
-| `@ninetailed/experience.js-utils-contentful` | ExperienceMapper, AudienceMapper for Contentful REST API |
-| `@ninetailed/experience.js-node` | Server-side Node.js SDK |
-| `@ninetailed/experience.js-plugin-insights` | Component view/click/hover tracking via Beacon API |
-| `@ninetailed/experience.js-plugin-preview` | Preview editor UI widget |
-| `@ninetailed/experience.js-plugin-ssr` | SSR/ESR support (cookie-based anonymous ID persistence) |
-| `@ninetailed/experience.js-plugin-privacy` | Consent management / GDPR event filtering |
-| `@ninetailed/experience.js-plugin-segment` | Segment CDP integration |
-| `@ninetailed/experience.js-plugin-google-tagmanager` | GTM data layer integration |
-| `@ninetailed/experience.js-plugin-google-analytics` | Google Analytics (gtag) integration |
-| `@ninetailed/experience.js-plugin-contentsquare` | Contentsquare integration |
+| Package                                              | Purpose                                                          |
+| ---------------------------------------------------- | ---------------------------------------------------------------- |
+| `@ninetailed/experience.js`                          | Core SDK (browser)                                               |
+| `@ninetailed/experience.js-react`                    | React bindings (Provider, hooks, components)                     |
+| `@ninetailed/experience.js-next`                     | Next.js integration (auto page tracking, re-exports React + SSR) |
+| `@ninetailed/experience.js-shared`                   | Shared types, NinetailedApiClient, event builders                |
+| `@ninetailed/experience.js-utils-contentful`         | ExperienceMapper, AudienceMapper for Contentful REST API         |
+| `@ninetailed/experience.js-node`                     | Server-side Node.js SDK                                          |
+| `@ninetailed/experience.js-plugin-insights`          | Component view/click/hover tracking via Beacon API               |
+| `@ninetailed/experience.js-plugin-preview`           | Preview editor UI widget                                         |
+| `@ninetailed/experience.js-plugin-ssr`               | SSR/ESR support (cookie-based anonymous ID persistence)          |
+| `@ninetailed/experience.js-plugin-privacy`           | Consent management / GDPR event filtering                        |
+| `@ninetailed/experience.js-plugin-segment`           | Segment CDP integration                                          |
+| `@ninetailed/experience.js-plugin-google-tagmanager` | GTM data layer integration                                       |
+| `@ninetailed/experience.js-plugin-google-analytics`  | Google Analytics (gtag) integration                              |
+| `@ninetailed/experience.js-plugin-contentsquare`     | Contentsquare integration                                        |
 
 ---
 
@@ -134,6 +135,7 @@ const unsubscribe = ninetailed.onProfileChange((profileState) => {
 Core method for experience resolution. Given a baseline and array of experiences, subscribes to profile changes and calls `cb` with the resolved variant. This is what powers the `<Experience>` component.
 
 The callback receives:
+
 - `status: 'loading' | 'success' | 'error'`
 - `loading: boolean`
 - `hasVariants: boolean`
@@ -161,13 +163,28 @@ Stops observing an element.
 ```typescript
 type ProfileState =
   | { status: 'loading'; profile: null; experiences: null; changes: null; error: null; from: 'api' | 'hydrated' }
-  | { status: 'success'; profile: Profile; experiences: SelectedVariantInfo[]; changes: Change[]; error: null; from: 'api' | 'hydrated' }
-  | { status: 'error'; profile: Profile | null; experiences: SelectedVariantInfo[] | null; changes: Change[] | null; error: Error; from: 'api' | 'hydrated' };
+  | {
+      status: 'success';
+      profile: Profile;
+      experiences: SelectedVariantInfo[];
+      changes: Change[];
+      error: null;
+      from: 'api' | 'hydrated';
+    }
+  | {
+      status: 'error';
+      profile: Profile | null;
+      experiences: SelectedVariantInfo[] | null;
+      changes: Change[] | null;
+      error: Error;
+      from: 'api' | 'hydrated';
+    };
 ```
 
 ### Window Global
 
 The SDK attaches to `window.ninetailed` with:
+
 - `page()`, `track()`, `identify()`, `reset()`, `debug()` -- non-async wrappers
 - `profile` -- current profile object
 - `experiences` -- current experience selections
@@ -202,9 +219,7 @@ type NinetailedProviderInstantiationProps = {
 };
 
 // Instance mode (pass a pre-created Ninetailed)
-type NinetailedProviderProps =
-  | NinetailedProviderInstantiationProps
-  | { ninetailed: Ninetailed };
+type NinetailedProviderProps = NinetailedProviderInstantiationProps | { ninetailed: Ninetailed };
 ```
 
 ### Hooks
@@ -223,7 +238,7 @@ Returns the current profile state with the `experiences` property stripped (to p
 
 ```typescript
 type UseProfileHookResult = Omit<ProfileState, 'experiences'> & {
-  loading: boolean;  // true when status === 'loading'
+  loading: boolean; // true when status === 'loading'
 };
 ```
 
@@ -238,10 +253,8 @@ console.log(profile.traits, profile.location, profile.audiences);
 The hook that powers the `<Experience>` component.
 
 ```typescript
-const {
-  status, hasVariants, experience, variant, variantIndex,
-  audience, isPersonalized, profile, error
-} = useExperience({ baseline, experiences });
+const { status, hasVariants, experience, variant, variantIndex, audience, isPersonalized, profile, error } =
+  useExperience({ baseline, experiences });
 ```
 
 Return type is a discriminated union by status: `'loading' | 'success' | 'error'`.
@@ -257,16 +270,16 @@ type FlagResult<T> =
   | { status: 'error'; value: T; error: Error };
 
 type UseFlagOptions = {
-  shouldAutoTrack?: boolean | (() => boolean);  // default: true
+  shouldAutoTrack?: boolean | (() => boolean); // default: true
 };
 ```
 
 ```typescript
 const { status, value, error } = useFlag('banner-text', 'default text');
-const { value: config } = useFlag<{ padding: string; color: string }>(
-  'hero-config',
-  { padding: '10px', color: 'blue' }
-);
+const { value: config } = useFlag<{ padding: string; color: string }>('hero-config', {
+  padding: '10px',
+  color: 'blue',
+});
 ```
 
 #### `useFlagWithManualTracking(flagKey, defaultValue): [FlagResult, () => void]`
@@ -293,7 +306,7 @@ Selects a variant for simple (non-experience-based) personalization.
 const { loading, variant, isPersonalized, audience } = usePersonalize(
   baseline,
   variants,
-  { holdout: -1 }  // holdout percentage (-1 = disabled)
+  { holdout: -1 }, // holdout percentage (-1 = disabled)
 );
 ```
 
@@ -305,18 +318,19 @@ The primary personalization component. Resolves which variant to show based on e
 
 ```typescript
 type ExperienceProps<P, PassThroughProps, Variant> = {
-  id: string;                                           // Required: baseline entry ID
-  experiences: ExperienceConfiguration<Variant>[];      // Mapped experiences
-  component: ComponentType<P>;                          // The component to render
-  loadingComponent?: ExperienceLoadingComponent;        // Custom loading component
-  passthroughProps?: PassThroughProps;                   // Props passed regardless of variant
-  trackClicks?: boolean;                                // Enable click tracking
-  trackHovers?: boolean;                                // Enable hover tracking
+  id: string; // Required: baseline entry ID
+  experiences: ExperienceConfiguration<Variant>[]; // Mapped experiences
+  component: ComponentType<P>; // The component to render
+  loadingComponent?: ExperienceLoadingComponent; // Custom loading component
+  passthroughProps?: PassThroughProps; // Props passed regardless of variant
+  trackClicks?: boolean; // Enable click tracking
+  trackHovers?: boolean; // Enable hover tracking
   // ...all other baseline props spread
 };
 ```
 
 Behavior:
+
 1. If no variants exist, renders the baseline directly
 2. While loading, renders `LoadingComponent` (default hides baseline with `visibility: hidden`)
 3. If the selected variant has `hidden: true`, renders only a tracking marker
@@ -340,7 +354,7 @@ Loading component for Edge-Side Rendering. Reads the `experienceVariantsMap` fro
 
 ```typescript
 type ESRProviderProps = {
-  experienceVariantsMap: Record<string, number>;  // experienceId -> variantIndex
+  experienceVariantsMap: Record<string, number>; // experienceId -> variantIndex
 };
 ```
 
@@ -354,7 +368,7 @@ type PersonalizeProps<P> = P & {
   variants?: Variant<P>[];
   component: PersonalizedComponent<P>;
   loadingComponent?: React.ComponentType;
-  holdout?: number;   // default: -1
+  holdout?: number; // default: -1
 };
 ```
 
@@ -364,8 +378,8 @@ Renders a profile trait value inline.
 
 ```typescript
 type MergeTagProps = {
-  id: string;         // Trait path (e.g. 'traits_company' or 'location_city')
-  fallback?: string;  // Fallback value if trait not found
+  id: string; // Trait path (e.g. 'traits_company' or 'location_city')
+  fallback?: string; // Fallback value if trait not found
 };
 ```
 
@@ -415,10 +429,7 @@ type NextNinetailedProviderProps = NinetailedProviderProps & {
   onRouteChange?: OnRouteChange;
 };
 
-type OnRouteChange = (
-  routeInfo: { isInitialRoute: boolean },
-  ninetailed: NinetailedInstance
-) => void;
+type OnRouteChange = (routeInfo: { isInitialRoute: boolean }, ninetailed: NinetailedInstance) => void;
 ```
 
 If `onRouteChange` is provided, it replaces the default `ninetailed.page()` call on route changes.
@@ -458,13 +469,13 @@ const apiClient = new NinetailedApiClient({
 
 #### Methods
 
-| Method | Description |
-|--------|-------------|
-| `createProfile({ events }, options?)` | Creates a new profile |
-| `updateProfile({ profileId, events }, options?)` | Updates an existing profile |
+| Method                                            | Description                                     |
+| ------------------------------------------------- | ----------------------------------------------- |
+| `createProfile({ events }, options?)`             | Creates a new profile                           |
+| `updateProfile({ profileId, events }, options?)`  | Updates an existing profile                     |
 | `upsertProfile({ profileId?, events }, options?)` | Create or update based on whether ID is present |
-| `getProfile(id, options?)` | Retrieve a profile by ID |
-| `upsertManyProfiles({ events }, options?)` | Batch upserts (each event needs `anonymousId`) |
+| `getProfile(id, options?)`                        | Retrieve a profile by ID                        |
+| `upsertManyProfiles({ events }, options?)`        | Batch upserts (each event needs `anonymousId`)  |
 
 All return `Promise<ProfileWithSelectedVariants>`.
 
@@ -472,14 +483,14 @@ All return `Promise<ProfileWithSelectedVariants>`.
 
 ```typescript
 type RequestOptions = {
-  timeout?: number;               // Default: 3000ms
-  preflight?: boolean;            // ESR/SSR mode: evaluate but don't persist
+  timeout?: number; // Default: 3000ms
+  preflight?: boolean; // ESR/SSR mode: evaluate but don't persist
   locale?: string;
-  ip?: string;                    // Override IP for server-side calls
-  plainText?: boolean;            // Default: true. Avoids CORS preflight
-  retries?: number;               // Default: 1. Only retries 503s
-  minRetryTimeout?: number;       // Default: 0ms
-  enabledFeatures?: Feature[];    // 'ip-enrichment' | 'location'
+  ip?: string; // Override IP for server-side calls
+  plainText?: boolean; // Default: true. Avoids CORS preflight
+  retries?: number; // Default: 1. Only retries 503s
+  minRetryTimeout?: number; // Default: 0ms
+  enabledFeatures?: Feature[]; // 'ip-enrichment' | 'location'
 };
 ```
 
@@ -513,9 +524,9 @@ The `ctx` parameter:
 type Profile = {
   id: string;
   stableId: string;
-  random: number;               // 0-1, used for traffic allocation
-  audiences: string[];          // Array of matched audience IDs
-  traits: Traits;               // JSON object of user traits
+  random: number; // 0-1, used for traffic allocation
+  audiences: string[]; // Array of matched audience IDs
+  traits: Traits; // JSON object of user traits
   location: GeoLocation;
   session: SessionStatistics;
 };
@@ -682,6 +693,7 @@ new NinetailedPreviewPlugin({
 ```
 
 Key methods exposed via `window.ninetailed.plugins.preview`:
+
 - `open()`, `close()`, `toggle()` -- widget visibility
 - `activateAudience(id)`, `deactivateAudience(id)`, `resetAudience(id)`
 - `setExperienceVariant({ experienceId, variantIndex })`
@@ -713,6 +725,7 @@ new NinetailedSsrPlugin({
 ```
 
 Behavior:
+
 - On `initialize`: reads cookie value and sets it as the analytics anonymous ID
 - On `PROFILE_CHANGE`: writes the profile ID to the cookie
 - On `PROFILE_RESET`: removes the cookie
@@ -734,20 +747,21 @@ new NinetailedPrivacyPlugin(
 
 ```typescript
 type PrivacyConfig = {
-  allowedEvents: EventType[];                  // Default no-consent: ['page']
-  allowedPageEventProperties: string[];        // Default: ['*']
-  allowedTrackEvents: string[];                // Default: []
-  allowedTrackEventProperties: string[];       // Default: []
-  allowedTraits: string[];                     // Default: []
-  blockProfileMerging: boolean;                // Default: true
-  enabledFeatures: Feature[];                  // Default: []
+  allowedEvents: EventType[]; // Default no-consent: ['page']
+  allowedPageEventProperties: string[]; // Default: ['*']
+  allowedTrackEvents: string[]; // Default: []
+  allowedTrackEventProperties: string[]; // Default: []
+  allowedTraits: string[]; // Default: []
+  blockProfileMerging: boolean; // Default: true
+  enabledFeatures: Feature[]; // Default: []
 };
 ```
 
 Consent is managed via:
+
 ```javascript
-window.ninetailed.consent(true)   // Grant consent
-window.ninetailed.consent(false)  // Revoke consent
+window.ninetailed.consent(true); // Grant consent
+window.ninetailed.consent(false); // Revoke consent
 ```
 
 **When to use:** GDPR compliance. Default no-consent config only allows `page` events with no PII.
@@ -769,12 +783,12 @@ These plugins forward experience view events to external analytics services. All
 
 Available template properties: `experience.id`, `experience.type`, `experience.name`, `experience.description`, `audience.id`, `audience.name`, `audience.description`, `selectedVariant`, `selectedVariantIndex`, `selectedVariantSelector`.
 
-| Plugin | Package | Target |
-|--------|---------|--------|
-| GTM | `@ninetailed/experience.js-plugin-google-tagmanager` | `window.dataLayer` |
-| Segment | `@ninetailed/experience.js-plugin-segment` | `window.analytics.track()` |
-| Google Analytics | `@ninetailed/experience.js-plugin-google-analytics` | `window.gtag()` |
-| Contentsquare | `@ninetailed/experience.js-plugin-contentsquare` | Contentsquare data layer |
+| Plugin           | Package                                              | Target                     |
+| ---------------- | ---------------------------------------------------- | -------------------------- |
+| GTM              | `@ninetailed/experience.js-plugin-google-tagmanager` | `window.dataLayer`         |
+| Segment          | `@ninetailed/experience.js-plugin-segment`           | `window.analytics.track()` |
+| Google Analytics | `@ninetailed/experience.js-plugin-google-analytics`  | `window.gtag()`            |
+| Contentsquare    | `@ninetailed/experience.js-plugin-contentsquare`     | Contentsquare data layer   |
 
 ```typescript
 // GTM
@@ -879,9 +893,7 @@ type Event =
 ### EventType
 
 ```typescript
-type EventType =
-  | 'page' | 'track' | 'identify' | 'screen'
-  | 'component' | 'component_click' | 'component_hover';
+type EventType = 'page' | 'track' | 'identify' | 'screen' | 'component' | 'component_click' | 'component_hover';
 ```
 
 ### Component Types

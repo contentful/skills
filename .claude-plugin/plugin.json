@@ -1,7 +1,8 @@
 {
-  "name": "contentful-skills",
-  "version": "1.5.3",
-  "description": "Agent skills for Contentful optimization",
+  "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "contentful",
+  "version": "2.4.59",
+  "description": "Agent skills for Contentful apps, APIs, migrations, and personalization",
   "author": {
     "name": "Contentful",
     "email": "skills@contentful.com",
@@ -12,6 +13,9 @@
   "license": "MIT",
   "keywords": [
     "contentful",
+    "app-framework",
+    "custom-apps",
+    "cms",
     "personalization",
     "analytics",
     "ninetailed"

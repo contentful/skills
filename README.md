@@ -13,7 +13,7 @@
 
 [![version](https://img.shields.io/badge/v1.5.1-0286FF?style=flat&label=version)](https://github.com/contentful/skills/releases)
 [![license](https://img.shields.io/badge/MIT-grey?style=flat&label=license)](LICENSE)
-[![skills](https://img.shields.io/badge/5_skills-0286FF?style=flat&label=)](skills/)
+[![skills](https://img.shields.io/badge/8_skills-0286FF?style=flat&label=)](skills/)
 [![platforms](https://img.shields.io/badge/35%2B_platforms-0286FF?style=flat&label=)](https://agentskills.io)
 
 </div>
@@ -24,11 +24,11 @@ AI coding agents write great code but know nothing about your content model, you
 
 ## Quickstart — Claude Code
 
-Two commands. You get five skills plus live MCP connections to your Contentful spaces.
+Two commands. You get eight skills plus live MCP connections to your Contentful spaces.
 
 ```
 /plugin marketplace add contentful/skills
-/plugin install contentful-skills@contentful-skills
+/plugin install contentful@contentful
 ```
 
 Run `/reload-plugins` to activate. This registers two MCP servers:
@@ -42,10 +42,15 @@ Run `/reload-plugins` to activate. This registers two MCP servers:
 | Skill | What it does |
 |:------|:-------------|
 | **[contentful-guide](#contentful-guide)** | Explains core concepts and routes you to the right skill, API, or doc. Start here. |
+| **[contentful-api](#contentful-api)** | Language-agnostic REST and GraphQL API reference — curl examples for CMA, CDA, CPA, Images, and GraphQL. |
 | **[contentful-nextjs](#contentful-nextjs)** | Integrates Contentful into a Next.js project — SDK setup, content fetching, Draft Mode previews. |
 | **[contentful-migration](#contentful-migration)** | Writes and runs content model migration scripts — fields, validations, transforms, editor interfaces. |
+| **[contentful-custom-app-from-scratch](#contentful-custom-app-from-scratch)** | Designs, scaffolds, builds, and validates new App Framework custom apps. |
+| **[contentful-custom-app-enhancement](#contentful-custom-app-enhancement)** | Improves and debugs existing Contentful custom apps in customer-owned repos. |
 | **[contentful-personalization](#contentful-personalization)** | Sets up, debugs, and develops personalization and A/B testing with the Experiences SDK. |
 | **[exo-content-bindings](#exo-content-bindings)** | Creates Data Assemblies (content bindings) that connect entries to Experience Orchestration components. |
+
+The custom app skills are packaged together under `skills/contentful-apps/`.
 
 ---
 
@@ -54,6 +59,10 @@ Run `/reload-plugins` to activate. This registers two MCP servers:
 Skills also work without the plugin on any platform that supports the [agentskills.io](https://agentskills.io) spec.
 
 ### Cursor
+
+Install the [Contentful Cursor plugin](https://cursor.directory/plugins/contentful-1) from Cursor Directory.
+
+Alternatively, add the skills manually:
 
 1. Open **Settings** → **Rules**
 2. Click **Add Rule** → **Remote Rule (GitHub)**
@@ -88,7 +97,7 @@ Skills auto-discover from `.agents/skills/` when added to your project. Use `/sk
 npx skills add contentful/skills --skill contentful-personalization
 ```
 
-Available: `contentful-guide`, `contentful-nextjs`, `contentful-migration`, `contentful-personalization`, `exo-content-bindings`
+Available: `contentful-guide`, `contentful-api`, `contentful-nextjs`, `contentful-migration`, `contentful-custom-app-from-scratch`, `contentful-custom-app-enhancement`, `contentful-personalization`, `exo-content-bindings`
 
 </details>
 
@@ -112,6 +121,28 @@ Explains core Contentful concepts and routes you to the right skill or documenta
 - API selection — CDA vs CPA vs CMA vs GraphQL vs Images API
 - Routing to the right implementation skill
 - Contentful MCP server orientation
+
+</details>
+
+### contentful-api
+
+Language-agnostic reference for Contentful's REST and GraphQL APIs. Pair this with any framework or language — examples are curl-based.
+
+<details>
+<summary>Triggers and details</summary>
+
+<br />
+
+**Activates on:** "curl Contentful", "CMA request", "CDA query parameters", "publish entry HTTP", "Images API URL", "Contentful GraphQL query"
+
+**Covers:**
+- Authentication — token types, headers, US/EU base URLs
+- HTTP conventions — version locking, rate limits, pagination, error payloads, locale structure
+- Content Management API — entries, content types, assets, environments, bulk actions
+- Content Delivery API — querying, includes/link resolution, localization, sync
+- Content Preview API — draft + published content via CDA endpoints
+- Images API — on-the-fly transformations via URL parameters
+- GraphQL Content API — querying with CDA tokens
 
 </details>
 
@@ -154,6 +185,46 @@ Write and run content model migration scripts using the Contentful migration lib
 - Entry transforms — in-place edits, deriving linked entries, moving entries between types
 - Editor interface wiring — widgets, field layout, sidebar controls
 - Best practices — sandbox testing, sequential file naming, separating schema from data changes
+
+</details>
+
+### contentful-custom-app-from-scratch
+
+Design, scaffold, build, and validate a new Contentful App Framework custom app for your own repository or workspace.
+
+<details>
+<summary>Triggers and details</summary>
+
+<br />
+
+**Activates on:** "build a Contentful app", "custom app from scratch", "App Framework app", "sidebar app", "field editor app", "page app", "app action", "app function"
+
+**Covers:**
+- Idea shaping and v1 scoping for internal custom apps
+- App location selection — app config, page, home, dialog, entry editor, entry field, entry sidebar
+- Scaffolding with `create-contentful-app`
+- App SDK, React Apps Toolkit, Forma 36, installation parameters, App Actions, and Functions guidance
+- Local Contentful setup, sandbox testing, validation, and handoff
+
+</details>
+
+### contentful-custom-app-enhancement
+
+Improve, debug, and extend an existing Contentful App Framework custom app in a customer-owned repository.
+
+<details>
+<summary>Triggers and details</summary>
+
+<br />
+
+**Activates on:** "fix my Contentful app", "improve a custom app", "enhance App Framework app", "debug custom app", "update sidebar app", "custom app feature request"
+
+**Covers:**
+- Triage from bug reports, support notes, screenshots, and feature requests
+- Existing app inspection across locations, SDK usage, parameters, App Actions, Functions, and backend code
+- Small, reviewable implementation plans
+- App-native UI and security guardrails
+- Targeted tests, local smoke checks, sandbox verification, and PR handoff
 
 </details>
 
@@ -201,14 +272,78 @@ Create Data Assemblies — the content-binding recipes that connect existing ent
 
 ---
 
-## Contentful MCP Server
+## MCP Server Setup
 
-These skills work best alongside the [Contentful MCP server](https://www.contentful.com/developers/docs/tools/mcp-server/), which gives your agent conversational access to your Contentful spaces. Plugin installs configure the MCP connection automatically. For skills-only installs, set up the MCP server separately:
+Plugin installs configure MCP connections automatically. If you installed via `npx skills add` or another non-plugin path, set up the MCP servers manually to get the full experience.
+
+### Contentful MCP (CMS operations)
+
+Connects your agent to your Contentful spaces for reading and writing content, content types, and assets.
+
+**Claude Code:**
+
+```
+/mcp add-http contentful-mcp https://mcp.contentful.com/mcp
+```
+
+**Other platforms** — add to your MCP config:
+
+```json
+{
+  "mcpServers": {
+    "contentful-mcp": {
+      "type": "http",
+      "url": "https://mcp.contentful.com/mcp"
+    }
+  }
+}
+```
 
 - **Documentation:** [contentful.com/developers/docs/tools/mcp-server](https://www.contentful.com/developers/docs/tools/mcp-server/)
-- **Endpoint:** `https://mcp.contentful.com/mcp`
+
+### Personalization MCP (structured workflows)
+
+The `contentful-personalization` skill includes a local MCP server that powers its interactive workflows. Point your agent at the skill's run script:
+
+**Claude Code:**
+
+```
+/mcp add -- /path/to/skills/contentful-personalization/scripts/run mcp --host claude-code
+```
+
+**Other platforms** — add to your MCP config:
+
+```json
+{
+  "mcpServers": {
+    "contentful-personalization": {
+      "command": "/path/to/skills/contentful-personalization/scripts/run",
+      "args": ["mcp", "--host", "claude-code"]
+    }
+  }
+}
+```
+
+> [!NOTE]
+> Replace `/path/to/skills/` with the actual path where skills were installed (typically `.agents/skills/` in your project).
 
 ---
+
+## Local Plugin Testing (Claude Code)
+
+To test the full plugin locally — including skills, MCP servers, and hooks — without publishing:
+
+```bash
+claude --plugin-dir /path/to/contentful/skills
+```
+
+This loads everything defined in `.claude-plugin/plugin.json` for that session: skills, the Contentful MCP server, and the personalization MCP server. Use `/reload-plugins` inside the session to pick up changes without restarting.
+
+You can also combine multiple plugin directories:
+
+```bash
+claude --plugin-dir ./skills --plugin-dir ./other-plugin
+```
 
 ## Contributing
 

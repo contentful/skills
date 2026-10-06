@@ -10,9 +10,24 @@ Development Dependencies
 @contentful/skill-kit
     License: MIT
     https://www.npmjs.com/package/@contentful/skill-kit [npmjs.com]
+@release-it/bumper
+    License: MIT
+    https://github.com/release-it/bumper [github.com]
+@release-it/conventional-changelog
+    License: MIT
+    https://github.com/release-it/conventional-changelog [github.com]
 @types/node
     License: MIT
     https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node [npmjs.com]
+oxlint
+    License: MIT
+    https://oxc.rs/docs/guide/usage/linter [oxc.rs]
+prettier
+    License: MIT
+    https://prettier.io [npmjs.com]
+release-it
+    License: MIT
+    https://github.com/release-it/release-it [github.com]
 tsx
     License: MIT
     https://tsx.is [npmjs.com]

@@ -2,12 +2,19 @@
 
 Guidance for personalization readiness by framework.
 
+Use the Optimization pattern for new integrations. Use the Ninetailed pattern only to repair or
+extend a detected legacy deployment.
+
 ## Next.js App Router (13.4+)
 
 ### Provider Placement
 
-`NinetailedProvider` is a client component — it must be in a Client Component
-boundary. Typically placed in `app/layout.tsx` wrapped with `'use client'`:
+Provider placement depends on the SDK family.
+
+**Existing legacy deployment — `@ninetailed/experience.js`:**
+
+Use a Client Component boundary, typically `app/providers.tsx`, and render it from
+`app/layout.tsx`.
 
 ```typescript
 // app/providers.tsx
@@ -27,27 +34,20 @@ export default function RootLayout({ children }) {
 }
 ```
 
+**Recommended — `@contentful/optimization-nextjs`:**
+
+Create one bound integration with `createNextjsAppRouterOptimization` from the `/app-router`
+subpath. Import its bound `OptimizationRoot`, `OptimizedEntry`, `NextAppAutoPageTracker`, and
+request handler from an application-owned module. The bound root owns server evaluation and browser
+takeover; browser-only hooks come from `/client`. Do not recreate the integration from generic
+`/client` and `/server` exports.
+
 ### Server Components
 
-Server Components cannot use hooks or context. Personalization must happen
-in Client Components or via edge middleware.
-
-Pattern: fetch content in a Server Component, pass to a Client Component
-that handles personalization:
-
-```typescript
-// app/page.tsx (Server Component)
-export default async function Page() {
-  const entries = await fetchPageContent();
-  return <PersonalizedPage entries={entries} />;
-}
-
-// components/PersonalizedPage.tsx
-'use client';
-export function PersonalizedPage({ entries }) {
-  // Use <Experience> components here
-}
-```
+Server Components cannot use browser hooks or context. With the Optimization App Router adapter, the
+bound `OptimizedEntry` can fetch and resolve an entry during server rendering; use a `/client`
+entry island only for browser-only live-update or loading controls. With the legacy SDK, fetch in a
+Server Component and pass the payload into a Client Component that renders `<Experience>`.
 
 ### Key Readiness Signals
 
@@ -97,9 +97,7 @@ Provider goes in `gatsby-browser.js` (and `gatsby-ssr.js` for SSR):
 ```javascript
 // gatsby-browser.js
 export const wrapRootElement = ({ element }) => (
-  <NinetailedProvider clientId={process.env.GATSBY_NINETAILED_CLIENT_ID}>
-    {element}
-  </NinetailedProvider>
+  <NinetailedProvider clientId={process.env.GATSBY_NINETAILED_CLIENT_ID}>{element}</NinetailedProvider>
 );
 ```
 
@@ -112,6 +110,7 @@ the static HTML shows the baseline, and the SDK swaps variants after hydration.
 ### Environment Variables
 
 Gatsby requires `GATSBY_` prefix for client-side env vars:
+
 ```
 GATSBY_NINETAILED_CLIENT_ID
 GATSBY_NINETAILED_ENVIRONMENT
@@ -174,6 +173,7 @@ ReactDOM.createRoot(root).render(
 
 Typically `useEffect` + API calls. Personalization is client-side only.
 Consider:
+
 - Is there a centralized data-fetching layer?
 - Or does each component fetch its own data?
 

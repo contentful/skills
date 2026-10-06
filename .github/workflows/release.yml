@@ -5,11 +5,12 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: true
+
 permissions:
-  contents: write
-  packages: write
   id-token: write
-  actions: read
 
 jobs:
   release:
@@ -18,7 +19,7 @@ jobs:
     steps:
       - name: Retrieve Secrets from Vault
         id: vault
-        uses: hashicorp/vault-action@4c06c5ccf5c0761b6029f56cfb1dcf5565918a3b # v3.4.0
+        uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc # v4.0.0
         with:
           url: ${{ secrets.VAULT_URL }}
           role: ${{ github.event.repository.name }}-github-action
@@ -31,7 +32,7 @@ jobs:
             secret/data/github/automation-app-user GH_USER_NAME | GIT_COMMITTER_NAME ;
             secret/data/github/automation-app-user GH_USER_EMAIL | GIT_COMMITTER_EMAIL ;
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           token: ${{ steps.vault.outputs.GITHUB_TOKEN }}
@@ -56,9 +57,9 @@ jobs:
       - name: Setup npmrc for publishing
         run: echo "//npm.pkg.github.com/:_authToken=${{ steps.vault.outputs.GITHUB_PACKAGES_WRITE_TOKEN }}" >> "$HOME/.npmrc"
 
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # v6
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
 
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: ".nvmrc"
           cache: pnpm
@@ -68,6 +69,9 @@ jobs:
         run: pnpm install --frozen-lockfile
         env:
           NODE_AUTH_TOKEN: ${{ steps.vault.outputs.GITHUB_PACKAGES_WRITE_TOKEN }}
+
+      - name: Sync with main
+        run: git pull --rebase origin main
 
       - name: Release
         run: pnpm exec release-it --ci

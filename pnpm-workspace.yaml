@@ -1,2 +1,8 @@
-onlyBuiltDependencies:
-  - esbuild
+overrides:
+  basic-ftp: 6.2.1
+  express-rate-limit: 8.7.0
+  hono: 4.13.12
+  ip-address: 10.7.3
+
+allowBuilds:
+  esbuild: true
