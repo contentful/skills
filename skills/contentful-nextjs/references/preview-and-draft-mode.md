@@ -22,12 +22,19 @@ Use this pattern when editors need to preview unpublished content in Next.js.
 import { draftMode } from "next/headers";
 import { getEntryById } from "@/lib/contentful/queries";
 
-export default async function Page({ params }: { params: { slug: string } }) {
-  const { isEnabled } = draftMode();
-  const entry = await getEntryById(params.slug, isEnabled);
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const { isEnabled } = await draftMode();
+  const entry = await getEntryById(slug, isEnabled);
   return <main>{entry?.fields?.title as string}</main>;
 }
 ```
+
+`params` and `draftMode()` are both async as of Next.js 15 — await them rather than reading the values synchronously.
 
 ## Preview-aware GraphQL guidance
 
