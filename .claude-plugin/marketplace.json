@@ -40,7 +40,8 @@
         "./skills/contentful-guide",
         "./skills/contentful-migration",
         "./skills/contentful-nextjs",
-        "./skills/contentful-personalization"
+        "./skills/contentful-personalization",
+        "./skills/exo-content-bindings"
       ]
     }
   ]
