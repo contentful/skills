@@ -19,9 +19,10 @@ directory at the project or folder where the user wants the visible `.contentful
 
 Requires Node.js 24.21 or newer on Windows, macOS, or Linux and an AI agent with shell access.
 Before running commands, check the Node version. If it is too old or missing, ask the user to install
-a supported Node version. npm/npx is needed only to install or update the skill. Downloads need network
+a supported Node version. npm/npx and network access are needed to install or update the skill; the
+installer may also need Git if its archive download is unavailable. Snapshot downloads need network
 access, a CMA token with read access, a Space ID, and an Environment ID. Python, an external SQLite
-installation, GitHub access, and a local dependency install are not needed. Later analysis runs offline.
+installation, private GitHub access, and a local dependency install are not needed. Later analysis runs offline.
 
 ## Download the snapshot
 

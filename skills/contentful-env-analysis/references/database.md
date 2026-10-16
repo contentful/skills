@@ -1,6 +1,6 @@
 # Snapshot database
 
-Use `contentful-unified.db` through `node bin/main.js query`. Common tables:
+Use `contentful-unified.db` through `node scripts/main.js query`. Common tables:
 
 | Table | Purpose | Main key |
 | --- | --- | --- |

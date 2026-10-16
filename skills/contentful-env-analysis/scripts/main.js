@@ -40,9 +40,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../../node_modules/.pnpm/fast-copy@3.1.0/node_modules/fast-copy/dist/cjs/index.cjs
+// node_modules/.pnpm/fast-copy@3.1.0/node_modules/fast-copy/dist/cjs/index.cjs
 var require_cjs = __commonJS({
-  "../../node_modules/.pnpm/fast-copy@3.1.0/node_modules/fast-copy/dist/cjs/index.cjs"(exports) {
+  "node_modules/.pnpm/fast-copy@3.1.0/node_modules/fast-copy/dist/cjs/index.cjs"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var extendStatics = function(d, b) {
@@ -402,17 +402,17 @@ var require_cjs = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_freeGlobal.js
+// node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_freeGlobal.js
 var require_freeGlobal = __commonJS({
-  "../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_freeGlobal.js"(exports, module) {
+  "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_freeGlobal.js"(exports, module) {
     var freeGlobal = typeof global == "object" && global && global.Object === Object && global;
     module.exports = freeGlobal;
   }
 });
 
-// ../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_root.js
+// node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_root.js
 var require_root = __commonJS({
-  "../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_root.js"(exports, module) {
+  "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_root.js"(exports, module) {
     var freeGlobal = require_freeGlobal();
     var freeSelf = typeof self == "object" && self && self.Object === Object && self;
     var root = freeGlobal || freeSelf || Function("return this")();
@@ -420,18 +420,18 @@ var require_root = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_Symbol.js
+// node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_Symbol.js
 var require_Symbol = __commonJS({
-  "../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_Symbol.js"(exports, module) {
+  "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_Symbol.js"(exports, module) {
     var root = require_root();
     var Symbol2 = root.Symbol;
     module.exports = Symbol2;
   }
 });
 
-// ../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_getRawTag.js
+// node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_getRawTag.js
 var require_getRawTag = __commonJS({
-  "../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_getRawTag.js"(exports, module) {
+  "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_getRawTag.js"(exports, module) {
     var Symbol2 = require_Symbol();
     var objectProto = Object.prototype;
     var hasOwnProperty2 = objectProto.hasOwnProperty;
@@ -458,9 +458,9 @@ var require_getRawTag = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_objectToString.js
+// node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_objectToString.js
 var require_objectToString = __commonJS({
-  "../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_objectToString.js"(exports, module) {
+  "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_objectToString.js"(exports, module) {
     var objectProto = Object.prototype;
     var nativeObjectToString = objectProto.toString;
     function objectToString(value) {
@@ -470,9 +470,9 @@ var require_objectToString = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_baseGetTag.js
+// node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_baseGetTag.js
 var require_baseGetTag = __commonJS({
-  "../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_baseGetTag.js"(exports, module) {
+  "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_baseGetTag.js"(exports, module) {
     var Symbol2 = require_Symbol();
     var getRawTag = require_getRawTag();
     var objectToString = require_objectToString();
@@ -489,17 +489,17 @@ var require_baseGetTag = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/isArray.js
+// node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/isArray.js
 var require_isArray = __commonJS({
-  "../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/isArray.js"(exports, module) {
+  "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/isArray.js"(exports, module) {
     var isArray2 = Array.isArray;
     module.exports = isArray2;
   }
 });
 
-// ../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/isObjectLike.js
+// node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/isObjectLike.js
 var require_isObjectLike = __commonJS({
-  "../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/isObjectLike.js"(exports, module) {
+  "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/isObjectLike.js"(exports, module) {
     function isObjectLike(value) {
       return value != null && typeof value == "object";
     }
@@ -507,9 +507,9 @@ var require_isObjectLike = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/isString.js
+// node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/isString.js
 var require_isString = __commonJS({
-  "../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/isString.js"(exports, module) {
+  "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/isString.js"(exports, module) {
     var baseGetTag = require_baseGetTag();
     var isArray2 = require_isArray();
     var isObjectLike = require_isObjectLike();
@@ -521,24 +521,24 @@ var require_isString = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/type.js
+// node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/type.js
 var require_type = __commonJS({
-  "../../node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/type.js"(exports, module) {
+  "node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/type.js"(exports, module) {
     "use strict";
     module.exports = TypeError;
   }
 });
 
-// ../../node_modules/.pnpm/object-inspect@1.13.4/node_modules/object-inspect/util.inspect.js
+// node_modules/.pnpm/object-inspect@1.13.4/node_modules/object-inspect/util.inspect.js
 var require_util_inspect = __commonJS({
-  "../../node_modules/.pnpm/object-inspect@1.13.4/node_modules/object-inspect/util.inspect.js"(exports, module) {
+  "node_modules/.pnpm/object-inspect@1.13.4/node_modules/object-inspect/util.inspect.js"(exports, module) {
     module.exports = __require("util").inspect;
   }
 });
 
-// ../../node_modules/.pnpm/object-inspect@1.13.4/node_modules/object-inspect/index.js
+// node_modules/.pnpm/object-inspect@1.13.4/node_modules/object-inspect/index.js
 var require_object_inspect = __commonJS({
-  "../../node_modules/.pnpm/object-inspect@1.13.4/node_modules/object-inspect/index.js"(exports, module) {
+  "node_modules/.pnpm/object-inspect@1.13.4/node_modules/object-inspect/index.js"(exports, module) {
     var hasMap = typeof Map === "function" && Map.prototype;
     var mapSizeDescriptor = Object.getOwnPropertyDescriptor && hasMap ? Object.getOwnPropertyDescriptor(Map.prototype, "size") : null;
     var mapSize = hasMap && mapSizeDescriptor && typeof mapSizeDescriptor.get === "function" ? mapSizeDescriptor.get : null;
@@ -1067,9 +1067,9 @@ var require_object_inspect = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/side-channel-list@1.0.1/node_modules/side-channel-list/index.js
+// node_modules/.pnpm/side-channel-list@1.0.1/node_modules/side-channel-list/index.js
 var require_side_channel_list = __commonJS({
-  "../../node_modules/.pnpm/side-channel-list@1.0.1/node_modules/side-channel-list/index.js"(exports, module) {
+  "node_modules/.pnpm/side-channel-list@1.0.1/node_modules/side-channel-list/index.js"(exports, module) {
     "use strict";
     var inspect = require_object_inspect();
     var $TypeError = require_type();
@@ -1160,113 +1160,113 @@ var require_side_channel_list = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/es-object-atoms@1.1.1/node_modules/es-object-atoms/index.js
+// node_modules/.pnpm/es-object-atoms@1.1.1/node_modules/es-object-atoms/index.js
 var require_es_object_atoms = __commonJS({
-  "../../node_modules/.pnpm/es-object-atoms@1.1.1/node_modules/es-object-atoms/index.js"(exports, module) {
+  "node_modules/.pnpm/es-object-atoms@1.1.1/node_modules/es-object-atoms/index.js"(exports, module) {
     "use strict";
     module.exports = Object;
   }
 });
 
-// ../../node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/index.js
+// node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/index.js
 var require_es_errors = __commonJS({
-  "../../node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/index.js"(exports, module) {
+  "node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/index.js"(exports, module) {
     "use strict";
     module.exports = Error;
   }
 });
 
-// ../../node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/eval.js
+// node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/eval.js
 var require_eval = __commonJS({
-  "../../node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/eval.js"(exports, module) {
+  "node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/eval.js"(exports, module) {
     "use strict";
     module.exports = EvalError;
   }
 });
 
-// ../../node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/range.js
+// node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/range.js
 var require_range = __commonJS({
-  "../../node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/range.js"(exports, module) {
+  "node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/range.js"(exports, module) {
     "use strict";
     module.exports = RangeError;
   }
 });
 
-// ../../node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/ref.js
+// node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/ref.js
 var require_ref = __commonJS({
-  "../../node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/ref.js"(exports, module) {
+  "node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/ref.js"(exports, module) {
     "use strict";
     module.exports = ReferenceError;
   }
 });
 
-// ../../node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/syntax.js
+// node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/syntax.js
 var require_syntax = __commonJS({
-  "../../node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/syntax.js"(exports, module) {
+  "node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/syntax.js"(exports, module) {
     "use strict";
     module.exports = SyntaxError;
   }
 });
 
-// ../../node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/uri.js
+// node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/uri.js
 var require_uri = __commonJS({
-  "../../node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/uri.js"(exports, module) {
+  "node_modules/.pnpm/es-errors@1.3.0/node_modules/es-errors/uri.js"(exports, module) {
     "use strict";
     module.exports = URIError;
   }
 });
 
-// ../../node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/abs.js
+// node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/abs.js
 var require_abs = __commonJS({
-  "../../node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/abs.js"(exports, module) {
+  "node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/abs.js"(exports, module) {
     "use strict";
     module.exports = Math.abs;
   }
 });
 
-// ../../node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/floor.js
+// node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/floor.js
 var require_floor = __commonJS({
-  "../../node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/floor.js"(exports, module) {
+  "node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/floor.js"(exports, module) {
     "use strict";
     module.exports = Math.floor;
   }
 });
 
-// ../../node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/max.js
+// node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/max.js
 var require_max = __commonJS({
-  "../../node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/max.js"(exports, module) {
+  "node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/max.js"(exports, module) {
     "use strict";
     module.exports = Math.max;
   }
 });
 
-// ../../node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/min.js
+// node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/min.js
 var require_min = __commonJS({
-  "../../node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/min.js"(exports, module) {
+  "node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/min.js"(exports, module) {
     "use strict";
     module.exports = Math.min;
   }
 });
 
-// ../../node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/pow.js
+// node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/pow.js
 var require_pow = __commonJS({
-  "../../node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/pow.js"(exports, module) {
+  "node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/pow.js"(exports, module) {
     "use strict";
     module.exports = Math.pow;
   }
 });
 
-// ../../node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/round.js
+// node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/round.js
 var require_round = __commonJS({
-  "../../node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/round.js"(exports, module) {
+  "node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/round.js"(exports, module) {
     "use strict";
     module.exports = Math.round;
   }
 });
 
-// ../../node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/isNaN.js
+// node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/isNaN.js
 var require_isNaN = __commonJS({
-  "../../node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/isNaN.js"(exports, module) {
+  "node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/isNaN.js"(exports, module) {
     "use strict";
     module.exports = Number.isNaN || function isNaN2(a) {
       return a !== a;
@@ -1274,9 +1274,9 @@ var require_isNaN = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/sign.js
+// node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/sign.js
 var require_sign = __commonJS({
-  "../../node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/sign.js"(exports, module) {
+  "node_modules/.pnpm/math-intrinsics@1.1.0/node_modules/math-intrinsics/sign.js"(exports, module) {
     "use strict";
     var $isNaN = require_isNaN();
     module.exports = function sign(number) {
@@ -1288,17 +1288,17 @@ var require_sign = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/gopd@1.2.0/node_modules/gopd/gOPD.js
+// node_modules/.pnpm/gopd@1.2.0/node_modules/gopd/gOPD.js
 var require_gOPD = __commonJS({
-  "../../node_modules/.pnpm/gopd@1.2.0/node_modules/gopd/gOPD.js"(exports, module) {
+  "node_modules/.pnpm/gopd@1.2.0/node_modules/gopd/gOPD.js"(exports, module) {
     "use strict";
     module.exports = Object.getOwnPropertyDescriptor;
   }
 });
 
-// ../../node_modules/.pnpm/gopd@1.2.0/node_modules/gopd/index.js
+// node_modules/.pnpm/gopd@1.2.0/node_modules/gopd/index.js
 var require_gopd = __commonJS({
-  "../../node_modules/.pnpm/gopd@1.2.0/node_modules/gopd/index.js"(exports, module) {
+  "node_modules/.pnpm/gopd@1.2.0/node_modules/gopd/index.js"(exports, module) {
     "use strict";
     var $gOPD = require_gOPD();
     if ($gOPD) {
@@ -1312,9 +1312,9 @@ var require_gopd = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/es-define-property@1.0.1/node_modules/es-define-property/index.js
+// node_modules/.pnpm/es-define-property@1.0.1/node_modules/es-define-property/index.js
 var require_es_define_property = __commonJS({
-  "../../node_modules/.pnpm/es-define-property@1.0.1/node_modules/es-define-property/index.js"(exports, module) {
+  "node_modules/.pnpm/es-define-property@1.0.1/node_modules/es-define-property/index.js"(exports, module) {
     "use strict";
     var $defineProperty = Object.defineProperty || false;
     if ($defineProperty) {
@@ -1328,9 +1328,9 @@ var require_es_define_property = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/has-symbols@1.1.0/node_modules/has-symbols/shams.js
+// node_modules/.pnpm/has-symbols@1.1.0/node_modules/has-symbols/shams.js
 var require_shams = __commonJS({
-  "../../node_modules/.pnpm/has-symbols@1.1.0/node_modules/has-symbols/shams.js"(exports, module) {
+  "node_modules/.pnpm/has-symbols@1.1.0/node_modules/has-symbols/shams.js"(exports, module) {
     "use strict";
     module.exports = function hasSymbols() {
       if (typeof Symbol !== "function" || typeof Object.getOwnPropertySymbols !== "function") {
@@ -1383,9 +1383,9 @@ var require_shams = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/has-symbols@1.1.0/node_modules/has-symbols/index.js
+// node_modules/.pnpm/has-symbols@1.1.0/node_modules/has-symbols/index.js
 var require_has_symbols = __commonJS({
-  "../../node_modules/.pnpm/has-symbols@1.1.0/node_modules/has-symbols/index.js"(exports, module) {
+  "node_modules/.pnpm/has-symbols@1.1.0/node_modules/has-symbols/index.js"(exports, module) {
     "use strict";
     var origSymbol = typeof Symbol !== "undefined" && Symbol;
     var hasSymbolSham = require_shams();
@@ -1407,26 +1407,26 @@ var require_has_symbols = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/get-proto@1.0.1/node_modules/get-proto/Reflect.getPrototypeOf.js
+// node_modules/.pnpm/get-proto@1.0.1/node_modules/get-proto/Reflect.getPrototypeOf.js
 var require_Reflect_getPrototypeOf = __commonJS({
-  "../../node_modules/.pnpm/get-proto@1.0.1/node_modules/get-proto/Reflect.getPrototypeOf.js"(exports, module) {
+  "node_modules/.pnpm/get-proto@1.0.1/node_modules/get-proto/Reflect.getPrototypeOf.js"(exports, module) {
     "use strict";
     module.exports = typeof Reflect !== "undefined" && Reflect.getPrototypeOf || null;
   }
 });
 
-// ../../node_modules/.pnpm/get-proto@1.0.1/node_modules/get-proto/Object.getPrototypeOf.js
+// node_modules/.pnpm/get-proto@1.0.1/node_modules/get-proto/Object.getPrototypeOf.js
 var require_Object_getPrototypeOf = __commonJS({
-  "../../node_modules/.pnpm/get-proto@1.0.1/node_modules/get-proto/Object.getPrototypeOf.js"(exports, module) {
+  "node_modules/.pnpm/get-proto@1.0.1/node_modules/get-proto/Object.getPrototypeOf.js"(exports, module) {
     "use strict";
     var $Object = require_es_object_atoms();
     module.exports = $Object.getPrototypeOf || null;
   }
 });
 
-// ../../node_modules/.pnpm/function-bind@1.1.2/node_modules/function-bind/implementation.js
+// node_modules/.pnpm/function-bind@1.1.2/node_modules/function-bind/implementation.js
 var require_implementation = __commonJS({
-  "../../node_modules/.pnpm/function-bind@1.1.2/node_modules/function-bind/implementation.js"(exports, module) {
+  "node_modules/.pnpm/function-bind@1.1.2/node_modules/function-bind/implementation.js"(exports, module) {
     "use strict";
     var ERROR_MESSAGE = "Function.prototype.bind called on incompatible ";
     var toStr = Object.prototype.toString;
@@ -1500,42 +1500,42 @@ var require_implementation = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/function-bind@1.1.2/node_modules/function-bind/index.js
+// node_modules/.pnpm/function-bind@1.1.2/node_modules/function-bind/index.js
 var require_function_bind = __commonJS({
-  "../../node_modules/.pnpm/function-bind@1.1.2/node_modules/function-bind/index.js"(exports, module) {
+  "node_modules/.pnpm/function-bind@1.1.2/node_modules/function-bind/index.js"(exports, module) {
     "use strict";
     var implementation = require_implementation();
     module.exports = Function.prototype.bind || implementation;
   }
 });
 
-// ../../node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/functionCall.js
+// node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/functionCall.js
 var require_functionCall = __commonJS({
-  "../../node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/functionCall.js"(exports, module) {
+  "node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/functionCall.js"(exports, module) {
     "use strict";
     module.exports = Function.prototype.call;
   }
 });
 
-// ../../node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/functionApply.js
+// node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/functionApply.js
 var require_functionApply = __commonJS({
-  "../../node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/functionApply.js"(exports, module) {
+  "node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/functionApply.js"(exports, module) {
     "use strict";
     module.exports = Function.prototype.apply;
   }
 });
 
-// ../../node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/reflectApply.js
+// node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/reflectApply.js
 var require_reflectApply = __commonJS({
-  "../../node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/reflectApply.js"(exports, module) {
+  "node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/reflectApply.js"(exports, module) {
     "use strict";
     module.exports = typeof Reflect !== "undefined" && Reflect && Reflect.apply;
   }
 });
 
-// ../../node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/actualApply.js
+// node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/actualApply.js
 var require_actualApply = __commonJS({
-  "../../node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/actualApply.js"(exports, module) {
+  "node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/actualApply.js"(exports, module) {
     "use strict";
     var bind2 = require_function_bind();
     var $apply = require_functionApply();
@@ -1545,9 +1545,9 @@ var require_actualApply = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/index.js
+// node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/index.js
 var require_call_bind_apply_helpers = __commonJS({
-  "../../node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/index.js"(exports, module) {
+  "node_modules/.pnpm/call-bind-apply-helpers@1.0.2/node_modules/call-bind-apply-helpers/index.js"(exports, module) {
     "use strict";
     var bind2 = require_function_bind();
     var $TypeError = require_type();
@@ -1562,9 +1562,9 @@ var require_call_bind_apply_helpers = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/dunder-proto@1.0.1/node_modules/dunder-proto/get.js
+// node_modules/.pnpm/dunder-proto@1.0.1/node_modules/dunder-proto/get.js
 var require_get = __commonJS({
-  "../../node_modules/.pnpm/dunder-proto@1.0.1/node_modules/dunder-proto/get.js"(exports, module) {
+  "node_modules/.pnpm/dunder-proto@1.0.1/node_modules/dunder-proto/get.js"(exports, module) {
     "use strict";
     var callBind = require_call_bind_apply_helpers();
     var gOPD = require_gopd();
@@ -1593,9 +1593,9 @@ var require_get = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/get-proto@1.0.1/node_modules/get-proto/index.js
+// node_modules/.pnpm/get-proto@1.0.1/node_modules/get-proto/index.js
 var require_get_proto = __commonJS({
-  "../../node_modules/.pnpm/get-proto@1.0.1/node_modules/get-proto/index.js"(exports, module) {
+  "node_modules/.pnpm/get-proto@1.0.1/node_modules/get-proto/index.js"(exports, module) {
     "use strict";
     var reflectGetProto = require_Reflect_getPrototypeOf();
     var originalGetProto = require_Object_getPrototypeOf();
@@ -1613,9 +1613,9 @@ var require_get_proto = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/hasown@2.0.4/node_modules/hasown/index.js
+// node_modules/.pnpm/hasown@2.0.3/node_modules/hasown/index.js
 var require_hasown = __commonJS({
-  "../../node_modules/.pnpm/hasown@2.0.4/node_modules/hasown/index.js"(exports, module) {
+  "node_modules/.pnpm/hasown@2.0.3/node_modules/hasown/index.js"(exports, module) {
     "use strict";
     var call = Function.prototype.call;
     var $hasOwn = Object.prototype.hasOwnProperty;
@@ -1624,9 +1624,9 @@ var require_hasown = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/get-intrinsic@1.3.0/node_modules/get-intrinsic/index.js
+// node_modules/.pnpm/get-intrinsic@1.3.0/node_modules/get-intrinsic/index.js
 var require_get_intrinsic = __commonJS({
-  "../../node_modules/.pnpm/get-intrinsic@1.3.0/node_modules/get-intrinsic/index.js"(exports, module) {
+  "node_modules/.pnpm/get-intrinsic@1.3.0/node_modules/get-intrinsic/index.js"(exports, module) {
     "use strict";
     var undefined2;
     var $Object = require_es_object_atoms();
@@ -1955,9 +1955,9 @@ var require_get_intrinsic = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/call-bound@1.0.4/node_modules/call-bound/index.js
+// node_modules/.pnpm/call-bound@1.0.4/node_modules/call-bound/index.js
 var require_call_bound = __commonJS({
-  "../../node_modules/.pnpm/call-bound@1.0.4/node_modules/call-bound/index.js"(exports, module) {
+  "node_modules/.pnpm/call-bound@1.0.4/node_modules/call-bound/index.js"(exports, module) {
     "use strict";
     var GetIntrinsic = require_get_intrinsic();
     var callBindBasic = require_call_bind_apply_helpers();
@@ -1978,9 +1978,9 @@ var require_call_bound = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/side-channel-map@1.0.1/node_modules/side-channel-map/index.js
+// node_modules/.pnpm/side-channel-map@1.0.1/node_modules/side-channel-map/index.js
 var require_side_channel_map = __commonJS({
-  "../../node_modules/.pnpm/side-channel-map@1.0.1/node_modules/side-channel-map/index.js"(exports, module) {
+  "node_modules/.pnpm/side-channel-map@1.0.1/node_modules/side-channel-map/index.js"(exports, module) {
     "use strict";
     var GetIntrinsic = require_get_intrinsic();
     var callBound = require_call_bound();
@@ -2034,9 +2034,9 @@ var require_side_channel_map = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/side-channel-weakmap@1.0.2/node_modules/side-channel-weakmap/index.js
+// node_modules/.pnpm/side-channel-weakmap@1.0.2/node_modules/side-channel-weakmap/index.js
 var require_side_channel_weakmap = __commonJS({
-  "../../node_modules/.pnpm/side-channel-weakmap@1.0.2/node_modules/side-channel-weakmap/index.js"(exports, module) {
+  "node_modules/.pnpm/side-channel-weakmap@1.0.2/node_modules/side-channel-weakmap/index.js"(exports, module) {
     "use strict";
     var GetIntrinsic = require_get_intrinsic();
     var callBound = require_call_bound();
@@ -2107,9 +2107,9 @@ var require_side_channel_weakmap = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/side-channel@1.1.1/node_modules/side-channel/index.js
+// node_modules/.pnpm/side-channel@1.1.1/node_modules/side-channel/index.js
 var require_side_channel = __commonJS({
-  "../../node_modules/.pnpm/side-channel@1.1.1/node_modules/side-channel/index.js"(exports, module) {
+  "node_modules/.pnpm/side-channel@1.1.1/node_modules/side-channel/index.js"(exports, module) {
     "use strict";
     var $TypeError = require_type();
     var inspect = require_object_inspect();
@@ -2147,9 +2147,9 @@ var require_side_channel = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/formats.js
+// node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/formats.js
 var require_formats = __commonJS({
-  "../../node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/formats.js"(exports, module) {
+  "node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/formats.js"(exports, module) {
     "use strict";
     var replace = String.prototype.replace;
     var percentTwenties = /%20/g;
@@ -2173,9 +2173,9 @@ var require_formats = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/utils.js
+// node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/utils.js
 var require_utils = __commonJS({
-  "../../node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/utils.js"(exports, module) {
+  "node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/utils.js"(exports, module) {
     "use strict";
     var formats = require_formats();
     var getSideChannel = require_side_channel();
@@ -2479,9 +2479,9 @@ var require_utils = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/stringify.js
+// node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/stringify.js
 var require_stringify = __commonJS({
-  "../../node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/stringify.js"(exports, module) {
+  "node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/stringify.js"(exports, module) {
     "use strict";
     var getSideChannel = require_side_channel();
     var utils = require_utils();
@@ -2776,9 +2776,9 @@ var require_stringify = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/parse.js
+// node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/parse.js
 var require_parse = __commonJS({
-  "../../node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/parse.js"(exports, module) {
+  "node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/parse.js"(exports, module) {
     "use strict";
     var utils = require_utils();
     var has = Object.prototype.hasOwnProperty;
@@ -3104,9 +3104,9 @@ var require_parse = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/index.js
+// node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/index.js
 var require_lib = __commonJS({
-  "../../node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/index.js"(exports, module) {
+  "node_modules/.pnpm/qs@6.16.0/node_modules/qs/lib/index.js"(exports, module) {
     "use strict";
     var stringify = require_stringify();
     var parse = require_parse();
@@ -3119,9 +3119,9 @@ var require_lib = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_overArg.js
+// node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_overArg.js
 var require_overArg = __commonJS({
-  "../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_overArg.js"(exports, module) {
+  "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_overArg.js"(exports, module) {
     function overArg(func, transform) {
       return function(arg) {
         return func(transform(arg));
@@ -3131,18 +3131,18 @@ var require_overArg = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_getPrototype.js
+// node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_getPrototype.js
 var require_getPrototype = __commonJS({
-  "../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_getPrototype.js"(exports, module) {
+  "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/_getPrototype.js"(exports, module) {
     var overArg = require_overArg();
     var getPrototype = overArg(Object.getPrototypeOf, Object);
     module.exports = getPrototype;
   }
 });
 
-// ../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/isPlainObject.js
+// node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/isPlainObject.js
 var require_isPlainObject = __commonJS({
-  "../../node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/isPlainObject.js"(exports, module) {
+  "node_modules/.pnpm/lodash@4.18.1/node_modules/lodash/isPlainObject.js"(exports, module) {
     var baseGetTag = require_baseGetTag();
     var getPrototype = require_getPrototype();
     var isObjectLike = require_isObjectLike();
@@ -3167,9 +3167,9 @@ var require_isPlainObject = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/contentful-sdk-core@10.0.0/node_modules/contentful-sdk-core/dist/cjs/index.cjs
+// node_modules/.pnpm/contentful-sdk-core@10.0.0/node_modules/contentful-sdk-core/dist/cjs/index.cjs
 var require_cjs2 = __commonJS({
-  "../../node_modules/.pnpm/contentful-sdk-core@10.0.0/node_modules/contentful-sdk-core/dist/cjs/index.cjs"(exports) {
+  "node_modules/.pnpm/contentful-sdk-core@10.0.0/node_modules/contentful-sdk-core/dist/cjs/index.cjs"(exports) {
     "use strict";
     var copy2 = require_cjs();
     var process2 = __require("process");
@@ -3678,9 +3678,9 @@ ${JSON.stringify(obj)}
   }
 });
 
-// ../../node_modules/.pnpm/delayed-stream@1.0.0/node_modules/delayed-stream/lib/delayed_stream.js
+// node_modules/.pnpm/delayed-stream@1.0.0/node_modules/delayed-stream/lib/delayed_stream.js
 var require_delayed_stream = __commonJS({
-  "../../node_modules/.pnpm/delayed-stream@1.0.0/node_modules/delayed-stream/lib/delayed_stream.js"(exports, module) {
+  "node_modules/.pnpm/delayed-stream@1.0.0/node_modules/delayed-stream/lib/delayed_stream.js"(exports, module) {
     var Stream = __require("stream").Stream;
     var util4 = __require("util");
     module.exports = DelayedStream;
@@ -3769,9 +3769,9 @@ var require_delayed_stream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/combined-stream@1.0.8/node_modules/combined-stream/lib/combined_stream.js
+// node_modules/.pnpm/combined-stream@1.0.8/node_modules/combined-stream/lib/combined_stream.js
 var require_combined_stream = __commonJS({
-  "../../node_modules/.pnpm/combined-stream@1.0.8/node_modules/combined-stream/lib/combined_stream.js"(exports, module) {
+  "node_modules/.pnpm/combined-stream@1.0.8/node_modules/combined-stream/lib/combined_stream.js"(exports, module) {
     var util4 = __require("util");
     var Stream = __require("stream").Stream;
     var DelayedStream = require_delayed_stream();
@@ -3938,9 +3938,9 @@ var require_combined_stream = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/mime-db@1.52.0/node_modules/mime-db/db.json
+// node_modules/.pnpm/mime-db@1.52.0/node_modules/mime-db/db.json
 var require_db = __commonJS({
-  "../../node_modules/.pnpm/mime-db@1.52.0/node_modules/mime-db/db.json"(exports, module) {
+  "node_modules/.pnpm/mime-db@1.52.0/node_modules/mime-db/db.json"(exports, module) {
     module.exports = {
       "application/1d-interleaved-parityfec": {
         source: "iana"
@@ -12463,16 +12463,16 @@ var require_db = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/mime-db@1.52.0/node_modules/mime-db/index.js
+// node_modules/.pnpm/mime-db@1.52.0/node_modules/mime-db/index.js
 var require_mime_db = __commonJS({
-  "../../node_modules/.pnpm/mime-db@1.52.0/node_modules/mime-db/index.js"(exports, module) {
+  "node_modules/.pnpm/mime-db@1.52.0/node_modules/mime-db/index.js"(exports, module) {
     module.exports = require_db();
   }
 });
 
-// ../../node_modules/.pnpm/mime-types@2.1.35/node_modules/mime-types/index.js
+// node_modules/.pnpm/mime-types@2.1.35/node_modules/mime-types/index.js
 var require_mime_types = __commonJS({
-  "../../node_modules/.pnpm/mime-types@2.1.35/node_modules/mime-types/index.js"(exports) {
+  "node_modules/.pnpm/mime-types@2.1.35/node_modules/mime-types/index.js"(exports) {
     "use strict";
     var db = require_mime_db();
     var extname = __require("path").extname;
@@ -12560,9 +12560,9 @@ var require_mime_types = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/defer.js
+// node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/defer.js
 var require_defer = __commonJS({
-  "../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/defer.js"(exports, module) {
+  "node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/defer.js"(exports, module) {
     module.exports = defer;
     function defer(fn) {
       var nextTick = typeof setImmediate == "function" ? setImmediate : typeof process == "object" && typeof process.nextTick == "function" ? process.nextTick : null;
@@ -12575,9 +12575,9 @@ var require_defer = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/async.js
+// node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/async.js
 var require_async = __commonJS({
-  "../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/async.js"(exports, module) {
+  "node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/async.js"(exports, module) {
     var defer = require_defer();
     module.exports = async;
     function async(callback) {
@@ -12598,9 +12598,9 @@ var require_async = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/abort.js
+// node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/abort.js
 var require_abort = __commonJS({
-  "../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/abort.js"(exports, module) {
+  "node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/abort.js"(exports, module) {
     module.exports = abort;
     function abort(state) {
       Object.keys(state.jobs).forEach(clean.bind(state));
@@ -12614,9 +12614,9 @@ var require_abort = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/iterate.js
+// node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/iterate.js
 var require_iterate = __commonJS({
-  "../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/iterate.js"(exports, module) {
+  "node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/iterate.js"(exports, module) {
     var async = require_async();
     var abort = require_abort();
     module.exports = iterate;
@@ -12647,9 +12647,9 @@ var require_iterate = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/state.js
+// node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/state.js
 var require_state = __commonJS({
-  "../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/state.js"(exports, module) {
+  "node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/state.js"(exports, module) {
     module.exports = state;
     function state(list, sortMethod) {
       var isNamedList = !Array.isArray(list), initState = {
@@ -12669,9 +12669,9 @@ var require_state = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/terminator.js
+// node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/terminator.js
 var require_terminator = __commonJS({
-  "../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/terminator.js"(exports, module) {
+  "node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/lib/terminator.js"(exports, module) {
     var abort = require_abort();
     var async = require_async();
     module.exports = terminator;
@@ -12686,9 +12686,9 @@ var require_terminator = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/parallel.js
+// node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/parallel.js
 var require_parallel = __commonJS({
-  "../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/parallel.js"(exports, module) {
+  "node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/parallel.js"(exports, module) {
     var iterate = require_iterate();
     var initState = require_state();
     var terminator = require_terminator();
@@ -12713,9 +12713,9 @@ var require_parallel = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/serialOrdered.js
+// node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/serialOrdered.js
 var require_serialOrdered = __commonJS({
-  "../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/serialOrdered.js"(exports, module) {
+  "node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/serialOrdered.js"(exports, module) {
     var iterate = require_iterate();
     var initState = require_state();
     var terminator = require_terminator();
@@ -12747,9 +12747,9 @@ var require_serialOrdered = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/serial.js
+// node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/serial.js
 var require_serial = __commonJS({
-  "../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/serial.js"(exports, module) {
+  "node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/serial.js"(exports, module) {
     var serialOrdered = require_serialOrdered();
     module.exports = serial;
     function serial(list, iterator2, callback) {
@@ -12758,9 +12758,9 @@ var require_serial = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/index.js
+// node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/index.js
 var require_asynckit = __commonJS({
-  "../../node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/index.js"(exports, module) {
+  "node_modules/.pnpm/asynckit@0.4.0/node_modules/asynckit/index.js"(exports, module) {
     module.exports = {
       parallel: require_parallel(),
       serial: require_serial(),
@@ -12769,9 +12769,9 @@ var require_asynckit = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/has-tostringtag@1.0.2/node_modules/has-tostringtag/shams.js
+// node_modules/.pnpm/has-tostringtag@1.0.2/node_modules/has-tostringtag/shams.js
 var require_shams2 = __commonJS({
-  "../../node_modules/.pnpm/has-tostringtag@1.0.2/node_modules/has-tostringtag/shams.js"(exports, module) {
+  "node_modules/.pnpm/has-tostringtag@1.0.2/node_modules/has-tostringtag/shams.js"(exports, module) {
     "use strict";
     var hasSymbols = require_shams();
     module.exports = function hasToStringTagShams() {
@@ -12780,9 +12780,9 @@ var require_shams2 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/es-set-tostringtag@2.1.0/node_modules/es-set-tostringtag/index.js
+// node_modules/.pnpm/es-set-tostringtag@2.1.0/node_modules/es-set-tostringtag/index.js
 var require_es_set_tostringtag = __commonJS({
-  "../../node_modules/.pnpm/es-set-tostringtag@2.1.0/node_modules/es-set-tostringtag/index.js"(exports, module) {
+  "node_modules/.pnpm/es-set-tostringtag@2.1.0/node_modules/es-set-tostringtag/index.js"(exports, module) {
     "use strict";
     var GetIntrinsic = require_get_intrinsic();
     var $defineProperty = GetIntrinsic("%Object.defineProperty%", true);
@@ -12812,9 +12812,20 @@ var require_es_set_tostringtag = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/form-data@4.0.6/node_modules/form-data/lib/populate.js
+// node_modules/.pnpm/hasown@2.0.4/node_modules/hasown/index.js
+var require_hasown2 = __commonJS({
+  "node_modules/.pnpm/hasown@2.0.4/node_modules/hasown/index.js"(exports, module) {
+    "use strict";
+    var call = Function.prototype.call;
+    var $hasOwn = Object.prototype.hasOwnProperty;
+    var bind2 = require_function_bind();
+    module.exports = bind2.call(call, $hasOwn);
+  }
+});
+
+// node_modules/.pnpm/form-data@4.0.6/node_modules/form-data/lib/populate.js
 var require_populate = __commonJS({
-  "../../node_modules/.pnpm/form-data@4.0.6/node_modules/form-data/lib/populate.js"(exports, module) {
+  "node_modules/.pnpm/form-data@4.0.6/node_modules/form-data/lib/populate.js"(exports, module) {
     "use strict";
     module.exports = function(dst, src) {
       Object.keys(src).forEach(function(prop) {
@@ -12825,9 +12836,9 @@ var require_populate = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/form-data@4.0.6/node_modules/form-data/lib/form_data.js
+// node_modules/.pnpm/form-data@4.0.6/node_modules/form-data/lib/form_data.js
 var require_form_data = __commonJS({
-  "../../node_modules/.pnpm/form-data@4.0.6/node_modules/form-data/lib/form_data.js"(exports, module) {
+  "node_modules/.pnpm/form-data@4.0.6/node_modules/form-data/lib/form_data.js"(exports, module) {
     "use strict";
     var CombinedStream = require_combined_stream();
     var util4 = __require("util");
@@ -12841,7 +12852,7 @@ var require_form_data = __commonJS({
     var mime = require_mime_types();
     var asynckit = require_asynckit();
     var setToStringTag = require_es_set_tostringtag();
-    var hasOwn = require_hasown();
+    var hasOwn = require_hasown2();
     var populate = require_populate();
     function escapeHeaderParam(str) {
       return String(str).replace(/\r/g, "%0D").replace(/\n/g, "%0A").replace(/"/g, "%22");
@@ -13147,9 +13158,9 @@ var require_form_data = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/ms@2.1.3/node_modules/ms/index.js
+// node_modules/.pnpm/ms@2.1.3/node_modules/ms/index.js
 var require_ms = __commonJS({
-  "../../node_modules/.pnpm/ms@2.1.3/node_modules/ms/index.js"(exports, module) {
+  "node_modules/.pnpm/ms@2.1.3/node_modules/ms/index.js"(exports, module) {
     var s = 1e3;
     var m = s * 60;
     var h = m * 60;
@@ -13263,9 +13274,9 @@ var require_ms = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/debug@4.4.3_supports-color@8.1.1/node_modules/debug/src/common.js
+// node_modules/.pnpm/debug@4.4.3/node_modules/debug/src/common.js
 var require_common = __commonJS({
-  "../../node_modules/.pnpm/debug@4.4.3_supports-color@8.1.1/node_modules/debug/src/common.js"(exports, module) {
+  "node_modules/.pnpm/debug@4.4.3/node_modules/debug/src/common.js"(exports, module) {
     function setup(env) {
       createDebug.debug = createDebug;
       createDebug.default = createDebug;
@@ -13440,9 +13451,9 @@ var require_common = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/debug@4.4.3_supports-color@8.1.1/node_modules/debug/src/browser.js
+// node_modules/.pnpm/debug@4.4.3/node_modules/debug/src/browser.js
 var require_browser = __commonJS({
-  "../../node_modules/.pnpm/debug@4.4.3_supports-color@8.1.1/node_modules/debug/src/browser.js"(exports, module) {
+  "node_modules/.pnpm/debug@4.4.3/node_modules/debug/src/browser.js"(exports, module) {
     exports.formatArgs = formatArgs;
     exports.save = save;
     exports.load = load;
@@ -13610,136 +13621,9 @@ var require_browser = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/has-flag@4.0.0/node_modules/has-flag/index.js
-var require_has_flag = __commonJS({
-  "../../node_modules/.pnpm/has-flag@4.0.0/node_modules/has-flag/index.js"(exports, module) {
-    "use strict";
-    module.exports = (flag, argv = process.argv) => {
-      const prefix = flag.startsWith("-") ? "" : flag.length === 1 ? "-" : "--";
-      const position = argv.indexOf(prefix + flag);
-      const terminatorPosition = argv.indexOf("--");
-      return position !== -1 && (terminatorPosition === -1 || position < terminatorPosition);
-    };
-  }
-});
-
-// ../../node_modules/.pnpm/supports-color@8.1.1/node_modules/supports-color/index.js
-var require_supports_color = __commonJS({
-  "../../node_modules/.pnpm/supports-color@8.1.1/node_modules/supports-color/index.js"(exports, module) {
-    "use strict";
-    var os = __require("os");
-    var tty = __require("tty");
-    var hasFlag = require_has_flag();
-    var { env } = process;
-    var flagForceColor;
-    if (hasFlag("no-color") || hasFlag("no-colors") || hasFlag("color=false") || hasFlag("color=never")) {
-      flagForceColor = 0;
-    } else if (hasFlag("color") || hasFlag("colors") || hasFlag("color=true") || hasFlag("color=always")) {
-      flagForceColor = 1;
-    }
-    function envForceColor() {
-      if ("FORCE_COLOR" in env) {
-        if (env.FORCE_COLOR === "true") {
-          return 1;
-        }
-        if (env.FORCE_COLOR === "false") {
-          return 0;
-        }
-        return env.FORCE_COLOR.length === 0 ? 1 : Math.min(Number.parseInt(env.FORCE_COLOR, 10), 3);
-      }
-    }
-    function translateLevel(level) {
-      if (level === 0) {
-        return false;
-      }
-      return {
-        level,
-        hasBasic: true,
-        has256: level >= 2,
-        has16m: level >= 3
-      };
-    }
-    function supportsColor(haveStream, { streamIsTTY, sniffFlags = true } = {}) {
-      const noFlagForceColor = envForceColor();
-      if (noFlagForceColor !== void 0) {
-        flagForceColor = noFlagForceColor;
-      }
-      const forceColor = sniffFlags ? flagForceColor : noFlagForceColor;
-      if (forceColor === 0) {
-        return 0;
-      }
-      if (sniffFlags) {
-        if (hasFlag("color=16m") || hasFlag("color=full") || hasFlag("color=truecolor")) {
-          return 3;
-        }
-        if (hasFlag("color=256")) {
-          return 2;
-        }
-      }
-      if (haveStream && !streamIsTTY && forceColor === void 0) {
-        return 0;
-      }
-      const min = forceColor || 0;
-      if (env.TERM === "dumb") {
-        return min;
-      }
-      if (process.platform === "win32") {
-        const osRelease = os.release().split(".");
-        if (Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
-          return Number(osRelease[2]) >= 14931 ? 3 : 2;
-        }
-        return 1;
-      }
-      if ("CI" in env) {
-        if (["TRAVIS", "CIRCLECI", "APPVEYOR", "GITLAB_CI", "GITHUB_ACTIONS", "BUILDKITE", "DRONE"].some((sign) => sign in env) || env.CI_NAME === "codeship") {
-          return 1;
-        }
-        return min;
-      }
-      if ("TEAMCITY_VERSION" in env) {
-        return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env.TEAMCITY_VERSION) ? 1 : 0;
-      }
-      if (env.COLORTERM === "truecolor") {
-        return 3;
-      }
-      if ("TERM_PROGRAM" in env) {
-        const version = Number.parseInt((env.TERM_PROGRAM_VERSION || "").split(".")[0], 10);
-        switch (env.TERM_PROGRAM) {
-          case "iTerm.app":
-            return version >= 3 ? 3 : 2;
-          case "Apple_Terminal":
-            return 2;
-        }
-      }
-      if (/-256(color)?$/i.test(env.TERM)) {
-        return 2;
-      }
-      if (/^screen|^xterm|^vt100|^vt220|^rxvt|color|ansi|cygwin|linux/i.test(env.TERM)) {
-        return 1;
-      }
-      if ("COLORTERM" in env) {
-        return 1;
-      }
-      return min;
-    }
-    function getSupportLevel(stream4, options = {}) {
-      const level = supportsColor(stream4, {
-        streamIsTTY: stream4 && stream4.isTTY,
-        ...options
-      });
-      return translateLevel(level);
-    }
-    module.exports = {
-      supportsColor: getSupportLevel,
-      stdout: getSupportLevel({ isTTY: tty.isatty(1) }),
-      stderr: getSupportLevel({ isTTY: tty.isatty(2) })
-    };
-  }
-});
-
-// ../../node_modules/.pnpm/debug@4.4.3_supports-color@8.1.1/node_modules/debug/src/node.js
+// node_modules/.pnpm/debug@4.4.3/node_modules/debug/src/node.js
 var require_node = __commonJS({
-  "../../node_modules/.pnpm/debug@4.4.3_supports-color@8.1.1/node_modules/debug/src/node.js"(exports, module) {
+  "node_modules/.pnpm/debug@4.4.3/node_modules/debug/src/node.js"(exports, module) {
     var tty = __require("tty");
     var util4 = __require("util");
     exports.init = init;
@@ -13755,7 +13639,7 @@ var require_node = __commonJS({
     );
     exports.colors = [6, 2, 3, 4, 5, 1];
     try {
-      const supportsColor = require_supports_color();
+      const supportsColor = __require("supports-color");
       if (supportsColor && (supportsColor.stderr || supportsColor).level >= 2) {
         exports.colors = [
           20,
@@ -13911,9 +13795,9 @@ var require_node = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/debug@4.4.3_supports-color@8.1.1/node_modules/debug/src/index.js
+// node_modules/.pnpm/debug@4.4.3/node_modules/debug/src/index.js
 var require_src = __commonJS({
-  "../../node_modules/.pnpm/debug@4.4.3_supports-color@8.1.1/node_modules/debug/src/index.js"(exports, module) {
+  "node_modules/.pnpm/debug@4.4.3/node_modules/debug/src/index.js"(exports, module) {
     if (typeof process === "undefined" || process.type === "renderer" || process.browser === true || process.__nwjs) {
       module.exports = require_browser();
     } else {
@@ -13922,9 +13806,9 @@ var require_src = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/agent-base@6.0.2_supports-color@8.1.1/node_modules/agent-base/dist/src/promisify.js
+// node_modules/.pnpm/agent-base@6.0.2/node_modules/agent-base/dist/src/promisify.js
 var require_promisify = __commonJS({
-  "../../node_modules/.pnpm/agent-base@6.0.2_supports-color@8.1.1/node_modules/agent-base/dist/src/promisify.js"(exports) {
+  "node_modules/.pnpm/agent-base@6.0.2/node_modules/agent-base/dist/src/promisify.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function promisify(fn) {
@@ -13944,9 +13828,9 @@ var require_promisify = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/agent-base@6.0.2_supports-color@8.1.1/node_modules/agent-base/dist/src/index.js
+// node_modules/.pnpm/agent-base@6.0.2/node_modules/agent-base/dist/src/index.js
 var require_src2 = __commonJS({
-  "../../node_modules/.pnpm/agent-base@6.0.2_supports-color@8.1.1/node_modules/agent-base/dist/src/index.js"(exports, module) {
+  "node_modules/.pnpm/agent-base@6.0.2/node_modules/agent-base/dist/src/index.js"(exports, module) {
     "use strict";
     var __importDefault = exports && exports.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -14127,9 +14011,9 @@ var require_src2 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/https-proxy-agent@5.0.1_supports-color@8.1.1/node_modules/https-proxy-agent/dist/parse-proxy-response.js
+// node_modules/.pnpm/https-proxy-agent@5.0.1/node_modules/https-proxy-agent/dist/parse-proxy-response.js
 var require_parse_proxy_response = __commonJS({
-  "../../node_modules/.pnpm/https-proxy-agent@5.0.1_supports-color@8.1.1/node_modules/https-proxy-agent/dist/parse-proxy-response.js"(exports) {
+  "node_modules/.pnpm/https-proxy-agent@5.0.1/node_modules/https-proxy-agent/dist/parse-proxy-response.js"(exports) {
     "use strict";
     var __importDefault = exports && exports.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -14193,9 +14077,9 @@ var require_parse_proxy_response = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/https-proxy-agent@5.0.1_supports-color@8.1.1/node_modules/https-proxy-agent/dist/agent.js
+// node_modules/.pnpm/https-proxy-agent@5.0.1/node_modules/https-proxy-agent/dist/agent.js
 var require_agent = __commonJS({
-  "../../node_modules/.pnpm/https-proxy-agent@5.0.1_supports-color@8.1.1/node_modules/https-proxy-agent/dist/agent.js"(exports) {
+  "node_modules/.pnpm/https-proxy-agent@5.0.1/node_modules/https-proxy-agent/dist/agent.js"(exports) {
     "use strict";
     var __awaiter = exports && exports.__awaiter || function(thisArg, _arguments, P, generator) {
       function adopt(value) {
@@ -14353,9 +14237,9 @@ var require_agent = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/https-proxy-agent@5.0.1_supports-color@8.1.1/node_modules/https-proxy-agent/dist/index.js
+// node_modules/.pnpm/https-proxy-agent@5.0.1/node_modules/https-proxy-agent/dist/index.js
 var require_dist = __commonJS({
-  "../../node_modules/.pnpm/https-proxy-agent@5.0.1_supports-color@8.1.1/node_modules/https-proxy-agent/dist/index.js"(exports, module) {
+  "node_modules/.pnpm/https-proxy-agent@5.0.1/node_modules/https-proxy-agent/dist/index.js"(exports, module) {
     "use strict";
     var __importDefault = exports && exports.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
@@ -14372,9 +14256,9 @@ var require_dist = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/follow-redirects@1.16.0_debug@4.4.3_supports-color@8.1.1_/node_modules/follow-redirects/debug.js
+// node_modules/.pnpm/follow-redirects@1.16.1_debug@4.4.3/node_modules/follow-redirects/debug.js
 var require_debug = __commonJS({
-  "../../node_modules/.pnpm/follow-redirects@1.16.0_debug@4.4.3_supports-color@8.1.1_/node_modules/follow-redirects/debug.js"(exports, module) {
+  "node_modules/.pnpm/follow-redirects@1.16.1_debug@4.4.3/node_modules/follow-redirects/debug.js"(exports, module) {
     var debug;
     module.exports = function() {
       if (!debug) {
@@ -14392,9 +14276,9 @@ var require_debug = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/follow-redirects@1.16.0_debug@4.4.3_supports-color@8.1.1_/node_modules/follow-redirects/index.js
+// node_modules/.pnpm/follow-redirects@1.16.1_debug@4.4.3/node_modules/follow-redirects/index.js
 var require_follow_redirects = __commonJS({
-  "../../node_modules/.pnpm/follow-redirects@1.16.0_debug@4.4.3_supports-color@8.1.1_/node_modules/follow-redirects/index.js"(exports, module) {
+  "node_modules/.pnpm/follow-redirects@1.16.1_debug@4.4.3/node_modules/follow-redirects/index.js"(exports, module) {
     var url2 = __require("url");
     var URL2 = url2.URL;
     var http4 = __require("http");
@@ -14622,6 +14506,12 @@ var require_follow_redirects = __commonJS({
     RedirectableRequest.prototype._sanitizeOptions = function(options) {
       if (!options.headers) {
         options.headers = {};
+      } else if (Array.isArray(options.headers)) {
+        var headerList = options.headers;
+        options.headers = {};
+        for (var i = 0; i < headerList.length; i += 2) {
+          options.headers[headerList[i]] = headerList[i + 1];
+        }
       }
       if (!isArray2(options.sensitiveHeaders)) {
         options.sensitiveHeaders = [];
@@ -14896,33 +14786,33 @@ var require_follow_redirects = __commonJS({
       return URL2 && value instanceof URL2;
     }
     function escapeRegex(regex) {
-      return regex.replace(/[\]\\/()*+?.$]/g, "\\$&");
+      return regex.replace(/[[\]\\/()*+?.^$|]/g, "\\$&");
     }
     module.exports = wrap2({ http: http4, https: https2 });
     module.exports.wrap = wrap2;
   }
 });
 
-// ../contentful-env-analysis/src/main.ts
+// src/skills/contentful-env-analysis/main.ts
 import { existsSync as existsSync6, mkdirSync as mkdirSync3, readFileSync as readFileSync4, readdirSync as readdirSync2, statSync, writeFileSync as writeFileSync3 } from "node:fs";
 import { join as join4, resolve as resolve3, sep } from "node:path";
 
-// ../contentful-env-analysis/src/lib/contentful-environment/fetch-space.ts
+// src/skills/contentful-env-analysis/lib/contentful-environment/fetch-space.ts
 import { existsSync as existsSync2, mkdirSync as mkdirSync2, readFileSync as readFileSync2, writeFileSync as writeFileSync2 } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { dirname as dirname2, join as join2, resolve as resolve2 } from "node:path";
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/index.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/index.mjs
 var import_contentful_sdk_core82 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/bind.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/bind.js
 function bind(fn, thisArg) {
   return function wrap2() {
     return fn.apply(thisArg, arguments);
   };
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/utils.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/utils.js
 var { toString } = Object.prototype;
 var { getPrototypeOf } = Object;
 var { iterator, toStringTag } = Symbol;
@@ -15470,7 +15360,7 @@ var utils_default = {
   isSafeIterable
 };
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/parseHeaders.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/parseHeaders.js
 var ignoreDuplicateOf = utils_default.toObjectSet([
   "age",
   "authorization",
@@ -15516,7 +15406,7 @@ var parseHeaders_default = (rawHeaders) => {
   return parsed;
 };
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/sanitizeHeaderValue.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/sanitizeHeaderValue.js
 function trimSPorHTAB(str) {
   let start = 0;
   let end = str.length;
@@ -15554,7 +15444,7 @@ function toByteStringHeaderObject(headers) {
   return byteStringHeaders;
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/core/AxiosHeaders.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/core/AxiosHeaders.js
 var $internals = /* @__PURE__ */ Symbol("internals");
 function normalizeHeader(header) {
   return header && String(header).trim().toLowerCase();
@@ -15887,7 +15777,7 @@ utils_default.reduceDescriptors(AxiosHeaders.prototype, ({ value }, key) => {
 utils_default.freezeMethods(AxiosHeaders);
 var AxiosHeaders_default = AxiosHeaders;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/core/AxiosError.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/core/AxiosError.js
 var REDACTED = "[REDACTED ****]";
 function hasOwnOrPrototypeToJSON(source) {
   if (utils_default.hasOwnProp(source, "toJSON")) {
@@ -16049,11 +15939,11 @@ AxiosError.ERR_INVALID_URL = "ERR_INVALID_URL";
 AxiosError.ERR_FORM_DATA_DEPTH_EXCEEDED = "ERR_FORM_DATA_DEPTH_EXCEEDED";
 var AxiosError_default = AxiosError;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/platform/node/classes/FormData.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/platform/node/classes/FormData.js
 var import_form_data = __toESM(require_form_data(), 1);
 var FormData_default = import_form_data.default;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/platform/node/classes/Buffer.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/platform/node/classes/Buffer.js
 var Buffer_default = {
   isBufferAvailable() {
     return typeof Buffer !== "undefined";
@@ -16063,7 +15953,7 @@ var Buffer_default = {
   }
 };
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/toFormData.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/toFormData.js
 var DEFAULT_FORM_DATA_MAX_DEPTH = 100;
 function isVisitable(thing) {
   return utils_default.isPlainObject(thing) || utils_default.isArray(thing);
@@ -16210,7 +16100,7 @@ function toFormData(obj, formData, options) {
 }
 var toFormData_default = toFormData;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/AxiosURLSearchParams.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/AxiosURLSearchParams.js
 function encode(str) {
   const charMap = {
     "!": "%21",
@@ -16240,7 +16130,7 @@ prototype.toString = function toString2(encoder) {
 };
 var AxiosURLSearchParams_default = AxiosURLSearchParams;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/buildURL.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/buildURL.js
 function encode2(val) {
   return encodeURIComponent(val).replace(/%3A/gi, ":").replace(/%24/g, "$").replace(/%2C/gi, ",").replace(/%20/g, "+");
 }
@@ -16270,7 +16160,7 @@ function buildURL(url2, params, options) {
   return url2;
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/core/InterceptorManager.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/core/InterceptorManager.js
 var $internals2 = /* @__PURE__ */ Symbol("internals");
 function countHandlers(handlers) {
   return handlers ? handlers.length : 0;
@@ -16408,7 +16298,7 @@ var InterceptorManager = class {
 };
 var InterceptorManager_default = InterceptorManager;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/defaults/transitional.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/defaults/transitional.js
 var transitional_default = {
   silentJSONParsing: true,
   forcedJSONParsing: true,
@@ -16418,14 +16308,14 @@ var transitional_default = {
   validateStatusUndefinedResolves: true
 };
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/platform/node/index.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/platform/node/index.js
 import crypto from "crypto";
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/platform/node/classes/URLSearchParams.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/platform/node/classes/URLSearchParams.js
 import url from "url";
 var URLSearchParams_default = url.URLSearchParams;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/platform/node/index.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/platform/node/index.js
 var ALPHA = "abcdefghijklmnopqrstuvwxyz";
 var DIGIT = "0123456789";
 var ALPHABET = {
@@ -16455,7 +16345,7 @@ var node_default = {
   protocols: ["http", "https", "file", "data"]
 };
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/platform/common/utils.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/platform/common/utils.js
 var utils_exports = {};
 __export(utils_exports, {
   hasBrowserEnv: () => hasBrowserEnv,
@@ -16473,13 +16363,13 @@ var hasStandardBrowserWebWorkerEnv = (() => {
 })();
 var origin = hasBrowserEnv && window.location.href || "http://localhost";
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/platform/index.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/platform/index.js
 var platform_default = {
   ...utils_exports,
   ...node_default
 };
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/toURLEncodedForm.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/toURLEncodedForm.js
 function toURLEncodedForm(data, options) {
   return toFormData_default(data, new platform_default.classes.URLSearchParams(), {
     visitor: function(value, key, path, helpers) {
@@ -16493,7 +16383,7 @@ function toURLEncodedForm(data, options) {
   });
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/formDataToJSON.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/formDataToJSON.js
 var MAX_DEPTH = DEFAULT_FORM_DATA_MAX_DEPTH;
 function throwIfDepthExceeded(index) {
   if (index > MAX_DEPTH) {
@@ -16561,7 +16451,7 @@ function formDataToJSON(formData) {
 }
 var formDataToJSON_default = formDataToJSON;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/core/methodList.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/core/methodList.js
 var methodList = Object.freeze([
   "get",
   "delete",
@@ -16577,7 +16467,7 @@ var methodList = Object.freeze([
 ]);
 var methodList_default = methodList;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/defaults/index.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/defaults/index.js
 var own = (obj, key) => obj != null && utils_default.hasOwnProp(obj, key) ? obj[key] : void 0;
 function stringifySafely2(rawValue, parser, encoder) {
   if (utils_default.isString(rawValue)) {
@@ -16694,7 +16584,7 @@ utils_default.forEach(methodList_default, (method) => {
 });
 var defaults_default = defaults;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/core/transformData.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/core/transformData.js
 function transformData(fns, response) {
   const config = this || defaults_default;
   const context = response || config;
@@ -16707,12 +16597,12 @@ function transformData(fns, response) {
   return data;
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/cancel/isCancel.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/cancel/isCancel.js
 function isCancel(value) {
   return !!(value && value.__CANCEL__);
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/cancel/CanceledError.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/cancel/CanceledError.js
 var CanceledError = class extends AxiosError_default {
   /**
    * A `CanceledError` is an object that is thrown when an operation is canceled.
@@ -16731,7 +16621,7 @@ var CanceledError = class extends AxiosError_default {
 };
 var CanceledError_default = CanceledError;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/core/settle.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/core/settle.js
 function settle(resolve4, reject, response) {
   const validateStatus2 = response.config.validateStatus;
   if (!response.status || !validateStatus2 || validateStatus2(response.status)) {
@@ -16747,7 +16637,7 @@ function settle(resolve4, reject, response) {
   }
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/isAbsoluteURL.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/isAbsoluteURL.js
 function isAbsoluteURL(url2) {
   if (typeof url2 !== "string") {
     return false;
@@ -16755,7 +16645,7 @@ function isAbsoluteURL(url2) {
   return /^([a-z][a-z\d+\-.]*:)?\/\//i.test(url2);
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/combineURLs.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/combineURLs.js
 function combineURLs(baseURL2, relativeURL) {
   if (!relativeURL) {
     return baseURL2;
@@ -16767,7 +16657,7 @@ function combineURLs(baseURL2, relativeURL) {
   return baseURL2.slice(0, end) + "/" + relativeURL.replace(/^\/+/, "");
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/normalizeURLForProtocolCheck.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/normalizeURLForProtocolCheck.js
 var urlParserControlCharacters = /[\t\n\r]/g;
 function normalizeURLForProtocolCheck(url2) {
   if (typeof url2 !== "string") {
@@ -16780,7 +16670,7 @@ function normalizeURLForProtocolCheck(url2) {
   return url2.slice(start).replace(urlParserControlCharacters, "");
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/core/buildFullPath.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/core/buildFullPath.js
 var malformedHttpProtocol = /^https?:(?!\/\/)/i;
 function redactFragment(fragment) {
   if (!fragment) {
@@ -16825,7 +16715,7 @@ function buildFullPath(baseURL2, requestedURL, allowAbsoluteUrls, config) {
   return requestedURL;
 }
 
-// ../../node_modules/.pnpm/proxy-from-env@2.1.0/node_modules/proxy-from-env/index.js
+// node_modules/.pnpm/proxy-from-env@2.1.0/node_modules/proxy-from-env/index.js
 var DEFAULT_PORTS = {
   ftp: 21,
   gopher: 70,
@@ -16892,7 +16782,7 @@ function getEnv(key) {
   return process.env[key.toLowerCase()] || process.env[key.toUpperCase()] || "";
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/adapters/http.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/adapters/http.js
 var import_https_proxy_agent = __toESM(require_dist(), 1);
 var import_follow_redirects = __toESM(require_follow_redirects(), 1);
 import http from "http";
@@ -16902,16 +16792,16 @@ import util3 from "util";
 import { resolve as resolvePath } from "path";
 import zlib from "zlib";
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/env/data.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/env/data.js
 var VERSION = "1.20.0";
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/parseProtocol.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/parseProtocol.js
 function parseProtocol(url2) {
   const match = /^([-+\w]{1,25}):(?:\/\/)?/.exec(url2);
   return match && match[1] || "";
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/fromDataURI.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/fromDataURI.js
 var DATA_URL_PATTERN = /^([^,;/]+\/[^,;/]+)?((?:;[^,;=]+=[^,;]+)*)(;base64)?,([\s\S]*)$/;
 function fromDataURI(uri, asBlob, options) {
   const _Blob = options && options.Blob || platform_default.classes.Blob;
@@ -16947,10 +16837,10 @@ function fromDataURI(uri, asBlob, options) {
   throw new AxiosError_default("Unsupported protocol " + protocol, AxiosError_default.ERR_NOT_SUPPORT);
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/adapters/http.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/adapters/http.js
 import stream3 from "stream";
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/core/setFormDataHeaders.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/core/setFormDataHeaders.js
 var FORM_DATA_CONTENT_HEADERS = ["content-type", "content-length"];
 function setFormDataHeaders(headers, formHeaders, policy) {
   if (policy !== "content-only") {
@@ -16964,7 +16854,7 @@ function setFormDataHeaders(headers, formHeaders, policy) {
   });
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/AxiosTransformStream.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/AxiosTransformStream.js
 import stream from "stream";
 var kInternals = /* @__PURE__ */ Symbol("internals");
 var AxiosTransformStream = class extends stream.Transform {
@@ -17087,14 +16977,14 @@ var AxiosTransformStream = class extends stream.Transform {
 };
 var AxiosTransformStream_default = AxiosTransformStream;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/adapters/http.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/adapters/http.js
 import { EventEmitter } from "events";
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/formDataToStream.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/formDataToStream.js
 import util from "util";
 import { Readable } from "stream";
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/readBlob.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/readBlob.js
 var { asyncIterator } = Symbol;
 var readBlob = async function* (blob) {
   if (blob.stream) {
@@ -17109,7 +16999,7 @@ var readBlob = async function* (blob) {
 };
 var readBlob_default = readBlob;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/formDataToStream.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/formDataToStream.js
 var BOUNDARY_ALPHABET = platform_default.ALPHABET.ALPHA_DIGIT + "-_";
 var textEncoder = typeof TextEncoder === "function" ? new TextEncoder() : new util.TextEncoder();
 var CRLF = "\r\n";
@@ -17194,7 +17084,7 @@ var formDataToStream = (form, headersHandler, options) => {
 };
 var formDataToStream_default = formDataToStream;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/ZlibHeaderTransformStream.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/ZlibHeaderTransformStream.js
 import stream2 from "stream";
 var ZlibHeaderTransformStream = class extends stream2.Transform {
   __transform(chunk, encoding, callback) {
@@ -17216,7 +17106,7 @@ var ZlibHeaderTransformStream = class extends stream2.Transform {
 };
 var ZlibHeaderTransformStream_default = ZlibHeaderTransformStream;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/Http2Sessions.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/Http2Sessions.js
 import http2 from "http2";
 import util2 from "util";
 var Http2Sessions = class {
@@ -17299,7 +17189,7 @@ var Http2Sessions = class {
 };
 var Http2Sessions_default = Http2Sessions;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/callbackify.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/callbackify.js
 var callbackify = (fn, reducer) => {
   return utils_default.isAsyncFn(fn) ? function(...args2) {
     const cb = args2.pop();
@@ -17314,7 +17204,7 @@ var callbackify = (fn, reducer) => {
 };
 var callbackify_default = callbackify;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/shouldBypassProxy.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/shouldBypassProxy.js
 var LOOPBACK_HOSTNAMES = /* @__PURE__ */ new Set(["localhost", "0.0.0.0"]);
 var trimTrailingDots = (value) => {
   let end = value.length;
@@ -17638,7 +17528,7 @@ function shouldBypassProxy(location) {
   });
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/speedometer.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/speedometer.js
 function speedometer(samplesCount, min) {
   samplesCount = samplesCount || 10;
   const bytes = new Array(samplesCount);
@@ -17674,7 +17564,7 @@ function speedometer(samplesCount, min) {
 }
 var speedometer_default = speedometer;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/throttle.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/throttle.js
 function throttle(fn, freq) {
   let timestamp = 0;
   let threshold = 1e3 / freq;
@@ -17710,7 +17600,7 @@ function throttle(fn, freq) {
 }
 var throttle_default = throttle;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/progressEventReducer.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/progressEventReducer.js
 var progressEventReducer = (listener, isDownloadStream, freq = 3) => {
   let bytesNotified = 0;
   const _speedometer = speedometer_default(50, 250);
@@ -17751,7 +17641,7 @@ var progressEventDecorator = (total, throttled) => {
 };
 var asyncDecorator = (fn, scheduler = utils_default.asap) => (...args2) => scheduler(() => fn(...args2));
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/estimateDataURLDecodedBytes.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/estimateDataURLDecodedBytes.js
 var isHexDigit = (charCode) => charCode >= 48 && charCode <= 57 || charCode >= 65 && charCode <= 70 || charCode >= 97 && charCode <= 102;
 var isPercentEncodedByte = (str, i, len) => i + 2 < len && isHexDigit(str.charCodeAt(i + 1)) && isHexDigit(str.charCodeAt(i + 2));
 var hexValue = (charCode) => charCode <= 57 ? charCode - 48 : (charCode & 223) - 55;
@@ -17854,7 +17744,7 @@ function estimateDataURLBufferAllocation(url2) {
   return estimateDataURLBytes(url2, estimateBase64BufferAllocation);
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/adapters/http.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/adapters/http.js
 var zlibOptions = {
   flush: zlib.constants.Z_SYNC_FLUSH,
   finishFlush: zlib.constants.Z_SYNC_FLUSH
@@ -18875,7 +18765,7 @@ var http_default = isHttpAdapterSupported && function httpAdapter(config) {
   });
 };
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/isURLSameOrigin.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/isURLSameOrigin.js
 var isURLSameOrigin_default = platform_default.hasStandardBrowserEnv ? /* @__PURE__ */ ((origin2, isMSIE) => (url2) => {
   url2 = new URL(url2, platform_default.origin);
   return origin2.protocol === url2.protocol && origin2.host === url2.host && (isMSIE || origin2.port === url2.port);
@@ -18884,7 +18774,7 @@ var isURLSameOrigin_default = platform_default.hasStandardBrowserEnv ? /* @__PUR
   platform_default.navigator && /(msie|trident)/i.test(platform_default.navigator.userAgent)
 ) : () => true;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/cookies.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/cookies.js
 var cookies_default = platform_default.hasStandardBrowserEnv ? (
   // Standard browser envs support document.cookie
   {
@@ -18941,7 +18831,7 @@ var cookies_default = platform_default.hasStandardBrowserEnv ? (
   }
 );
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/core/mergeConfig.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/core/mergeConfig.js
 var headersToObject = (thing) => thing instanceof AxiosHeaders_default ? { ...thing } : thing;
 var ownEnumerableKeys = (thing) => {
   if (Object.getOwnPropertySymbols && Object.getOwnPropertyDescriptor) {
@@ -19069,7 +18959,7 @@ function mergeConfig(config1, config2) {
   return config;
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/resolveConfig.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/resolveConfig.js
 var encodeUTF8 = (str) => encodeURIComponent(str).replace(
   /%([0-9A-F]{2})/gi,
   (_, hex) => String.fromCharCode(parseInt(hex, 16))
@@ -19128,7 +19018,7 @@ function resolveConfig(config) {
 }
 var resolveConfig_default = resolveConfig;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/adapters/xhr.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/adapters/xhr.js
 var isXHRAdapterSupported = typeof XMLHttpRequest !== "undefined";
 var xhr_default = isXHRAdapterSupported && function(config) {
   return new Promise(function dispatchXhrRequest(resolve4, reject) {
@@ -19298,7 +19188,7 @@ var xhr_default = isXHRAdapterSupported && function(config) {
   });
 };
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/composeSignals.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/composeSignals.js
 var composeSignals = (signals, timeout) => {
   signals = signals ? signals.filter(Boolean) : [];
   if (!timeout && !signals.length) {
@@ -19347,7 +19237,7 @@ var composeSignals = (signals, timeout) => {
 };
 var composeSignals_default = composeSignals;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/trackStream.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/trackStream.js
 var streamChunk = function* (chunk, chunkSize) {
   let len = chunk.byteLength;
   if (!chunkSize || len < chunkSize) {
@@ -19427,7 +19317,7 @@ var trackStream = (stream4, chunkSize, onProgress, onFinish) => {
   );
 };
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/adapters/fetch.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/adapters/fetch.js
 var DEFAULT_CHUNK_SIZE = 64 * 1024;
 var DEFAULT_REQUEST_OPTIONS = {
   cache: "default",
@@ -19883,7 +19773,7 @@ var getFetch = (config) => {
 };
 var adapter = getFetch();
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/adapters/adapters.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/adapters/adapters.js
 var knownAdapters = {
   http: http_default,
   xhr: xhr_default,
@@ -19948,7 +19838,7 @@ var adapters_default = {
   adapters: knownAdapters
 };
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/core/dispatchRequest.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/core/dispatchRequest.js
 function throwIfCancellationRequested(config) {
   if (config.cancelToken) {
     config.cancelToken.throwIfRequested();
@@ -20000,7 +19890,7 @@ function dispatchRequest(_config) {
   );
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/validator.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/validator.js
 var validators = {};
 ["object", "boolean", "number", "function", "string", "symbol"].forEach((type, i) => {
   validators[type] = function validator(thing) {
@@ -20067,7 +19957,7 @@ var validator_default = {
   validators
 };
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/core/Axios.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/core/Axios.js
 var validators2 = validator_default.validators;
 var Axios = class {
   constructor(instanceConfig) {
@@ -20285,7 +20175,7 @@ utils_default.forEach(["post", "put", "patch", "query"], function forEachMethodW
 });
 var Axios_default = Axios;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/cancel/CancelToken.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/cancel/CancelToken.js
 var CancelToken = class _CancelToken {
   constructor(executor) {
     if (typeof executor !== "function") {
@@ -20383,19 +20273,19 @@ var CancelToken = class _CancelToken {
 };
 var CancelToken_default = CancelToken;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/spread.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/spread.js
 function spread(callback) {
   return function wrap2(arr) {
     return callback.apply(null, arr);
   };
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/isAxiosError.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/isAxiosError.js
 function isAxiosError(payload) {
   return utils_default.isObject(payload) && payload.isAxiosError === true;
 }
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/helpers/HttpStatusCode.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/helpers/HttpStatusCode.js
 var HttpStatusCode = {
   Continue: 100,
   SwitchingProtocols: 101,
@@ -20483,7 +20373,7 @@ Object.entries(HttpStatusCode).forEach(([key, value]) => {
 });
 var HttpStatusCode_default = HttpStatusCode;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/lib/axios.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/lib/axios.js
 function createInstance(defaultConfig) {
   const context = new Axios_default(defaultConfig);
   const instance = bind(Axios_default.prototype.request, context);
@@ -20516,7 +20406,7 @@ axios.HttpStatusCode = HttpStatusCode_default;
 axios.default = axios;
 var axios_default = axios;
 
-// ../../node_modules/.pnpm/axios@1.20.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/axios/index.js
+// node_modules/.pnpm/axios@1.20.0_debug@4.4.3/node_modules/axios/index.js
 var {
   Axios: Axios2,
   AxiosError: AxiosError2,
@@ -20537,10 +20427,10 @@ var {
   create
 } = axios_default;
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/rest-adapter.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/rest-adapter.mjs
 var import_contentful_sdk_core5 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/fast-copy@4.1.1/node_modules/fast-copy/dist/es/index.mjs
+// node_modules/.pnpm/fast-copy@4.2.0/node_modules/fast-copy/dist/es/index.mjs
 var MaxDepthExceededError = class extends RangeError {
   constructor(maxDepth) {
     super(`Maximum copy depth of ${String(maxDepth)} exceeded; the value copied is nested too deeply.`);
@@ -20558,7 +20448,7 @@ function getCleanClone(prototype2) {
   if (Constructor === Object) {
     return prototype2 === Object.prototype ? {} : Object.create(prototype2);
   }
-  if (Constructor && ~toStringFunction.call(Constructor).indexOf("[native code]")) {
+  if (typeof Constructor === "function" && ~toStringFunction.call(Constructor).indexOf("[native code]")) {
     try {
       return new Constructor();
     } catch (_a) {
@@ -20624,10 +20514,15 @@ function copyBlob(blob, _state) {
   return blob.slice(0, blob.size, blob.type);
 }
 function copyDataView(dataView, state) {
-  return new state.Constructor(copyArrayBuffer(dataView.buffer));
+  return new state.Constructor(copyArrayBuffer(dataView.buffer), dataView.byteOffset, dataView.byteLength);
 }
 function copyDate(date, state) {
   return new state.Constructor(date.getTime());
+}
+function copyDateStrict(date, state) {
+  const clone = copyDate(date, state);
+  state.cache.set(date, clone);
+  return copyOwnPropertiesStrict(date, clone, state);
 }
 function copyMapLoose(map, state) {
   const clone = new state.Constructor();
@@ -20644,7 +20539,16 @@ function copyObjectLoose(object2, state) {
   const clone = getCleanClone(state.prototype);
   state.cache.set(object2, clone);
   for (const key of Object.keys(object2)) {
-    clone[key] = state.copier(object2[key], state);
+    if (key === "__proto__") {
+      Object.defineProperty(clone, key, {
+        configurable: true,
+        enumerable: true,
+        value: state.copier(object2[key], state),
+        writable: true
+      });
+    } else {
+      clone[key] = state.copier(object2[key], state);
+    }
   }
   for (const symbol of Object.getOwnPropertySymbols(object2)) {
     if (propertyIsEnumerable2.call(object2, symbol)) {
@@ -20691,7 +20595,7 @@ function getOptions({ createCache: createCacheOverride, maxDepth, methods: metho
     asyncGenerator: copySelf,
     blob: copyBlob,
     dataView: copyDataView,
-    date: copyDate,
+    date: strict ? copyDateStrict : copyDate,
     error: copySelf,
     generator: copySelf,
     map: strict ? copyMapStrict : copyMapLoose,
@@ -20792,7 +20696,7 @@ function createCopier(options = {}) {
 var copyStrict = createCopier({ strict: true });
 var copy = createCopier();
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/ai-action.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/ai-action.mjs
 var ai_action_exports = {};
 __export(ai_action_exports, {
   create: () => create2,
@@ -20805,7 +20709,7 @@ __export(ai_action_exports, {
   update: () => update
 });
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/raw.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/raw.mjs
 var import_contentful_sdk_core = __toESM(require_cjs2(), 1);
 function getBaseUrl(http4) {
   return http4.defaults.baseURL?.split("/spaces")[0];
@@ -20847,7 +20751,7 @@ function http3(http4, url2, config) {
   }).then((response) => response.data, import_contentful_sdk_core.errorHandler);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/ai-action.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/ai-action.mjs
 var get2 = (http4, params, headers) => {
   return get(http4, `/spaces/${params.spaceId}/ai/actions/${params.aiActionId}`, {
     headers
@@ -20892,7 +20796,7 @@ var invoke = (http4, params, data, headers) => {
   return post(http4, `/spaces/${params.spaceId}/environments/${params.environmentId}/ai/actions/${params.aiActionId}/invoke`, data, { headers, params: params.query });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/ai-action-invocation.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/ai-action-invocation.mjs
 var ai_action_invocation_exports = {};
 __export(ai_action_invocation_exports, {
   get: () => get3
@@ -20901,7 +20805,7 @@ var get3 = (http4, params, headers) => {
   return get(http4, `/spaces/${params.spaceId}/environments/${params.environmentId}/ai/actions/${params.aiActionId}/invocations/${params.invocationId}`, { headers });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/agent.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/agent.mjs
 var agent_exports = {};
 __export(agent_exports, {
   generate: () => generate,
@@ -20936,7 +20840,7 @@ var generate = (http4, params, data, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/agent-run.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/agent-run.mjs
 var agent_run_exports = {};
 __export(agent_run_exports, {
   get: () => get5,
@@ -20972,7 +20876,7 @@ var resumeRun = (http4, params, data, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/access-token.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/access-token.mjs
 var access_token_exports = {};
 __export(access_token_exports, {
   createPersonalAccessToken: () => createPersonalAccessToken,
@@ -21003,7 +20907,7 @@ var getManyForOrganization = (http4, params) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/automation-definition.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/automation-definition.mjs
 var automation_definition_exports = {};
 __export(automation_definition_exports, {
   create: () => create3,
@@ -21043,7 +20947,7 @@ var del3 = (http4, params, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/automation-execution.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/automation-execution.mjs
 var automation_execution_exports = {};
 __export(automation_execution_exports, {
   get: () => get8,
@@ -21065,7 +20969,7 @@ var getForAutomationDefinition = (http4, params, headers) => get(http4, getExecu
   params: params.query
 });
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/api-key.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/api-key.mjs
 var api_key_exports = {};
 __export(api_key_exports, {
   create: () => create4,
@@ -21114,7 +21018,7 @@ var del4 = (http4, params) => {
   return del(http4, `/spaces/${params.spaceId}/api_keys/${params.apiKeyId}`);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-access-token.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-access-token.mjs
 var app_access_token_exports = {};
 __export(app_access_token_exports, {
   create: () => create5
@@ -21123,7 +21027,7 @@ var create5 = (http4, params, data) => {
   return post(http4, `/spaces/${params.spaceId}/environments/${params.environmentId}/app_installations/${params.appDefinitionId}/access_tokens`, void 0, { headers: { Authorization: `Bearer ${data.jwt}` } });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-action.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-action.mjs
 var app_action_exports = {};
 __export(app_action_exports, {
   create: () => create6,
@@ -21134,7 +21038,7 @@ __export(app_action_exports, {
   update: () => update4
 });
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/utils.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/utils.mjs
 function normalizeSelect(query2) {
   if (query2 && query2.select && !/sys/i.test(query2.select)) {
     return {
@@ -21155,7 +21059,7 @@ function normalizeSpaceId(query2) {
   return query2;
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-action.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-action.mjs
 var getBaseUrl4 = (params) => `/organizations/${params.organizationId}/app_definitions/${params.appDefinitionId}/actions`;
 var getAppActionUrl = (params) => `${getBaseUrl4(params)}/${params.appActionId}`;
 var getAppActionsEnvUrl = (params) => {
@@ -21187,7 +21091,7 @@ var update4 = (http4, params, data) => {
   return put(http4, getAppActionUrl(params), data);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-action-call.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-action-call.mjs
 var app_action_call_exports = {};
 __export(app_action_call_exports, {
   create: () => create7,
@@ -21198,7 +21102,7 @@ __export(app_action_call_exports, {
   getResponse: () => getResponse
 });
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/common-utils.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/common-utils.mjs
 var import_contentful_sdk_core2 = __toESM(require_cjs2(), 1);
 var wrapCollection = (fn) => (makeRequest2, data, ...rest) => {
   const collectionData = (0, import_contentful_sdk_core2.toPlainObject)(copy(data));
@@ -21256,7 +21160,7 @@ function normalizeCursorPaginationResponse(data) {
   };
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-action-call.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-action-call.mjs
 var create7 = (http4, params, data) => {
   return post(http4, `/spaces/${params.spaceId}/environments/${params.environmentId}/app_installations/${params.appDefinitionId}/actions/${params.appActionId}/calls`, data);
 };
@@ -21346,7 +21250,7 @@ var createWithResult = async (http4, params, data) => {
   return pollStructuredAppActionCall(http4, params, { callId });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-bundle.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-bundle.mjs
 var app_bundle_exports = {};
 __export(app_bundle_exports, {
   create: () => create8,
@@ -21384,7 +21288,7 @@ var create8 = (http4, params, payload) => {
   return post(http4, getBaseUrl5(params), data);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-definition.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-definition.mjs
 var app_definition_exports = {};
 __export(app_definition_exports, {
   create: () => create9,
@@ -21434,7 +21338,7 @@ var getInstallationsForOrg = (http4, params) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-details.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-details.mjs
 var app_details_exports = {};
 __export(app_details_exports, {
   del: () => del8,
@@ -21451,7 +21355,7 @@ var del8 = (http4, params) => {
   return del(http4, `/organizations/${params.organizationId}/app_definitions/${params.appDefinitionId}/details`);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-event-subscription.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-event-subscription.mjs
 var app_event_subscription_exports = {};
 __export(app_event_subscription_exports, {
   del: () => del9,
@@ -21468,7 +21372,7 @@ var del9 = (http4, params) => {
   return del(http4, `/organizations/${params.organizationId}/app_definitions/${params.appDefinitionId}/event_subscription`);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-installation.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-installation.mjs
 var app_installation_exports = {};
 __export(app_installation_exports, {
   del: () => del10,
@@ -21514,7 +21418,7 @@ var getForOrganization = (http4, params) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-key.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-key.mjs
 var app_key_exports = {};
 __export(app_key_exports, {
   create: () => create10,
@@ -21535,7 +21439,7 @@ var del11 = (http4, params) => {
   return del(http4, `/organizations/${params.organizationId}/app_definitions/${params.appDefinitionId}/keys/${params.fingerprint}`);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-signed-request.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-signed-request.mjs
 var app_signed_request_exports = {};
 __export(app_signed_request_exports, {
   create: () => create11
@@ -21544,7 +21448,7 @@ var create11 = (http4, params, data) => {
   return post(http4, `/spaces/${params.spaceId}/environments/${params.environmentId}/app_installations/${params.appDefinitionId}/signed_requests`, data);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-signing-secret.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-signing-secret.mjs
 var app_signing_secret_exports = {};
 __export(app_signing_secret_exports, {
   del: () => del12,
@@ -21561,7 +21465,7 @@ var del12 = (http4, params) => {
   return del(http4, `/organizations/${params.organizationId}/app_definitions/${params.appDefinitionId}/signing_secret`);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-upload.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-upload.mjs
 var app_upload_exports = {};
 __export(app_upload_exports, {
   create: () => create12,
@@ -21569,7 +21473,7 @@ __export(app_upload_exports, {
   get: () => get19
 });
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/upload-http-client.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/upload-http-client.mjs
 function getUploadHttpClient(http4, options) {
   const { hostUpload, defaultHostnameUpload, timeout } = http4.httpClientParams;
   const uploadHttp = http4.cloneWithNewParams({
@@ -21580,7 +21484,7 @@ function getUploadHttpClient(http4, options) {
   return uploadHttp;
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-upload.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/app-upload.mjs
 var getBaseUrl8 = (params) => `/organizations/${params.organizationId}/app_uploads`;
 var getAppUploadUrl = (params) => `${getBaseUrl8(params)}/${params.appUploadId}`;
 var get19 = (http4, params) => {
@@ -21601,7 +21505,7 @@ var create12 = (http4, params, payload) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/asset.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/asset.mjs
 var asset_exports = {};
 __export(asset_exports, {
   archive: () => archive,
@@ -21622,7 +21526,7 @@ __export(asset_exports, {
 });
 var import_contentful_sdk_core4 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/upload.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/upload.mjs
 var upload_exports = {};
 __export(upload_exports, {
   create: () => create13,
@@ -21663,7 +21567,7 @@ var get20 = (http4, params) => {
   return get(httpUpload, path);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/release-asset.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/release-asset.mjs
 var release_asset_exports = {};
 __export(release_asset_exports, {
   create: () => create14,
@@ -21795,7 +21699,7 @@ var processForAllLocales = async (http4, { asset, options = {}, ...params }) => 
   return Promise.all(allProcessingLocales).then(() => mostUpToDateAssetVersion);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/asset.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/asset.mjs
 var get22 = (http4, params, rawData, headers) => {
   if (params.releaseId) {
     return get21(http4, params);
@@ -21987,7 +21891,7 @@ var processForAllLocales2 = async (http4, { asset, options = {}, ...params }) =>
   return Promise.all(allProcessingLocales).then(() => mostUpToDateAssetVersion);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/asset-key.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/asset-key.mjs
 var asset_key_exports = {};
 __export(asset_key_exports, {
   ValidationError: () => ValidationError,
@@ -22021,7 +21925,7 @@ var create16 = (http4, params, data) => {
   return post(http4, `/spaces/${params.spaceId}/environments/${params.environmentId}/asset_keys`, postParams);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/available-license.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/available-license.mjs
 var available_license_exports = {};
 __export(available_license_exports, {
   getMany: () => getMany15
@@ -22033,7 +21937,7 @@ var getMany15 = (http4, params) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/bulk-action.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/bulk-action.mjs
 var bulk_action_exports = {};
 __export(bulk_action_exports, {
   get: () => get23,
@@ -22070,7 +21974,7 @@ var validateV2 = (http4, params, payload) => {
   return post(http4, `/spaces/${params.spaceId}/environments/${params.environmentId}/bulk_actions`, payload);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/comment.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/comment.mjs
 var comment_exports = {};
 __export(comment_exports, {
   create: () => create17,
@@ -22155,7 +22059,7 @@ var del16 = (http4, { version, ...params }) => {
 };
 var getAll = getMany16;
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/component.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/component.mjs
 var component_exports = {};
 __export(component_exports, {
   create: () => create18,
@@ -22213,7 +22117,7 @@ var unpublish4 = (http4, params, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/component-type.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/component-type.mjs
 var component_type_exports = {};
 __export(component_type_exports, {
   create: () => create19,
@@ -22271,7 +22175,7 @@ var unpublish5 = (http4, params, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/concept.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/concept.mjs
 var concept_exports = {};
 __export(concept_exports, {
   create: () => create20,
@@ -22340,7 +22244,7 @@ function cursorBasedCollection(path, params) {
   };
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/concept-scheme.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/concept-scheme.mjs
 var concept_scheme_exports = {};
 __export(concept_scheme_exports, {
   create: () => create21,
@@ -22393,7 +22297,7 @@ var update10 = (http4, params, data, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/content-type.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/content-type.mjs
 var content_type_exports = {};
 __export(content_type_exports, {
   create: () => create22,
@@ -22459,7 +22363,7 @@ var unpublish6 = (http4, params, headers) => {
   return del(http4, getContentTypeUrl(params) + "/published", { headers });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/data-assembly.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/data-assembly.mjs
 var data_assembly_exports = {};
 __export(data_assembly_exports, {
   create: () => create23,
@@ -22529,7 +22433,7 @@ var unpublish7 = (http4, params, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/design-token.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/design-token.mjs
 var design_token_exports = {};
 __export(design_token_exports, {
   del: () => del23,
@@ -22564,7 +22468,7 @@ var del23 = (http4, params) => {
   return del(http4, getBaseUrl14(params) + `/${params.designTokenId}`);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/editor-interface.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/editor-interface.mjs
 var editor_interface_exports = {};
 __export(editor_interface_exports, {
   get: () => get32,
@@ -22589,7 +22493,7 @@ var update13 = (http4, params, rawData, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/eligible-license.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/eligible-license.mjs
 var eligible_license_exports = {};
 __export(eligible_license_exports, {
   getMany: () => getMany25
@@ -22601,7 +22505,7 @@ var getMany25 = (http4, params) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/entry.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/entry.mjs
 var entry_exports = {};
 __export(entry_exports, {
   archive: () => archive2,
@@ -22620,7 +22524,7 @@ __export(entry_exports, {
   update: () => update15
 });
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/release-entry.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/release-entry.mjs
 var release_entry_exports = {};
 __export(release_entry_exports, {
   create: () => create24,
@@ -22680,7 +22584,7 @@ var createWithId7 = (http4, params, rawData, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/entry.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/entry.mjs
 var get34 = (http4, params, rawData, headers) => {
   if (params.releaseId) {
     return get33(http4, params);
@@ -22796,7 +22700,7 @@ var references = (http4, params) => {
   return get(http4, `/spaces/${spaceId}/environments/${environmentId}/entries/${entryId}/references?include=${level}`);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/environment.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/environment.mjs
 var environment_exports = {};
 __export(environment_exports, {
   create: () => create26,
@@ -22845,7 +22749,7 @@ var createWithId9 = (http4, params, rawData, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/environment-alias.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/environment-alias.mjs
 var environment_alias_exports = {};
 __export(environment_alias_exports, {
   createWithId: () => createWithId10,
@@ -22884,7 +22788,7 @@ var del26 = (http4, params) => {
   return del(http4, getEnvironmentAliasUrl(params));
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/environment-template.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/environment-template.mjs
 var environment_template_exports = {};
 __export(environment_template_exports, {
   create: () => create27,
@@ -22930,7 +22834,7 @@ var validate2 = (http4, { spaceId, environmentId, environmentTemplateId, version
 var install = (http4, { spaceId, environmentId, environmentTemplateId }, payload, headers) => post(http4, `/spaces/${spaceId}/environments/${environmentId}/template_installations/${environmentTemplateId}/versions`, payload, { headers });
 var disconnect = (http4, { spaceId, environmentId, environmentTemplateId }, headers) => del(http4, `/spaces/${spaceId}/environments/${environmentId}/template_installations/${environmentTemplateId}`, { headers });
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/environment-template-installation.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/environment-template-installation.mjs
 var environment_template_installation_exports = {};
 __export(environment_template_installation_exports, {
   getForEnvironment: () => getForEnvironment,
@@ -22953,7 +22857,7 @@ var getForEnvironment = (http4, { spaceId, environmentId, environmentTemplateId,
   headers
 });
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/extension.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/extension.mjs
 var extension_exports = {};
 __export(extension_exports, {
   create: () => create28,
@@ -22997,7 +22901,7 @@ var del28 = (http4, params) => {
   return del(http4, getExtensionUrl(params));
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/fragment.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/fragment.mjs
 var fragment_exports = {};
 __export(fragment_exports, {
   create: () => create29,
@@ -23053,7 +22957,7 @@ var unpublish9 = (http4, params, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/function.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/function.mjs
 var function_exports = {};
 __export(function_exports, {
   get: () => get40,
@@ -23077,7 +22981,7 @@ var getManyForEnvironment2 = (http4, params) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/function-log.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/function-log.mjs
 var function_log_exports = {};
 __export(function_log_exports, {
   get: () => get41,
@@ -23104,7 +23008,7 @@ var getMany35 = (http4, params) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/http.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/http.mjs
 var http_exports = {};
 __export(http_exports, {
   del: () => del30,
@@ -23133,7 +23037,7 @@ var request = (http$1, { url: url2, config }) => {
   return http3(http$1, url2, config);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/locale.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/locale.mjs
 var locale_exports = {};
 __export(locale_exports, {
   create: () => create30,
@@ -23170,7 +23074,7 @@ var del31 = (http4, params) => {
   return del(http4, `/spaces/${params.spaceId}/environments/${params.environmentId}/locales/${params.localeId}`);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/organization.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/organization.mjs
 var organization_exports = {};
 __export(organization_exports, {
   get: () => get44,
@@ -23194,7 +23098,7 @@ var get44 = (http4, params) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/organization-invitation.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/organization-invitation.mjs
 var organization_invitation_exports = {};
 __export(organization_invitation_exports, {
   create: () => create31,
@@ -23223,7 +23127,7 @@ var get45 = (http4, params, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/organization-membership.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/organization-membership.mjs
 var organization_membership_exports = {};
 __export(organization_membership_exports, {
   del: () => del32,
@@ -23256,7 +23160,7 @@ var del32 = (http4, params) => {
   return del(http4, getEntityUrl(params));
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/oauth-application.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/oauth-application.mjs
 var oauth_application_exports = {};
 __export(oauth_application_exports, {
   create: () => create32,
@@ -23287,7 +23191,7 @@ var del33 = (http4, params) => {
   return del(http4, `/users/${params.userId}/oauth_applications/${params.oauthApplicationId}`);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/personal-access-token.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/personal-access-token.mjs
 var personal_access_token_exports = {};
 __export(personal_access_token_exports, {
   create: () => create33,
@@ -23312,7 +23216,7 @@ var revoke2 = (http4, params) => {
   return put(http4, `/users/me/access_tokens/${params.tokenId}/revoked`, null);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/preview-api-key.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/preview-api-key.mjs
 var preview_api_key_exports = {};
 __export(preview_api_key_exports, {
   get: () => get49,
@@ -23327,7 +23231,7 @@ var getMany40 = (http4, params) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/release.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/release.mjs
 var release_exports = {};
 __export(release_exports, {
   archive: () => archive3,
@@ -23409,7 +23313,7 @@ var unarchive3 = (http4, params) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/release-action.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/release-action.mjs
 var release_action_exports = {};
 __export(release_action_exports, {
   get: () => get51,
@@ -23433,7 +23337,7 @@ var queryForRelease = (http4, params) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/resource.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/resource.mjs
 var resource_exports = {};
 __export(resource_exports, {
   getMany: () => getMany42
@@ -23443,7 +23347,7 @@ var getMany42 = (http4, params) => get(http4, getBaseUrl21(params), {
   params: params.query
 });
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/resource-provider.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/resource-provider.mjs
 var resource_provider_exports = {};
 __export(resource_provider_exports, {
   del: () => del35,
@@ -23461,7 +23365,7 @@ var del35 = (http4, params) => {
   return del(http4, getBaseUrl22(params));
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/resource-type.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/resource-type.mjs
 var resource_type_exports = {};
 __export(resource_type_exports, {
   del: () => del36,
@@ -23490,7 +23394,7 @@ var getForEnvironment2 = (http4, params) => {
   return get(http4, getSpaceEnvUrl(params));
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/role.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/role.mjs
 var role_exports = {};
 __export(role_exports, {
   create: () => create35,
@@ -23538,7 +23442,7 @@ var del37 = (http4, params) => {
   return del(http4, `/spaces/${params.spaceId}/roles/${params.roleId}`);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/scheduled-action.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/scheduled-action.mjs
 var scheduled_action_exports = {};
 __export(scheduled_action_exports, {
   create: () => create36,
@@ -23580,7 +23484,7 @@ var update25 = (http4, params, data) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/content-semantics-index.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/content-semantics-index.mjs
 var content_semantics_index_exports = {};
 __export(content_semantics_index_exports, {
   create: () => create37,
@@ -23605,7 +23509,7 @@ var del39 = (http4, params) => {
   return del(http4, `/organizations/${params.organizationId}/semantic/search-index/${params.indexId}`);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/semantic-duplicates.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/semantic-duplicates.mjs
 var semantic_duplicates_exports = {};
 __export(semantic_duplicates_exports, {
   get: () => get57
@@ -23614,7 +23518,7 @@ var get57 = (http4, params, data, headers) => {
   return post(http4, `/spaces/${params.spaceId}/environments/${params.environmentId}/semantic/duplicates`, data, { headers });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/semantic-recommendations.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/semantic-recommendations.mjs
 var semantic_recommendations_exports = {};
 __export(semantic_recommendations_exports, {
   get: () => get58
@@ -23623,7 +23527,7 @@ var get58 = (http4, params, data, headers) => {
   return post(http4, `/spaces/${params.spaceId}/environments/${params.environmentId}/semantic/recommendations`, data, { headers });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/semantic-reference-suggestions.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/semantic-reference-suggestions.mjs
 var semantic_reference_suggestions_exports = {};
 __export(semantic_reference_suggestions_exports, {
   get: () => get59
@@ -23632,7 +23536,7 @@ var get59 = (http4, params, data, headers) => {
   return post(http4, `/spaces/${params.spaceId}/environments/${params.environmentId}/semantic/reference-suggestions`, data, { headers });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/semantic-search.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/semantic-search.mjs
 var semantic_search_exports = {};
 __export(semantic_search_exports, {
   get: () => get60
@@ -23641,7 +23545,7 @@ var get60 = (http4, params, data, headers) => {
   return post(http4, `/spaces/${params.spaceId}/environments/${params.environmentId}/semantic/search`, data, { headers });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/semantic-settings.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/semantic-settings.mjs
 var semantic_settings_exports = {};
 __export(semantic_settings_exports, {
   get: () => get61
@@ -23650,7 +23554,7 @@ var get61 = (http4, params) => {
   return get(http4, `/organizations/${params.organizationId}/semantic/settings`);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/snapshot.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/snapshot.mjs
 var snapshot_exports = {};
 __export(snapshot_exports, {
   getForContentType: () => getForContentType,
@@ -23679,7 +23583,7 @@ var getForContentType = (http4, params) => {
   return get(http4, getContentTypeUrl2(params));
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/space.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/space.mjs
 var space_exports = {};
 __export(space_exports, {
   create: () => create38,
@@ -23722,7 +23626,7 @@ var unarchive4 = (http4, params, data, headers) => {
 };
 var del40 = (http4, params) => del(http4, `/spaces/${params.spaceId}`);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/space-add-on.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/space-add-on.mjs
 var space_add_on_exports = {};
 __export(space_add_on_exports, {
   getMany: () => getMany48,
@@ -23745,7 +23649,7 @@ var updateAllocations = (http4, params, data, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/space-member.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/space-member.mjs
 var space_member_exports = {};
 __export(space_member_exports, {
   get: () => get63,
@@ -23756,7 +23660,7 @@ var getMany49 = (http4, params) => get(http4, `/spaces/${params.spaceId}/space_m
   params: params.query
 });
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/space-membership.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/space-membership.mjs
 var space_membership_exports = {};
 __export(space_membership_exports, {
   create: () => create39,
@@ -23817,7 +23721,7 @@ var del41 = (http4, params) => {
   return del(http4, getEntityUrl3(params));
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/tag.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/tag.mjs
 var tag_exports = {};
 __export(tag_exports, {
   createWithId: () => createWithId14,
@@ -23852,7 +23756,7 @@ var del42 = (http4, { version, ...params }) => {
   return del(http4, getTagUrl(params), { headers: { "X-Contentful-Version": version } });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/task.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/task.mjs
 var task_exports = {};
 __export(task_exports, {
   create: () => create40,
@@ -23912,7 +23816,7 @@ var del43 = (http4, { version, ...params }) => {
   return del(http4, getTaskUrl(params), { headers: { "X-Contentful-Version": version } });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/team.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/team.mjs
 var team_exports = {};
 __export(team_exports, {
   create: () => create41,
@@ -23948,7 +23852,7 @@ var update30 = (http4, params, rawData, headers) => {
 };
 var del44 = (http4, params) => del(http4, getEntityUrl4(params));
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/team-membership.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/team-membership.mjs
 var team_membership_exports = {};
 __export(team_membership_exports, {
   create: () => create42,
@@ -23984,7 +23888,7 @@ var update31 = (http4, params, rawData, headers) => {
 };
 var del45 = (http4, params) => del(http4, getEntityUrl5(params));
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/team-space-membership.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/team-space-membership.mjs
 var team_space_membership_exports = {};
 __export(team_space_membership_exports, {
   create: () => create43,
@@ -24036,7 +23940,7 @@ var del46 = (http4, params) => {
   return del(http4, getEntityUrl6(params));
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/template.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/template.mjs
 var template_exports = {};
 __export(template_exports, {
   create: () => create44,
@@ -24092,7 +23996,7 @@ var unpublish11 = (http4, params, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/ui-config.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/ui-config.mjs
 var ui_config_exports = {};
 __export(ui_config_exports, {
   get: () => get71,
@@ -24112,7 +24016,7 @@ var update33 = (http4, params, rawData) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/experience.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/experience.mjs
 var experience_exports = {};
 __export(experience_exports, {
   ExperienceAlphaHeaders: () => ExperienceAlphaHeaders,
@@ -24192,7 +24096,7 @@ var unpublish12 = (http4, params, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/experience-variant.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/experience-variant.mjs
 var experience_variant_exports = {};
 __export(experience_variant_exports, {
   archive: () => archive4,
@@ -24278,7 +24182,7 @@ var unarchive5 = (http4, params, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/experience-fragment.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/experience-fragment.mjs
 var experience_fragment_exports = {};
 __export(experience_fragment_exports, {
   create: () => create47,
@@ -24334,7 +24238,7 @@ var unpublish14 = (http4, params, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/experience-template.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/experience-template.mjs
 var experience_template_exports = {};
 __export(experience_template_exports, {
   create: () => create48,
@@ -24390,7 +24294,7 @@ var unpublish15 = (http4, params, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/experience-fragment-variant.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/experience-fragment-variant.mjs
 var experience_fragment_variant_exports = {};
 __export(experience_fragment_variant_exports, {
   archive: () => archive5,
@@ -24457,7 +24361,7 @@ var unarchive6 = (http4, params, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/upload-credentials.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/upload-credentials.mjs
 var upload_credentials_exports = {};
 __export(upload_credentials_exports, {
   create: () => create50
@@ -24471,7 +24375,7 @@ var create50 = (http4, params) => {
   return post(httpUpload, path);
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/usage.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/usage.mjs
 var usage_exports = {};
 __export(usage_exports, {
   getAggregated: () => getAggregated,
@@ -24500,7 +24404,7 @@ var getAssetBandwidthUsageDetailed = (http4, params) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/user.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/user.mjs
 var user_exports = {};
 __export(user_exports, {
   getCurrent: () => getCurrent,
@@ -24527,7 +24431,7 @@ var getManyForOrganization9 = (http4, params) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/user-ui-config.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/user-ui-config.mjs
 var user_ui_config_exports = {};
 __export(user_ui_config_exports, {
   get: () => get77,
@@ -24547,7 +24451,7 @@ var update34 = (http4, params, rawData) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/webhook.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/webhook.mjs
 var webhook_exports = {};
 __export(webhook_exports, {
   create: () => create51,
@@ -24636,7 +24540,7 @@ var deleteRetryPolicy = async (http4, params) => {
   return del(http4, getWebhookRetryPolicyUrl(params));
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/workflow.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/workflow.mjs
 var workflow_exports = {};
 __export(workflow_exports, {
   complete: () => complete,
@@ -24683,7 +24587,7 @@ var complete = (http4, { version, ...params }, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/workflow-definition.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/workflow-definition.mjs
 var workflow_definition_exports = {};
 __export(workflow_definition_exports, {
   create: () => create53,
@@ -24723,7 +24627,7 @@ var del55 = (http4, { version, ...params }, headers) => {
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/workflows-changelog.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/workflows-changelog.mjs
 var workflows_changelog_exports = {};
 __export(workflows_changelog_exports, {
   getMany: () => getMany64
@@ -24734,7 +24638,7 @@ var getMany64 = (http4, params, headers) => get(http4, getBaseUrl40(params), {
   params: params.query
 });
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/index.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/endpoints/index.mjs
 var endpoints = {
   AiAction: ai_action_exports,
   AiActionInvocation: ai_action_invocation_exports,
@@ -24830,7 +24734,7 @@ var endpoints = {
   WorkflowsChangelog: workflows_changelog_exports
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/make-request.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/make-request.mjs
 var makeRequest = async ({ axiosInstance, entityType, action: actionInput, params, payload, headers, userAgent }) => {
   const action = actionInput === "delete" ? "del" : actionInput;
   const endpoint = (
@@ -24848,7 +24752,7 @@ var makeRequest = async ({ axiosInstance, entityType, action: actionInput, param
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/adapters/REST/rest-adapter.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/adapters/REST/rest-adapter.mjs
 var defaultHostParameters = {
   defaultHostname: "api.contentful.com",
   defaultHostnameUpload: "upload.contentful.com"
@@ -24880,7 +24784,7 @@ var RestAdapter = class {
   }
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/create-adapter.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/create-adapter.mjs
 function createAdapter(params) {
   if ("apiAdapter" in params) {
     return params.apiAdapter;
@@ -24889,26 +24793,26 @@ function createAdapter(params) {
   }
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/create-contentful-api.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/create-contentful-api.mjs
 var import_contentful_sdk_core80 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/space.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/space.mjs
 var import_contentful_sdk_core57 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/create-space-api.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/create-space-api.mjs
 var import_contentful_sdk_core56 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/eligible-license.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/eligible-license.mjs
 var import_contentful_sdk_core6 = __toESM(require_cjs2(), 1);
 function wrapEligibleLicense(makeRequest2, data) {
   return (0, import_contentful_sdk_core6.toPlainObject)(copy(data));
 }
 var wrapEligibleLicenseCollection = wrapCollection(wrapEligibleLicense);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/environment.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/environment.mjs
 var import_contentful_sdk_core42 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/enhance-with-methods.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/enhance-with-methods.mjs
 function enhanceWithMethods(baseObject, methodsObject) {
   return Object.keys(methodsObject).reduce((enhancedObject, methodName) => {
     Object.defineProperty(enhancedObject, methodName, {
@@ -24921,18 +24825,18 @@ function enhanceWithMethods(baseObject, methodsObject) {
   }, baseObject);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/create-environment-api.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/create-environment-api.mjs
 var import_contentful_sdk_core41 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/release-action.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/release-action.mjs
 var import_contentful_sdk_core7 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/methods/utils.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/methods/utils.mjs
 function sleep(durationMs) {
   return new Promise((resolve4) => setTimeout(resolve4, durationMs));
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/methods/action.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/methods/action.mjs
 var DEFAULT_MAX_RETRIES = 30;
 var DEFAULT_INITIAL_DELAY_MS = 1e3;
 var DEFAULT_RETRY_INTERVAL_MS = 2e3;
@@ -24967,7 +24871,7 @@ async function pollAsyncActionStatus(actionFunction, options) {
   throw new AsyncActionProcessingError(`${action?.sys.type} didn't finish processing within the expected timeframe.`, action);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/release-action.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/release-action.mjs
 function createReleaseActionApi(makeRequest2) {
   const getParams3 = (self2) => {
     const action = self2.toPlainObject();
@@ -25000,16 +24904,16 @@ function wrapReleaseAction(makeRequest2, data) {
 }
 var wrapReleaseActionCollection = wrapCollection(wrapReleaseAction);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/release.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/release.mjs
 var import_contentful_sdk_core8 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/common-types.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/common-types.mjs
 var ScheduledActionReferenceFilters;
 (function(ScheduledActionReferenceFilters2) {
   ScheduledActionReferenceFilters2["contentTypeAnnotationNotIn"] = "sys.contentType.metadata.annotations.ContentType[nin]";
 })(ScheduledActionReferenceFilters || (ScheduledActionReferenceFilters = {}));
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/release.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/release.mjs
 function createReleaseApi(makeRequest2) {
   const getParams3 = (self2) => {
     const release = self2.toPlainObject();
@@ -25088,7 +24992,7 @@ function wrapRelease(makeRequest2, data) {
 }
 var wrapReleaseCollection = wrapCursorPaginatedCollection(wrapRelease);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/tag.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/tag.mjs
 var import_contentful_sdk_core9 = __toESM(require_cjs2(), 1);
 function createTagApi(makeRequest2) {
   const getParams3 = (tag) => ({
@@ -25127,10 +25031,10 @@ function wrapTag(makeRequest2, data) {
 }
 var wrapTagCollection = wrapCollection(wrapTag);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/ui-config.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/ui-config.mjs
 var import_contentful_sdk_core10 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/create-ui-config-api.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/create-ui-config-api.mjs
 function createUIConfigApi(makeRequest2) {
   const getParams3 = (self2) => {
     const uiConfig = self2.toPlainObject();
@@ -25177,17 +25081,17 @@ function createUIConfigApi(makeRequest2) {
   };
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/ui-config.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/ui-config.mjs
 function wrapUIConfig(makeRequest2, data) {
   const user = (0, import_contentful_sdk_core10.toPlainObject)(copy(data));
   const userWithMethods = enhanceWithMethods(user, createUIConfigApi(makeRequest2));
   return (0, import_contentful_sdk_core10.freezeSys)(userWithMethods);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/user-ui-config.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/user-ui-config.mjs
 var import_contentful_sdk_core11 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/create-user-ui-config-api.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/create-user-ui-config-api.mjs
 function createUserUIConfigApi(makeRequest2) {
   const getParams3 = (self2) => {
     const userUIConfig = self2.toPlainObject();
@@ -25234,14 +25138,14 @@ function createUserUIConfigApi(makeRequest2) {
   };
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/user-ui-config.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/user-ui-config.mjs
 function wrapUserUIConfig(makeRequest2, data) {
   const user = (0, import_contentful_sdk_core11.toPlainObject)(copy(data));
   const userWithMethods = enhanceWithMethods(user, createUserUIConfigApi(makeRequest2));
   return (0, import_contentful_sdk_core11.freezeSys)(userWithMethods);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/environment-template-installation.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/environment-template-installation.mjs
 var import_contentful_sdk_core12 = __toESM(require_cjs2(), 1);
 var EnvironmentTemplateInstallationStatuses;
 (function(EnvironmentTemplateInstallationStatuses2) {
@@ -25258,7 +25162,7 @@ function wrapEnvironmentTemplateInstallation(makeRequest2, data) {
 }
 var wrapEnvironmentTemplateInstallationCollection = wrapCursorPaginatedCollection(wrapEnvironmentTemplateInstallation);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/function.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/function.mjs
 var import_contentful_sdk_core13 = __toESM(require_cjs2(), 1);
 function createFunctionApi(makeRequest2) {
   return {
@@ -25305,7 +25209,7 @@ function wrapFunction(makeRequest2, data) {
 }
 var wrapFunctionCollection = wrapCollection(wrapFunction);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/function-log.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/function-log.mjs
 var import_contentful_sdk_core14 = __toESM(require_cjs2(), 1);
 function wrapFunctionLog(makeRequest2, data) {
   const functionLog = (0, import_contentful_sdk_core14.toPlainObject)(copy(data));
@@ -25313,10 +25217,10 @@ function wrapFunctionLog(makeRequest2, data) {
 }
 var wrapFunctionLogCollection = wrapCollection(wrapFunctionLog);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/content-type.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/content-type.mjs
 var import_contentful_sdk_core17 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/plain/checks.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/plain/checks.mjs
 var isPublished = (data) => !!data.sys.publishedVersion;
 var isUpdated = (data) => {
   return !!(data.sys.publishedVersion && data.sys.version > data.sys.publishedVersion + 1);
@@ -25324,7 +25228,7 @@ var isUpdated = (data) => {
 var isDraft = (data) => !data.sys.publishedVersion;
 var isArchived = (data) => !!data.sys.archivedVersion;
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/editor-interface.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/editor-interface.mjs
 var import_contentful_sdk_core15 = __toESM(require_cjs2(), 1);
 function createEditorInterfaceApi(makeRequest2) {
   return {
@@ -25358,7 +25262,7 @@ function wrapEditorInterface(makeRequest2, data) {
 }
 var wrapEditorInterfaceCollection = wrapCollection(wrapEditorInterface);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/snapshot.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/snapshot.mjs
 var import_contentful_sdk_core16 = __toESM(require_cjs2(), 1);
 function createSnapshotApi() {
   return {
@@ -25372,7 +25276,7 @@ function wrapSnapshot(_makeRequest, data) {
 }
 var wrapSnapshotCollection = wrapCollection(wrapSnapshot);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/methods/content-type.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/methods/content-type.mjs
 var findAndUpdateField = function(contentType, fieldId, omitOrDelete) {
   const field = contentType.fields.find((field2) => field2.id === fieldId);
   if (!field) {
@@ -25408,7 +25312,7 @@ var omitAndDeleteField = (makeRequest2, { fieldId, ...params }, contentType) => 
   });
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/content-type.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/content-type.mjs
 function createContentTypeApi(makeRequest2) {
   const getParams3 = (self2) => {
     const contentType = self2.toPlainObject();
@@ -25504,10 +25408,10 @@ function wrapContentType(makeRequest2, data) {
 var wrapContentTypeCollection = wrapCollection(wrapContentType);
 var wrapContentTypeCursorPaginatedCollection = wrapCursorPaginatedCollection(wrapContentType);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/entry.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/entry.mjs
 var import_contentful_sdk_core20 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/task.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/task.mjs
 var import_contentful_sdk_core18 = __toESM(require_cjs2(), 1);
 function createTaskApi(makeRequest2) {
   const getParams3 = (task) => {
@@ -25551,7 +25455,7 @@ function wrapTask(makeRequest2, data) {
 }
 var wrapTaskCollection = wrapCollection(wrapTask);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/comment.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/comment.mjs
 var import_contentful_sdk_core19 = __toESM(require_cjs2(), 1);
 var CommentNode;
 (function(CommentNode2) {
@@ -25601,7 +25505,7 @@ function wrapComment(makeRequest2, data) {
 }
 var wrapCommentCollection = wrapCollection(wrapComment);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/create-entry-api.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/create-entry-api.mjs
 function createEntryApi(makeRequest2) {
   const getParams3 = (self2) => {
     const entry = self2.toPlainObject();
@@ -26079,7 +25983,7 @@ function createEntryApi(makeRequest2) {
   };
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/entry.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/entry.mjs
 function wrapEntry(makeRequest2, data) {
   const entry = (0, import_contentful_sdk_core20.toPlainObject)(copy(data));
   const entryWithMethods = enhanceWithMethods(entry, createEntryApi(makeRequest2));
@@ -26088,7 +25992,7 @@ function wrapEntry(makeRequest2, data) {
 var wrapEntryCollection = wrapCollection(wrapEntry);
 var wrapEntryTypeCursorPaginatedCollection = wrapCursorPaginatedCollection(wrapEntry);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/asset.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/asset.mjs
 var import_contentful_sdk_core21 = __toESM(require_cjs2(), 1);
 function createAssetApi(makeRequest2) {
   const getParams3 = (raw) => {
@@ -26201,14 +26105,14 @@ function wrapAsset(makeRequest2, data) {
 var wrapAssetCollection = wrapCollection(wrapAsset);
 var wrapAssetTypeCursorPaginatedCollection = wrapCursorPaginatedCollection(wrapAsset);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/asset-key.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/asset-key.mjs
 var import_contentful_sdk_core22 = __toESM(require_cjs2(), 1);
 function wrapAssetKey(_makeRequest, data) {
   const assetKey = (0, import_contentful_sdk_core22.toPlainObject)(copy(data));
   return assetKey;
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/locale.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/locale.mjs
 var import_contentful_sdk_core23 = __toESM(require_cjs2(), 1);
 function createLocaleApi(makeRequest2) {
   const getParams3 = (locale) => ({
@@ -26245,7 +26149,7 @@ function wrapLocale(makeRequest2, data) {
 }
 var wrapLocaleCollection = wrapCollection(wrapLocale);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/upload.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/upload.mjs
 var import_contentful_sdk_core24 = __toESM(require_cjs2(), 1);
 function createUploadApi(makeRequest2) {
   return {
@@ -26269,7 +26173,7 @@ function wrapUpload(makeRequest2, data) {
   return (0, import_contentful_sdk_core24.freezeSys)(uploadWithMethods);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/extension.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/extension.mjs
 var import_contentful_sdk_core25 = __toESM(require_cjs2(), 1);
 function createExtensionApi(makeRequest2) {
   const getParams3 = (data) => ({
@@ -26304,7 +26208,7 @@ function wrapExtension(makeRequest2, data) {
 }
 var wrapExtensionCollection = wrapCollection(wrapExtension);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/app-installation.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/app-installation.mjs
 var import_contentful_sdk_core26 = __toESM(require_cjs2(), 1);
 function createAppInstallationApi(makeRequest2) {
   const getParams3 = (data) => ({
@@ -26340,14 +26244,14 @@ function wrapAppInstallation(makeRequest2, data) {
 }
 var wrapAppInstallationCollection = wrapCollection(wrapAppInstallation);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/app-signed-request.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/app-signed-request.mjs
 var import_contentful_sdk_core27 = __toESM(require_cjs2(), 1);
 function wrapAppSignedRequest(_makeRequest, data) {
   const signedRequest = (0, import_contentful_sdk_core27.toPlainObject)(copy(data));
   return signedRequest;
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/app-action-call.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/app-action-call.mjs
 var import_contentful_sdk_core28 = __toESM(require_cjs2(), 1);
 function createAppActionCallApi(makeRequest2, retryOptions) {
   return {
@@ -26394,7 +26298,7 @@ function wrapAppActionCallResponse(makeRequest2, data, retryOptions) {
   return appActionCallResponseWithMethods;
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/bulk-action.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/bulk-action.mjs
 var import_contentful_sdk_core29 = __toESM(require_cjs2(), 1);
 var BulkActionStatus;
 (function(BulkActionStatus2) {
@@ -26433,14 +26337,14 @@ function wrapBulkAction(makeRequest2, data) {
   return (0, import_contentful_sdk_core29.freezeSys)(bulkActionWithApiMethods);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/app-access-token.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/app-access-token.mjs
 var import_contentful_sdk_core30 = __toESM(require_cjs2(), 1);
 function wrapAppAccessToken(_makeRequest, data) {
   const appAccessToken = (0, import_contentful_sdk_core30.toPlainObject)(copy(data));
   return (0, import_contentful_sdk_core30.freezeSys)(appAccessToken);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/resource-type.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/resource-type.mjs
 var import_contentful_sdk_core31 = __toESM(require_cjs2(), 1);
 function createResourceTypeApi(makeRequest2) {
   return {
@@ -26521,7 +26425,7 @@ function wrapResourceTypeforEnvironment(makeRequest2, data) {
 }
 var wrapResourceTypesForEnvironmentCollection = wrapCursorPaginatedCollection(wrapResourceTypeforEnvironment);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/resource.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/resource.mjs
 var import_contentful_sdk_core32 = __toESM(require_cjs2(), 1);
 function wrapResource(makeRequest2, data) {
   const resource = (0, import_contentful_sdk_core32.toPlainObject)(data);
@@ -26529,17 +26433,17 @@ function wrapResource(makeRequest2, data) {
 }
 var wrapResourceCollection = wrapCursorPaginatedCollection(wrapResource);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/ai-action-invocation.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/ai-action-invocation.mjs
 var import_contentful_sdk_core33 = __toESM(require_cjs2(), 1);
 function wrapAiActionInvocation(makeRequest2, data) {
   const invocation = (0, import_contentful_sdk_core33.toPlainObject)(copy(data));
   return (0, import_contentful_sdk_core33.freezeSys)(invocation);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/agent.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/agent.mjs
 var import_contentful_sdk_core35 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/agent-run.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/agent-run.mjs
 var import_contentful_sdk_core34 = __toESM(require_cjs2(), 1);
 function wrapAgentRun(_makeRequest, data) {
   const agentRun = (0, import_contentful_sdk_core34.toPlainObject)(copy(data));
@@ -26551,7 +26455,7 @@ function wrapAgentGenerateResponse(_makeRequest, data) {
 }
 var wrapAgentRunCollection = wrapCollection(wrapAgentRun);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/agent.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/agent.mjs
 function createAgentApi(makeRequest2) {
   const getParams3 = (data) => ({
     spaceId: data.sys.space.sys.id,
@@ -26577,35 +26481,35 @@ function wrapAgent(makeRequest2, data) {
 }
 var wrapAgentCollection = wrapCollection(wrapAgent);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/semantic-duplicates.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/semantic-duplicates.mjs
 var import_contentful_sdk_core36 = __toESM(require_cjs2(), 1);
 function wrapSemanticDuplicates(_makeRequest, data) {
   const result = (0, import_contentful_sdk_core36.toPlainObject)(copy(data));
   return (0, import_contentful_sdk_core36.freezeSys)(result);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/semantic-recommendations.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/semantic-recommendations.mjs
 var import_contentful_sdk_core37 = __toESM(require_cjs2(), 1);
 function wrapSemanticRecommendations(_makeRequest, data) {
   const result = (0, import_contentful_sdk_core37.toPlainObject)(copy(data));
   return (0, import_contentful_sdk_core37.freezeSys)(result);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/semantic-reference-suggestions.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/semantic-reference-suggestions.mjs
 var import_contentful_sdk_core38 = __toESM(require_cjs2(), 1);
 function wrapSemanticReferenceSuggestions(_makeRequest, data) {
   const result = (0, import_contentful_sdk_core38.toPlainObject)(copy(data));
   return (0, import_contentful_sdk_core38.freezeSys)(result);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/semantic-search.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/semantic-search.mjs
 var import_contentful_sdk_core39 = __toESM(require_cjs2(), 1);
 function wrapSemanticSearch(_makeRequest, data) {
   const result = (0, import_contentful_sdk_core39.toPlainObject)(copy(data));
   return (0, import_contentful_sdk_core39.freezeSys)(result);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/content-semantics-index.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/content-semantics-index.mjs
 var import_contentful_sdk_core40 = __toESM(require_cjs2(), 1);
 function wrapContentSemanticsIndex(_makeRequest, data) {
   const result = (0, import_contentful_sdk_core40.toPlainObject)(copy(data));
@@ -26616,7 +26520,7 @@ function wrapContentSemanticsIndexCollection(_makeRequest, data) {
   return (0, import_contentful_sdk_core40.freezeSys)(result);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/create-environment-api.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/create-environment-api.mjs
 function createEnvironmentApi(makeRequest2) {
   return {
     /**
@@ -29471,7 +29375,7 @@ function createEnvironmentApi(makeRequest2) {
   };
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/environment.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/environment.mjs
 function wrapEnvironment(makeRequest2, data) {
   const environment = (0, import_contentful_sdk_core42.toPlainObject)(copy(data));
   const environmentApi = createEnvironmentApi(makeRequest2);
@@ -29480,7 +29384,7 @@ function wrapEnvironment(makeRequest2, data) {
 }
 var wrapEnvironmentCollection = wrapCollection(wrapEnvironment);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/webhook.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/webhook.mjs
 var import_contentful_sdk_core43 = __toESM(require_cjs2(), 1);
 function createWebhookApi(makeRequest2) {
   const getParams3 = (data) => ({
@@ -29538,7 +29442,7 @@ function wrapWebhook(makeRequest2, data) {
 }
 var wrapWebhookCollection = wrapCollection(wrapWebhook);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/role.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/role.mjs
 var import_contentful_sdk_core44 = __toESM(require_cjs2(), 1);
 function createRoleApi(makeRequest2) {
   const getParams3 = (data) => ({
@@ -29572,7 +29476,7 @@ function wrapRole(makeRequest2, data) {
 }
 var wrapRoleCollection = wrapCollection(wrapRole);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/user.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/user.mjs
 var import_contentful_sdk_core45 = __toESM(require_cjs2(), 1);
 function wrapUser(_makeRequest, data) {
   const user = (0, import_contentful_sdk_core45.toPlainObject)(copy(data));
@@ -29581,7 +29485,7 @@ function wrapUser(_makeRequest, data) {
 }
 var wrapUserCollection = wrapCollection(wrapUser);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/space-add-on.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/space-add-on.mjs
 var import_contentful_sdk_core46 = __toESM(require_cjs2(), 1);
 function wrapSpaceAddOn(makeRequest2, data) {
   const spaceAddOn = (0, import_contentful_sdk_core46.toPlainObject)(copy(data));
@@ -29596,7 +29500,7 @@ function wrapSpaceAddOnOrganization(makeRequest2, data) {
 }
 var wrapSpaceAddOnOrganizationCollection = wrapCollection(wrapSpaceAddOnOrganization);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/space-member.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/space-member.mjs
 var import_contentful_sdk_core47 = __toESM(require_cjs2(), 1);
 function wrapSpaceMember(_makeRequest, data) {
   const spaceMember = (0, import_contentful_sdk_core47.toPlainObject)(copy(data));
@@ -29604,7 +29508,7 @@ function wrapSpaceMember(_makeRequest, data) {
 }
 var wrapSpaceMemberCollection = wrapCollection(wrapSpaceMember);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/space-membership.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/space-membership.mjs
 var import_contentful_sdk_core48 = __toESM(require_cjs2(), 1);
 function createSpaceMembershipApi(makeRequest2) {
   const getParams3 = (data) => ({
@@ -29638,7 +29542,7 @@ function wrapSpaceMembership(makeRequest2, data) {
 }
 var wrapSpaceMembershipCollection = wrapCollection(wrapSpaceMembership);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/team-space-membership.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/team-space-membership.mjs
 var import_contentful_sdk_core49 = __toESM(require_cjs2(), 1);
 function createTeamSpaceMembershipApi(makeRequest2) {
   const getParams3 = (data) => ({
@@ -29672,7 +29576,7 @@ function wrapTeamSpaceMembership(makeRequest2, data) {
 }
 var wrapTeamSpaceMembershipCollection = wrapCollection(wrapTeamSpaceMembership);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/team.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/team.mjs
 var import_contentful_sdk_core50 = __toESM(require_cjs2(), 1);
 function createTeamApi(makeRequest2) {
   const getParams3 = (data) => ({
@@ -29706,7 +29610,7 @@ function wrapTeam(makeRequest2, data) {
 }
 var wrapTeamCollection = wrapCollection(wrapTeam);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/api-key.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/api-key.mjs
 var import_contentful_sdk_core51 = __toESM(require_cjs2(), 1);
 function createApiKeyApi(makeRequest2) {
   const getParams3 = (data) => ({
@@ -29741,7 +29645,7 @@ function wrapApiKey(makeRequest2, data) {
 }
 var wrapApiKeyCollection = wrapCollection(wrapApiKey);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/environment-alias.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/environment-alias.mjs
 var import_contentful_sdk_core52 = __toESM(require_cjs2(), 1);
 function createEnvironmentAliasApi(makeRequest2) {
   const getParams3 = (alias) => ({
@@ -29776,7 +29680,7 @@ function wrapEnvironmentAlias(makeRequest2, data) {
 }
 var wrapEnvironmentAliasCollection = wrapCollection(wrapEnvironmentAlias);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/preview-api-key.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/preview-api-key.mjs
 var import_contentful_sdk_core53 = __toESM(require_cjs2(), 1);
 function createPreviewApiKeyApi() {
   return {};
@@ -29788,7 +29692,7 @@ function wrapPreviewApiKey(_makeRequest, data) {
 }
 var wrapPreviewApiKeyCollection = wrapCollection(wrapPreviewApiKey);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/scheduled-action.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/scheduled-action.mjs
 var import_contentful_sdk_core54 = __toESM(require_cjs2(), 1);
 var ScheduledActionStatus;
 (function(ScheduledActionStatus2) {
@@ -29915,7 +29819,7 @@ function wrapScheduledAction(makeRequest2, data) {
 }
 var wrapScheduledActionCollection = wrapCollection(wrapScheduledAction);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/ai-action.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/ai-action.mjs
 var import_contentful_sdk_core55 = __toESM(require_cjs2(), 1);
 function createAiActionApi(makeRequest2) {
   const getParams3 = (data) => ({
@@ -29982,7 +29886,7 @@ function wrapAiAction(makeRequest2, data) {
 }
 var wrapAiActionCollection = wrapCollection(wrapAiAction);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/create-space-api.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/create-space-api.mjs
 function createSpaceApi(makeRequest2) {
   return {
     /**
@@ -31653,7 +31557,7 @@ function createSpaceApi(makeRequest2) {
   };
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/space.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/space.mjs
 function wrapSpace(makeRequest2, data) {
   const space = (0, import_contentful_sdk_core57.toPlainObject)(copy(data));
   const spaceApi = createSpaceApi(makeRequest2);
@@ -31663,7 +31567,7 @@ function wrapSpace(makeRequest2, data) {
 var wrapSpaceCollection = wrapCollection(wrapSpace);
 var wrapSpaceCursorPaginatedCollection = wrapCursorPaginatedCollection(wrapSpace);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/personal-access-token.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/personal-access-token.mjs
 var import_contentful_sdk_core58 = __toESM(require_cjs2(), 1);
 function wrapPersonalAccessToken(makeRequest2, data) {
   const personalAccessToken = (0, import_contentful_sdk_core58.toPlainObject)(copy(data));
@@ -31680,7 +31584,7 @@ function wrapPersonalAccessToken(makeRequest2, data) {
 }
 var wrapPersonalAccessTokenCollection = wrapCollection(wrapPersonalAccessToken);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/access-token.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/access-token.mjs
 var import_contentful_sdk_core59 = __toESM(require_cjs2(), 1);
 function wrapAccessToken(makeRequest2, data) {
   const AccessToken = (0, import_contentful_sdk_core59.toPlainObject)(copy(data));
@@ -31697,16 +31601,16 @@ function wrapAccessToken(makeRequest2, data) {
 }
 var wrapAccessTokenCollection = wrapCollection(wrapAccessToken);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/organization.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/organization.mjs
 var import_contentful_sdk_core75 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/create-organization-api.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/create-organization-api.mjs
 var import_contentful_sdk_core74 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/app-definition.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/app-definition.mjs
 var import_contentful_sdk_core62 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/app-bundle.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/app-bundle.mjs
 var import_contentful_sdk_core60 = __toESM(require_cjs2(), 1);
 function createAppBundleApi(makeRequest2) {
   const getParams3 = (data) => ({
@@ -31732,7 +31636,7 @@ function wrapAppBundle(makeRequest2, data) {
 }
 var wrapAppBundleCollection = wrapCollection(wrapAppBundle);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/resource-provider.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/resource-provider.mjs
 var import_contentful_sdk_core61 = __toESM(require_cjs2(), 1);
 function createResourceProviderApi(makeRequest2) {
   return {
@@ -31845,7 +31749,7 @@ function wrapResourceProvider(makeRequest2, data) {
   return (0, import_contentful_sdk_core61.freezeSys)(ResourceProviderWithMethods);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/create-app-definition-api.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/create-app-definition-api.mjs
 function createAppDefinitionApi(makeRequest2) {
   const getParams3 = (data) => ({
     appDefinitionId: data.sys.id,
@@ -32089,7 +31993,7 @@ function createAppDefinitionApi(makeRequest2) {
   };
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/app-definition.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/app-definition.mjs
 function wrapAppDefinition(makeRequest2, data) {
   const appDefinition = (0, import_contentful_sdk_core62.toPlainObject)(copy(data));
   const appDefinitionWithMethods = enhanceWithMethods(appDefinition, createAppDefinitionApi(makeRequest2));
@@ -32097,7 +32001,7 @@ function wrapAppDefinition(makeRequest2, data) {
 }
 var wrapAppDefinitionCollection = wrapCollection(wrapAppDefinition);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/organization-membership.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/organization-membership.mjs
 var import_contentful_sdk_core63 = __toESM(require_cjs2(), 1);
 function createOrganizationMembershipApi(makeRequest2, organizationId) {
   const getParams3 = (data) => ({
@@ -32131,7 +32035,7 @@ function wrapOrganizationMembership(makeRequest2, data, organizationId) {
 }
 var wrapOrganizationMembershipCollection = wrapCollection(wrapOrganizationMembership);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/team-membership.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/team-membership.mjs
 var import_contentful_sdk_core64 = __toESM(require_cjs2(), 1);
 function createTeamMembershipApi(makeRequest2) {
   const getParams3 = (data) => ({
@@ -32166,14 +32070,14 @@ function wrapTeamMembership(makeRequest2, data) {
 }
 var wrapTeamMembershipCollection = wrapCollection(wrapTeamMembership);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/organization-invitation.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/organization-invitation.mjs
 var import_contentful_sdk_core65 = __toESM(require_cjs2(), 1);
 function wrapOrganizationInvitation(_makeRequest, data) {
   const invitation = (0, import_contentful_sdk_core65.toPlainObject)(copy(data));
   return (0, import_contentful_sdk_core65.freezeSys)(invitation);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/app-upload.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/app-upload.mjs
 var import_contentful_sdk_core66 = __toESM(require_cjs2(), 1);
 function createAppUploadApi(makeRequest2) {
   const getParams3 = (data) => ({
@@ -32197,7 +32101,7 @@ function wrapAppUpload(makeRequest2, data) {
   return (0, import_contentful_sdk_core66.freezeSys)(appUploadWithMethods);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/app-signing-secret.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/app-signing-secret.mjs
 var import_contentful_sdk_core67 = __toESM(require_cjs2(), 1);
 function createSigningSecretApi(makeRequest2) {
   const getParams3 = (data) => ({
@@ -32220,7 +32124,7 @@ function wrapAppSigningSecret(makeRequest2, data) {
   return enhanceWithMethods(signingSecret, createSigningSecretApi(makeRequest2));
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/app-event-subscription.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/app-event-subscription.mjs
 var import_contentful_sdk_core68 = __toESM(require_cjs2(), 1);
 function createEventSubscriptionApi(makeRequest2) {
   const getParams3 = (data) => ({
@@ -32243,7 +32147,7 @@ function wrapAppEventSubscription(makeRequest2, data) {
   return enhanceWithMethods(eventSubscription, createEventSubscriptionApi(makeRequest2));
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/app-key.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/app-key.mjs
 var import_contentful_sdk_core69 = __toESM(require_cjs2(), 1);
 function createKeyApi(makeRequest2) {
   const getParams3 = (data) => ({
@@ -32268,7 +32172,7 @@ function wrapAppKey(makeRequest2, data) {
 }
 var wrapAppKeyCollection = wrapCollection(wrapAppKey);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/app-details.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/app-details.mjs
 var import_contentful_sdk_core70 = __toESM(require_cjs2(), 1);
 function createAppDetailsApi(makeRequest2) {
   const getParams3 = (data) => ({
@@ -32291,7 +32195,7 @@ function wrapAppDetails(makeRequest2, data) {
   return enhanceWithMethods(appDetails, createAppDetailsApi(makeRequest2));
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/app-action.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/app-action.mjs
 var import_contentful_sdk_core71 = __toESM(require_cjs2(), 1);
 function createAppActionApi(makeRequest2) {
   const getParams3 = (data) => ({
@@ -32317,21 +32221,21 @@ function wrapAppAction(makeRequest2, data) {
 }
 var wrapAppActionCollection = wrapCollection(wrapAppAction);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/available-license.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/available-license.mjs
 var import_contentful_sdk_core72 = __toESM(require_cjs2(), 1);
 function wrapAvailableLicense(makeRequest2, data) {
   return (0, import_contentful_sdk_core72.toPlainObject)(copy(data));
 }
 var wrapAvailableLicenseCollection = wrapCollection(wrapAvailableLicense);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/semantic-settings.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/semantic-settings.mjs
 var import_contentful_sdk_core73 = __toESM(require_cjs2(), 1);
 function wrapContentSemanticsSettings(_makeRequest, data) {
   const result = (0, import_contentful_sdk_core73.toPlainObject)(copy(data));
   return (0, import_contentful_sdk_core73.freezeSys)(result);
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/create-organization-api.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/create-organization-api.mjs
 function createOrganizationApi(makeRequest2) {
   return {
     /**
@@ -33590,7 +33494,7 @@ function createOrganizationApi(makeRequest2) {
   };
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/organization.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/organization.mjs
 function wrapOrganization(makeRequest2, data) {
   const org = (0, import_contentful_sdk_core75.toPlainObject)(copy(data));
   const orgApi = createOrganizationApi(makeRequest2);
@@ -33599,7 +33503,7 @@ function wrapOrganization(makeRequest2, data) {
 }
 var wrapOrganizationCollection = wrapCollection(wrapOrganization);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/usage.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/usage.mjs
 var import_contentful_sdk_core76 = __toESM(require_cjs2(), 1);
 function wrapUsage(_makeRequest, data) {
   const usage = (0, import_contentful_sdk_core76.toPlainObject)(copy(data));
@@ -33622,10 +33526,10 @@ function wrapAssetBandwidthUsageDetailedCollection(makeRequest2, data) {
   return collectionData;
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/environment-template.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/environment-template.mjs
 var import_contentful_sdk_core78 = __toESM(require_cjs2(), 1);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/create-environment-template-api.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/create-environment-template-api.mjs
 var import_contentful_sdk_core77 = __toESM(require_cjs2(), 1);
 function createEnvironmentTemplateApi(makeRequest2, organizationId) {
   return {
@@ -33892,7 +33796,7 @@ function createEnvironmentTemplateApi(makeRequest2, organizationId) {
   };
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/environment-template.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/environment-template.mjs
 function wrapEnvironmentTemplate(makeRequest2, data, organizationId) {
   const environmentTemplate = (0, import_contentful_sdk_core78.toPlainObject)(copy(data));
   const environmentTemplateApi = createEnvironmentTemplateApi(makeRequest2, organizationId);
@@ -33901,7 +33805,7 @@ function wrapEnvironmentTemplate(makeRequest2, data, organizationId) {
 }
 var wrapEnvironmentTemplateCollection = wrapCursorPaginatedCollection(wrapEnvironmentTemplate);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/oauth-application.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/oauth-application.mjs
 var import_contentful_sdk_core79 = __toESM(require_cjs2(), 1);
 var ScopeValues;
 (function(ScopeValues2) {
@@ -33948,7 +33852,7 @@ function wrapOAuthApplication(makeRequest2, data, userId) {
 }
 var wrapOAuthApplicationCollection = wrapCursorPaginatedCollection(wrapOAuthApplication);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/create-contentful-api.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/create-contentful-api.mjs
 function createClientApi(makeRequest2) {
   return {
     /**
@@ -34592,7 +34496,7 @@ function createClientApi(makeRequest2) {
   };
 }
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/plain/wrappers/wrap.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/plain/wrappers/wrap.mjs
 var wrap = ({ makeRequest: makeRequest2, defaults: defaults2 }, entityType, action) => {
   return (params, payload, headers) => (
     // @ts-expect-error see above
@@ -34607,7 +34511,7 @@ var wrap = ({ makeRequest: makeRequest2, defaults: defaults2 }, entityType, acti
   );
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/plain/plain-client.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/plain/plain-client.mjs
 var createPlainClient = (makeRequest2, defaults2) => {
   const wrapParams = { makeRequest: makeRequest2, defaults: defaults2 };
   return {
@@ -35315,7 +35219,7 @@ var createPlainClient = (makeRequest2, defaults2) => {
   };
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/constants/editor-interface-defaults/types.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/constants/editor-interface-defaults/types.mjs
 var WidgetNamespace;
 (function(WidgetNamespace2) {
   WidgetNamespace2["BUILTIN"] = "builtin";
@@ -35326,7 +35230,7 @@ var WidgetNamespace;
 })(WidgetNamespace || (WidgetNamespace = {}));
 var DEFAULT_EDITOR_ID = "default-editor";
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/constants/editor-interface-defaults/sidebar-defaults.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/constants/editor-interface-defaults/sidebar-defaults.mjs
 var SidebarWidgetTypes = {
   USERS: "users-widget",
   CONTENT_PREVIEW: "content-preview-widget",
@@ -35379,7 +35283,7 @@ var Users = {
   description: "Built-in - Displays users on the same entry."
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/constants/editor-interface-defaults/editors-defaults.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/constants/editor-interface-defaults/editors-defaults.mjs
 var EntryEditorWidgetTypes = {
   DEFAULT_EDITOR: {
     name: "Editor",
@@ -35410,7 +35314,7 @@ var TagsEditor = {
   name: EntryEditorWidgetTypes.TAGS_EDITOR.name
 };
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/constants/editor-interface-defaults/controls-defaults.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/constants/editor-interface-defaults/controls-defaults.mjs
 var INTERNAL_TO_API = {
   Symbol: { type: "Symbol" },
   Text: { type: "Text" },
@@ -35432,7 +35336,7 @@ var INTERNAL_TO_API = {
 };
 var FIELD_TYPES = Object.keys(INTERNAL_TO_API);
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/entities/workflow-definition.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/entities/workflow-definition.mjs
 var import_contentful_sdk_core81 = __toESM(require_cjs2(), 1);
 var WorkflowStepPermissionType;
 (function(WorkflowStepPermissionType2) {
@@ -35457,7 +35361,7 @@ var WorkflowStepActionType;
   WorkflowStepActionType2["Task"] = "task";
 })(WorkflowStepActionType || (WorkflowStepActionType = {}));
 
-// ../../node_modules/.pnpm/contentful-management@12.19.0_debug@4.4.3_supports-color@8.1.1__supports-color@8.1.1/node_modules/contentful-management/dist/esm/index.mjs
+// node_modules/.pnpm/contentful-management@12.19.2_debug@4.4.3/node_modules/contentful-management/dist/esm/index.mjs
 function createClient(clientOptions, opts = {}) {
   const sdkMain = opts.type === "legacy" ? "contentful-management.js" : "contentful-management-plain.js";
   const userAgent = (0, import_contentful_sdk_core82.getUserAgentHeader)(
@@ -35477,8 +35381,18 @@ function createClient(clientOptions, opts = {}) {
   }
 }
 
-// ../contentful-env-analysis/src/lib/database/generate-db.ts
-import { existsSync, mkdirSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
+// src/skills/contentful-env-analysis/lib/database/generate-db.ts
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  unlinkSync,
+  writeFileSync
+} from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { dirname, join, resolve } from "node:path";
 var json = (value) => JSON.stringify(value);
@@ -35504,6 +35418,16 @@ CREATE TABLE IF NOT EXISTS taxonomy_concepts (id INTEGER PRIMARY KEY AUTOINCREME
 `;
 function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
+}
+function writeSummary(path, value) {
+  const temporary = mkdtempSync(join(dirname(path), ".summary-"));
+  try {
+    const file = join(temporary, "summary.json");
+    writeFileSync(file, JSON.stringify(value, null, 2), { flag: "wx", mode: 384 });
+    renameSync(file, path);
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
 }
 function readArray(path, label) {
   if (!path || !existsSync(path)) return [];
@@ -35559,29 +35483,143 @@ function insertContentType(db, payload) {
   const ctId = id(s);
   if (!ctId) return;
   const fields = Array.isArray(payload.fields) ? payload.fields : [];
-  db.prepare(`INSERT INTO content_type (content_type_id,name,description,display_field,sys_type,sys_revision,sys_created_at,sys_updated_at,sys_urn,space_id,environment_id,raw_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`).run(...sqlValues(ctId, payload.name, payload.description, payload.displayField, s.type, s.revision, s.createdAt, s.updatedAt, s.urn, linkId(s.space), linkId(s.environment), json({ ...payload, fields: void 0 })));
+  db.prepare(
+    `INSERT INTO content_type (content_type_id,name,description,display_field,sys_type,sys_revision,sys_created_at,sys_updated_at,sys_urn,space_id,environment_id,raw_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
+  ).run(
+    ...sqlValues(
+      ctId,
+      payload.name,
+      payload.description,
+      payload.displayField,
+      s.type,
+      s.revision,
+      s.createdAt,
+      s.updatedAt,
+      s.urn,
+      linkId(s.space),
+      linkId(s.environment),
+      json({ ...payload, fields: void 0 })
+    )
+  );
   db.prepare("DELETE FROM field WHERE content_type_id = ?").run(ctId);
-  const stmt = db.prepare("INSERT INTO field (content_type_id,field_id,internal_field_id,position,api_name,name,field_type,link_type,localized,required,disabled,omitted,validations_json,items_json,default_value_json,raw_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+  const stmt = db.prepare(
+    "INSERT INTO field (content_type_id,field_id,internal_field_id,position,api_name,name,field_type,link_type,localized,required,disabled,omitted,validations_json,items_json,default_value_json,raw_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+  );
   fields.forEach((field, position) => {
     const f = record(field);
     const internalId = String(f.id ?? "");
     const apiName = String(f.apiName ?? internalId);
     if (!internalId) return;
-    stmt.run(...sqlValues(ctId, apiName, internalId, position, apiName, f.name, f.type, f.linkType, bool(f.localized), bool(f.required), bool(f.disabled), bool(f.omitted), json(f.validations ?? []), "items" in f ? json(f.items) : null, "defaultValue" in f ? json(f.defaultValue) : null, json(f)));
+    stmt.run(
+      ...sqlValues(
+        ctId,
+        apiName,
+        internalId,
+        position,
+        apiName,
+        f.name,
+        f.type,
+        f.linkType,
+        bool(f.localized),
+        bool(f.required),
+        bool(f.disabled),
+        bool(f.omitted),
+        json(f.validations ?? []),
+        "items" in f ? json(f.items) : null,
+        "defaultValue" in f ? json(f.defaultValue) : null,
+        json(f)
+      )
+    );
   });
 }
 function upsertFields(db, table, fieldsTable, entityId, payload, prefix) {
   const s = sys(payload);
   const fields = record(payload.fields);
   const body = { ...payload, fields: void 0 };
-  const columns = prefix === "entry" ? ["entry_id", "content_type_id", "sys_type", "sys_created_at", "sys_updated_at", "sys_first_published_at", "sys_published_at", "sys_version", "sys_published_version", "sys_published_counter", "space_id", "environment_id", "created_by_id", "updated_by_id", "published_by_id", "metadata_json", "raw_json"] : ["asset_id", "sys_type", "sys_created_at", "sys_updated_at", "sys_first_published_at", "sys_published_at", "sys_version", "sys_published_version", "sys_published_counter", "space_id", "environment_id", "created_by_id", "updated_by_id", "published_by_id", "metadata_json", "raw_json"];
-  const values = prefix === "entry" ? [entityId, linkId(s.contentType), s.type ?? null, s.createdAt ?? null, s.updatedAt ?? null, s.firstPublishedAt ?? null, s.publishedAt ?? null, s.version ?? null, s.publishedVersion ?? null, s.publishedCounter ?? null, linkId(s.space), linkId(s.environment), linkId(s.createdBy), linkId(s.updatedBy), linkId(s.publishedBy), json(payload.metadata ?? {}), json(body)] : [entityId, s.type ?? null, s.createdAt ?? null, s.updatedAt ?? null, s.firstPublishedAt ?? null, s.publishedAt ?? null, s.version ?? null, s.publishedVersion ?? null, s.publishedCounter ?? null, linkId(s.space), linkId(s.environment), linkId(s.createdBy), linkId(s.updatedBy), linkId(s.publishedBy), json(payload.metadata ?? {}), json(body)];
+  const columns = prefix === "entry" ? [
+    "entry_id",
+    "content_type_id",
+    "sys_type",
+    "sys_created_at",
+    "sys_updated_at",
+    "sys_first_published_at",
+    "sys_published_at",
+    "sys_version",
+    "sys_published_version",
+    "sys_published_counter",
+    "space_id",
+    "environment_id",
+    "created_by_id",
+    "updated_by_id",
+    "published_by_id",
+    "metadata_json",
+    "raw_json"
+  ] : [
+    "asset_id",
+    "sys_type",
+    "sys_created_at",
+    "sys_updated_at",
+    "sys_first_published_at",
+    "sys_published_at",
+    "sys_version",
+    "sys_published_version",
+    "sys_published_counter",
+    "space_id",
+    "environment_id",
+    "created_by_id",
+    "updated_by_id",
+    "published_by_id",
+    "metadata_json",
+    "raw_json"
+  ];
+  const values = prefix === "entry" ? [
+    entityId,
+    linkId(s.contentType),
+    s.type ?? null,
+    s.createdAt ?? null,
+    s.updatedAt ?? null,
+    s.firstPublishedAt ?? null,
+    s.publishedAt ?? null,
+    s.version ?? null,
+    s.publishedVersion ?? null,
+    s.publishedCounter ?? null,
+    linkId(s.space),
+    linkId(s.environment),
+    linkId(s.createdBy),
+    linkId(s.updatedBy),
+    linkId(s.publishedBy),
+    json(payload.metadata ?? {}),
+    json(body)
+  ] : [
+    entityId,
+    s.type ?? null,
+    s.createdAt ?? null,
+    s.updatedAt ?? null,
+    s.firstPublishedAt ?? null,
+    s.publishedAt ?? null,
+    s.version ?? null,
+    s.publishedVersion ?? null,
+    s.publishedCounter ?? null,
+    linkId(s.space),
+    linkId(s.environment),
+    linkId(s.createdBy),
+    linkId(s.updatedBy),
+    linkId(s.publishedBy),
+    json(payload.metadata ?? {}),
+    json(body)
+  ];
   const key = prefix === "entry" ? "entry_id" : "asset_id";
-  db.prepare(`INSERT OR REPLACE INTO ${table} (${columns.join(",")}) VALUES (${columns.map(() => "?").join(",")})`).run(...sqlValues(...values));
+  db.prepare(`INSERT OR REPLACE INTO ${table} (${columns.join(",")}) VALUES (${columns.map(() => "?").join(",")})`).run(
+    ...sqlValues(...values)
+  );
   db.prepare(`DELETE FROM ${fieldsTable} WHERE ${key} = ?`).run(entityId);
-  const stmt = db.prepare(`INSERT INTO ${fieldsTable} (${key},field_key,locale,value_type,value_json) VALUES (?,?,?,?,?)`);
+  const stmt = db.prepare(
+    `INSERT INTO ${fieldsTable} (${key},field_key,locale,value_type,value_json) VALUES (?,?,?,?,?)`
+  );
   for (const [fieldKey, localized] of Object.entries(fields)) {
-    if (localized && typeof localized === "object" && !Array.isArray(localized)) for (const [locale, value] of Object.entries(localized)) stmt.run(entityId, fieldKey, locale, valueType(value), json(value));
+    if (localized && typeof localized === "object" && !Array.isArray(localized))
+      for (const [locale, value] of Object.entries(localized))
+        stmt.run(entityId, fieldKey, locale, valueType(value), json(value));
     else stmt.run(entityId, fieldKey, "__raw__", valueType(localized), json(localized));
   }
 }
@@ -35600,25 +35638,50 @@ function insertSimple(db, table, key, payload, fields) {
     component_id: "component"
   };
   const names = [key, ...fields, "raw_json"];
-  const values = [entityId, ...fields.map((field) => {
-    if (field === "space_id" || field === "environment_id") return linkId(s[field.replace("_id", "")]);
-    if (field in systemFields) return s[systemFields[field]] ?? null;
-    if (field in resourceLinks) return resourceLinkId(s[resourceLinks[field]]);
-    if (field === "is_coded") return "componentTree" in payload ? 0 : 1;
-    if (field === "pref_label") return text(payload.prefLabel);
-    return payload[field] ?? s[field] ?? null;
-  }), json(payload)];
-  db.prepare(`INSERT OR REPLACE INTO ${table} (${names.join(",")}) VALUES (${names.map(() => "?").join(",")})`).run(...sqlValues(...values));
+  const values = [
+    entityId,
+    ...fields.map((field) => {
+      if (field === "space_id" || field === "environment_id") return linkId(s[field.replace("_id", "")]);
+      if (field in systemFields) return s[systemFields[field]] ?? null;
+      if (field in resourceLinks) return resourceLinkId(s[resourceLinks[field]]);
+      if (field === "is_coded") return "componentTree" in payload ? 0 : 1;
+      if (field === "pref_label") return text(payload.prefLabel);
+      return payload[field] ?? s[field] ?? null;
+    }),
+    json(payload)
+  ];
+  db.prepare(`INSERT OR REPLACE INTO ${table} (${names.join(",")}) VALUES (${names.map(() => "?").join(",")})`).run(
+    ...sqlValues(...values)
+  );
 }
 function insertProperties(db, table, parentColumn, parentId, payload) {
   db.prepare(`DELETE FROM ${table} WHERE ${parentColumn} = ?`).run(parentId);
-  const statement = db.prepare(`INSERT INTO ${table} (${parentColumn},property_id,position,kind,name,property_type,required,validations_json,default_value_json,raw_json) VALUES (?,?,?,?,?,?,?,?,?,?)`);
+  const statement = db.prepare(
+    `INSERT INTO ${table} (${parentColumn},property_id,position,kind,name,property_type,required,validations_json,default_value_json,raw_json) VALUES (?,?,?,?,?,?,?,?,?,?)`
+  );
   let position = 0;
-  for (const [kind, key] of [["content_property", "contentProperties"], ["design_property", "designProperties"], ["slot", "slots"]]) {
+  for (const [kind, key] of [
+    ["content_property", "contentProperties"],
+    ["design_property", "designProperties"],
+    ["slot", "slots"]
+  ]) {
     for (const property of Array.isArray(payload[key]) ? payload[key] : []) {
       const item = record(property);
       if (!item.id) continue;
-      statement.run(...sqlValues(parentId, item.id, position++, kind, item.name, item.type, bool(item.required), "validations" in item ? json(item.validations) : null, "default" in item ? json(item.default) : null, json(item)));
+      statement.run(
+        ...sqlValues(
+          parentId,
+          item.id,
+          position++,
+          kind,
+          item.name,
+          item.type,
+          bool(item.required),
+          "validations" in item ? json(item.validations) : null,
+          "default" in item ? json(item.default) : null,
+          json(item)
+        )
+      );
     }
   }
 }
@@ -35632,40 +35695,125 @@ function buildDatabase(sourceDir, dbPath, extraFiles = {}, inputFiles = {}) {
     const value = readJson(path);
     const payloads = Array.isArray(value) ? value : Array.isArray(record(value).items) ? record(value).items : [value];
     payloads.forEach((payload) => {
-      if (payload && typeof payload === "object" && !Array.isArray(payload)) insertContentType(db, payload);
+      if (payload && typeof payload === "object" && !Array.isArray(payload))
+        insertContentType(db, payload);
     });
   }
-  for (const entry of readArray(inputFiles.entries ?? join(sourceDir, "entries.json"), "Entries")) if (id(sys(entry))) upsertFields(db, "entries", "entry_fields", id(sys(entry)), entry, "entry");
-  for (const entry of readArray(inputFiles.publishedEntries ?? join(sourceDir, "published-entries.json"), "Published entries")) if (id(sys(entry))) upsertFields(db, "published_entries", "published_entry_fields", id(sys(entry)), entry, "entry");
-  for (const asset of readArray(inputFiles.assets ?? join(sourceDir, "assets.json"), "Assets")) if (id(sys(asset))) upsertFields(db, "assets", "asset_fields", id(sys(asset)), asset, "asset");
+  for (const entry of readArray(inputFiles.entries ?? join(sourceDir, "entries.json"), "Entries"))
+    if (id(sys(entry))) upsertFields(db, "entries", "entry_fields", id(sys(entry)), entry, "entry");
+  for (const entry of readArray(
+    inputFiles.publishedEntries ?? join(sourceDir, "published-entries.json"),
+    "Published entries"
+  ))
+    if (id(sys(entry))) upsertFields(db, "published_entries", "published_entry_fields", id(sys(entry)), entry, "entry");
+  for (const asset of readArray(inputFiles.assets ?? join(sourceDir, "assets.json"), "Assets"))
+    if (id(sys(asset))) upsertFields(db, "assets", "asset_fields", id(sys(asset)), asset, "asset");
   for (const component of items(join(sourceDir, "component-types.json"))) {
-    insertSimple(db, "component", "component_id", component, ["name", "description", "sys_type", "sys_version", "sys_created_at", "sys_updated_at", "variant", "variant_type", "variant_dimension", "space_id", "environment_id", "is_coded"]);
+    insertSimple(db, "component", "component_id", component, [
+      "name",
+      "description",
+      "sys_type",
+      "sys_version",
+      "sys_created_at",
+      "sys_updated_at",
+      "variant",
+      "variant_type",
+      "variant_dimension",
+      "space_id",
+      "environment_id",
+      "is_coded"
+    ]);
     insertProperties(db, "component_property", "component_id", id(sys(component)), component);
   }
   for (const template of items(join(sourceDir, "templates.json"))) {
-    insertSimple(db, "experience_template", "experience_template_id", template, ["name", "description", "sys_type", "sys_version", "sys_created_at", "sys_updated_at", "space_id", "environment_id"]);
+    insertSimple(db, "experience_template", "experience_template_id", template, [
+      "name",
+      "description",
+      "sys_type",
+      "sys_version",
+      "sys_created_at",
+      "sys_updated_at",
+      "space_id",
+      "environment_id"
+    ]);
     insertProperties(db, "experience_template_property", "experience_template_id", id(sys(template)), template);
   }
-  for (const experience of items(join(sourceDir, "experiences.json"))) insertSimple(db, "exo_experience", "experience_id", experience, ["name", "experience_template_id", "sys_version", "sys_created_at", "sys_updated_at", "space_id", "environment_id"]);
-  for (const fragment of items(join(sourceDir, "fragments.json"))) insertSimple(db, "exo_fragment", "fragment_id", fragment, ["name", "component_id", "sys_version", "sys_created_at", "sys_updated_at", "space_id", "environment_id"]);
-  for (const assembly of items(join(sourceDir, "data-assemblies.json"))) insertSimple(db, "exo_data_assembly", "data_assembly_id", assembly, ["name", "description", "sys_version", "sys_created_at", "sys_updated_at", "space_id", "environment_id"]);
-  for (const tag of extraFiles.tags ?? items(join(sourceDir, "tags.json"))) insertSimple(db, "tags", "tag_id", record(tag), ["name", "visibility"]);
-  for (const concept of extraFiles.concepts ?? items(join(sourceDir, "taxonomy-concepts.json"))) insertSimple(db, "taxonomy_concepts", "concept_id", record(concept), ["uri", "pref_label"]);
-  const tables = ["content_type", "field", "entries", "entry_fields", "published_entries", "published_entry_fields", "assets", "asset_fields", "component", "component_property", "experience_template", "experience_template_property", "exo_experience", "exo_fragment", "exo_data_assembly", "tags", "taxonomy_concepts"];
-  const counts = Object.fromEntries(tables.map((table) => {
-    const row = db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get();
-    return [table, Number(row?.count ?? 0)];
-  }));
-  const contentTypes = db.prepare(`
+  for (const experience of items(join(sourceDir, "experiences.json")))
+    insertSimple(db, "exo_experience", "experience_id", experience, [
+      "name",
+      "experience_template_id",
+      "sys_version",
+      "sys_created_at",
+      "sys_updated_at",
+      "space_id",
+      "environment_id"
+    ]);
+  for (const fragment of items(join(sourceDir, "fragments.json")))
+    insertSimple(db, "exo_fragment", "fragment_id", fragment, [
+      "name",
+      "component_id",
+      "sys_version",
+      "sys_created_at",
+      "sys_updated_at",
+      "space_id",
+      "environment_id"
+    ]);
+  for (const assembly of items(join(sourceDir, "data-assemblies.json")))
+    insertSimple(db, "exo_data_assembly", "data_assembly_id", assembly, [
+      "name",
+      "description",
+      "sys_version",
+      "sys_created_at",
+      "sys_updated_at",
+      "space_id",
+      "environment_id"
+    ]);
+  for (const tag of extraFiles.tags ?? items(join(sourceDir, "tags.json")))
+    insertSimple(db, "tags", "tag_id", record(tag), ["name", "visibility"]);
+  for (const concept of extraFiles.concepts ?? items(join(sourceDir, "taxonomy-concepts.json")))
+    insertSimple(db, "taxonomy_concepts", "concept_id", record(concept), ["uri", "pref_label"]);
+  const tables = [
+    "content_type",
+    "field",
+    "entries",
+    "entry_fields",
+    "published_entries",
+    "published_entry_fields",
+    "assets",
+    "asset_fields",
+    "component",
+    "component_property",
+    "experience_template",
+    "experience_template_property",
+    "exo_experience",
+    "exo_fragment",
+    "exo_data_assembly",
+    "tags",
+    "taxonomy_concepts"
+  ];
+  const counts = Object.fromEntries(
+    tables.map((table) => {
+      const row = db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get();
+      return [table, Number(row?.count ?? 0)];
+    })
+  );
+  const contentTypes = db.prepare(
+    `
     SELECT ct.content_type_id AS id, ct.name,
       (SELECT COUNT(*) FROM entries e WHERE e.content_type_id = ct.content_type_id) AS entry_count,
       (SELECT COUNT(*) FROM field f WHERE f.content_type_id = ct.content_type_id) AS field_count
     FROM content_type ct
     ORDER BY entry_count DESC, ct.content_type_id
-  `).all();
-  const summary = { generated_at: (/* @__PURE__ */ new Date()).toISOString(), tables: counts, content_types: contentTypes, locales: db.prepare("SELECT DISTINCT locale FROM entry_fields WHERE locale != '__raw__' ORDER BY locale").all().map((row) => row.locale) };
-  writeFileSync(join(dirname(dbPath), "summary.json"), JSON.stringify(summary, null, 2));
+  `
+  ).all();
+  const summary = {
+    generated_at: (/* @__PURE__ */ new Date()).toISOString(),
+    tables: counts,
+    content_types: contentTypes,
+    locales: db.prepare("SELECT DISTINCT locale FROM entry_fields WHERE locale != '__raw__' ORDER BY locale").all().map((row) => row.locale)
+  };
   db.close();
+  writeSummary(join(dirname(dbPath), "summary.json"), summary);
   return summary;
 }
 function refreshEntries(dbPath, entriesByContentType, tagsAndConcepts = {}) {
@@ -35678,10 +35826,13 @@ function refreshEntries(dbPath, entriesByContentType, tagsAndConcepts = {}) {
         db.prepare("DELETE FROM entry_fields WHERE entry_id = ?").run(entryId);
         db.prepare("DELETE FROM entries WHERE entry_id = ?").run(entryId);
       }
-      for (const entry of entries) if (id(sys(entry))) upsertFields(db, "entries", "entry_fields", id(sys(entry)), entry, "entry");
+      for (const entry of entries)
+        if (id(sys(entry))) upsertFields(db, "entries", "entry_fields", id(sys(entry)), entry, "entry");
     }
-    for (const tag of tagsAndConcepts.tags ?? []) insertSimple(db, "tags", "tag_id", record(tag), ["name", "visibility"]);
-    for (const concept of tagsAndConcepts.concepts ?? []) insertSimple(db, "taxonomy_concepts", "concept_id", record(concept), ["uri", "pref_label"]);
+    for (const tag of tagsAndConcepts.tags ?? [])
+      insertSimple(db, "tags", "tag_id", record(tag), ["name", "visibility"]);
+    for (const concept of tagsAndConcepts.concepts ?? [])
+      insertSimple(db, "taxonomy_concepts", "concept_id", record(concept), ["uri", "pref_label"]);
   } finally {
     db.close();
   }
@@ -35691,14 +35842,24 @@ function runGenerateDb(argv = process.argv.slice(2)) {
     const parsed = parseArgs(argv);
     const sourceDir = parsed.source ?? parsed.contentTypesDir;
     const summaryPath = join(dirname(parsed.dbPath), "summary.json");
-    const previousSummary = existsSync(summaryPath) ? record(readJson(summaryPath)) : {};
-    const summary = buildDatabase(sourceDir, parsed.dbPath, {}, {
-      entries: parsed.args.get("--entries-file"),
-      publishedEntries: parsed.args.get("--published-entries-file"),
-      assets: parsed.args.get("--assets-file")
-    });
+    let previousSummary = {};
+    try {
+      previousSummary = record(readJson(summaryPath));
+    } catch (error) {
+      if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) throw error;
+    }
+    const summary = buildDatabase(
+      sourceDir,
+      parsed.dbPath,
+      {},
+      {
+        entries: parsed.args.get("--entries-file"),
+        publishedEntries: parsed.args.get("--published-entries-file"),
+        assets: parsed.args.get("--assets-file")
+      }
+    );
     if (Object.keys(previousSummary).length > 0) {
-      writeFileSync(summaryPath, JSON.stringify({ ...previousSummary, ...summary }, null, 2));
+      writeSummary(summaryPath, { ...previousSummary, ...summary });
     }
     console.log(`Database: ${parsed.dbPath}`);
     return 0;
@@ -35708,7 +35869,7 @@ function runGenerateDb(argv = process.argv.slice(2)) {
   }
 }
 
-// ../contentful-env-analysis/src/lib/contentful-environment/fetch-space.ts
+// src/skills/contentful-env-analysis/lib/contentful-environment/fetch-space.ts
 var PAGE_LIMIT = 1e3;
 var ALPHA_HEADERS = {
   "X-Contentful-Enable-Alpha-Feature": "new-exo-entity-types"
@@ -35723,12 +35884,19 @@ function linkId2(value) {
 function envFileValues() {
   const path = process.env.CONTENTFUL_ENV_FILE;
   if (!path || !existsSync2(path)) return {};
-  return Object.fromEntries(readFileSync2(path, "utf8").split("\n").flatMap((line) => {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) return [];
-    const [key, ...rest] = trimmed.split("=");
-    return [[key.trim(), rest.join("=").trim().replace(/^['"]|['"]$/g, "")]];
-  }));
+  return Object.fromEntries(
+    readFileSync2(path, "utf8").split("\n").flatMap((line) => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) return [];
+      const [key, ...rest] = trimmed.split("=");
+      return [
+        [
+          key.trim(),
+          rest.join("=").trim().replace(/^['"]|['"]$/g, "")
+        ]
+      ];
+    })
+  );
 }
 function args(argv) {
   const env = envFileValues();
@@ -35748,7 +35916,9 @@ function args(argv) {
     skipIfPresent: values.has("--skip-if-present"),
     resultFile: values.get("--result-file"),
     refreshDb: values.get("--refresh-db"),
-    contentTypes: argv.flatMap((value, index) => value === "--content-type" && argv[index + 1] ? [argv[index + 1]] : [])
+    contentTypes: argv.flatMap(
+      (value, index) => value === "--content-type" && argv[index + 1] ? [argv[index + 1]] : []
+    )
   };
 }
 function hostUrl(host) {
@@ -35788,8 +35958,11 @@ async function fetchCursorCollection(fetchPage) {
 async function fetchExoCollection(client, path, headers = ALPHA_HEADERS) {
   try {
     const response = await rawGet(client, `${path}?limit=${PAGE_LIMIT}`, headers);
-    const items2 = (response.items ?? []).filter((item) => Boolean(item) && typeof item === "object");
-    if (items2.length >= PAGE_LIMIT) return { items: items2, status: "truncated", detail: `response filled the ${PAGE_LIMIT}-item page` };
+    const items2 = (response.items ?? []).filter(
+      (item) => Boolean(item) && typeof item === "object"
+    );
+    if (items2.length >= PAGE_LIMIT)
+      return { items: items2, status: "truncated", detail: `response filled the ${PAGE_LIMIT}-item page` };
     return { items: items2, status: "ok" };
   } catch (error) {
     const message = formatError(error);
@@ -35816,14 +35989,16 @@ function idsFromEntries(entries, assets = []) {
 async function fetchReferencedMetadata(client, spaceId, environmentId, organizationId, entries, assets = []) {
   const { tagIds, conceptIds } = idsFromEntries(entries, assets);
   const fetchReferenced = async (ids, fetch2) => {
-    const results = await Promise.all(ids.map(async (id2) => {
-      try {
-        return { id: id2, item: await fetch2(id2) };
-      } catch (error) {
-        if (errorStatus(error) === 404) return { id: id2 };
-        throw error;
-      }
-    }));
+    const results = await Promise.all(
+      ids.map(async (id2) => {
+        try {
+          return { id: id2, item: await fetch2(id2) };
+        } catch (error) {
+          if (errorStatus(error) === 404) return { id: id2 };
+          throw error;
+        }
+      })
+    );
     return {
       items: results.flatMap((result) => "item" in result ? [result.item] : []),
       missingIds: results.flatMap((result) => "item" in result ? [] : [result.id])
@@ -35889,7 +36064,12 @@ function writeJson(path, value) {
 function collectionSummary(collection, result) {
   const count = result.fetched ?? result.items.length;
   const countField = collection === "data_assemblies" ? "fetched" : "count";
-  return { status: result.status, collection, ...result.status === "ok" ? { [countField]: count } : {}, ...result.detail ? { detail: result.detail } : {} };
+  return {
+    status: result.status,
+    collection,
+    ...result.status === "ok" ? { [countField]: count } : {},
+    ...result.detail ? { detail: result.detail } : {}
+  };
 }
 function formatError(error) {
   const value = object(error);
@@ -35897,7 +36077,11 @@ function formatError(error) {
   return status ? `HTTP ${status}: ${String(value.message ?? error)}` : error instanceof Error ? error.message : String(error);
 }
 async function fetchSpace(options) {
-  const missing = [["token", options.token], ["space-id", options.spaceId], ["environment-id", options.environmentId]].filter(([, value]) => !value).map(([name]) => name);
+  const missing = [
+    ["token", options.token],
+    ["space-id", options.spaceId],
+    ["environment-id", options.environmentId]
+  ].filter(([, value]) => !value).map(([name]) => name);
   if (missing.length) throw new Error(`missing ${missing.join(", ")}; provide flags or the working .env`);
   const token = options.token;
   const spaceId = options.spaceId;
@@ -35910,8 +36094,10 @@ async function fetchSpace(options) {
     } catch {
       throw new Error(`existing snapshot has no valid summary.json: ${resolve2(options.outDir)}`);
     }
-    if (!Object.keys(summary2).length) throw new Error(`existing snapshot has no valid summary.json: ${resolve2(options.outDir)}`);
-    if (summary2.space_id !== spaceId || summary2.environment_id !== environmentId) throw new Error(`existing snapshot does not belong to ${spaceId}/${environmentId}: ${options.outDir}`);
+    if (!Object.keys(summary2).length)
+      throw new Error(`existing snapshot has no valid summary.json: ${resolve2(options.outDir)}`);
+    if (summary2.space_id !== spaceId || summary2.environment_id !== environmentId)
+      throw new Error(`existing snapshot does not belong to ${spaceId}/${environmentId}: ${options.outDir}`);
     console.log(`Using existing snapshot: ${resolve2(options.outDir)}`);
     if (options.resultFile) writeFileSync2(options.resultFile, resolve2(options.outDir), "utf8");
     return 0;
@@ -35936,7 +36122,7 @@ async function fetchSpace(options) {
   if (options.refreshDb) {
     if (!existsSync2(options.refreshDb)) throw new Error(`SQLite db not found: ${options.refreshDb}`);
     const fetched = {};
-    for (const contentType of [...new Set(options.contentTypes)]) {
+    for (const contentType of new Set(options.contentTypes)) {
       const entries3 = await fetchCursorCollection((pageNext) => {
         const query2 = new URLSearchParams({
           cursor: "true",
@@ -35951,7 +36137,9 @@ async function fetchSpace(options) {
     const entries2 = Object.values(fetched).flat();
     const tagsAndConcepts2 = await fetchReferencedMetadata(client, spaceId, environmentId, organizationId, entries2);
     refreshEntries(resolve2(options.refreshDb), fetched, tagsAndConcepts2);
-    console.log(`Refreshed ${Object.values(fetched).reduce((count, entries3) => count + entries3.length, 0)} entries in ${options.refreshDb}`);
+    console.log(
+      `Refreshed ${Object.values(fetched).reduce((count, entries3) => count + entries3.length, 0)} entries in ${options.refreshDb}`
+    );
     return 0;
   }
   const spaceName = space.name || spaceId;
@@ -35959,7 +36147,10 @@ async function fetchSpace(options) {
   mkdirSync2(outRoot, { recursive: true });
   const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[-:TZ.]/g, "").slice(0, 15);
   const environmentSlug = environmentId.replace(/[^a-zA-Z0-9_-]+/g, "-");
-  const dataDir = join2(outRoot, `${String(spaceName).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}-${environmentSlug}-${stamp}`);
+  const dataDir = join2(
+    outRoot,
+    `${String(spaceName).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}-${environmentSlug}-${stamp}`
+  );
   const rawDir = join2(dataDir, "raw");
   mkdirSync2(rawDir, { recursive: true });
   if (options.skipIfPresent && existsSync2(join2(dataDir, "contentful-unified.db"))) return 0;
@@ -35977,7 +36168,14 @@ async function fetchSpace(options) {
     const query2 = new URLSearchParams({ cursor: "true", limit: String(PAGE_LIMIT), ...pageNext ? { pageNext } : {} });
     return rawGet(client, `${base}/entries?${query2}`);
   });
-  const tagsAndConcepts = await fetchReferencedMetadata(client, spaceId, environmentId, organizationId, entries, assets);
+  const tagsAndConcepts = await fetchReferencedMetadata(
+    client,
+    spaceId,
+    environmentId,
+    organizationId,
+    entries,
+    assets
+  );
   writeJson(join2(rawDir, "ct-all.json"), { items: contentTypes });
   writeJson(join2(rawDir, "entries.json"), entries);
   writeJson(join2(rawDir, "assets.json"), assets);
@@ -35988,10 +36186,22 @@ async function fetchSpace(options) {
   const dataAssemblies = await fetchDataAssemblies(client, spaceId, environmentId, templates, componentTypes);
   const experiences = await fetchExoCollection(client, `${base}/experiences`);
   const fragments = await fetchExoCollection(client, `${base}/experience_fragments`);
-  for (const [name, collection] of [["component-types.json", componentTypes], ["templates.json", templates], ["data-assemblies.json", dataAssemblies], ["experiences.json", experiences], ["fragments.json", fragments]]) {
+  for (const [name, collection] of [
+    ["component-types.json", componentTypes],
+    ["templates.json", templates],
+    ["data-assemblies.json", dataAssemblies],
+    ["experiences.json", experiences],
+    ["fragments.json", fragments]
+  ]) {
     if (collection.status === "ok") writeJson(join2(rawDir, name), { items: collection.items });
-    else if (collection.status === "truncated") console.log(`TRUNCATED \u2014 /${name.replace(".json", "").replace("component-types", "components").replace("templates", "experience_templates").replace("fragments", "experience_fragments")} filled the ${PAGE_LIMIT}-item page`);
-    else console.log(`UNAVAILABLE \u2014 /${name.replace(".json", "").replace("component-types", "components").replace("templates", "experience_templates").replace("fragments", "experience_fragments")} is not served for this space; recorded as unavailable, not 0`);
+    else if (collection.status === "truncated")
+      console.log(
+        `TRUNCATED \u2014 /${name.replace(".json", "").replace("component-types", "components").replace("templates", "experience_templates").replace("fragments", "experience_fragments")} filled the ${PAGE_LIMIT}-item page`
+      );
+    else
+      console.log(
+        `UNAVAILABLE \u2014 /${name.replace(".json", "").replace("component-types", "components").replace("templates", "experience_templates").replace("fragments", "experience_fragments")} is not served for this space; recorded as unavailable, not 0`
+      );
   }
   const dbPath = join2(dataDir, "contentful-unified.db");
   const summary = buildDatabase(rawDir, dbPath);
@@ -36002,16 +36212,28 @@ async function fetchSpace(options) {
     experiences: collectionSummary("experiences", experiences),
     experienceFragments: collectionSummary("experience_fragments", fragments)
   };
-  Object.assign(summary, { space_id: spaceId, space_name: spaceName, environment_id: environmentId, api_host: options.apiHost, metadata: tagsAndConcepts.counts, ...exoEntities, exo_entities: exoEntities });
+  Object.assign(summary, {
+    space_id: spaceId,
+    space_name: spaceName,
+    environment_id: environmentId,
+    api_host: options.apiHost,
+    metadata: tagsAndConcepts.counts,
+    ...exoEntities,
+    exo_entities: exoEntities
+  });
   writeJson(join2(dataDir, "summary.json"), summary);
   if (!options.keepDb) writeFileSync2(`${dbPath}.gz`, gzipSync(readFileSync2(dbPath)));
   if (!options.keepDb) await import("node:fs/promises").then(({ unlink }) => unlink(dbPath));
   if (options.resultFile) writeFileSync2(options.resultFile, dataDir, "utf8");
-  if (Object.values({ componentTypes, templates, dataAssemblies, experiences, fragments }).some((collection) => collection.status === "truncated")) {
+  if (Object.values({ componentTypes, templates, dataAssemblies, experiences, fragments }).some(
+    (collection) => collection.status === "truncated"
+  )) {
     console.error("ERROR: this snapshot is incomplete because an ExO collection was truncated");
     return 1;
   }
-  console.log(`Fetched ${entries.length} entries, ${tagsAndConcepts.tags.length} tags, ${tagsAndConcepts.concepts.length} taxonomy concepts`);
+  console.log(
+    `Fetched ${entries.length} entries, ${tagsAndConcepts.tags.length} tags, ${tagsAndConcepts.concepts.length} taxonomy concepts`
+  );
   return 0;
 }
 async function runFetchSpace(argv = process.argv.slice(2)) {
@@ -36023,11 +36245,11 @@ async function runFetchSpace(argv = process.argv.slice(2)) {
   }
 }
 
-// ../contentful-env-analysis/src/lib/database/query.ts
+// src/skills/contentful-env-analysis/lib/database/query.ts
 import { existsSync as existsSync3 } from "node:fs";
 import { DatabaseSync as DatabaseSync2 } from "node:sqlite";
 
-// ../contentful-env-analysis/src/lib/shared/args.ts
+// src/skills/contentful-env-analysis/lib/shared/args.ts
 function parseArgs2(argv) {
   const out = {};
   for (let i = 0; i < argv.length; i++) {
@@ -36060,7 +36282,7 @@ function requiredStringArg(args2, key) {
   return value;
 }
 
-// ../contentful-env-analysis/src/lib/shared/is-direct-execution.ts
+// src/skills/contentful-env-analysis/lib/shared/is-direct-execution.ts
 import { realpathSync } from "node:fs";
 import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -36071,7 +36293,7 @@ function isDirectExecution(moduleUrl, executablePath = process.argv[1], executab
   return realpathSync(fileURLToPath(moduleUrl)) === executable;
 }
 
-// ../contentful-env-analysis/src/lib/database/query.ts
+// src/skills/contentful-env-analysis/lib/database/query.ts
 function safeSql(sql) {
   const value = sql.trim().replace(/;\s*$/, "");
   if (!/^(SELECT|WITH|EXPLAIN)\b/i.test(value)) {
@@ -36083,7 +36305,11 @@ function safeSql(sql) {
 function queryDatabase(dbPath, sql, limit = 200) {
   if (!existsSync3(dbPath)) throw new Error(`Database not found: ${dbPath}`);
   if (!Number.isInteger(limit) || limit < 1 || limit > 1e4) throw new Error("--limit must be between 1 and 10000");
-  const db = new DatabaseSync2(dbPath, { readOnly: true, allowExtension: false, enableDoubleQuotedStringLiterals: false });
+  const db = new DatabaseSync2(dbPath, {
+    readOnly: true,
+    allowExtension: false,
+    enableDoubleQuotedStringLiterals: false
+  });
   try {
     db.exec("PRAGMA query_only = ON; PRAGMA trusted_schema = OFF;");
     const statement = db.prepare(safeSql(sql));
@@ -36095,10 +36321,11 @@ function queryDatabase(dbPath, sql, limit = 200) {
         truncated = true;
         break;
       }
-      rows.push(Object.fromEntries(Object.entries(row).map(([key, value]) => [
-        key,
-        typeof value === "bigint" ? Number(value) : value
-      ])));
+      rows.push(
+        Object.fromEntries(
+          Object.entries(row).map(([key, value]) => [key, typeof value === "bigint" ? Number(value) : value])
+        )
+      );
     }
     return { columns, rows, truncated };
   } finally {
@@ -36124,7 +36351,7 @@ if (isDirectExecution(import.meta.url, process.argv[1], ["query.ts", "query.js"]
   process.exitCode = runQuery();
 }
 
-// ../contentful-env-analysis/src/lib/database/validate-db.ts
+// src/skills/contentful-env-analysis/lib/database/validate-db.ts
 import { existsSync as existsSync4 } from "node:fs";
 import { DatabaseSync as DatabaseSync3 } from "node:sqlite";
 var REQUIRED_SNAPSHOT_TABLES = [
@@ -36146,10 +36373,12 @@ function validateDatabase(dbPath) {
     const tables = new Set(tableRows.flatMap((row) => typeof row.name === "string" ? [row.name] : []));
     const missingTables = REQUIRED_SNAPSHOT_TABLES.filter((table) => !tables.has(table));
     if (missingTables.length > 0) return { ok: false, missingTables, counts: {} };
-    const counts = Object.fromEntries(REQUIRED_SNAPSHOT_TABLES.map((table) => {
-      const row = db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get();
-      return [table, numberValue(row?.count)];
-    }));
+    const counts = Object.fromEntries(
+      REQUIRED_SNAPSHOT_TABLES.map((table) => {
+        const row = db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get();
+        return [table, numberValue(row?.count)];
+      })
+    );
     return { ok: true, missingTables: [], counts };
   } finally {
     db.close();
@@ -36176,7 +36405,7 @@ function runValidateDatabase(argv = process.argv.slice(2)) {
   }
 }
 
-// ../contentful-env-analysis/src/lib/space-analysis/startup-inventory.ts
+// src/skills/contentful-env-analysis/lib/space-analysis/startup-inventory.ts
 import { existsSync as existsSync5, readFileSync as readFileSync3 } from "node:fs";
 import { DatabaseSync as DatabaseSync4 } from "node:sqlite";
 import { join as join3 } from "node:path";
@@ -36203,14 +36432,16 @@ function collectionStatus(summary, key) {
 }
 function loadEnvironmentFile(path) {
   if (!existsSync5(path)) return {};
-  return Object.fromEntries(readFileSync3(path, "utf8").split("\n").flatMap((line) => {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) return [];
-    const [key, ...rest] = trimmed.split("=");
-    const raw = rest.join("=").trim();
-    const value = raw.length >= 2 && raw[0] === raw.at(-1) && (raw[0] === '"' || raw[0] === "'") ? raw.slice(1, -1) : raw;
-    return [[key.trim(), value]];
-  }));
+  return Object.fromEntries(
+    readFileSync3(path, "utf8").split("\n").flatMap((line) => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) return [];
+      const [key, ...rest] = trimmed.split("=");
+      const raw = rest.join("=").trim();
+      const value = raw.length >= 2 && raw[0] === raw.at(-1) && (raw[0] === '"' || raw[0] === "'") ? raw.slice(1, -1) : raw;
+      return [[key.trim(), value]];
+    })
+  );
 }
 function tableExists(db, name) {
   return db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(name) !== void 0;
@@ -36224,13 +36455,17 @@ function scalar(db, sql, ...params) {
   }
 }
 function referencedEntryIds(db) {
-  return new Set(db.prepare(`
+  return new Set(
+    db.prepare(
+      `
     SELECT DISTINCT json_extract(node.value, '$.sys.id') AS entry_id
     FROM entry_fields field, json_tree(field.value_json) node
     WHERE node.type = 'object'
       AND json_extract(node.value, '$.sys.linkType') = 'Entry'
       AND json_type(node.value, '$.sys.id') = 'text'
-  `).all().flatMap((row) => typeof row.entry_id === "string" ? [row.entry_id] : []));
+  `
+    ).all().flatMap((row) => typeof row.entry_id === "string" ? [row.entry_id] : [])
+  );
 }
 function gatherInventory(dataDir) {
   const dbPath = join3(dataDir, "contentful-unified.db");
@@ -36302,10 +36537,9 @@ function gatherInventory(dataDir) {
     if (tableExists(db, "component")) {
       inventory.componentCodedCount = scalar(db, "SELECT COUNT(*) FROM component WHERE is_coded = 1");
       inventory.componentCompositeCount = scalar(db, "SELECT COUNT(*) FROM component WHERE is_coded = 0");
-      inventory.componentNames = db.prepare(
-        "SELECT name FROM component WHERE name IS NOT NULL ORDER BY name LIMIT 5"
-      ).all().flatMap((row) => typeof row.name === "string" ? [row.name] : []);
-      inventory.components = db.prepare(`
+      inventory.componentNames = db.prepare("SELECT name FROM component WHERE name IS NOT NULL ORDER BY name LIMIT 5").all().flatMap((row) => typeof row.name === "string" ? [row.name] : []);
+      inventory.components = db.prepare(
+        `
         SELECT c.component_id, c.name, c.is_coded,
           SUM(CASE WHEN cp.kind = 'content_property' THEN 1 ELSE 0 END) AS content_properties,
           SUM(CASE WHEN cp.kind = 'design_property' THEN 1 ELSE 0 END) AS design_properties,
@@ -36315,19 +36549,25 @@ function gatherInventory(dataDir) {
         LEFT JOIN component_property cp ON cp.component_id = c.component_id
         GROUP BY c.component_id, c.name, c.is_coded
         ORDER BY c.name, c.component_id
-      `).all().flatMap((row) => typeof row.component_id === "string" ? [{
-        id: row.component_id,
-        name: stringValue(row.name) ?? row.component_id,
-        kind: numberValue2(row.is_coded) === 1 ? "coded" : "composite",
-        contentPropertyCount: numberValue2(row.content_properties),
-        designPropertyCount: numberValue2(row.design_properties),
-        slotCount: numberValue2(row.slots),
-        fragmentCount: numberValue2(row.fragments)
-      }] : []);
+      `
+      ).all().flatMap(
+        (row) => typeof row.component_id === "string" ? [
+          {
+            id: row.component_id,
+            name: stringValue(row.name) ?? row.component_id,
+            kind: numberValue2(row.is_coded) === 1 ? "coded" : "composite",
+            contentPropertyCount: numberValue2(row.content_properties),
+            designPropertyCount: numberValue2(row.design_properties),
+            slotCount: numberValue2(row.slots),
+            fragmentCount: numberValue2(row.fragments)
+          }
+        ] : []
+      );
     }
     if (tableExists(db, "experience_template")) {
       inventory.experienceTemplateCount = scalar(db, "SELECT COUNT(*) FROM experience_template");
-      inventory.experienceTemplates = db.prepare(`
+      inventory.experienceTemplates = db.prepare(
+        `
         SELECT t.experience_template_id, t.name,
           SUM(CASE WHEN p.kind = 'content_property' THEN 1 ELSE 0 END) AS content_properties,
           SUM(CASE WHEN p.kind = 'design_property' THEN 1 ELSE 0 END) AS design_properties,
@@ -36339,66 +36579,85 @@ function gatherInventory(dataDir) {
           ON p.experience_template_id = t.experience_template_id
         GROUP BY t.experience_template_id, t.name
         ORDER BY t.name, t.experience_template_id
-      `).all().flatMap((row) => typeof row.experience_template_id === "string" ? [{
-        id: row.experience_template_id,
-        name: stringValue(row.name) ?? row.experience_template_id,
-        contentPropertyCount: numberValue2(row.content_properties),
-        designPropertyCount: numberValue2(row.design_properties),
-        slotCount: numberValue2(row.slots),
-        experienceCount: numberValue2(row.experiences)
-      }] : []);
+      `
+      ).all().flatMap(
+        (row) => typeof row.experience_template_id === "string" ? [
+          {
+            id: row.experience_template_id,
+            name: stringValue(row.name) ?? row.experience_template_id,
+            contentPropertyCount: numberValue2(row.content_properties),
+            designPropertyCount: numberValue2(row.design_properties),
+            slotCount: numberValue2(row.slots),
+            experienceCount: numberValue2(row.experiences)
+          }
+        ] : []
+      );
     }
     if (tableExists(db, "exo_experience")) {
       inventory.experienceCount = scalar(db, "SELECT COUNT(*) FROM exo_experience");
-      inventory.experiences = db.prepare(`
+      inventory.experiences = db.prepare(
+        `
         SELECT e.experience_id, e.name, e.experience_template_id, t.name AS template_name
         FROM exo_experience e
         LEFT JOIN experience_template t
           ON t.experience_template_id = e.experience_template_id
         ORDER BY e.name, e.experience_id
-      `).all().flatMap((row) => typeof row.experience_id === "string" ? [{
-        id: row.experience_id,
-        name: stringValue(row.name) ?? row.experience_id,
-        schemaId: stringValue(row.experience_template_id),
-        schemaName: stringValue(row.template_name)
-      }] : []);
+      `
+      ).all().flatMap(
+        (row) => typeof row.experience_id === "string" ? [
+          {
+            id: row.experience_id,
+            name: stringValue(row.name) ?? row.experience_id,
+            schemaId: stringValue(row.experience_template_id),
+            schemaName: stringValue(row.template_name)
+          }
+        ] : []
+      );
     }
     if (tableExists(db, "exo_fragment")) {
       inventory.fragmentCount = scalar(db, "SELECT COUNT(*) FROM exo_fragment");
-      inventory.fragments = db.prepare(`
+      inventory.fragments = db.prepare(
+        `
         SELECT f.fragment_id, f.name, f.component_id, c.name AS component_name
         FROM exo_fragment f
         LEFT JOIN component c ON c.component_id = f.component_id
         ORDER BY f.name, f.fragment_id
-      `).all().flatMap((row) => typeof row.fragment_id === "string" ? [{
-        id: row.fragment_id,
-        name: stringValue(row.name) ?? row.fragment_id,
-        schemaId: stringValue(row.component_id),
-        schemaName: stringValue(row.component_name)
-      }] : []);
+      `
+      ).all().flatMap(
+        (row) => typeof row.fragment_id === "string" ? [
+          {
+            id: row.fragment_id,
+            name: stringValue(row.name) ?? row.fragment_id,
+            schemaId: stringValue(row.component_id),
+            schemaName: stringValue(row.component_name)
+          }
+        ] : []
+      );
     }
     if (tableExists(db, "exo_data_assembly")) {
       inventory.exoDataAssemblyCount = scalar(db, "SELECT COUNT(*) FROM exo_data_assembly");
-      inventory.dataAssemblies = db.prepare(`
+      inventory.dataAssemblies = db.prepare(
+        `
         SELECT data_assembly_id, name
         FROM exo_data_assembly
         ORDER BY name, data_assembly_id
-      `).all().flatMap((row) => typeof row.data_assembly_id === "string" ? [{
-        id: row.data_assembly_id,
-        name: stringValue(row.name) ?? row.data_assembly_id
-      }] : []);
+      `
+      ).all().flatMap(
+        (row) => typeof row.data_assembly_id === "string" ? [
+          {
+            id: row.data_assembly_id,
+            name: stringValue(row.name) ?? row.data_assembly_id
+          }
+        ] : []
+      );
     }
     if (!inventory.spaceId && tableExists(db, "entries")) {
-      const row = db.prepare(
-        "SELECT space_id, environment_id FROM entries WHERE space_id IS NOT NULL LIMIT 1"
-      ).get();
+      const row = db.prepare("SELECT space_id, environment_id FROM entries WHERE space_id IS NOT NULL LIMIT 1").get();
       inventory.spaceId = stringValue(row?.space_id);
       inventory.environmentId ??= stringValue(row?.environment_id);
     }
     if (tableExists(db, "entry_fields")) {
-      inventory.locales = db.prepare(
-        "SELECT DISTINCT locale FROM entry_fields WHERE locale != '__raw__' ORDER BY locale"
-      ).all().flatMap((row) => typeof row.locale === "string" ? [row.locale] : []);
+      inventory.locales = db.prepare("SELECT DISTINCT locale FROM entry_fields WHERE locale != '__raw__' ORDER BY locale").all().flatMap((row) => typeof row.locale === "string" ? [row.locale] : []);
     }
     if (tableExists(db, "content_type")) {
       const referencedIds = tableExists(db, "entry_fields") ? referencedEntryIds(db) : /* @__PURE__ */ new Set();
@@ -36409,42 +36668,48 @@ function gatherInventory(dataDir) {
            ct.name`
       ).all().flatMap((row) => {
         if (typeof row.content_type_id !== "string" || typeof row.name !== "string") return [];
-        return [{
-          id: row.content_type_id,
-          name: row.name,
-          entryCount: scalar(db, "SELECT COUNT(*) FROM entries WHERE content_type_id = ?", row.content_type_id),
-          publishedEntryCount: scalar(
-            db,
-            "SELECT COUNT(*) FROM entries WHERE content_type_id = ? AND sys_published_at IS NOT NULL",
-            row.content_type_id
-          ),
-          draftOnlyEntryCount: scalar(
-            db,
-            "SELECT COUNT(*) FROM entries WHERE content_type_id = ? AND sys_published_at IS NULL",
-            row.content_type_id
-          ),
-          potentiallyUnreferencedEntryCount: db.prepare(
-            "SELECT entry_id FROM entries WHERE content_type_id = ?"
-          ).all(row.content_type_id).filter((entry) => typeof entry.entry_id === "string" && !referencedIds.has(entry.entry_id)).length,
-          fieldCount: scalar(db, "SELECT COUNT(*) FROM field WHERE content_type_id = ?", row.content_type_id)
-        }];
+        return [
+          {
+            id: row.content_type_id,
+            name: row.name,
+            entryCount: scalar(db, "SELECT COUNT(*) FROM entries WHERE content_type_id = ?", row.content_type_id),
+            publishedEntryCount: scalar(
+              db,
+              "SELECT COUNT(*) FROM entries WHERE content_type_id = ? AND sys_published_at IS NOT NULL",
+              row.content_type_id
+            ),
+            draftOnlyEntryCount: scalar(
+              db,
+              "SELECT COUNT(*) FROM entries WHERE content_type_id = ? AND sys_published_at IS NULL",
+              row.content_type_id
+            ),
+            potentiallyUnreferencedEntryCount: db.prepare("SELECT entry_id FROM entries WHERE content_type_id = ?").all(row.content_type_id).filter((entry) => typeof entry.entry_id === "string" && !referencedIds.has(entry.entry_id)).length,
+            fieldCount: scalar(db, "SELECT COUNT(*) FROM field WHERE content_type_id = ?", row.content_type_id)
+          }
+        ];
       });
       if (tableExists(db, "field")) {
-        inventory.richTextFields = db.prepare(`
+        inventory.richTextFields = db.prepare(
+          `
           SELECT f.content_type_id, ct.name AS content_type_name, f.field_id, f.name AS field_name
           FROM field f
           JOIN content_type ct ON ct.content_type_id = f.content_type_id
           WHERE f.field_type = 'RichText'
           ORDER BY ct.name, f.position
-        `).all().flatMap((row) => {
-          if (typeof row.content_type_id !== "string" || typeof row.content_type_name !== "string" || typeof row.field_id !== "string") return [];
-          return [{
-            contentTypeId: row.content_type_id,
-            contentTypeName: row.content_type_name,
-            fieldId: row.field_id,
-            fieldName: typeof row.field_name === "string" ? row.field_name : row.field_id,
-            entryCount: scalar(db, "SELECT COUNT(*) FROM entries WHERE content_type_id = ?", row.content_type_id),
-            populatedEntryCount: scalar(db, `
+        `
+        ).all().flatMap((row) => {
+          if (typeof row.content_type_id !== "string" || typeof row.content_type_name !== "string" || typeof row.field_id !== "string")
+            return [];
+          return [
+            {
+              contentTypeId: row.content_type_id,
+              contentTypeName: row.content_type_name,
+              fieldId: row.field_id,
+              fieldName: typeof row.field_name === "string" ? row.field_name : row.field_id,
+              entryCount: scalar(db, "SELECT COUNT(*) FROM entries WHERE content_type_id = ?", row.content_type_id),
+              populatedEntryCount: scalar(
+                db,
+                `
               SELECT COUNT(*) FROM entries e
               WHERE e.content_type_id = ? AND EXISTS (
                 SELECT 1 FROM entry_fields ef, json_tree(ef.value_json) value
@@ -36452,17 +36717,26 @@ function gatherInventory(dataDir) {
                   AND ((value.key = 'value' AND typeof(value.value) = 'text' AND trim(value.value) != '')
                     OR (value.key = 'linkType' AND value.value = 'Entry'))
               )
-            `, row.content_type_id, row.field_id),
-            emptyEntryCount: 0,
-            entryLinkCount: scalar(db, `
+            `,
+                row.content_type_id,
+                row.field_id
+              ),
+              emptyEntryCount: 0,
+              entryLinkCount: scalar(
+                db,
+                `
               SELECT COUNT(*) FROM entries e
               WHERE e.content_type_id = ? AND EXISTS (
                 SELECT 1 FROM entry_fields ef, json_tree(ef.value_json) value
                 WHERE ef.entry_id = e.entry_id AND ef.field_key = ?
                   AND value.key = 'linkType' AND value.value = 'Entry'
               )
-            `, row.content_type_id, row.field_id)
-          }];
+            `,
+                row.content_type_id,
+                row.field_id
+              )
+            }
+          ];
         });
         for (const field of inventory.richTextFields) {
           field.emptyEntryCount = field.entryCount - field.populatedEntryCount;
@@ -36603,12 +36877,14 @@ function runInventory(argv = process.argv.slice(2)) {
     const args2 = parseArgs2(argv);
     const dataDir = requiredStringArg(args2, "data-dir");
     const render = requiredStringArg(args2, "render");
-    if (render !== "human") throw new Error("--render must be human");
+    if (render !== "human" && render !== "json") throw new Error("--render must be human or json");
     const envFile = stringArg(args2, "env-file") ?? ".env";
     const inventory = gatherInventory(dataDir);
     computeInventoryWarnings(inventory, loadEnvironmentFile(envFile));
-    process.stdout.write(`${renderHumanInventory(inventory)}
-`);
+    process.stdout.write(
+      `${render === "json" ? JSON.stringify({ schemaVersion: 1, inventory }, null, 2) : renderHumanInventory(inventory)}
+`
+    );
     return 0;
   } catch (error) {
     console.error(`ERROR: ${error instanceof Error ? error.message : String(error)}`);
@@ -36616,7 +36892,7 @@ function runInventory(argv = process.argv.slice(2)) {
   }
 }
 
-// ../contentful-env-analysis/src/main.ts
+// src/skills/contentful-env-analysis/main.ts
 var WORK_DIR = ".contentful-env-analysis";
 function projectBase() {
   const segments = process.cwd().split(sep);
@@ -36631,12 +36907,17 @@ function runInit(argv) {
   mkdirSync3(join4(root, "snapshots"), { recursive: true });
   writeFileSync3(join4(root, ".gitignore"), "*\n");
   const envPath = join4(root, ".env");
-  if (!existsSync6(envPath)) {
-    writeFileSync3(envPath, "CONTENTFUL_CMA_TOKEN=\nSPACE_ID=\nENVIRONMENT_ID=\nAPI_HOST=api.contentful.com\n");
+  try {
+    writeFileSync3(envPath, "CONTENTFUL_CMA_TOKEN=\nSPACE_ID=\nENVIRONMENT_ID=\nAPI_HOST=api.contentful.com\n", {
+      flag: "wx",
+      mode: 384
+    });
+  } catch (error) {
+    if (!(error instanceof Error && "code" in error && error.code === "EEXIST")) throw error;
   }
-  console.log(`Working folder: ${root}`);
-  console.log(`Credentials: ${envPath}`);
-  console.log("Next: add CONTENTFUL_CMA_TOKEN, SPACE_ID, and ENVIRONMENT_ID to that file.");
+  console.error(`Working folder: ${root}`);
+  console.error(`Credentials: ${envPath}`);
+  console.error("Next: add CONTENTFUL_CMA_TOKEN, SPACE_ID, and ENVIRONMENT_ID to that file.");
   return 0;
 }
 function snapshots(root) {
@@ -36648,8 +36929,12 @@ function snapshots(root) {
       if (!statSync(join4(path, "contentful-unified.db")).isFile()) return [];
       const summary = JSON.parse(readFileSync4(join4(path, "summary.json"), "utf8"));
       if (!summary || typeof summary !== "object" || Array.isArray(summary)) return [];
-      if (!("space_id" in summary) || typeof summary.space_id !== "string" || !summary.space_id || !("environment_id" in summary) || typeof summary.environment_id !== "string" || !summary.environment_id) return [];
-      if (Object.values(summary).some((value) => value && typeof value === "object" && "status" in value && value.status === "truncated")) return [];
+      if (!("space_id" in summary) || typeof summary.space_id !== "string" || !summary.space_id || !("environment_id" in summary) || typeof summary.environment_id !== "string" || !summary.environment_id)
+        return [];
+      if (Object.values(summary).some(
+        (value) => value && typeof value === "object" && "status" in value && value.status === "truncated"
+      ))
+        return [];
       return [{ path, summary }];
     } catch {
       return [];
@@ -36664,13 +36949,25 @@ function snapshotPath(root, argv) {
   return latest;
 }
 async function main() {
-  const [command, ...rest] = process.argv.slice(2);
+  const [command, ...args2] = process.argv.slice(2);
+  const rest = args2.flatMap((value) => {
+    const equals = value.indexOf("=");
+    return value.startsWith("--") && equals > 2 ? [value.slice(0, equals), value.slice(equals + 1)] : [value];
+  });
   if (!command || command === "--help" || command === "-h") {
-    console.log("Usage: node bin/main.js <init|fetch|snapshots|inventory|query|generate-db|validate-db> [options]");
+    console.error(
+      "Usage: node scripts/main.js <init|fetch|snapshots|inventory|query|generate-db|validate-db> [options]"
+    );
+    console.error("Options: --dir <work-folder> --env-file <credentials-file> --snapshot <snapshot-folder>");
+    console.error("Fetch: --out-dir <folder> --result-file <file> --refresh-db <db> --content-type <id>");
+    console.error(
+      "Inventory: --render human|json. Query/validation: --db <file>. Query: --sql <SELECT> --limit <rows>."
+    );
     return command ? 0 : 1;
   }
   try {
     if (command === "init") return runInit(rest);
+    const parsed = parseArgs2(rest);
     const root = workDir(rest);
     if (!existsSync6(root)) runInit(rest);
     if (command === "snapshots") {
@@ -36679,23 +36976,42 @@ async function main() {
       return 0;
     }
     if (command === "fetch") {
-      const parsed = parseArgs2(rest);
       const reuse = stringArg(parsed, "snapshot");
-      const forwarded = rest.filter((value, index) => value !== "--dir" && rest[index - 1] !== "--dir" && value !== "--snapshot" && rest[index - 1] !== "--snapshot");
-      forwarded.push("--out-dir", reuse ? resolve3(reuse) : join4(root, "snapshots"), "--keep-db");
+      const output = stringArg(parsed, "out-dir");
+      if (reuse && output && resolve3(reuse) !== resolve3(output)) {
+        throw new Error("--snapshot and --out-dir must select the same folder when reusing a snapshot");
+      }
+      const forwarded = rest.filter(
+        (value, index) => value !== "--dir" && rest[index - 1] !== "--dir" && value !== "--snapshot" && rest[index - 1] !== "--snapshot" && value !== "--env-file" && rest[index - 1] !== "--env-file"
+      );
+      if (!output) forwarded.push("--out-dir", reuse ? resolve3(reuse) : join4(root, "snapshots"));
+      forwarded.push("--keep-db");
       if (reuse) forwarded.push("--skip-if-present");
-      process.env.CONTENTFUL_ENV_FILE = join4(root, ".env");
+      process.env.CONTENTFUL_ENV_FILE = stringArg(parsed, "env-file") ?? join4(root, ".env");
       return runFetchSpace(forwarded);
     }
     if (command === "generate-db") {
       const cleaned2 = rest.filter((value, index) => value !== "--dir" && rest[index - 1] !== "--dir");
       return runGenerateDb(cleaned2);
     }
+    const explicitDb = stringArg(parsed, "db");
+    if (command === "validate-db" && explicitDb) return runValidateDatabase([resolve3(explicitDb)]);
+    if (command === "query" && explicitDb) return runQuery(rest);
     const snapshot = snapshotPath(root, rest);
-    const cleaned = rest.filter((value, index) => value !== "--dir" && rest[index - 1] !== "--dir" && value !== "--snapshot" && rest[index - 1] !== "--snapshot");
+    const cleaned = rest.filter(
+      (value, index) => value !== "--dir" && rest[index - 1] !== "--dir" && value !== "--snapshot" && rest[index - 1] !== "--snapshot"
+    );
     if (command === "inventory") {
-      const envFile = stringArg(parseArgs2(rest), "env-file") ?? join4(root, ".env");
-      return runInventory([...cleaned, "--data-dir", snapshot, "--render", "human", "--env-file", envFile]);
+      const envFile = stringArg(parsed, "env-file") ?? join4(root, ".env");
+      return runInventory([
+        ...cleaned,
+        "--data-dir",
+        snapshot,
+        "--render",
+        stringArg(parsed, "render") ?? "human",
+        "--env-file",
+        envFile
+      ]);
     }
     if (command === "query") return runQuery([...cleaned, "--db", join4(snapshot, "contentful-unified.db")]);
     if (command === "validate-db") return runValidateDatabase([join4(snapshot, "contentful-unified.db")]);

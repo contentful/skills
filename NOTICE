@@ -19,9 +19,12 @@ Development Dependencies
 @types/node
     License: MIT
     https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node [npmjs.com]
-fflate
+contentful-management
     License: MIT
-    https://101arrowz.github.io/fflate [npmjs.com]
+    https://www.contentful.com/developers/documentation/content-management-api/ [npmjs.com]
+esbuild
+    License: MIT
+    https://github.com/evanw/esbuild [npmjs.com]
 oxlint
     License: MIT
     https://oxc.rs/docs/guide/usage/linter [npmjs.com]
@@ -31,9 +34,6 @@ prettier
 release-it
     License: MIT
     https://github.com/release-it/release-it#readme [npmjs.com]
-tar
-    License: BlueOak-1.0.0
-    https://github.com/isaacs/node-tar [npmjs.com]
 tsx
     License: MIT
     https://tsx.is [npmjs.com]
