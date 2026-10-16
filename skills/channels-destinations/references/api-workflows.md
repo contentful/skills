@@ -1,6 +1,25 @@
 # API operations and lifecycle
 
-Use the current [Destinations Management API OpenAPI definition](https://github.com/contentful/contentful-docs/blob/main/fern/apis/destinations-management/destinations-management.yaml) and [API reference](https://www.contentful.com/developers/docs/references/experience-management-api/). They are authoritative for request/response schemas, auth, headers, pagination, and current behavior. Endpoint paths below are orientation only; verify the current spec before each operation. Runtime shapes and outcomes labeled **observed** come from a live environment and may differ by version; verify against the target before writing.
+Use the current [Destinations Management API reference](https://www.contentful.com/developers/docs/references/experience-management-api/destinations-management/). It is authoritative for request/response schemas, auth, headers, pagination, and current behavior. Endpoint paths below are orientation only; verify the current reference before each operation. Runtime shapes and outcomes labeled **observed** come from a live environment and may differ by version; verify against the target before writing.
+
+## Tool access
+
+Examples use `curl`. If no shell/exec tool is available, make the equivalent calls through the `contentful-mcp` MCP tools: same endpoints, same payloads. If neither is available, tell the user you cannot reach the API and stop rather than guessing at Destination state.
+
+```bash
+# Read a Destination tree before planning node changes
+curl -s -H "Authorization: Bearer $CMA_TOKEN" \
+  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/destinations/$DESTINATION_ID/tree"
+
+# Update a Destination (replace body; current version required; never send channelId)
+curl -s -X PUT -H "Authorization: Bearer $CMA_TOKEN" \
+  -H "Content-Type: application/vnd.contentful.management.v1+json" \
+  -H "X-Contentful-Version: $VERSION" \
+  -d '{"name": "<name>", "properties": [{"id": "<propertyId>", "value": "<value>"}]}' \
+  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/destinations/$DESTINATION_ID"
+```
+
+`$API_HOST` is `https://api.contentful.com` (`https://api.eu.contentful.com` for EU data residency). Never echo `$CMA_TOKEN`.
 
 ## Resource operations
 
@@ -32,7 +51,7 @@ Create Channels at organization scope. Requests include `properties` (per-Destin
 
 ## Destination
 
-Create a Destination in the target space/environment using an existing Channel and its declared property IDs/types. The Channel association is fixed; do not send `channelId` when updating. Read the Destination and tree after creation. **Observed:** one live environment returned `sys.channelId` (a string) instead of the OpenAPI snapshot's `sys.channel` link; returned properties included `type`, while requests used `id` and `value` (for example, `{ "id": "<propertyId>", "value": "<value>" }`). If runtime and spec differ, inspect a live read and validate the minimal request on a safe fixture; never copy response-only fields blindly.
+Create a Destination in the target space/environment using an existing Channel and its declared property IDs/types. The Channel association is fixed; do not send `channelId` when updating. Read the Destination and tree after creation. **Observed:** one live environment returned `sys.channelId` (a string) instead of the documented `sys.channel` link; returned properties included `type`, while requests used `id` and `value` (for example, `{ "id": "<propertyId>", "value": "<value>" }`). If runtime and spec differ, inspect a live read and validate the minimal request on a safe fixture; never copy response-only fields blindly.
 
 ## Nodes
 
@@ -42,7 +61,7 @@ Do not treat node-type conversion as a regular update. Current docs constrain fo
 
 ## Observed Experience reference shape
 
-A live seeded Experience node used this ResourceLink URN shape; the inspected OpenAPI snapshot did not document it. Read the target Experience and confirm the current contract before use.
+A live seeded Experience node used this ResourceLink URN shape; the inspected API reference did not document it. Read the target Experience and confirm the current contract before use.
 
 ```json
 {

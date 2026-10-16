@@ -1,11 +1,12 @@
 ---
 name: channels-destinations
-description: Set up and manage Contentful Channels, Destinations, and Destination Nodes through the Destinations Management API or approved integrations. Use for creating or updating channel contracts, destination properties, destination maps, experience/folder/redirect nodes, assigning experiences, routing and path configuration, publishing, unpublishing, migration, or deletion. Verify the current API schema and permissions before acting; use this skill instead of guessing endpoints or payloads.
+description: Set up and manage Contentful Channels, Destinations, and Destination Nodes through the Destinations Management API. Use for creating or updating channel contracts, destination properties, destination maps, experience/folder/redirect nodes, assigning experiences, routing and path configuration, publishing, unpublishing, migration, or deletion. Verify the current API schema and permissions before acting; use this skill instead of guessing endpoints or payloads.
+allowed-tools: Bash(curl *) mcp__contentful-mcp__* mcp__plugin_contentful_contentful-mcp__*
 ---
 
 # Channels, Destinations, and Nodes
 
-Use the Destinations Management API first. Treat live API documentation and the current OpenAPI schema as authoritative; bundled guidance is an execution checklist, not a substitute for checking the current contract. Runtime observations in the references are target-specific; re-check them against the current target before writing.
+Use the Destinations Management API first. Treat the live API reference as authoritative; bundled guidance is an execution checklist, not a substitute for checking the current contract. Runtime observations in the references are target-specific; re-check them against the current target before writing.
 
 ## Read-only fast path
 
@@ -14,7 +15,7 @@ For list, lookup, or tree-only requests, use the relevant read endpoint, follow 
 ## Before making changes
 
 1. Clarify the intended outcome and identify the exact organization, Channel, space, environment, Destination, and target Experiences. Never infer IDs or production/staging intent from display names alone.
-2. Discover available approved Contentful API integrations/tools. Use those for API calls; never invent a tool or fall back to raw HTTP/curl. If no suitable integration is available, prepare a verified plan and payloads rather than claiming to have changed anything.
+2. Pick the tool path: use `curl` through a shell/exec tool when one is available. If not, make the same calls through the `contentful-mcp` MCP tools. If neither can reach the Destinations Management API, tell the user and stop (see [If the API is unreachable](#if-the-api-is-unreachable)). Never invent a tool.
 3. Read the current API operation/schema for every operation you will use. Follow its authentication, content type, version-header, pagination, and response requirements. Never expose or echo access tokens.
 4. Read existing state before writing: list Channels, list Destinations in the exact environment, and fetch the Destination tree before changing nodes. Match by stable IDs; check for duplicates and dependencies.
 5. Show the proposed resource hierarchy and material properties before applying a multi-resource setup. Ask for missing user-owned choices (for example routing on/off, node paths/types, assigned Experiences, or target environment) rather than silently choosing.
@@ -47,6 +48,6 @@ Consult [API operations and lifecycle](references/api-workflows.md) and [Domain 
 - **Deletion:** inspect dependencies and inbound redirects first. The live API rejected Destination deletion while nodes remained (`DestinationHasNodes`); remove nodes explicitly, leaf-first, unpublishing each published node first, then delete the Destination. Remove or migrate dependent Destinations before deleting a Channel; the Channel must also be unpublished before deletion. Do not assume deleting a node removes descendants; unless the current contract confirms otherwise, delete explicitly bottom-up. Plan removal/migration of redirects pointing into the affected subtree before deleting targets.
 - Do not assume UI-only bulk/cascade options exist in the API. Verify equivalent API behavior before using them.
 
-## If execution is unavailable
+## If the API is unreachable
 
-Return a concrete, ordered plan with the required identifiers, current-state findings, API operations, schema-verified request shapes, expected side effects, and any user confirmations still needed. Clearly label it **not executed**. Do not fabricate API responses, IDs, permissions, or publish status.
+If neither a shell/exec tool nor a `contentful-mcp` tool can reach the Destinations Management API, tell the user the API can't be reached and stop. Do not guess at Channel, Destination, or tree state, and do not fabricate API responses, IDs, permissions, or publish status. If the user asks for a plan anyway, label it **not executed and not based on live state**, and list the reads that must run before any of it is applied.
