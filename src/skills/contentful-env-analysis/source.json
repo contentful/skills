@@ -1,0 +1,17 @@
+{
+  "release": "dpp-2026-10-16-114833",
+  "artifact": {
+    "release": "dpp-2026-10-16-114833",
+    "asset": "contentful-env-analysis-2026-10-16-114833.zip",
+    "sha256": "8a048949edb8156d8b04dd52d35b73ac4049d19c13f4e85df9325698e4cefde2",
+    "commit": "27f63eb1d7922250b9e9f526bffb17605aa024f2",
+    "files": {
+      "references/database.md": "7ed6fc3620563e5d536b33bf2707b18d2b6aae55b4c77feaffdce32385731a08",
+      "references/exo-domain.md": "00a54a9876aec4c5d749e60e229b0b201e60b89ae8aa3ea320286dd6f7eb296f",
+      "SKILL.md": "57c203b73dc5bea3d188e3650623f2992a15b832e29057a4122a051d2a4ff735",
+      "scripts/main.js": "df28a82142ba4e15cc1aa4fd69011ef5643bb0ad1f981cd8d0342545d1edb3b2",
+      "THIRD-PARTY-NOTICES.md": "52e4bbfa09b82961eb0fb0141ba8b395e03c18e14926258aa4d55ecbbce0e6f5",
+      "LICENSE": "a0a54c962fd6f99e9f915455a33994a8237f6653a815c2eca369307205197388"
+    }
+  }
+}

@@ -21,6 +21,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test --import tsx/esm 'src/skills/**/*.test.ts'",
     "build": "skill-kit build src/skills/contentful-personalization/skill.ts -o skills/contentful-personalization --mode node",
+    "sync:env-analysis": "tsx src/skills/contentful-env-analysis/sync.ts",
     "validate": "python3 local-skills/skills/skill-authoring/scripts/quick_validate.py skills --all",
     "update-licenses": "node ./scripts/update-licenses.mjs"
   },
@@ -29,9 +30,11 @@
     "@release-it/bumper": "^8.0.0",
     "@release-it/conventional-changelog": "^12.0.0",
     "@types/node": "^25.2.3",
+    "fflate": "^0.8.3",
     "oxlint": "^1.61.0",
     "prettier": "^3.8.3",
     "release-it": "^21.0.0",
+    "tar": "^7.5.22",
     "tsx": "^4.21.0",
     "typescript": "^7.0.0"
   }

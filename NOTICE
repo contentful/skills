@@ -9,25 +9,31 @@ Development Dependencies
 
 @contentful/skill-kit
     License: MIT
-    https://www.npmjs.com/package/@contentful/skill-kit [npmjs.com]
+    https://github.com/contentful/skill-kit#readme [npmjs.com]
 @release-it/bumper
     License: MIT
-    https://github.com/release-it/bumper [github.com]
+    https://github.com/release-it/bumper#readme [npmjs.com]
 @release-it/conventional-changelog
     License: MIT
-    https://github.com/release-it/conventional-changelog [github.com]
+    https://github.com/release-it/conventional-changelog#readme [npmjs.com]
 @types/node
     License: MIT
     https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node [npmjs.com]
+fflate
+    License: MIT
+    https://101arrowz.github.io/fflate [npmjs.com]
 oxlint
     License: MIT
-    https://oxc.rs/docs/guide/usage/linter [oxc.rs]
+    https://oxc.rs/docs/guide/usage/linter [npmjs.com]
 prettier
     License: MIT
     https://prettier.io [npmjs.com]
 release-it
     License: MIT
-    https://github.com/release-it/release-it [github.com]
+    https://github.com/release-it/release-it#readme [npmjs.com]
+tar
+    License: BlueOak-1.0.0
+    https://github.com/isaacs/node-tar [npmjs.com]
 tsx
     License: MIT
     https://tsx.is [npmjs.com]
