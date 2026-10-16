@@ -1,15 +1,18 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import {
+  closeSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
+  openSync,
   readFileSync,
   readdirSync,
   realpathSync,
   symlinkSync,
   utimesSync,
   writeFileSync,
+  writeSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -48,11 +51,14 @@ test(
     const target = join(root, 'outside.env');
     symlinkSync(target, join(work, '.env'));
     runCli(root, 'init', '--dir', work);
-    assert.equal(existsSync(target), false);
-
-    writeFileSync(target, 'SPACE_ID=keep-me\n', { flag: 'wx', mode: 0o600 });
-    runCli(root, 'init', '--dir', work);
-    assert.equal(readFileSync(target, 'utf8'), 'SPACE_ID=keep-me\n');
+    const fd = openSync(target, 'wx+', 0o600);
+    try {
+      writeSync(fd, 'SPACE_ID=keep-me\n', 0, 'utf8');
+      runCli(root, 'init', '--dir', work);
+      assert.equal(readFileSync(fd, 'utf8'), 'SPACE_ID=keep-me\n');
+    } finally {
+      closeSync(fd);
+    }
   },
 );
 
