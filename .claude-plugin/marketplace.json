@@ -34,6 +34,7 @@
         "ninetailed"
       ],
       "skills": [
+        "./skills/channels-destinations",
         "./skills/contentful-api",
         "./skills/contentful-apps/contentful-custom-app-enhancement",
         "./skills/contentful-apps/contentful-custom-app-from-scratch",
