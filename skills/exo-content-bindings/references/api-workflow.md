@@ -9,7 +9,9 @@ Full CMA call sequences for the Process steps referenced from [SKILL.md](../SKIL
 | Space ID | User provides or detect from context | Yes | — |
 | Environment ID | User provides | No | `master` |
 | CMA token | User provides or `$CMA_TOKEN` env var | Yes | — |
-| API host | Domain for CMA requests | No | `api.contentful.com` (`api.flinkly.com` for staging) |
+| API base URL (`$API_BASE_URL`) | Full base URL for CMA requests. Must start with `https://` — a bare hostname makes curl fall back to plain HTTP and can send the token unencrypted. | No | `https://api.contentful.com` (`https://api.flinkly.com` for staging) |
+
+For a reference space on a different host, set `$REF_API_BASE_URL` the same way (with `https://`).
 
 ## 1. Introspect the space
 
@@ -18,13 +20,13 @@ Fetch all component types and content types.
 ```bash
 # Fetch component types
 curl -s -H "Authorization: Bearer $CMA_TOKEN" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/component_types"
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/component_types"
 ```
 
 ```bash
 # Fetch content types (source data)
 curl -s -H "Authorization: Bearer $CMA_TOKEN" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/content_types"
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/content_types"
 ```
 
 ## 1.5 Check for a reference space (STRONGLY RECOMMENDED)
@@ -36,7 +38,7 @@ If a reference exists, fetch its DAs FIRST and replicate their patterns exactly.
 ```bash
 # Fetch DAs from reference space
 curl -s -H "Authorization: Bearer $CMA_TOKEN" \
-  "$REF_API_HOST/spaces/$REF_SPACE_ID/environments/$REF_ENVIRONMENT_ID/data_assemblies" \
+  "$REF_API_BASE_URL/spaces/$REF_SPACE_ID/environments/$REF_ENVIRONMENT_ID/data_assemblies" \
   | python3 -c "
 import sys, json
 data = json.load(sys.stdin)
@@ -74,7 +76,7 @@ This is the primary decision fork. Every component type falls into one of two ca
 ```bash
 # Classify all component types
 curl -s -H "Authorization: Bearer $CMA_TOKEN" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/component_types" \
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/component_types" \
   | python3 -c "
 import sys, json
 data = json.load(sys.stdin)
@@ -127,7 +129,7 @@ Coded components are straightforward. All `contentProperties` are public and dir
 ```bash
 # Inspect a coded component's content properties
 curl -s -H "Authorization: Bearer $CMA_TOKEN" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/component_types/$CT_ID" \
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/component_types/$CT_ID" \
   | python3 -c "
 import sys, json
 ct = json.load(sys.stdin)
@@ -163,7 +165,7 @@ Both are public and bindable, but you need to understand the origin to design th
 ```bash
 # Inspect a composite component — content properties + tree
 curl -s -H "Authorization: Bearer $CMA_TOKEN" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/component_types/$CT_ID" \
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/component_types/$CT_ID" \
   | python3 -c "
 import sys, json
 ct = json.load(sys.stdin)
@@ -203,7 +205,7 @@ if slots:
 ```bash
 # Fetch existing data assemblies
 curl -s -H "Authorization: Bearer $CMA_TOKEN" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies" \
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies" \
   | python3 -c "
 import sys, json
 data = json.load(sys.stdin)
@@ -221,7 +223,7 @@ for da in data.get('items', []):
 ```bash
 # Sample entries for a content type
 curl -s -H "Authorization: Bearer $CMA_TOKEN" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/entries?content_type=$CT_ID&limit=2" \
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/entries?content_type=$CT_ID&limit=2" \
   | python3 -c "
 import sys, json
 data = json.load(sys.stdin)
@@ -393,48 +395,34 @@ See [resolver-patterns.md](resolver-patterns.md) for full request bodies coverin
 ```bash
 # Fetch the component type's current state
 CT_RESPONSE=$(curl -s -H "Authorization: Bearer $CMA_TOKEN" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/component_types/$CT_ID")
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/component_types/$CT_ID")
 
 CT_VERSION=$(echo "$CT_RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin)['sys']['version'])")
 
-# Extract existing dataAssemblies links (may be empty array)
-EXISTING_DAS=$(echo "$CT_RESPONSE" | python3 -c "
+# Build the PUT body: append the DA link (if not already present) and drop sys.
+# DA_ID is passed as an argument, not interpolated into Python source.
+PUT_BODY=$(echo "$CT_RESPONSE" | python3 -c '
 import sys, json
+da_id = sys.argv[1]
 ct = json.load(sys.stdin)
-das = ct.get('dataAssemblies', [])
-print(json.dumps(das))")
-
-# Add new DA link to the array
-NEW_DA_LINK='{
-  "sys": {
-    "type": "ResourceLink",
-    "linkType": "Contentful:DataAssembly",
-    "urn": "crn:contentful:::experience:spaces/$self/environments/$self/dataAssemblies/'$DA_ID'"
-  }
-}'
-
-UPDATED_DAS=$(echo "$EXISTING_DAS" | python3 -c "
-import sys, json
-existing = json.load(sys.stdin)
-new_link = json.loads('$NEW_DA_LINK')
-# Don't add if already linked
-if not any(d.get('sys',{}).get('urn','').endswith('/$DA_ID') for d in existing):
-    existing.append(new_link)
-print(json.dumps(existing))")
+das = ct.get("dataAssemblies", [])
+if not any(d.get("sys", {}).get("urn", "").endswith("/" + da_id) for d in das):
+    das.append({"sys": {
+        "type": "ResourceLink",
+        "linkType": "Contentful:DataAssembly",
+        "urn": "crn:contentful:::experience:spaces/$self/environments/$self/dataAssemblies/" + da_id,
+    }})
+ct["dataAssemblies"] = das
+del ct["sys"]  # API rejects sys in the PUT body
+print(json.dumps(ct))' "$DA_ID")
 
 # Update the component type
 curl -s -X PUT \
   -H "Authorization: Bearer $CMA_TOKEN" \
   -H "Content-Type: application/json" \
   -H "X-Contentful-Version: $CT_VERSION" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/component_types/$CT_ID" \
-  -d "$(echo "$CT_RESPONSE" | python3 -c "
-import sys, json
-ct = json.load(sys.stdin)
-ct['dataAssemblies'] = $UPDATED_DAS
-# Remove sys for the PUT body (API rejects it in body)
-del ct['sys']
-print(json.dumps(ct))")"
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/component_types/$CT_ID" \
+  -d "$PUT_BODY"
 ```
 
 **URN format for DA links:**
@@ -447,21 +435,21 @@ crn:contentful:::experience:spaces/$self/environments/$self/dataAssemblies/{da-i
 ```bash
 # Fetch the current version
 VERSION=$(curl -s -H "Authorization: Bearer $CMA_TOKEN" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
   | python3 -c "import sys, json; print(json.load(sys.stdin)['sys']['version'])")
 
 # Publish
 curl -s -X PUT \
   -H "Authorization: Bearer $CMA_TOKEN" \
   -H "X-Contentful-Version: $VERSION" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID/published"
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID/published"
 ```
 
 ## 9. Verify
 
 ```bash
 curl -s -H "Authorization: Bearer $CMA_TOKEN" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
   | python3 -c "
 import sys, json
 da = json.load(sys.stdin)
@@ -478,7 +466,7 @@ If a reference space was identified in step 1.5, compare your created DAs agains
 ```bash
 # Compare created DAs against reference
 curl -s -H "Authorization: Bearer $CMA_TOKEN" \
-  "$REF_API_HOST/spaces/$REF_SPACE_ID/environments/$REF_ENVIRONMENT_ID/data_assemblies" \
+  "$REF_API_BASE_URL/spaces/$REF_SPACE_ID/environments/$REF_ENVIRONMENT_ID/data_assemblies" \
   | python3 -c "
 import sys, json
 ref = json.load(sys.stdin)
@@ -514,19 +502,19 @@ The `PUT /data_assemblies/:id` endpoint uses **upsert** semantics:
 RESPONSE=$(curl -s -w "\n%{http_code}" -X PUT \
   -H "Authorization: Bearer $CMA_TOKEN" \
   -H "Content-Type: application/json" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
   -d "$BODY")
 
 HTTP_CODE=$(echo "$RESPONSE" | tail -1)
 if [ "$HTTP_CODE" = "409" ]; then
   VERSION=$(curl -s -H "Authorization: Bearer $CMA_TOKEN" \
-    "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
+    "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
     | python3 -c "import sys, json; print(json.load(sys.stdin)['sys']['version'])")
   curl -s -X PUT \
     -H "Authorization: Bearer $CMA_TOKEN" \
     -H "Content-Type: application/json" \
     -H "X-Contentful-Version: $VERSION" \
-    "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
+    "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
     -d "$BODY"
 fi
 ```

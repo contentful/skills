@@ -10,7 +10,7 @@ Used for: coded components, composites with direct/hoisted string properties.
 curl -s -X PUT \
   -H "Authorization: Bearer $CMA_TOKEN" \
   -H "Content-Type: application/json" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
   -d '{
   "sys": {
     "id": "'$DA_ID'",
@@ -61,7 +61,7 @@ Used for: coded components with `Array<Record>` content properties (e.g., grids,
 curl -s -X PUT \
   -H "Authorization: Bearer $CMA_TOKEN" \
   -H "Content-Type: application/json" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
   -d '{
   "sys": {
     "id": "'$DA_ID'",
@@ -135,7 +135,7 @@ Used for: `TypeRef` (whole-component hoisting) or reusing an existing DA for a l
 curl -s -X PUT \
   -H "Authorization: Bearer $CMA_TOKEN" \
   -H "Content-Type: application/json" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
   -d '{
   "sys": {
     "id": "'$DA_ID'",
@@ -281,7 +281,7 @@ Read a field on a linked entry by traversing the reference in the GraphQL query:
 curl -s -X PUT \
   -H "Authorization: Bearer $CMA_TOKEN" \
   -H "Content-Type: application/json" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
   -d '{
   "sys": {
     "id": "'$DA_ID'",
@@ -330,7 +330,7 @@ When the linked entry is complex enough to warrant its own DA, use a nested `Con
 curl -s -X PUT \
   -H "Authorization: Bearer $CMA_TOKEN" \
   -H "Content-Type: application/json" \
-  "$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
+  "$API_BASE_URL/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID/data_assemblies/$DA_ID" \
   -d '{
   "sys": {
     "id": "'$DA_ID'",
