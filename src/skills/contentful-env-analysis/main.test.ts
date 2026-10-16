@@ -50,7 +50,7 @@ test(
     runCli(root, 'init', '--dir', work);
     assert.equal(existsSync(target), false);
 
-    writeFileSync(target, 'SPACE_ID=keep-me\n');
+    writeFileSync(target, 'SPACE_ID=keep-me\n', { flag: 'wx', mode: 0o600 });
     runCli(root, 'init', '--dir', work);
     assert.equal(readFileSync(target, 'utf8'), 'SPACE_ID=keep-me\n');
   },

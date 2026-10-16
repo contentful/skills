@@ -1,6 +1,16 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import {
+  closeSync,
+  constants,
+  mkdirSync,
+  mkdtempSync,
+  openSync,
+  readFileSync,
+  readdirSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -39,11 +49,15 @@ test(
     ]);
 
     assert.equal(readFileSync(target, 'utf8'), original);
-    assert.equal(lstatSync(summary).isSymbolicLink(), false);
-    const generated = JSON.parse(readFileSync(summary, 'utf8'));
-    assert.equal(generated.space_id, identity.space_id);
-    assert.equal(generated.environment_id, identity.environment_id);
-    assert.equal(generated.tables.entries, 0);
+    const fd = openSync(summary, constants.O_RDONLY | constants.O_NOFOLLOW);
+    try {
+      const generated = JSON.parse(readFileSync(fd, 'utf8'));
+      assert.equal(generated.space_id, identity.space_id);
+      assert.equal(generated.environment_id, identity.environment_id);
+      assert.equal(generated.tables.entries, 0);
+    } finally {
+      closeSync(fd);
+    }
     assert.deepEqual(readdirSync(snapshot).sort(), ['contentful-unified.db', 'summary.json']);
   },
 );
