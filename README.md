@@ -13,7 +13,7 @@
 
 [![version](https://img.shields.io/badge/v1.5.1-0286FF?style=flat&label=version)](https://github.com/contentful/skills/releases)
 [![license](https://img.shields.io/badge/MIT-grey?style=flat&label=license)](LICENSE)
-[![skills](https://img.shields.io/badge/7_skills-0286FF?style=flat&label=)](skills/)
+[![skills](https://img.shields.io/badge/8_skills-0286FF?style=flat&label=)](skills/)
 [![platforms](https://img.shields.io/badge/35%2B_platforms-0286FF?style=flat&label=)](https://agentskills.io)
 
 </div>
@@ -24,7 +24,7 @@ AI coding agents write great code but know nothing about your content model, you
 
 ## Quickstart — Claude Code
 
-Two commands. You get seven skills plus live MCP connections to your Contentful spaces.
+Two commands. You get eight skills plus live MCP connections to your Contentful spaces.
 
 ```
 /plugin marketplace add contentful/skills
@@ -45,6 +45,7 @@ Run `/reload-plugins` to activate. This registers two MCP servers:
 | **[contentful-api](#contentful-api)** | Language-agnostic REST and GraphQL API reference — curl examples for CMA, CDA, CPA, Images, and GraphQL. |
 | **[contentful-nextjs](#contentful-nextjs)** | Integrates Contentful into a Next.js project — SDK setup, content fetching, Draft Mode previews. |
 | **[contentful-migration](#contentful-migration)** | Writes and runs content model migration scripts — fields, validations, transforms, editor interfaces. |
+| **[contentful-env-analysis](#contentful-env-analysis)** | Downloads an environment to a local SQLite snapshot and answers questions about content, references, Rich Text, and ExO entities. Read-only. |
 | **[contentful-custom-app-from-scratch](#contentful-custom-app-from-scratch)** | Designs, scaffolds, builds, and validates new App Framework custom apps. |
 | **[contentful-custom-app-enhancement](#contentful-custom-app-enhancement)** | Improves and debugs existing Contentful custom apps in customer-owned repos. |
 | **[contentful-personalization](#contentful-personalization)** | Sets up, debugs, and develops personalization and A/B testing with the Experiences SDK. |
@@ -96,7 +97,7 @@ Skills auto-discover from `.agents/skills/` when added to your project. Use `/sk
 npx skills add contentful/skills --skill contentful-personalization
 ```
 
-Available: `contentful-guide`, `contentful-api`, `contentful-nextjs`, `contentful-migration`, `contentful-custom-app-from-scratch`, `contentful-custom-app-enhancement`, `contentful-personalization`
+Available: `contentful-guide`, `contentful-api`, `contentful-nextjs`, `contentful-migration`, `contentful-env-analysis`, `contentful-custom-app-from-scratch`, `contentful-custom-app-enhancement`, `contentful-personalization`
 
 </details>
 
@@ -226,6 +227,25 @@ Improve, debug, and extend an existing Contentful App Framework custom app in a 
 - Targeted tests, local smoke checks, sandbox verification, and PR handoff
 
 </details>
+
+### contentful-env-analysis
+
+Download a Contentful space and environment into a local SQLite snapshot, see inventory tables, and ask questions without changing remote content or starting an upgrade.
+
+```bash
+npx skills add contentful/skills --skill contentful-env-analysis
+```
+
+Restart your agent session, then invoke `/contentful-env-analysis` in Claude Code or `$contentful-env-analysis` in Codex. The agent creates `.contentful-env-analysis/`, asks for the CMA token, Space ID, and Environment ID, downloads the snapshot, and suggests questions.
+
+Requires **Node.js 24.21+**, an AI agent with shell access, npm/npx and network access for installation, and a CMA token with read access for downloads. The installer may also need Git if its archive download is unavailable. Works with the same JavaScript bundle on Windows, macOS, and Linux. No Python, external SQLite, GitHub account, MCP server, or dependency installation is required. After downloading, analysis runs offline. Snapshot files contain customer content; keep them local and private.
+
+Try asking:
+
+- Which Rich Text fields are empty or contain Entry links?
+- Which entries have no incoming links, and could they be page roots?
+- Which content types have the most draft-only entries or missing translations?
+- Which ExO Components and Experience Templates exist, and how many instances use each one?
 
 ### contentful-personalization
 
