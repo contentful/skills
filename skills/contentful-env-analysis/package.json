@@ -1,0 +1,17 @@
+{
+  "name": "@contentful/skill-contentful-env-analysis",
+  "version": "2.5.0",
+  "type": "module",
+  "description": "Download and analyze a Contentful environment using a local read-only SQLite snapshot.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.21.0"
+  },
+  "files": [
+    "SKILL.md",
+    "scripts/**",
+    "references/**",
+    "LICENSE",
+    "THIRD-PARTY-NOTICES.md"
+  ]
+}

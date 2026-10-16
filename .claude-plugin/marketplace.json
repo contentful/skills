@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Skills for Contentful apps, APIs, migrations, personalization, and analytics",
-    "version": "2.4.59"
+    "version": "2.5.0"
   },
   "plugins": [
     {
@@ -37,6 +37,7 @@
         "./skills/contentful-api",
         "./skills/contentful-apps/contentful-custom-app-enhancement",
         "./skills/contentful-apps/contentful-custom-app-from-scratch",
+        "./skills/contentful-env-analysis",
         "./skills/contentful-guide",
         "./skills/contentful-migration",
         "./skills/contentful-nextjs",
