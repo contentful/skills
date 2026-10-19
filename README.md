@@ -49,6 +49,7 @@ Run `/reload-plugins` to activate. This registers two MCP servers:
 | **[contentful-custom-app-from-scratch](#contentful-custom-app-from-scratch)** | Designs, scaffolds, builds, and validates new App Framework custom apps. |
 | **[contentful-custom-app-enhancement](#contentful-custom-app-enhancement)** | Improves and debugs existing Contentful custom apps in customer-owned repos. |
 | **[contentful-personalization](#contentful-personalization)** | Sets up, debugs, and develops personalization and A/B testing with the Experiences SDK. |
+| **[exo-content-bindings](#exo-content-bindings)** | Creates Data Assemblies (content bindings) that connect entries to Experience Orchestration components. |
 
 The custom app skills are packaged together under `skills/contentful-apps/`.
 
@@ -266,6 +267,26 @@ Set up, debug, and develop with Contentful personalization and A/B testing. A st
 **Reference library:** SDK guides, component patterns, SSR/middleware patterns, provider patterns, analytics setup, environment variables, error resolution, and more.
 
 Built with [@contentful/skill-kit](https://github.com/contentful/skill-kit) — a structured state machine with MCP server integration.
+
+</details>
+
+### exo-content-bindings
+
+Create Data Assemblies — the content-binding recipes that connect existing entries to Experience Orchestration component types. Covers classifying coded vs. composite components, judging content vs. design properties, public/private (hoisted) properties, and slot vs. content-binding scope, then designing, creating, linking, and publishing Data Assemblies via the CMA.
+
+<details>
+<summary>Triggers and details</summary>
+
+<br />
+
+**Activates on:** "create Data Assemblies", "content binding", "data assembly", "prebinding", "bind entries to components", "hydrate a component", "set up a Binding Set"
+
+**Covers:**
+- Space introspection and coded vs. composite component classification
+- The content-property vs. design-property test, and the public/private hoisting rule
+- Resolver patterns — entity, collection, nested Data Assembly, asset/Media fields, deep binding, polymorphic branching
+- RichText handling, GraphQL query conventions, and the content-type-field-to-content-property type mapping
+- A complete worked example, plus binding-set and DA-reuse guidance
 
 </details>
 
