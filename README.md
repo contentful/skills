@@ -49,6 +49,7 @@ Run `/reload-plugins` to activate. This registers two MCP servers:
 | **[contentful-custom-app-from-scratch](#contentful-custom-app-from-scratch)** | Designs, scaffolds, builds, and validates new App Framework custom apps. |
 | **[contentful-custom-app-enhancement](#contentful-custom-app-enhancement)** | Improves and debugs existing Contentful custom apps in customer-owned repos. |
 | **[contentful-personalization](#contentful-personalization)** | Sets up, debugs, and develops personalization and A/B testing with the Experiences SDK. |
+| **[channels-destinations](#channels-destinations)** | Sets up and manages Channels, Destinations, and Destination Nodes via the Destinations Management API. |
 | **[exo-content-bindings](#exo-content-bindings)** | Creates Data Assemblies (content bindings) that connect entries to Experience Orchestration components. |
 
 The custom app skills are packaged together under `skills/contentful-apps/`.
@@ -98,7 +99,7 @@ Skills auto-discover from `.agents/skills/` when added to your project. Use `/sk
 npx skills add contentful/skills --skill contentful-personalization
 ```
 
-Available: `contentful-guide`, `contentful-api`, `contentful-nextjs`, `contentful-migration`, `contentful-env-analysis`, `contentful-custom-app-from-scratch`, `contentful-custom-app-enhancement`, `contentful-personalization`
+Available: `contentful-guide`, `contentful-api`, `contentful-nextjs`, `contentful-migration`, `contentful-env-analysis`, `contentful-custom-app-from-scratch`, `contentful-custom-app-enhancement`, `contentful-personalization`, `channels-destinations`
 
 </details>
 
@@ -267,6 +268,25 @@ Set up, debug, and develop with Contentful personalization and A/B testing. A st
 **Reference library:** SDK guides, component patterns, SSR/middleware patterns, provider patterns, analytics setup, environment variables, error resolution, and more.
 
 Built with [@contentful/skill-kit](https://github.com/contentful/skill-kit) — a structured state machine with MCP server integration.
+
+</details>
+
+### channels-destinations
+
+Set up and manage Channels, Destinations, and Destination Nodes through the Destinations Management API. Covers Channel contracts, Destination properties, Destination maps with experience/folder/redirect nodes, and safe publish, unpublish, and delete ordering.
+
+<details>
+<summary>Triggers and details</summary>
+
+<br />
+
+**Activates on:** "create a channel", "set up a destination", "destination map", "destination nodes", "assign an experience", "path routing", "publish a destination", "delete a destination"
+
+**Covers:**
+- Channel contracts — Destination properties, node properties, and the single `Path` property rule
+- Building Destination maps with experience, folder, and redirect nodes
+- Dependency-ordered publishing and leaf-first unpublish and deletion guardrails
+- Verifying state after every write, and a "not executed" plan when no API integration is available
 
 </details>
 
