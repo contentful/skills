@@ -1,6 +1,6 @@
 {
   "name": "@contentful/skill-channels-destinations",
-  "version": "1.0.0",
+  "version": "2.7.0",
   "description": "Set up and manage Contentful Channels, Destinations, and Destination Nodes",
   "license": "MIT",
   "files": [
