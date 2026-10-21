@@ -153,12 +153,12 @@ When a marketer uses this DA in an experience, the node stores:
 ```json
 {
   "id": "node:hero",
-  "nodeType": "InlineFragment",
-  "componentType": {
+  "nodeType": "InlineExperienceFragment",
+  "component": {
     "sys": {
       "type": "ResourceLink",
-      "linkType": "Contentful:ComponentType",
-      "urn": "crn:contentful:::experience:spaces/$self/environments/$self/componentTypes/hero-plain"
+      "linkType": "Contentful:Component",
+      "urn": "crn:contentful:::experience:spaces/$self/environments/$self/components/hero-plain"
     }
   },
   "contentBindings": {
@@ -168,17 +168,21 @@ When a marketer uses this DA in an experience, the node stores:
       "urn": "crn:contentful:::experience:spaces/$self/environments/$self/dataAssemblies/hero-from-promotion"
     },
     "parameters": {
-      "promo": {
-        "sys": {
-          "type": "ResourceLink",
-          "linkType": "Contentful:Entry",
-          "urn": "crn:contentful:::content:spaces/$self/environments/$self/entries/abc123"
+      "promotionId": {
+        "$literal": {
+          "sys": {
+            "type": "ResourceLink",
+            "linkType": "Contentful:Entry",
+            "urn": "crn:contentful:::content:spaces/$self/environments/$self/entries/abc123"
+          }
         }
       }
     }
   }
 }
 ```
+
+Each `contentBindings.parameters` value must be wrapped: `{ "$literal": <link> }` for a fixed entry, `{ "$from": ... }`, or a `$parameters/...` pointer. A bare `{ "sys": { "type": "ResourceLink", ... } }` value is rejected by the Experiences Management API.
 
 At runtime, ExO executes the DA's GraphQL resolver with entry `abc123`, maps the result through the return expressions, and writes the resolved values into the component's content properties.
 
