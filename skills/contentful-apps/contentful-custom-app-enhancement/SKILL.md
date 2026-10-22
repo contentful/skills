@@ -100,6 +100,10 @@ Pause and clarify when the request requires:
 - unavailable Function or plan capabilities,
 - ambiguous editor behavior.
 
+When a report contains several problems, pick the one with the highest payoff
+using the prioritization order in the
+[Enhancement checklist](references/enhancement-checklist.md#prioritization).
+
 ### 4. Plan the Smallest Useful Change
 
 Write a short plan before editing:
@@ -112,12 +116,23 @@ Write a short plan before editing:
 
 Prefer improving the existing flow over replacing it.
 
-### 5. Implement in the App's Existing Style
+### 5. Set Up a Safe Local Test
+
+- Stop stale dev servers from earlier app work so the local port serves the
+  intended app.
+- Test against a development app definition or a non-production space. Do not
+  repoint a production app definition at a local URL without the user's explicit
+  confirmation.
+- Before concluding that a change has no effect, confirm the app definition
+  points at the intended local URL and not an older hosted bundle.
+
+### 6. Implement in the App's Existing Style
 
 - Reuse current framework, routing, hooks, components, and package manager.
 - Keep TypeScript precise and avoid broad `any` types.
 - Use Forma 36 for Contentful web app UI unless the app already uses another
-  deliberate design system.
+  deliberate design system. Follow
+  [UI conventions](references/ui-conventions.md) for any UI you touch.
 - Preserve editor trust: show loading, empty, error, permission, and destructive
   action states when relevant.
 - Keep configuration UI explicit about what values are stored at installation
@@ -131,7 +146,7 @@ Prefer improving the existing flow over replacing it.
 - Keep changes narrow; avoid unrelated formatting, dependency churn, or
   refactors.
 
-### 6. Validate the Improvement
+### 7. Validate the Improvement
 
 Run the closest available validation:
 
@@ -149,10 +164,13 @@ Run the closest available validation:
 - App Action, Function, or backend endpoint test when the change touches
   server-side behavior.
 
+Prefer the project's local toolchain (package scripts or `node_modules/.bin`)
+over globally installed tools.
+
 When validation requires credentials or access the agent does not have, explain
 exactly what remains for the user to verify.
 
-### 7. Prepare Reviewable Output
+### 8. Prepare Reviewable Output
 
 If the user wants a commit or PR:
 
@@ -160,7 +178,9 @@ If the user wants a commit or PR:
 - keep commits small and conventional,
 - do not stage unrelated local files,
 - include request context, implementation summary, validation, and open
-  questions in the PR draft.
+  questions in the PR draft,
+- confirm with the user before opening the PR, especially after several rounds
+  of edits.
 
 If the user only asked for the fix, end with:
 
@@ -175,6 +195,10 @@ If the user only asked for the fix, end with:
 - Do not force a code change when the better answer is product clarification.
 - Do not overfit one vague report without saying what is uncertain.
 - Do not widen the scope into a rewrite unless the user asks.
+- If the request stops being small, say so early and switch from implementation
+  to recommendation.
+- Do not ignore or overwrite the user's in-progress edits; incorporate them and
+  re-evaluate.
 - Do not assume app users have publication or distribution requirements unless
   they say so.
 - Do not claim Contentful plan features, SDK behavior, or API limits from memory
