@@ -19,6 +19,8 @@ const ALPHA_FEATURE = 'new-exo-entity-types';
 interface StubRoute {
   status: number;
   count?: number;
+  location?: string;
+  message?: string;
 }
 
 interface RecordedRequest {
@@ -136,20 +138,23 @@ async function startStub(routes: Record<string, StubRoute>, options: StubOptions
       return;
     }
 
+    const route = routes[collection];
+    if (route && route.status !== 200) {
+      res.writeHead(route.status, {
+        'Content-Type': 'application/json',
+        ...(route.location ? { Location: route.location } : {}),
+      });
+      res.end(JSON.stringify({ message: route.message ?? `stubbed ${route.status}` }));
+      return;
+    }
     if (collection === 'space') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ name: 'Stub Space', sys: { organization: { sys: { id: 'org-1' } } } }));
       return;
     }
-    const route = routes[collection];
     if (route === undefined) {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ message: `no stub route for ${collection}` }));
-      return;
-    }
-    if (route.status !== 200) {
-      res.writeHead(route.status, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ message: `stubbed ${route.status}` }));
       return;
     }
     const items = Array.from({ length: route.count ?? 0 }, (_, i) => ({
@@ -216,6 +221,7 @@ async function runTool(
   script: string,
   args: string[],
   port: number,
+  options: { apiHost?: string; hostSource?: 'file' | 'environment' | 'flag' } = {},
 ): Promise<{ status: number; stdout: string; stderr: string }> {
   const root = mkdtempSync(join(tmpdir(), 'env-fetch-test-'));
   const work = join(root, 'work');
@@ -225,7 +231,9 @@ async function runTool(
   writeFileSync(
     envFile,
     [
-      `API_HOST=http://127.0.0.1:${port}`,
+      ...(options.hostSource === 'environment' || options.hostSource === 'flag'
+        ? []
+        : [`API_HOST=${options.apiHost ?? 'api.contentful.com'}`]),
       `SPACE_ID=${SPACE}`,
       `ENVIRONMENT_ID=${ENVIRONMENT}`,
       'CONTENTFUL_CMA_TOKEN=stub-token',
@@ -233,10 +241,32 @@ async function runTool(
   );
   try {
     return await new Promise((resolve, reject) => {
-      const child = spawn(process.execPath, [script, 'fetch', `--dir=${work}`, `--env-file=${envFile}`, ...args], {
-        cwd: root,
-        env: { ...process.env },
-      });
+      const child = spawn(
+        process.execPath,
+        [
+          '--import',
+          new URL('test-transport.ts', import.meta.url).href,
+          script,
+          'fetch',
+          `--dir=${work}`,
+          `--env-file=${envFile}`,
+          ...args,
+          ...(options.hostSource === 'flag' ? ['--api-host', options.apiHost!] : []),
+        ],
+        {
+          cwd: root,
+          env: {
+            ...process.env,
+            API_HOST: options.hostSource === 'environment' ? options.apiHost : undefined,
+            CONTENTFUL_CMA_TOKEN: 'stub-token',
+            ENV_ANALYSIS_TEST_PORT: String(port),
+            HTTP_PROXY: '',
+            HTTPS_PROXY: '',
+            ALL_PROXY: '',
+            NO_PROXY: '*',
+          },
+        },
+      );
       let stdout = '',
         stderr = '';
       child.stdout.setEncoding('utf8').on('data', (chunk: string) => {
@@ -281,17 +311,109 @@ function spaceDir(outDir: string): string {
   return join(outDir, folders[0] ?? '');
 }
 
-test('fetch-space requires HTTPS outside explicit loopback hosts before sending credentials', async () => {
+test('fetch-space rejects unapproved API hosts from every configuration source before sending credentials', async () => {
   const stub = await startStub(FETCH_ROUTES);
   const outDir = mkdtempSync(join(tmpdir(), 'exo-fetch-host-'));
   try {
-    const run = await runTool(
-      FETCH_SPACE,
-      ['--api-host', `http://localhost.:${stub.port}`, '--out-dir', outDir, '--keep-db'],
-      stub.port,
-    );
-    assert.equal(run.status, 1);
-    assert.match(run.stderr, /API_HOST must use HTTPS/);
+    for (const hostSource of ['file', 'environment', 'flag'] as const) {
+      for (const apiHost of [
+        'https://untrusted.invalid',
+        'https://api.contentful.com.untrusted.invalid',
+        'http://api.contentful.com',
+        `http://127.0.0.1:${stub.port}`,
+        'https://api.contentful.com:8443',
+        'https://user:password@api.contentful.com',
+        'https://api.contentful.com@untrusted.invalid',
+        'https://api.contentful.com/path',
+        'https://api.contentful.com/../',
+        'https://api.contentful.com?query',
+        'https://api.contentful.com#fragment',
+        'https://api.contentful.com\\@untrusted.invalid',
+      ]) {
+        const run = await runTool(FETCH_SPACE, ['--out-dir', outDir], stub.port, { apiHost, hostSource });
+        assert.equal(run.status, 1, `${hostSource}: ${apiHost}`);
+        assert.match(run.stderr, /API_HOST must be/);
+        assert.doesNotMatch(run.stderr, /stub-token|password/);
+      }
+    }
+    assert.equal(stub.requests.length, 0);
+  } finally {
+    rmSync(outDir, { recursive: true, force: true });
+    await stub.close();
+  }
+});
+
+test('fetch-space supports canonical US and EU hosts from every configuration source', async () => {
+  const stub = await startStub(FETCH_ROUTES);
+  const outDir = mkdtempSync(join(tmpdir(), 'env-fetch-regions-'));
+  try {
+    for (const hostSource of ['file', 'environment', 'flag'] as const) {
+      for (const apiHost of [
+        'api.contentful.com',
+        'https://api.eu.contentful.com/',
+        'HTTPS://API.CONTENTFUL.COM:443/',
+      ]) {
+        const run = await runTool(FETCH_SPACE, ['--out-dir', outDir], stub.port, { apiHost, hostSource });
+        assert.equal(run.status, 0, run.stderr);
+      }
+    }
+    assert.ok(stub.requests.length > 0);
+    assert.ok(stub.requests.every((request) => request.method === 'GET'));
+  } finally {
+    rmSync(outDir, { recursive: true, force: true });
+    await stub.close();
+  }
+});
+
+test('fetch-space does not follow redirects or expose credentials in API errors', async () => {
+  for (const [status, location] of [
+    [301, 'https://untrusted.invalid/redirect-target'],
+    [302, 'https://untrusted.invalid/redirect-target'],
+    [303, 'https://untrusted.invalid/redirect-target'],
+    [307, 'https://untrusted.invalid/redirect-target'],
+    [308, 'https://untrusted.invalid/redirect-target'],
+    [307, '/redirect-target'],
+    [401, undefined],
+  ] as const) {
+    const stub = await startStub({
+      ...FETCH_ROUTES,
+      space: {
+        status,
+        location,
+        message: 'Reflected Authorization: Bearer stub-token',
+      },
+    });
+    const outDir = mkdtempSync(join(tmpdir(), 'env-fetch-redirect-'));
+    try {
+      const run = await runTool(FETCH_SPACE, ['--out-dir', outDir], stub.port);
+      assert.equal(run.status, 1, run.stderr);
+      assert.ok(run.stderr.includes(`HTTP ${status}`), run.stderr);
+      assert.equal(stub.requests.length, 1, 'redirect target must not receive any request');
+      assert.equal(stub.requests[0].headers.authorization, 'Bearer stub-token');
+      assert.doesNotMatch(run.stdout + run.stderr, /stub-token|Authorization|headers|redirect-target/);
+    } finally {
+      rmSync(outDir, { recursive: true, force: true });
+      await stub.close();
+    }
+  }
+});
+
+test('fetch-space dry-run reports the selected target without downloading or revealing credentials', async () => {
+  const stub = await startStub(FETCH_ROUTES);
+  const outDir = mkdtempSync(join(tmpdir(), 'env-fetch-dry-run-'));
+  try {
+    const run = await runTool(FETCH_SPACE, ['--dry-run', '--out-dir', outDir], stub.port, {
+      apiHost: 'api.eu.contentful.com',
+    });
+    assert.equal(run.status, 0, run.stderr);
+    assert.deepEqual(JSON.parse(run.stdout), {
+      spaceId: SPACE,
+      environmentId: ENVIRONMENT,
+      apiOrigin: 'https://api.eu.contentful.com',
+      outputDir: outDir,
+    });
+    assert.doesNotMatch(run.stdout + run.stderr, /stub-token|Authorization/);
+    assert.deepEqual(readdirSync(outDir), []);
     assert.equal(stub.requests.length, 0);
   } finally {
     rmSync(outDir, { recursive: true, force: true });

@@ -96,6 +96,9 @@ async function main(): Promise<number> {
     console.error('Options: --dir <work-folder> --env-file <credentials-file> --snapshot <snapshot-folder>');
     console.error('Fetch: --out-dir <folder> --result-file <file> --refresh-db <db> --content-type <id>');
     console.error(
+      'Fetch --dry-run: show the selected target and output path without downloading or exposing credentials.',
+    );
+    console.error(
       'Inventory: --render human|json. Query/validation: --db <file>. Query: --sql <SELECT> --limit <rows>.',
     );
     return command ? 0 : 1;
