@@ -238,9 +238,11 @@ Download a Contentful space and environment into a local SQLite snapshot, see in
 npx skills add contentful/skills --skill contentful-env-analysis
 ```
 
-Restart your agent session, then invoke `/contentful-env-analysis` in Claude Code or `$contentful-env-analysis` in Codex. The agent creates `.contentful-env-analysis/`, asks for the CMA token, Space ID, and Environment ID, downloads the snapshot, and suggests questions.
+For reviewed-version installation and updates, follow the skill's [security and data-handling guidance](skills/contentful-env-analysis/references/security.md). The quick install above selects the current repository version; it is not integrity verification.
 
-Requires **Node.js 24.21+**, an AI agent with shell access, npm/npx and network access for installation, and a CMA token with read access for downloads. The installer may also need Git if its archive download is unavailable. Works with the same JavaScript bundle on Windows, macOS, and Linux. No Python, external SQLite, GitHub account, MCP server, or dependency installation is required. After downloading, analysis runs offline. Snapshot files contain customer content; keep them local and private.
+Restart your agent session, then invoke `/contentful-env-analysis` in Claude Code or `$contentful-env-analysis` in Codex. The agent creates `.contentful-env-analysis/`, asks you to configure credentials outside chat, shows the selected target and data-processing notice for confirmation, downloads the snapshot, and suggests questions.
+
+Requires **Node.js 24.21+**, an AI agent with shell access, npm/npx and network access for installation, and a CMA token with read access for downloads. The installer may also need Git if its archive download is unavailable. Works with the same JavaScript bundle on Windows, macOS, and Linux. No Python, external SQLite, GitHub account, MCP server, or dependency installation is required. After downloading, script queries run offline; results supplied to an AI agent may be processed by its provider. Snapshot files contain customer content; keep them private and remove them when no longer needed.
 
 Try asking:
 
