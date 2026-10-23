@@ -164,7 +164,7 @@ settings:
 
 overrides:
   contentful-sdk-core>qs: 6.16.0
-  basic-ftp: 6.2.2
+  basic-ftp: 6.2.3
   express-rate-limit: 8.7.1
   hono: 4.13.13
   ip-address: 10.7.4
@@ -1108,8 +1108,8 @@ packages:
   axios@1.20.0:
     resolution: {integrity: sha512-r8aOh8j9cGKpgQAqpzrUHnSIc6a59Y3Xf/cv8sy1DrHCkZHzQGEuoq1tARk6qSyDdtQGSDgpb9kFlruzPvrgwg==}
 
-  basic-ftp@6.2.2:
-    resolution: {integrity: sha512-LIkJcf/F6bTTfvE3k2YcTxrJsLKKVXiEpHZYkQP6JoqTb7khng7c13ckRTDQbqRh5IkehVH3F00sSlAa2F6DwA==}
+  basic-ftp@6.2.3:
+    resolution: {integrity: sha512-T7GYtQ2eKJUN5YORG7A8u2WfB9JMN0a4/wl3MI64qq2qTRfa3FXzoNq0DDojZDkDyStcL+TkfKsz4JHEZx5kGQ==}
     engines: {node: '>=10.0.0'}
 
   before-after-hook@4.0.0:
@@ -2844,7 +2844,7 @@ snapshots:
       - debug
       - supports-color
 
-  basic-ftp@6.2.2: {}
+  basic-ftp@6.2.3: {}
 
   before-after-hook@4.0.0: {}
 
@@ -3368,7 +3368,7 @@ snapshots:
 
   get-uri@8.0.1:
     dependencies:
-      basic-ftp: 6.2.2
+      basic-ftp: 6.2.3
       data-uri-to-buffer: 8.0.0
       debug: 4.4.3
     transitivePeerDependencies:
