@@ -59,6 +59,7 @@ function args(argv: string[]) {
     spaceId: get('--space-id', 'SPACE_ID'),
     environmentId: get('--environment-id', 'ENVIRONMENT_ID'),
     apiHost: get('--api-host', 'API_HOST', 'api.contentful.com')!,
+    dryRun: values.has('--dry-run'),
     outDir: values.get('--out-dir'),
     keepDb: values.has('--keep-db'),
     skipIfPresent: values.has('--skip-if-present'),
@@ -70,9 +71,14 @@ function args(argv: string[]) {
   };
 }
 
-function hostUrl(host: string) {
-  const value = host.replace(/\/$/, '');
-  return value.startsWith('http://') || value.startsWith('https://') ? value : `https://${value}`;
+function approvedHost(host: string): string {
+  const match = /^(?:https:\/\/)?(api(?:\.eu)?\.contentful\.com)(?::443)?\/?$/i.exec(host);
+  if (!match || match[0] !== host) {
+    throw new Error(
+      'API_HOST must be api.contentful.com or api.eu.contentful.com, optionally with https:// and a root slash',
+    );
+  }
+  return match[1]!.toLowerCase();
 }
 
 function errorStatus(error: unknown): number {
@@ -249,13 +255,8 @@ function collectionSummary(
 }
 
 function formatError(error: unknown) {
-  const value = object(error);
   const status = errorStatus(error);
-  return status
-    ? `HTTP ${status}: ${String(value.message ?? error)}`
-    : error instanceof Error
-      ? error.message
-      : String(error);
+  return status ? `HTTP ${status}: Contentful request failed` : error instanceof Error ? error.message : String(error);
 }
 
 export async function fetchSpace(options: ReturnType<typeof args>): Promise<number> {
@@ -266,10 +267,28 @@ export async function fetchSpace(options: ReturnType<typeof args>): Promise<numb
   ]
     .filter(([, value]) => !value)
     .map(([name]) => name);
-  if (missing.length) throw new Error(`missing ${missing.join(', ')}; provide flags or the working .env`);
+  if (missing.length)
+    throw new Error(`missing ${missing.join(', ')}; configure the working .env or process environment`);
   const token = options.token!;
   const spaceId = options.spaceId!;
   const environmentId = options.environmentId!;
+  const host = approvedHost(options.apiHost);
+  if (options.dryRun) {
+    console.log(
+      JSON.stringify(
+        {
+          spaceId,
+          environmentId,
+          apiOrigin: `https://${host}`,
+          outputDir: options.outDir ? resolve(options.outDir) : null,
+          ...(options.refreshDb ? { refreshDb: resolve(options.refreshDb) } : {}),
+        },
+        null,
+        2,
+      ),
+    );
+    return 0;
+  }
   if (options.skipIfPresent && options.outDir && existsSync(join(resolve(options.outDir), 'contentful-unified.db'))) {
     const summaryPath = join(resolve(options.outDir), 'summary.json');
     let summary: JsonObject;
@@ -286,19 +305,25 @@ export async function fetchSpace(options: ReturnType<typeof args>): Promise<numb
     if (options.resultFile) writeFileSync(options.resultFile, resolve(options.outDir), 'utf8');
     return 0;
   }
-  const parsedHost = new URL(hostUrl(options.apiHost));
-  const localHttp =
-    parsedHost.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(parsedHost.hostname);
-  if (parsedHost.protocol !== 'https:' && !localHttp) {
-    throw new Error('API_HOST must use HTTPS; HTTP is allowed only for explicit loopback hosts used in local testing');
-  }
   const client = createClient({
     accessToken: token,
-    host: parsedHost.host,
-    insecure: localHttp,
+    host,
+    adapter: 'http',
     retryLimit: 5,
     throttle: '70%',
     headers: ALPHA_HEADERS,
+    onBeforeRequest(config) {
+      config.maxRedirects = 0;
+      return config;
+    },
+    onError(error: unknown) {
+      const status = errorStatus(error);
+      throw new Error(
+        status
+          ? `HTTP ${status}: Contentful request failed`
+          : 'Contentful request failed; check your network connection and retry',
+      );
+    },
   });
   const space = await client.space.get({ spaceId });
   const organizationId = linkId(object(space.sys).organization);
