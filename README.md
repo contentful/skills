@@ -232,7 +232,7 @@ Improve, debug, and extend an existing Contentful App Framework custom app in a 
 
 ### contentful-env-analysis
 
-Download a Contentful space and environment into a local SQLite snapshot, see inventory tables, and ask questions without changing remote content or starting an upgrade.
+Download a Contentful space and environment into a local SQLite snapshot, see inventory tables, and ask questions without changing remote content.
 
 ```bash
 npx skills add contentful/skills --skill contentful-env-analysis

@@ -1,12 +1,12 @@
 ---
 name: contentful-env-analysis
-description: Download a Contentful space and environment into a local read-only SQLite snapshot, inspect its content model and ExO entities, or answer data questions without starting an ExO upgrade.
+description: Download a Contentful space and environment into a local read-only SQLite snapshot, inspect its content model and ExO entities, or answer data questions.
 compatibility: Requires Node.js 24.21+, an agent with shell access, and a Contentful CMA token for downloads.
 ---
 
 # Contentful Environment Analysis
 
-Create and inspect a local snapshot. This skill is analysis-only: it must not change the Contentful space or start an ExO upgrade.
+Create and inspect a local snapshot. This skill is analysis-only: it must not change the Contentful space.
 
 When this skill is invoked directly, start the download workflow immediately. Do not ask the user to
 repeat their request or choose a mode before running `init`.
@@ -41,8 +41,10 @@ snapshot has no reliable identity, say so rather than assigning it to the curren
 ## Download the snapshot
 
 1. Run `node scripts/main.js init`.
-2. Tell the user that `.contentful-env-analysis/` now contains only `.env`, `.gitignore`, and an empty
-   `snapshots/` folder. It does not create upgrade runs or codebase-analysis state.
+2. Show the data-processing notice printed by `init` to the user as written, before asking them to
+   configure credentials. It is also included as comments in new `.env` files. Existing credentials
+   files are left unchanged, but `init` still displays the notice. Tell the user that
+   `.contentful-env-analysis/` contains `.env`, `.gitignore`, and the `snapshots/` folder.
 3. Ask the operator to configure credentials outside the conversation. They can edit
    `.contentful-env-analysis/.env` themselves or use a credential helper to inject the token into the
    script's environment, leaving the token field in `.env` blank. Recommend a dedicated identity limited

@@ -9,6 +9,7 @@ import {
   readFileSync,
   readdirSync,
   realpathSync,
+  rmSync,
   symlinkSync,
   utimesSync,
   writeFileSync,
@@ -61,6 +62,49 @@ test(
     }
   },
 );
+
+test('init shows the data notice and adds it to new credentials files without changing existing credentials', () => {
+  const root = mkdtempSync(join(tmpdir(), 'contentful-env-analysis-notice-'));
+  const work = join(root, 'work');
+  try {
+    const initialized = spawnSync(process.execPath, [MAIN, 'init', '--dir', work], { cwd: root, encoding: 'utf8' });
+    assert.equal(initialized.status, 0, initialized.stderr);
+    const envPath = join(work, '.env');
+    const env = readFileSync(envPath, 'utf8');
+    const notice = env
+      .split('\n')
+      .filter((line) => line.startsWith('# '))
+      .map((line) => line.slice(2))
+      .join('\n');
+    assert.notEqual(notice, '', 'the new credentials template must contain a data-processing notice');
+    assert.ok(initialized.stderr.includes(notice), 'the same notice must be shown beside the credentials path');
+    assert.deepEqual(
+      Object.fromEntries(
+        env
+          .split('\n')
+          .filter((line) => line && !line.startsWith('#'))
+          .map((line) => line.split('=')),
+      ),
+      {
+        CONTENTFUL_CMA_TOKEN: '',
+        SPACE_ID: '',
+        ENVIRONMENT_ID: '',
+        API_HOST: 'api.contentful.com',
+      },
+    );
+
+    const existing = 'CONTENTFUL_CMA_TOKEN=notice-test-token\nSPACE_ID=keep-space\nENVIRONMENT_ID=keep-env\n';
+    writeFileSync(envPath, existing);
+    const repeated = spawnSync(process.execPath, [MAIN, 'init', '--dir', work], { cwd: root, encoding: 'utf8' });
+    assert.equal(repeated.status, 0, repeated.stderr);
+    assert.equal(readFileSync(envPath, 'utf8'), existing);
+    assert.ok(repeated.stderr.includes(notice), 'existing users must also see the notice');
+    assert.doesNotMatch(repeated.stdout + repeated.stderr, /notice-test-token/);
+    assert.equal(repeated.stdout, '', 'setup diagnostics must not change machine-readable stdout');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
 
 test('snapshot discovery skips failed and truncated downloads and selects the latest complete snapshot', () => {
   const root = mkdtempSync(join(tmpdir(), 'contentful-env-analysis-discovery-'));
