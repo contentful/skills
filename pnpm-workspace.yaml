@@ -1,5 +1,5 @@
 overrides:
-  contentful-sdk-core>qs: 6.16.0
+  contentful-sdk-core>qs: 6.16.1
   basic-ftp: 6.2.2
   express-rate-limit: 8.7.1
   hono: 4.13.13
