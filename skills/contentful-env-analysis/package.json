@@ -1,6 +1,6 @@
 {
   "name": "@contentful/skill-contentful-env-analysis",
-  "version": "2.7.6",
+  "version": "2.7.7",
   "type": "module",
   "description": "Download and analyze a Contentful environment using a local read-only SQLite snapshot.",
   "license": "MIT",
