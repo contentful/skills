@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cp, mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,6 +24,14 @@ test('committed bundle is current and runs in isolation without installed depend
     const initialized = run('snapshots');
     assert.equal(initialized.status, 0, initialized.stderr);
     assert.deepEqual(JSON.parse(initialized.stdout), []);
+    const envTemplate = await readFile(join(root, '.contentful-env-analysis', '.env'), 'utf8');
+    const notice = envTemplate
+      .split('\n')
+      .filter((line) => line.startsWith('# '))
+      .map((line) => line.slice(2))
+      .join('\n');
+    assert.notEqual(notice, '');
+    assert.ok(initialized.stderr.includes(notice));
     assert.deepEqual((await readdir(join(root, '.contentful-env-analysis'))).sort(), [
       '.env',
       '.gitignore',
