@@ -1,6 +1,6 @@
 {
   "name": "@contentful/skill-exo-content-bindings",
-  "version": "2.7.7",
+  "version": "2.7.8",
   "description": "Create Data Assemblies (content bindings) for Contentful Experience Orchestration components",
   "license": "MIT",
   "files": [
