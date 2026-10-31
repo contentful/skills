@@ -163,7 +163,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  contentful-sdk-core>qs: 6.16.0
+  contentful-sdk-core>qs: 6.16.1
   basic-ftp: 6.2.2
   express-rate-limit: 8.7.2
   hono: 4.13.14
@@ -1944,8 +1944,8 @@ packages:
     resolution: {integrity: sha512-6YHEFRL9mfgcAvql/XhwTvf5jKcOiiupt2FiJxHkiX1z4j7WL8J/jRHYLluORvc1XxB5rV20KoeK00gVJamspg==}
     engines: {node: '>=0.6'}
 
-  qs@6.16.0:
-    resolution: {integrity: sha512-h6fhOIaRrID2CbEY2fqs+7t+UXZo+MLAnU5gRIq85uFtdiUPCdsApMlHhXogKVM4HM2DVbIjGNTTYH2OcmP1vA==}
+  qs@6.16.1:
+    resolution: {integrity: sha512-5Px6J7rfHBAGUhNQ3es4YzcOdBBw0SDcVtThJml4RdnKw4tKs2epA0kPZ+K8X+WiHktT93RHVcQ/3ym5aTCgtg==}
     engines: {node: '>=0.6'}
 
   queue-microtask@1.2.3:
@@ -2981,7 +2981,7 @@ snapshots:
       fast-copy: 3.1.0
       lodash: 4.18.1
       process: 0.11.10
-      qs: 6.16.0
+      qs: 6.16.1
     optionalDependencies:
       '@rollup/rollup-linux-x64-gnu': 4.64.7
 
@@ -3758,7 +3758,7 @@ snapshots:
     dependencies:
       side-channel: 1.1.0
 
-  qs@6.16.0:
+  qs@6.16.1:
     dependencies:
       es-define-property: 1.0.1
       side-channel: 1.1.1
