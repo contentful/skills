@@ -50,7 +50,7 @@ Run `/reload-plugins` to activate. This registers two MCP servers:
 | **[contentful-custom-app-enhancement](#contentful-custom-app-enhancement)** | Improves and debugs existing Contentful custom apps in customer-owned repos. |
 | **[contentful-personalization](#contentful-personalization)** | Sets up, debugs, and develops personalization and A/B testing with the Experiences SDK. |
 | **[channels-destinations](#channels-destinations)** | Sets up and manages Channels, Destinations, and Destination Nodes via the Destinations Management API. |
-| **[exo-content-bindings](#exo-content-bindings)** | Creates Data Assemblies (content bindings) that connect entries to Experience Orchestration components. |
+| **[exo-content-bindings](#exo-content-bindings)** | Creates Content Binding Configurations that connect Content Types to Experience Orchestration components. |
 
 The custom app skills are packaged together under `skills/contentful-apps/`.
 
@@ -294,7 +294,7 @@ Set up and manage Channels, Destinations, and Destination Nodes through the Dest
 
 ### exo-content-bindings
 
-Create Data Assemblies — the content-binding recipes that connect existing entries to Experience Orchestration component types. Covers classifying coded vs. composite components, judging content vs. design properties, public/private (hoisted) properties, and slot vs. content-binding scope, then designing, creating, linking, and publishing Data Assemblies via the CMA.
+Creates Content Binding Configurations, powered by Data Assemblies that connect Content Types to Components. Covers classifying coded vs. composite components, judging content vs. design properties, public/private (hoisted) properties, and slots.
 
 <details>
 <summary>Triggers and details</summary>
