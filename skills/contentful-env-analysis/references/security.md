@@ -1,5 +1,18 @@
 # Safe setup and data handling
 
+## Data processing notice
+
+`init` displays this notice beside the credentials-file path and includes it as comments in new
+`.env` files. Existing credentials files are not overwritten. Show this notice to the user before
+credential setup, in addition to confirming the selected target before download.
+
+> Data processing notice:
+> This skill saves Contentful content, including drafts and metadata, to local JSON files and a SQLite database.
+> This data may include confidential or personal information.
+> Content read by your AI agent may be processed by its provider, depending on your host, account and settings.
+> Only continue if you are authorised to use this data with the selected agent and provider.
+> Local copies remain until you delete them. Deleting local files does not delete agent/provider history.
+
 ## Choose and verify an installation
 
 Skill instructions and the bundled JavaScript execute with your agent's local permissions. Review

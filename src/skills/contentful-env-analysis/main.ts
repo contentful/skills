@@ -11,6 +11,14 @@ import { parseArgs, stringArg } from './lib/shared/args.ts';
 import { isDirectExecution } from './lib/shared/is-direct-execution.ts';
 
 const WORK_DIR = '.contentful-env-analysis';
+const DATA_PROCESSING_NOTICE = [
+  'Data processing notice:',
+  'This skill saves Contentful content, including drafts and metadata, to local JSON files and a SQLite database.',
+  'This data may include confidential or personal information.',
+  'Content read by your AI agent may be processed by its provider, depending on your host, account and settings.',
+  'Only continue if you are authorised to use this data with the selected agent and provider.',
+  'Local copies remain until you delete them. Deleting local files does not delete agent/provider history.',
+].join('\n');
 
 function projectBase(): string {
   const segments = process.cwd().split(sep);
@@ -28,15 +36,23 @@ function runInit(argv: string[]): number {
   writeFileSync(join(root, '.gitignore'), '*\n');
   const envPath = join(root, '.env');
   try {
-    writeFileSync(envPath, 'CONTENTFUL_CMA_TOKEN=\nSPACE_ID=\nENVIRONMENT_ID=\nAPI_HOST=api.contentful.com\n', {
-      flag: 'wx',
-      mode: 0o600,
-    });
+    const noticeComments = DATA_PROCESSING_NOTICE.split('\n')
+      .map((line) => `# ${line}`)
+      .join('\n');
+    writeFileSync(
+      envPath,
+      `${noticeComments}\n\nCONTENTFUL_CMA_TOKEN=\nSPACE_ID=\nENVIRONMENT_ID=\nAPI_HOST=api.contentful.com\n`,
+      {
+        flag: 'wx',
+        mode: 0o600,
+      },
+    );
   } catch (error) {
     if (!(error instanceof Error && 'code' in error && error.code === 'EEXIST')) throw error;
   }
   console.error(`Working folder: ${root}`);
   console.error(`Credentials: ${envPath}`);
+  console.error(DATA_PROCESSING_NOTICE);
   console.error('Next: add CONTENTFUL_CMA_TOKEN, SPACE_ID, and ENVIRONMENT_ID to that file.');
   return 0;
 }
