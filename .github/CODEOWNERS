@@ -1,5 +1,5 @@
 * @contentful/team-personalization @TimBeyer
 
 # Environment analysis (Team Atlas)
-/skills/contentful-env-analysis/ @contentful/team-migrations
-/src/skills/contentful-env-analysis/ @contentful/team-migrations
+/skills/contentful-env-analysis/ @contentful/team-developer-activation
+/src/skills/contentful-env-analysis/ @contentful/team-developer-activation
