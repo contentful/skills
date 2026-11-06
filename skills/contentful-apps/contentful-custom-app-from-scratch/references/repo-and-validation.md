@@ -31,15 +31,21 @@ When scaffolding from scratch:
 
 Typical local loop:
 
-1. Install dependencies with the repo's package manager.
-2. Start the app dev server.
-3. Create an app definition in a development organization.
-4. Set the frontend URL to the local server.
-5. Select implemented locations.
-6. Install the app into a sandbox or non-production environment.
-7. Assign the app to the intended content type, field, sidebar, home, or page
+1. Stop stale dev servers from earlier app work so the port serves the intended
+   app.
+2. Install dependencies with the repo's package manager.
+3. Start the app dev server.
+4. Create an app definition in a development organization.
+5. Set the frontend URL to the local server.
+6. Select implemented locations.
+7. Install the app into a sandbox or non-production environment.
+8. Assign the app to the intended content type, field, sidebar, home, or page
    location.
-8. Exercise the main workflow with minimal test content.
+9. Exercise the main workflow with minimal test content.
+
+If a change does not appear in the Contentful web app, first confirm the app
+definition points at the local URL rather than an older hosted bundle, and that
+the browser is not showing a cached build.
 
 ## Validation Matrix
 
@@ -50,13 +56,19 @@ Run the checks that exist in the project:
 - Lint/format: `lint`, formatter check, or equivalent.
 - Tests: unit, component, or integration tests for critical app behavior.
 - Build: production build or app bundle command.
+- Artifacts: when the app uses Functions or App Actions, confirm the expected
+  manifest and build output exist.
 - Manual smoke: Contentful web app flow with local app URL.
+- Accessibility: primary flow works with the keyboard and controls are labeled.
 - Security: no secrets in code, logs, test data, screenshots, or docs.
 - Runtime config: if app code reads installation parameters, search for
   `appInstallation.getForOrganization`, `appInstallation.get`, and
   `getForOrganization`; runtime reads should come from
   `sdk.parameters.installation` unless a CMA app-installation call is explicitly
   needed for remote installation records.
+
+Prefer the project's local toolchain (package scripts or `node_modules/.bin`)
+over globally installed tools.
 
 If a check is missing, do not invent a passing result. State the gap and run the
 closest meaningful alternative.
@@ -70,5 +82,6 @@ Summarize:
 - commands to run locally,
 - app definition and assignment steps,
 - validation run,
+- what is still mocked, demo-only, or credential-dependent,
 - known limitations,
 - recommended next work.

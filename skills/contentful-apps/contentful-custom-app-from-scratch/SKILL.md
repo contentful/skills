@@ -37,12 +37,14 @@ examples to adapt, not as required repo structure or publication process.
 - Start with the app's job, primary users, affected content model, and target
   Contentful surface before writing code.
 - Ask only for information that changes the architecture or prevents a wrong
-  build.
+  build. Offer concrete options with tradeoffs instead of open-ended questions.
 - Prefer the smallest version that proves the value in a non-production space.
 - Ground capability decisions in official App Framework docs and the current
   project structure.
 - Keep user-owned secrets, tokens, and production content out of generated code,
   logs, and examples.
+- Expect several passes. Treat the user's feedback and in-progress edits as part
+  of the working source of truth.
 
 ## Workflow
 
@@ -63,9 +65,26 @@ Capture a short brief before scaffolding:
 If the idea is still broad, propose 2-3 feasible v1 options and recommend the
 smallest useful one.
 
+If the user provides a prototype, handoff repo, or example project as context,
+separate reusable patterns from generated or disposable artifacts, and do not
+build inside that repo unless the user asks.
+
 For planning details, use [App planning](references/app-planning.md).
 
-### 2. Choose the App Shape
+### 2. Check Feasibility and Choose the App Shape
+
+When the user asks whether something is possible, answer with a concrete build
+shape:
+
+- recommended locations,
+- key App SDK and CMA touchpoints,
+- likely permissions,
+- main risks,
+- simplest viable architecture.
+
+Separate what can run entirely in the client, what needs CMA calls or
+installation parameters, what needs a backend, App Action, or Function, and what
+is not realistic for v1.
 
 Choose locations by user workflow:
 
@@ -85,6 +104,9 @@ Choose locations by user workflow:
 
 If sensitive credentials are required, model them as secret installation
 parameters and consume raw values only in a backend or Function-backed path.
+
+For integration apps, decide whether v1 needs a small demo or test path so the
+user can verify the flow end to end, and name it in the plan.
 
 ### 3. Inspect or Scaffold the Project
 
@@ -108,7 +130,10 @@ If the user does not have a repo:
 ### 4. Build in Contentful-Native Style
 
 - Use the App SDK or React Apps Toolkit to access the current location SDK.
-- Use Forma 36 components for Contentful web app UI. Always check if Forma 36 has a similar component before attempting to build something custom.
+- Use Forma 36 components for Contentful web app UI. Always check if Forma 36
+  has a similar component before attempting to build something custom.
+- Follow [UI conventions](references/ui-conventions.md) for copy, layout,
+  configuration screens, icons, and accessibility.
 - Keep UI dense, clear, and editor-friendly; avoid marketing layouts inside the
   Contentful web app.
 - Include loading, empty, permission, and error states when they affect the main
@@ -123,6 +148,9 @@ If the user does not have a repo:
 - Do not expose management tokens, API keys, or third-party credentials in
   browser code.
 
+Before calling UI work done, compare it against Forma 36 and comparable public
+apps and fix misaligned layouts without waiting for the user to point them out.
+
 ### 5. Wire the Local App into Contentful
 
 Create or update the app definition in a development organization or sandbox:
@@ -136,6 +164,10 @@ Create or update the app definition in a development organization or sandbox:
   page location,
 - seed minimal test content when needed.
 
+Before concluding that a change has no effect, confirm the app definition points
+at the intended local URL and that no stale dev server from earlier work is
+serving a different bundle on the same port.
+
 For local test and handoff steps, use
 [Repository and validation](references/repo-and-validation.md).
 
@@ -148,15 +180,30 @@ Run the closest meaningful checks available in the user's project:
 - unit or component tests,
 - production build,
 - local dev server smoke test,
-- manual Contentful web app flow in a non-production space.
+- manual Contentful web app flow in a non-production space,
 - `rg -n "appInstallation\\.(getForOrganization|get)\\(|getForOrganization"`
   over the app source when runtime code reads installation parameters, with any
   remaining CMA app-installation call explained.
 
+Prefer the project's local toolchain (package scripts or `node_modules/.bin`)
+over globally installed tools so results reflect the app's real environment.
+
 Do not claim the app works unless you ran the relevant validation or clearly
 state what could not be run.
 
-### 7. Hand Off the Result
+### 7. Self-Review
+
+Before handing off or suggesting the app is ready for review, check for:
+
+- missing or skipped verification,
+- scope that is overbuilt for v1,
+- secret-handling assumptions, such as credentials reaching browser code or
+  stored as non-secret parameters,
+- permissions broader than the feature needs,
+- README or docs claims that exceed what the app actually does,
+- behavior that is still mocked, hardcoded, or credential-dependent.
+
+### 8. Hand Off and Iterate
 
 End with:
 
@@ -166,6 +213,19 @@ End with:
 - validation performed,
 - remaining assumptions, limitations, or credentials needed,
 - suggested next iteration.
+
+After the first working version, name the biggest remaining gaps and help the
+user choose the next pass: UX polish, added capability, robustness, or review
+preparation. Keep the app runnable after each substantial change.
+
+## Guardrails
+
+- Do not treat vague inspiration as permission to overbuild.
+- Do not default to a multi-location app when one location proves the concept.
+- Do not invent App Framework capabilities without checking current docs.
+- Do not build custom UI where Forma 36 already solves the problem.
+- Do not leave the app half-wired without saying what is still mocked or
+  missing.
 
 ## Related Skills
 

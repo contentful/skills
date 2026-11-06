@@ -16,6 +16,8 @@ build plan.
   parameters, environment variables, or backend secret storage?
 - V1 scope: What is required, what is intentionally deferred, and what must be
   confirmed before coding?
+- Assumptions and blockers: Which assumptions are acceptable for v1, and which
+  open questions could change the architecture?
 - Validation: What can be tested locally, in a sandbox, and in the Contentful web
   app?
 
@@ -47,6 +49,11 @@ Connects Contentful to an external system. Common pieces:
 - `entry-sidebar`, `entry-field`, `dialog`, or `page` for user interaction,
 - App Actions, Functions, or an external backend for server-side work,
 - secret installation parameters for sensitive credentials.
+
+Integration apps often benefit from a small demo or test path in v1 (sample
+data, a test connection button, or a sandbox account flow) so the user can
+verify the integration end to end. Name it explicitly in the plan. Editor
+workflow and operational apps rarely need one.
 
 ## Location Selection Notes
 
@@ -90,6 +97,8 @@ Use a backend, App Action, or Function when:
 Functions are available only for eligible accounts and plans, so confirm
 availability before making them a v1 requirement.
 
+Call out anything that is not realistic for v1 instead of quietly dropping it.
+
 ## Security Checks
 
 - Treat non-secret installation and instance parameters as readable by space
@@ -98,6 +107,7 @@ availability before making them a v1 requirement.
   `sdk.parameters.installation` instead of fetching app installation records
   through CMA.
 - Use secret installation parameters for access tokens and private credentials.
+- Request only the permissions and access the feature set needs.
 - Do not write tokens into source files, test fixtures, screenshots, logs, or PR
   descriptions.
 - Prefer sandbox environments and minimal sample content for development.
