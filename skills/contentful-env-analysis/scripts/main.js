@@ -36256,7 +36256,7 @@ async function fetchSpace(options) {
   if (Object.values({ componentTypes, templates, dataAssemblies, experiences, fragments }).some(
     (collection) => collection.status === "truncated"
   )) {
-    console.error("ERROR: this snapshot is incomplete because an ExO collection was truncated");
+    console.error("ERROR: this snapshot is incomplete because an entity collection was truncated");
     return 1;
   }
   console.log(
@@ -36797,7 +36797,7 @@ function computeInventoryWarnings(inventory, env) {
     );
   }
   if (inventory.dbPresent && inventory.componentCount === 0 && (!inventory.exoCollectionStatus?.components || inventory.exoCollectionStatus.components === "ok")) {
-    inventory.warnings.push("No existing ExO Components found in this snapshot.");
+    inventory.warnings.push("No existing Components found in this snapshot.");
   }
   if (inventory.dbPresent && inventory.contentTypeCount === 0) {
     inventory.warnings.push("No content types found \u2014 the database may be empty or malformed.");
@@ -36858,7 +36858,7 @@ function renderHumanInventory(inventory) {
     }
   }
   if (inventory.components.length > 0) {
-    lines.push("", "  ExO Components:");
+    lines.push("", "  Components:");
     for (const component of inventory.components) {
       lines.push(
         `    - ${component.name} (${component.id}): ${component.kind}, ${component.contentPropertyCount} content properties, ${component.designPropertyCount} design properties, ${component.slotCount} slots, ${component.fragmentCount} fragments`
@@ -36866,7 +36866,7 @@ function renderHumanInventory(inventory) {
     }
   }
   if (inventory.experienceTemplates.length > 0) {
-    lines.push("", "  ExO Experience Templates:");
+    lines.push("", "  Experience Templates:");
     for (const template of inventory.experienceTemplates) {
       lines.push(
         `    - ${template.name} (${template.id}): ${template.contentPropertyCount} content properties, ${template.designPropertyCount} design properties, ${template.slotCount} slots, ${template.experienceCount} experiences`
@@ -36874,21 +36874,21 @@ function renderHumanInventory(inventory) {
     }
   }
   if (inventory.experiences.length > 0) {
-    lines.push("", "  ExO Experiences:");
+    lines.push("", "  Experiences:");
     for (const experience of inventory.experiences) {
       const template = experience.schemaName ?? experience.schemaId ?? "(unknown template)";
       lines.push(`    - ${experience.name} (${experience.id}): template ${template}`);
     }
   }
   if (inventory.fragments.length > 0) {
-    lines.push("", "  ExO Fragments:");
+    lines.push("", "  Fragments:");
     for (const fragment of inventory.fragments) {
       const component = fragment.schemaName ?? fragment.schemaId ?? "(unknown component)";
       lines.push(`    - ${fragment.name} (${fragment.id}): component ${component}`);
     }
   }
   if (inventory.dataAssemblies.length > 0) {
-    lines.push("", "  ExO Data Assemblies:");
+    lines.push("", "  Data Assemblies:");
     for (const assembly of inventory.dataAssemblies) {
       lines.push(`    - ${assembly.name} (${assembly.id})`);
     }

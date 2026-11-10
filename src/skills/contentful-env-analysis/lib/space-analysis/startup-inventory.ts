@@ -527,7 +527,7 @@ export function computeInventoryWarnings(inventory: SpaceInventory, env: StringM
     inventory.componentCount === 0 &&
     (!inventory.exoCollectionStatus?.components || inventory.exoCollectionStatus.components === 'ok')
   ) {
-    inventory.warnings.push('No existing ExO Components found in this snapshot.');
+    inventory.warnings.push('No existing Components found in this snapshot.');
   }
   if (inventory.dbPresent && inventory.contentTypeCount === 0) {
     inventory.warnings.push('No content types found — the database may be empty or malformed.');
@@ -596,7 +596,7 @@ export function renderHumanInventory(inventory: SpaceInventory): string {
     }
   }
   if (inventory.components.length > 0) {
-    lines.push('', '  ExO Components:');
+    lines.push('', '  Components:');
     for (const component of inventory.components) {
       lines.push(
         `    - ${component.name} (${component.id}): ${component.kind}, ` +
@@ -606,7 +606,7 @@ export function renderHumanInventory(inventory: SpaceInventory): string {
     }
   }
   if (inventory.experienceTemplates.length > 0) {
-    lines.push('', '  ExO Experience Templates:');
+    lines.push('', '  Experience Templates:');
     for (const template of inventory.experienceTemplates) {
       lines.push(
         `    - ${template.name} (${template.id}): ${template.contentPropertyCount} content properties, ` +
@@ -616,21 +616,21 @@ export function renderHumanInventory(inventory: SpaceInventory): string {
     }
   }
   if (inventory.experiences.length > 0) {
-    lines.push('', '  ExO Experiences:');
+    lines.push('', '  Experiences:');
     for (const experience of inventory.experiences) {
       const template = experience.schemaName ?? experience.schemaId ?? '(unknown template)';
       lines.push(`    - ${experience.name} (${experience.id}): template ${template}`);
     }
   }
   if (inventory.fragments.length > 0) {
-    lines.push('', '  ExO Fragments:');
+    lines.push('', '  Fragments:');
     for (const fragment of inventory.fragments) {
       const component = fragment.schemaName ?? fragment.schemaId ?? '(unknown component)';
       lines.push(`    - ${fragment.name} (${fragment.id}): component ${component}`);
     }
   }
   if (inventory.dataAssemblies.length > 0) {
-    lines.push('', '  ExO Data Assemblies:');
+    lines.push('', '  Data Assemblies:');
     for (const assembly of inventory.dataAssemblies) {
       lines.push(`    - ${assembly.name} (${assembly.id})`);
     }

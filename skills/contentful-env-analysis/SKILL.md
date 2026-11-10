@@ -1,6 +1,6 @@
 ---
 name: contentful-env-analysis
-description: Download a Contentful space and environment into a local read-only SQLite snapshot, inspect its content model and ExO entities, or answer data questions.
+description: Download a Contentful space and environment into a local read-only SQLite snapshot, inspect its content model and content usage, or answer data questions.
 compatibility: Requires Node.js 24.21+, an agent with shell access, and a Contentful CMA token for downloads.
 ---
 
@@ -56,7 +56,7 @@ snapshot has no reliable identity, say so rather than assigning it to the curren
 6. For a new download, run `node scripts/main.js fetch --dry-run` to show the selected space/environment,
    API origin and output folder without fetching or exposing the token. Before fetching, tell the user:
    - The script will read all localized entries, including drafts, content type definitions, asset
-     metadata (not media binaries), referenced tags/taxonomy concepts and available ExO entities.
+     metadata (not media binaries), referenced tags/taxonomy concepts and available component and experience data.
    - Raw JSON, SQLite and summaries will be stored in a timestamped folder under the shown output path.
      Local tools with access to that folder can read this customer data.
    - Contentful API requests go to the shown approved US/EU origin. Results shared with the AI agent may
@@ -94,7 +94,7 @@ Fragments, and Data Assemblies. Call out the content types with the most entries
 Present the inventory as compact Markdown tables, not only prose or bullet counts:
 
 - Show content types with total, published, draft-only, potentially unreferenced entries, and field count.
-- Show every ExO Component with its ID, coded/composite kind, content/design property and slot counts,
+- Show every Component with its ID, coded/composite kind, content/design property and slot counts,
   and Fragment instance count.
 - Show every Experience Template with its ID, property and slot counts, and Experience instance count.
 - Show the names and IDs of Experiences, Fragments, and Data Assemblies, including the template or
@@ -113,8 +113,8 @@ Then offer concrete questions based on the actual names in that inventory. Usefu
 - Which entries are potentially unreferenced, and could any be page roots or loaded directly by the application?
 - What entry types link to `<actual content type>`?
 - Which locales have gaps for `<actual content type>`?
-- Which ExO Components and Experience Templates already exist, and how many instances use each one?
-- Which Data Assemblies exist, and which ExO entities refer to them?
+- Which Components and Experience Templates already exist, and how many instances use each one?
+- Which Data Assemblies exist, and which components or templates refer to them?
 
 Tell the user that the snapshot is ready, show four to six relevant examples, and invite them to ask any
 other question about the space. Always include the Rich Text completeness and potentially-unreferenced-entry
@@ -134,7 +134,7 @@ node scripts/main.js query --snapshot <snapshot-path> --sql '<SELECT statement>'
 
 The command permits only `SELECT`, `WITH`, and `EXPLAIN`, caps returned rows, disables extensions, and opens SQLite read-only. Prefer counts and grouped summaries before requesting large row sets. Avoid selecting `raw_json` unless the question needs the full resource payload, because it may contain customer content.
 
-For questions about ExO terms and relationships, read [references/exo-domain.md](references/exo-domain.md). Keep factual domain explanation separate from what the snapshot proves.
+For questions about component and experience terms and relationships, read [references/entities.md](references/entities.md). Keep factual domain explanation separate from what the snapshot proves.
 
 ## Refresh
 

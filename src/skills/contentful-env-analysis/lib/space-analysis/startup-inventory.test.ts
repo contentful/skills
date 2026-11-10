@@ -216,5 +216,5 @@ test('does not report an unavailable ExO collection as empty', () => {
   const inventory = gatherInventory(dataDir);
   computeInventoryWarnings(inventory, {});
   assert.match(renderHumanInventory(inventory), /Components:\s+unavailable/);
-  assert.ok(!inventory.warnings.some((warning) => warning.includes('No existing ExO Components')));
+  assert.ok(!inventory.warnings.some((warning) => warning.includes('No existing Components')));
 });
