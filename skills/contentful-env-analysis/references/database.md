@@ -10,12 +10,12 @@ Use `contentful-unified.db` through `node scripts/main.js query`. Common tables:
 | `entry_fields` | Localized entry field values | `entry_id`, `field_key`, `locale` |
 | `assets` | Asset system data and raw payload | `asset_id` |
 | `asset_fields` | Localized asset field values | `asset_id`, `field_key`, `locale` |
-| `component` | ExO Components | `component_id` |
+| `component` | Components | `component_id` |
 | `component_property` | Component content/design properties and slots | `component_id`, `property_id`, `kind` |
-| `experience_template` | ExO Experience Templates | `experience_template_id` |
+| `experience_template` | Experience Templates | `experience_template_id` |
 | `experience_template_property` | Template properties and slots | `experience_template_id`, `property_id`, `kind` |
-| `exo_experience` | ExO Experience instances | `experience_id` |
-| `exo_fragment` | ExO Fragment instances | `fragment_id` |
+| `exo_experience` | Experience instances | `experience_id` |
+| `exo_fragment` | Fragment instances | `fragment_id` |
 | `exo_data_assembly` | Data Assemblies | `data_assembly_id` |
 | `tags` | Tags referenced by fetched entries/assets | `tag_id` |
 | `taxonomy_concepts` | Concepts referenced by fetched entries/assets | `concept_id` |

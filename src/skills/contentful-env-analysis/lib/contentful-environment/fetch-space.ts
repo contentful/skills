@@ -449,7 +449,7 @@ export async function fetchSpace(options: ReturnType<typeof args>): Promise<numb
       (collection) => collection.status === 'truncated',
     )
   ) {
-    console.error('ERROR: this snapshot is incomplete because an ExO collection was truncated');
+    console.error('ERROR: this snapshot is incomplete because an entity collection was truncated');
     return 1;
   }
   console.log(

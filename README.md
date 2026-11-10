@@ -45,7 +45,7 @@ Run `/reload-plugins` to activate. This registers two MCP servers:
 | **[contentful-api](#contentful-api)** | Language-agnostic REST and GraphQL API reference — curl examples for CMA, CDA, CPA, Images, and GraphQL. |
 | **[contentful-nextjs](#contentful-nextjs)** | Integrates Contentful into a Next.js project — SDK setup, content fetching, Draft Mode previews. |
 | **[contentful-migration](#contentful-migration)** | Writes and runs content model migration scripts — fields, validations, transforms, editor interfaces. |
-| **[contentful-env-analysis](#contentful-env-analysis)** | Downloads an environment to a local SQLite snapshot and answers questions about content, references, Rich Text, and ExO entities. Read-only. |
+| **[contentful-env-analysis](#contentful-env-analysis)** | Downloads an environment to a local SQLite snapshot and answers questions about content, references, Rich Text, and content usage. Read-only. |
 | **[contentful-custom-app-from-scratch](#contentful-custom-app-from-scratch)** | Designs, scaffolds, builds, and validates new App Framework custom apps. |
 | **[contentful-custom-app-enhancement](#contentful-custom-app-enhancement)** | Improves and debugs existing Contentful custom apps in customer-owned repos. |
 | **[contentful-personalization](#contentful-personalization)** | Sets up, debugs, and develops personalization and A/B testing with the Experiences SDK. |
@@ -249,7 +249,7 @@ Try asking:
 - Which Rich Text fields are empty or contain Entry links?
 - Which entries have no incoming links, and could they be page roots?
 - Which content types have the most draft-only entries or missing translations?
-- Which ExO Components and Experience Templates exist, and how many instances use each one?
+- Which fields are rarely populated across entries?
 
 ### contentful-personalization
 
