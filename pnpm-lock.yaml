@@ -165,7 +165,7 @@ settings:
 overrides:
   contentful-sdk-core>qs: 6.16.0
   basic-ftp: 6.2.2
-  express-rate-limit: 8.7.3
+  express-rate-limit: 8.7.4
   hono: 4.13.17
   ip-address: 10.7.6
 
@@ -1432,8 +1432,8 @@ packages:
     resolution: {integrity: sha512-CRT1WTyuQoD771GW56XEZFQ/ZoSfWid1alKGDYMmkt2yl8UXrVR4pspqWNEcqKvVIzg6PAltWjxcSSPrboA4iA==}
     engines: {node: '>=18.0.0'}
 
-  express-rate-limit@8.7.3:
-    resolution: {integrity: sha512-zPLqDI2f0gV2WmGnacLf9XSSqn4VldRyP5LCzOwx0BKH40mO6+2PCFkoSsRO2jePx87/Kf6NUF6P2QOTKXHbQA==}
+  express-rate-limit@8.7.4:
+    resolution: {integrity: sha512-LKBXzX700wz3zAGNNmVnjRI5mEbYkLv7UbMI4+9Xa+JPcg2UZh6AgY/2CZh9RrJjFM5ttC/N1lD+KzyFoZITCw==}
     engines: {node: '>= 16'}
     peerDependencies:
       express: '>= 4.11'
@@ -2533,7 +2533,7 @@ snapshots:
       eventsource: 3.0.7
       eventsource-parser: 3.0.8
       express: 5.2.1
-      express-rate-limit: 8.7.3(express@5.2.1)
+      express-rate-limit: 8.7.4(express@5.2.1)
       hono: 4.13.17
       jose: 6.2.3
       json-schema-typed: 8.0.2
@@ -3228,7 +3228,7 @@ snapshots:
     dependencies:
       eventsource-parser: 3.0.8
 
-  express-rate-limit@8.7.3(express@5.2.1):
+  express-rate-limit@8.7.4(express@5.2.1):
     dependencies:
       debug: 4.4.3
       express: 5.2.1
