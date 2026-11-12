@@ -78,6 +78,23 @@ Its JSON envelope is `{ "schemaVersion": 1, "inventory": { ... } }`, containing 
 metrics and warnings as the human rendering, without credentials or upgrade instructions.
 Pass credential-file paths, never CMA tokens in command arguments.
 
+## Updating the ExO content bindings skill
+
+`skills/exo-content-bindings/scripts/main.js` is generated. Edit instructions and references in
+`skills/exo-content-bindings/`; edit the command-line source and its tests in
+`src/skills/exo-content-bindings/`. Do not hand-edit `scripts/main.js` or `THIRD-PARTY-NOTICES.md`.
+
+1. Change the instructions, references, or source.
+2. Run `pnpm build:exo-content-bindings` to regenerate the self-contained bundle and notices.
+3. Run `pnpm typecheck`, `pnpm test`, and `pnpm validate`. Tests check that the committed bundle matches
+   the source and run it without a source checkout or `node_modules`.
+4. Commit source, tests, and regenerated files together.
+
+The tests use a made-up GraphQL schema (`src/skills/exo-content-bindings/fixtures/schema.graphql`) in the
+shape the Management API serves at `/graphql_schema`. The check for whether the component editor can edit a
+binding set (`lib/recipe.mjs`, `editorCheck`) is a copy of the editor's rules: when the editor's rules change,
+update that function, its tests, and `references/platform-notes.md` together.
+
 ## Pull request checklist
 
 - Keep PRs focused and easy to review.
