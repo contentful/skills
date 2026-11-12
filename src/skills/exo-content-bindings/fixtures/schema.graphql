@@ -1,0 +1,130 @@
+# A small, made-up environment in the shape the Management API serves at /graphql_schema.
+# Event -> venue (one content type), host (a union of one), sessions (a list of two types), speakers (a list of one).
+
+directive @fieldResolver(data: JSON, kind: String) on FIELD_DEFINITION
+directive @typeIdentifier(contentTypeId: String) on OBJECT
+directive @enumMapper(value: JSON) on ENUM_VALUE
+
+scalar DateTime
+scalar JSON
+
+interface _Node {
+  _id: ID!
+}
+
+interface Entry {
+  sys: Sys!
+}
+
+type Sys {
+  id: String!
+  publishedAt: DateTime
+}
+
+type CursorPages {
+  next: String
+  prev: String
+}
+
+type Asset implements _Node {
+  _id: ID! @fieldResolver(kind: "node-interface-field")
+  contentType: String @fieldResolver(kind: "asset-subfield", data: {subfieldName: "assetContentType"})
+  description: String @fieldResolver(kind: "primitive-field", data: {id: "description", localized: true, required: false})
+  fileName: String @fieldResolver(kind: "asset-subfield", data: {subfieldName: "assetFileName"})
+  sys: Sys!
+  title: String @fieldResolver(kind: "primitive-field", data: {id: "title", localized: true, required: false})
+  url: String @fieldResolver(kind: "asset-url")
+  width: Int @fieldResolver(kind: "asset-subfield", data: {subfieldName: "assetWidth"})
+}
+
+type Event implements Entry & _Node @typeIdentifier(contentTypeId: "event") {
+  _id: ID! @fieldResolver(kind: "node-interface-field")
+  body: EventBody @fieldResolver(kind: "rich-text", data: {fieldId: "f_body", contentTypeId: "event", required: false})
+  featured: Boolean @fieldResolver(kind: "primitive-field", data: {id: "f_featured", required: false, contentTypeId: "event"})
+  host: EventHost @fieldResolver(kind: "entry-link-field", data: {parentContentTypeId: "event", fieldId: "f_host", required: false, parentType: "Event"})
+  image: Asset @fieldResolver(kind: "asset-link-field", data: {parentContentTypeId: "event", fieldId: "f_image", required: false, parentType: "Event"})
+  sessionsCursorCollection(limit: Int = 100): EventSessionsCursorCollection @fieldResolver(kind: "nested-cursor-collection-with-content-types", data: {fieldId: "f_sessions", required: true, proxiedContentTypesIds: ["talk", "workshop"], creatingContentTypeId: "talkOrWorkshop", parentType: "Event", parentContentTypeId: "event"})
+  speakersCursorCollection(limit: Int = 100): EventSpeakersCursorCollection @fieldResolver(kind: "nested-cursor-collection-with-content-types", data: {fieldId: "f_speakers", required: false, proxiedContentTypesIds: [], creatingContentTypeId: "person", parentType: "Event", parentContentTypeId: "event"})
+  starts: DateTime @fieldResolver(kind: "primitive-field", data: {id: "f_starts", required: false, contentTypeId: "event"})
+  summary: String @fieldResolver(kind: "primitive-field", data: {id: "f_summary", required: false, contentTypeId: "event"})
+  sys: Sys!
+  title: String @fieldResolver(kind: "primitive-field", data: {id: "f_title", required: true, contentTypeId: "event"})
+  venue: Venue @fieldResolver(kind: "entry-link-field", data: {parentContentTypeId: "event", fieldId: "f_venue", required: false, parentType: "Event", contentTypeId: "venue"})
+}
+
+type EventBody {
+  json: JSON! @fieldResolver(kind: "rich-text-json")
+}
+
+union EventHost = Person
+
+type EventSessionsCursorCollection {
+  items: [EventSessionsItem]!
+  limit: Int!
+  pages: CursorPages!
+}
+
+union EventSessionsItem = Talk | Workshop
+
+type EventSpeakersCursorCollection {
+  items: [Person]!
+  limit: Int!
+  pages: CursorPages!
+}
+
+type EventCursorCollection {
+  items: [Event]!
+  limit: Int!
+  pages: CursorPages!
+}
+
+enum EventOrder {
+  sys_publishedAt_ASC
+  sys_publishedAt_DESC
+  title_ASC
+  title_DESC
+}
+
+type Person implements Entry & _Node @typeIdentifier(contentTypeId: "person") {
+  _id: ID! @fieldResolver(kind: "node-interface-field")
+  name: String @fieldResolver(kind: "primitive-field", data: {id: "f_name", required: true, contentTypeId: "person"})
+  role: String @fieldResolver(kind: "primitive-field", data: {id: "f_role", required: false, contentTypeId: "person"})
+  sys: Sys!
+}
+
+type Talk implements Entry & _Node @typeIdentifier(contentTypeId: "talk") {
+  _id: ID! @fieldResolver(kind: "node-interface-field")
+  abstract: TalkAbstract @fieldResolver(kind: "rich-text", data: {fieldId: "f_abstract", contentTypeId: "talk", required: false})
+  sys: Sys!
+  title: String @fieldResolver(kind: "primitive-field", data: {id: "f_title", required: true, contentTypeId: "talk"})
+}
+
+type TalkAbstract {
+  json: JSON! @fieldResolver(kind: "rich-text-json")
+}
+
+type Venue implements Entry & _Node @typeIdentifier(contentTypeId: "venue") {
+  _id: ID! @fieldResolver(kind: "node-interface-field")
+  city: String @fieldResolver(kind: "primitive-field", data: {id: "f_city", required: false, contentTypeId: "venue"})
+  name: String @fieldResolver(kind: "primitive-field", data: {id: "f_name", required: true, contentTypeId: "venue"})
+  photo: Asset @fieldResolver(kind: "asset-link-field", data: {parentContentTypeId: "venue", fieldId: "f_photo", required: false, parentType: "Venue"})
+  sys: Sys!
+}
+
+type Workshop implements Entry & _Node @typeIdentifier(contentTypeId: "workshop") {
+  _id: ID! @fieldResolver(kind: "node-interface-field")
+  capacity: Int @fieldResolver(kind: "primitive-field", data: {id: "f_capacity", required: false, contentTypeId: "workshop"})
+  sys: Sys!
+  title: String @fieldResolver(kind: "primitive-field", data: {id: "f_title", required: true, contentTypeId: "workshop"})
+}
+
+type Query {
+  _node(id: ID!): _Node @fieldResolver(kind: "node-field")
+  asset(id: String!): Asset @fieldResolver(kind: "asset")
+  event(id: String!): Event @fieldResolver(kind: "entry")
+  eventCursorCollection(limit: Int = 100, order: [EventOrder], pageNext: String): EventCursorCollection @fieldResolver(kind: "root-cursor-collection", data: {creatingContentTypeId: "event"})
+  person(id: String!): Person @fieldResolver(kind: "entry")
+  talk(id: String!): Talk @fieldResolver(kind: "entry")
+  venue(id: String!): Venue @fieldResolver(kind: "entry")
+  workshop(id: String!): Workshop @fieldResolver(kind: "entry")
+}
