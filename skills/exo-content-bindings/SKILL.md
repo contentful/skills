@@ -1,270 +1,179 @@
 ---
 name: exo-content-bindings
-description: Create Data Assemblies (content bindings) in a Contentful Experience Orchestration space, connecting existing entries to component content properties. Covers classifying coded vs. composite component types, judging content vs. design properties, public vs. private (hoisted) properties, slot vs. content-binding scope, and designing, creating, linking, and publishing Data Assemblies via the CMA. Use when asked to create Data Assemblies, wire up content, bind entries to components, hydrate a component, or set up a Binding Set. Also triggers on "content binding", "data assembly", "prebinding", "create DA". Not for placing components into a template's structural slots (assembly, not binding) or attaching bindings to an existing Experience/Fragment instance — this skill creates reusable recipes, not per-instance bindings.
+description: Design and create binding sets (content binding configuration, stored as Data Assemblies) for Contentful Experience Orchestration (ExO) components and templates, by working out with the user what editors should pick versus what the system should derive, then proposing, building, validating and publishing the recipes. Use this whenever someone wants to connect Contentful entries to ExO components or templates, "wire up", "bind", "hydrate" or "prebind" content, set up or review Binding Sets / Data Assemblies, add a query-driven or reference-driven collection, decide between template-level and component-level binding, or asks why a binding is set up the way it is. Also use it for indirect requests — "editors keep picking the wrong venue", "can the cards come from the section entry", "make this page one selection" — which are binding-design decisions. Not for building component trees or filling slots on an existing page (that is assembly), and not for choosing entries on a specific Experience (instance binding).
 license: MIT
-argument-hint: "[space id] [component type or content type]"
-allowed-tools: Bash(curl *) mcp__contentful-mcp__* mcp__plugin_contentful-skills_contentful-mcp__*
+compatibility: Requires Node.js 20+ and an agent with shell access. Reading needs a Contentful CMA token with Experience Orchestration access; creating binding sets needs write access.
+allowed-tools: Bash(node *) Read Write Edit
 metadata:
   author: contentful
-  version: "1.0.0"
 ---
 
-# ExO Content Bindings — Data Assembly Creator
+# ExO Content Bindings: binding configuration design
 
-## Overview
+You help a **presentation editor** (the person who designs the authoring system) decide how ExO components and templates get their content, then you create the binding sets they approve. A binding set is a reusable recipe: it says what an **experience editor** picks when they place a component, and how everything else is filled from what they picked. The same component can offer several binding sets; the editor chooses one per instance.
 
-Creates Data Assemblies that connect existing Contentful entries to Experience Orchestration component types. A Data Assembly is a parametrized query with a known return type — it describes *how* entry fields hydrate a component's content properties.
+The editor's experience is the product. Two recipes can fill the same properties and give editors completely different work: one asks for a section entry and derives the cards; another asks for the section and each card separately. Neither is right in general. The right one depends on whether those cards are a meaningful editorial choice on each page. You cannot read that off the schema. You have to ask, and you have to keep asking as you go, because the user's answers on one component usually tell you something about the next.
 
-**Mental model — four layers:**
+## What the platform calls things
 
-| Layer | Entity | What it does | Example |
-|-------|--------|--------------|---------|
-| Schema | Component Type / Template | Declares `contentProperties` — named "holes" expecting content | `heading`, `image`, `ctaLabel` |
-| Recipe | Data Assembly (API) / Binding Set (UI) | Describes *how* entries fill those holes (resolvers + return map) | "Product Card from Product" |
-| Instance | Experience / Fragment / Inline Component | Stores `contentBindings` — a chosen DA + parameter entries | this card uses `productEntry123` |
-| Runtime | Delivery payload | Resolved values written into content properties | `heading = "Spring Sale"` |
+Use the product's words so the user can find what you describe in the editor. ([Onboarding guide](https://www.contentful.com/help/experience-orchestration-onboarding-guide/))
 
-This skill operates at the **Recipe layer** — creating and publishing Data Assemblies.
-
-**The invariant that makes the model work:** the component tree **always reads through `$contentProperties/...`** — never directly from an entry, never from `$contentBindings/...`. Every binding strategy exists to fill a content property. *A binding that fills no content property computes data nothing reads.* Use this as a correctness check on any DA you design: trace each `return` key to a declared content property, or delete it.
-
-The practical consequence: from the component's point of view, a manual value and a DA-hydrated value are indistinguishable. It just reads a content property. That is why the DA-vs-literal choice is a modeling decision, not a rendering one.
-
-## Terminology
-
-Precise language prevents misunderstandings between these easily conflated concepts:
-
-| Term | What it is | What it is NOT |
-|------|-----------|----------------|
-| **Content property** | A named input on a Component Type or Template that receives content | Not a content-type field (those are the *source*) |
-| **Content-type field** | A field on a Contentful content type (the CMS data) | Not a content property (those are on ExO components) |
-| **Parameter** | One marketer selection input on a DA, constrained to allowed content types | Not a binding — it's the *input* to a binding |
-| **Field mapping** | A target content property + source path starting from a parameter | Not the parameter itself |
-| **Binding set** | The UI/editor name for an editable data-wiring configuration that corresponds 1:1 with a Data Assembly. Use "Binding Set" when referencing editor UI; use "Data Assembly" when referencing API calls. | Not the DA entity itself — same thing, different contexts |
-| **Prebinding** | The ComponentType editor workflow where DAs are defined. This skill automates what Prebinding does in the UI. | Not the runtime resolution step |
-| **Content binding** | An instance choosing a DA + providing entry IDs for its parameters (at the Experience/Fragment level) | Not the DA itself (that's the recipe) |
-| **Nested binding** | A PropertyMapping that gives a content property the whole output of a child DA through a DataAssemblyResolver | Not a reference field traversal |
-| **Reference path** | Zero or more reference fields followed by a terminal value field | Not a display label |
-| **Template** | A page-level entity governing Experiences (has channel config). Can be coded or composite, same as component types | Not interchangeable with "component type" — templates have channels/viewports |
-
-## Tool access
-
-This skill calls the Contentful Management API (CMA) directly. Prefer `curl` (via Bash) when a shell is available — the examples in `references/` use it. If no shell/exec tool is available, make the equivalent calls through the `contentful-mcp` MCP tools instead (same endpoints and payloads, translated to whatever tool the server exposes for spaces/component types/data assemblies). If neither `curl` nor `contentful-mcp` is reachable, say so explicitly and stop — do not guess at space state or fabricate a plan without introspecting first.
-
-## Content property vs. design property
-
-A content property is content, not presentation. Before designing any mapping, apply this test to each property:
-
-- Changing the value changes **what is said** → **content property** (bindable; a DA may fill it)
-- Changing the value changes **how it looks** → **design property** (never bind it)
-
-**Apply the test explicitly rather than guessing from the property name, and rather than relying on which array the property appears in.** `variant`, `columns`, `backgroundColor`, `showDivider`, `theme`, `alignment` are design properties **even when their values happen to come from the CMS**. A `theme: light|dark` field on a content type is the classic trap: it is CMS-authored, so it looks bindable, but it changes how the component looks, so it is not a content property and must not appear in a DA's `return` map.
-
-The converse also holds: a property whose name sounds decorative (`badgeText`, `eyebrow`, `label`) is a content property if changing it changes what the page says.
-
-This test governs field-mapping inference (`references/api-workflow.md` step 5.3). A source field that fails it is not an unmapped content property — it is *correctly* unmapped, and should be reported that way in the Binding Plan rather than listed as a gap.
-
-## Process overview
-
-1. **Introspect the space** — fetch component types and content types. Check for a reference space with the same components already wired.
-2. **Classify each component type** — coded (leaf, all content properties public) vs. composite (tree, mix of direct + hoisted properties). See "Public vs. private" below.
-3. **Design DAs** for coded and composite types separately — composites need extra care around hoisting and slot boundaries.
-4. **Infer field mappings**, gated by the content-vs-design test and the public/private golden rule, then produce a Binding Plan and **get explicit user approval before creating anything**.
-5. **Create, link, and publish** each Data Assembly, then verify and produce a mandatory Complete Binding Map.
-
-Full CMA call sequences, request/response shapes, and exact commands for every step: **[references/api-workflow.md](references/api-workflow.md)**.
-Full resolver request bodies (entity, collection, nested-DA, asset/Media, deep binding, polymorphic): **[references/resolver-patterns.md](references/resolver-patterns.md)**.
-Pointer expressions, GraphQL conventions, RichText handling, and the type mapping table: **[references/richtext-and-types.md](references/richtext-and-types.md)**.
-A complete worked example end to end: **[references/worked-example.md](references/worked-example.md)**.
-
-## Public vs. private
-
-Not every content property in a composite is reachable from outside.
-
-**Public** properties are the subset exposed on the component's surface. Only public properties can be overridden by a parent embedding this component, targeted by a Data Assembly, or seen and edited by a marketer. They are the component's **stable content input contract**.
-
-**Private** properties belong to child components inside the `componentTree` and are not exposed. There is no `privateProperties` array — privacy is defined *by absence*: a child property is private precisely because it was **not hoisted**. Do not go looking for a list of private properties; enumerate the tree's children and subtract what appears in the parent's `contentProperties`.
-
-**The golden rule: never bind, override, or map a property that is not public.** If something must be bound, it has to be hoisted first — which is a component-type change, outside this skill's scope.
-
-### Hoisting rules
-
-1. **Required** child content properties are **automatically hoisted** to the parent's public surface
-2. **Optional** child properties are hoisted **intentionally** — only when the designer decides the parent should control them
-3. If a needed property isn't in the parent's `contentProperties`, it's private — the component type must be updated first (out of scope)
-4. Per-property hoisting and whole-component hoisting (`TypeRef`) are mutually exclusive for the same child
-5. **De-hoisting orphans DAs** — if a public property is later un-exposed, every DA referencing it breaks. This is why checking existing DAs before adding another matters.
-
-**Rules 1 and 3 can contradict each other — say so when they do.** If a child property is **required** on the child but **absent** from the parent's `contentProperties`, rule 1 says it should have been hoisted automatically. Do not silently record it as "intentionally private." Report it as a **possible modeling or auto-hoisting defect** for the component-type owner, alongside the blocked mapping. A required-but-unreachable property means the composite cannot render correctly from any binding.
-
-### Should a property be public?
-
-You cannot change hoisting from this skill, but you will be asked *whether* something should be hoisted. Recommend hoisting when **any** of these hold:
-
-- it is **required** by the child (automatic — see the contradiction rule above),
-- a **marketer must control it** per instance,
-- a **DA needs to fill it** — only public properties are bindable,
-- a **parent must override it** when embedding the child.
-
-Recommend keeping it private when:
-
-- it is an internal implementation detail (a computed alt text, a layout-only string),
-- exposing it adds noise without editorial value — hoisting every child property produces `text1, text2, url1, url2…` clutter, which is explicitly discouraged,
-- nothing outside the child will ever bind to or override it.
-
-**Default posture: hoist the minimum that satisfies the four triggers; leave everything else private.** A small, intentional public surface is the goal.
-
-### Slot boundaries
-
-Slots create a hard DA ownership boundary:
-
-```
-Parent DA scope:
-├── parent's contentProperties (direct + hoisted) ← DA targets these
-├── componentTree children read via $contentProperties/... ← fed by parent DA
-└── [SLOT: "main"]
-    └── Child components placed here ← SEPARATE DAs, not parent's
-```
-
-**Never** attempt to map fields into a slot child's properties from the parent's DA.
-
-### Slot vs. content binding — the distinction that decides scope
-
-Both are reference-shaped. They mean opposite things, and confusing them produces a structurally wrong experience.
-
-| | Slot | Content binding |
+| Say | Meaning | API name |
 |---|---|---|
-| Means | "this component **contains** these other visual components" | "this component **reads data from** these records" |
-| Referenced thing | becomes a Fragment inside this component | stays content, accessed through a Data Assembly |
-| Target shape | presentational — has its own layout, design properties, nested references | data-oriented — flat domain data, no layout |
+| **Binding configuration** | Designing a recipe in the component or template editor: allowed content types, which fields fill which content properties | Creating a **Data Assembly** |
+| **Binding set** | One such recipe. A component can offer several | Data Assembly |
+| **Binding** | An experience editor choosing a binding set and entries for one placed component | `contentBindings` on an Experience or Experience Fragment |
+| **Component parameter** / editor pick | A selection the recipe asks the editor for | Data Assembly `parameter` |
+| **Content property** | A named input on a component or template that receives content | `contentProperties[]` |
+| **Design property** | An input that controls appearance, often constrained to design tokens | `designProperties[]`; never bound |
+| **Presentation editor** | Designs components, templates and binding sets (your user) | |
+| **Experience editor** | Assembles pages from them and does the binding | |
+| **Content editor** | Maintains the entries that bindings read | |
+| **Experience fragment** | A reusable, pre-assembled group of components | `experience_fragments` |
+| **Template** | Page-level structure that governs Experiences; can carry binding sets too | `experience_templates` |
 
-**How to tell:** look at what the reference actually points to. If the target has its own visual structure (layout fields, design properties, nested presentational references), it is a slot. If it is flat domain data — categories, tags, profiles, events — referenced by many different types as a shared source, it is a binding.
+This skill works at the **binding configuration** layer. It never edits an Experience or Fragment. When a request is really about an instance ("fill the empty slots on the pricing page"), say so, explain that binding sets are the prerequisite, do that part, and name what remains for the experience editor.
 
-The same distinction routes the request you were given. "Fill the slots" is ambiguous and resolves by context:
+## What you don't have to work out
 
-- **Assembly** — placing fragments/components into a template's structural slots. Only when the user is actively building or changing a tree.
-- **Content binding** — linking CMS entries to binding parameters on an **already-assembled** experience. The signal: the user is not asking to change layout, they want content connected to what already exists.
+The schema already answers several questions. Read them; don't infer them.
 
-Phrases like "fill unlinked slots", "populate empty slots", "fill in missing entries" with **no structural intent** mean **content binding on instances**, not assembly — and not this skill either. This skill builds the *recipes*; it does not attach bindings to Experience or Fragment instances (see Limitations).
+- **Content vs design.** A component definition lists `contentProperties` and `designProperties` separately. Only `contentProperties` are bindable. If something is in `contentProperties`, it *can* be bound; whether it *should* be is an intent question for the user (see `hideCta` below), not a classification you make.
+- **Public surface.** Since the October 2026 release all content properties on a component are public. Composed components expose whatever their author hoisted into `contentProperties`; children inside the tree that weren't hoisted are not yours to reach. If a property the user needs isn't there, that's a component change, which is out of scope: say so.
+- **Coded vs composed.** Read the `Contentful:CodedImplementation` / `Contentful:ComposedImplementation` annotation. Don't guess from the tree shape; coded components can have slots and templates can be coded.
+- **Field types, requiredness, allowed types, GraphQL names.** `discover` reads them from the environment's GraphQL schema, which the Management API serves. Never derive a GraphQL name from a display label.
+- **Query syntax and pointer syntax.** `build` generates them. You write *which field feeds which property*; the script writes the GraphQL and checks it against the schema.
 
-**So when a request contains that phrasing, name it rather than only declaring it out of scope.** Say which layer it belongs to, confirm that the DAs this skill creates are the prerequisite for it, and state what remains to be done afterwards — per instance, in the editor or via the instance API. Answering "out of scope" without naming the layer leaves the user unable to act.
+## The conversation
 
-**You MUST produce a complete binding plan and get user approval before creating any Data Assemblies.** Do not skip this step. Do not create DAs incrementally without a plan. See [references/api-workflow.md](references/api-workflow.md) §5.4–5.5 for the plan format.
+Work region by region, not component by component in schema order. A "region" is an editorial responsibility: the hero, the proof section, the CTA band. Discover first, then for each region have a short exchange before proposing anything. The whole run is one conversation with checkpoints, not one plan dumped for sign-off.
 
-## Quick Decision Guide
+### 1. Discover
 
-Steps 0a and 0b decide *whether* to bind. Steps 1–3 decide *how*. Do not start at Step 1.
+`scripts/main.js` sits in this skill's directory beside `SKILL.md`. Resolve its absolute path and use it in every command below; `<workdir>` is a folder for this run's files. The script is self-contained: there is nothing to install. `node <skill>/scripts/main.js --help` lists the commands, and each command has its own `--help`. Every command prints one JSON document; messages go to stderr.
 
-```
-Step 0a: Is this request even about Data Assemblies?
-  "Bind entries to components" / "wire up content" / "create DA"
-    → YES, this skill. Continue.
-  "Fill the empty slots" / "populate this page" / "fill in missing entries"
-    → Instance-layer content binding. This skill creates the prerequisite
-      recipes but does NOT attach bindings to instances. Name the layer,
-      create the DAs, then say what remains per instance.
-  "Place these components into the template" / "build the tree"
-    → Assembly, not binding. Not this skill.
-
-Step 0b: Is this property a content property?
-  Changing the value changes WHAT IS SAID   → content property, continue
-  Changing the value changes HOW IT LOOKS   → design property, STOP.
-      Never bind it. Report as correctly-unmapped, not as a gap.
-      (theme, variant, columns, alignment, backgroundColor, showDivider —
-       still design properties when the value comes from the CMS)
-  Is it public (present in the component type's contentProperties)?
-    NO → STOP. Golden rule: never bind a non-public property.
-         Required on the child but absent here? → flag as a possible
-         auto-hoisting defect, not as intentionally private.
-
-Step 1: What kind of component type?
-  CODED → all contentProperties are public, go to Step 2
-  COMPOSITE → check contentProperties list:
-    Has contentProperties? → go to Step 2 (they're all public/hoisted)
-    No contentProperties? → this composite doesn't need a DA
-      (content arrives via slot children, each with their own DA)
-
-Step 2: What feeds this content property?
-  Single entry's field(s)?
-    YES → Entity resolver (kind: "entity", _node query)
-      Needs fields from a linked entry (reference)?
-        YES → How complex is the linked entry?
-          Simple (1-2 fields) → Scalar deep bind (traverse ref in GraphQL query)
-          Complex (own component) → TypeRef deep bind (nested DA)
-          Limit: ≤ 3 hops from root entry
-        NO  → Single GraphQL resolver (shallow bind)
-  Array of entries?
-    YES → Collection resolver (kind: "collection", ...Collection query)
-  Fixed value?
-    YES → Use $literal in return (no resolver needed)
-  Polymorphic source (multiple possible types)?
-    YES → Use $on to branch on __typename
-
-Step 3: Is this property on a slot child?
-  YES → Create a SEPARATE DA for that child (do not include in parent DA)
-  NO  → Include in the component's own DA
+```bash
+node <skill>/scripts/main.js discover --env-file <env-file> --out-dir <workdir>
 ```
 
-## Common Mistakes
+`<env-file>` holds `CONTENTFUL_MANAGEMENT_TOKEN`, `EXO_SPACE_ID`, `EXO_ENVIRONMENT_ID` (or `CMA_TOKEN` / `SPACE_ID` / `ENVIRONMENT_ID`). Pass the file's path; never put a token in a command. Read-only. The JSON it prints has counts and file paths. **Read `<workdir>/discovery.md`**: it lists components and templates with their bindable properties, the content model with how often each field is actually filled, **every existing binding set in plain language**, and which fragments use them. The full data is in `<workdir>/discovery.json`.
 
-| Mistake | Fix |
-|---------|-----|
-| Not classifying coded vs. composite first | Always classify — composites may not need a DA at all |
-| Building a DA for a composite that only has slot children | If all content comes via slots, each child gets its own DA — parent needs none |
-| Trying to hydrate slot children from the parent's DA | Slot boundary is absolute — each slot child needs its own DA |
-| Using bare string pointers in `return` without checking reference | Default to `$from` syntax — bare pointers work but aren't editable in BindingPanel. Replicate reference space style if one exists. |
-| Missing `__typename` in GraphQL query | Required for `$on` branching at runtime |
-| Using CMA field IDs directly in GraphQL | GraphQL uses camelCase (e.g., `internalName` not `internal_name`) |
-| Forgetting `kind: "collection"` for array resolvers | Without it, resolver returns single object not array |
-| Setting `allowedTypes` to content type *name* instead of *ID* | Must be the programmatic ID (e.g., `topicProduct` not `Topic Product`) |
-| Creating DA with same ID without version header | Fetch version first, or use upsert pattern (see [references/api-workflow.md](references/api-workflow.md)) |
-| Mapping a property that isn't in `contentProperties` | Only the component's declared public properties are bindable |
-| Hoisting per-property AND whole-component for same child | Mutually exclusive — pick one strategy |
-| Not linking DA to the component type | After creating, add DA to the component type's `dataAssemblies` array — without this, it won't appear in the binding panel |
-| Not publishing the DA after creation | Unpublished DAs not available for binding in editor |
-| `sys.dataType` IDs don't match `contentProperties` IDs | They must be identical — the DA's dataType is the contract between resolver output and the component's input |
-| Modeling images as bare `String` (URL only) | Use `Record` with url/width/height/alt/contentType |
-| Mapping asset `alt` from the asset's `title` | `alt` comes from `description`, falling back to `title` only when `description` is empty across the sample — and say so in the Binding Plan when you fall back |
-| Binding a design property because its value comes from the CMS | Apply the what-is-said / how-it-looks test. `theme`, `variant`, `alignment` are design properties regardless of source |
-| Recording a required-but-unhoisted child property as "intentionally private" | Required properties are auto-hoisted — absence is a possible modeling defect. Flag it |
-| Mapping a low-confidence guess to fill out the plan | Leave it unmapped and name it. A wrong mapping produces plausible content in the right shape, so nobody notices it |
-| Answering "out of scope" to a "fill the empty slots" request | Name the layer it belongs to and what remains after the DAs exist |
-| Using `$from` syntax for RichText fields | RichText requires bare string pointers to the parent object. `$from` causes "expected RichText, got String" |
-| Declaring RichText as `String` dataType to avoid validation | Use `RichText` dataType + `{ document: json }` alias + bare parent pointer. The platform resolves it natively |
-| Pointing to `/json` or `/document` leaf for RichText | Point to the parent (e.g., `$resolvers/main/ct/subline`). The platform reads the aliased `document` key itself |
-| Omitting `sys.id` from PUT body | API rejects with "Invalid input at sys.id" — always include `"id": "$DA_ID"` in the sys object |
-| Creating duplicate DAs for components sharing the same content property IDs | Create ONE DA and link it to multiple component types (see [references/worked-example.md](references/worked-example.md)) |
+This skill needs a shell and Node.js 20 or newer. Without them, say so and stop: binding sets written by hand through the API cannot be checked for whether the component editor can edit them, and that check is the point of the workflow.
 
-## Operating Principles
+`discover` also reports each component's publish state. "Not published at the moment (it was published before)" means someone unpublished it: editors cannot place it, or use any binding set on it, until it is published again. "Has unpublished changes" means editors still see the older published version. Either way, tell the user; publishing is their decision (see step 4).
 
-1. **Introspect before designing** — do not invent content-type fields, content properties, or IDs. The space's schemas are the source of truth.
-2. **Content properties ≠ content-type fields** — a content property is the *target* (on the component); a content-type field is the *source* (on the entry). They often have different names.
-3. **Validate paths against content-type metadata** — a return mapping like `_node/headline` must correspond to an actual field on the source content type.
-4. **IDs are stable contracts** — DA IDs, parameter IDs, and dataType IDs form contracts. Display names can change; IDs cannot after publication without a migration.
-5. **Reference traversal is typed** — `_node/author/name` means "follow the `author` reference, then read `name`". Each segment must be a valid field on the resolved type at that depth.
-6. **Only public properties are bindable** — if a property isn't in the component type's `contentProperties` array, it cannot be targeted regardless of whether it exists internally. Never bind, override, or map a property that is not public.
-7. **Propose before creating** — if the mapping between source fields and target properties is ambiguous (similar names, multiple candidates), present options and confirm.
-8. **Content, not presentation** — a mapping target must pass the what-is-said / how-it-looks test. CMS-authored design values (`theme`, `variant`) are still design properties.
-9. **Every `return` key fills a declared content property** — the tree reads only through `$contentProperties/...`, so a mapping that fills nothing is dead weight, not a spare.
-10. **An absent mapping beats a wrong one** — leave low-confidence properties unmapped and name them in the Binding Plan. Wrong mappings produce plausible content in the right shape and are hard to spot.
-11. **Never claim to have unbound, replaced, or rewired anything** — existing DAs are reused or extended, never silently displaced.
+If it fails with 401/403 that is a permissions problem (only space admins, or the Experience Editor / Presentation Editor roles, can see ExO entities), not an empty environment. Say that.
 
-## Limitations
+**Existing binding sets are house conventions.** Read every one before proposing anything. If an existing Quote recipe attributes quotes to `company`, that is an institutional decision ("quotes are attributed to the customer logo, not the person"), and you follow it unless the user says otherwise. Do not create a competing recipe for a component that already has one covering the same properties unless the user wants an alternative recipe; extend or reuse instead. Never describe anything as replaced or rewired.
 
-- This skill creates Data Assemblies and links them to component types — it does not attach content bindings to experience/fragment instances
-- GraphQL introspection not available via CMA — field names inferred from content type definitions
-- Nested DA composition requires the referenced DA to already exist and be published
-- `$on` type discriminator uses GraphQL `__typename` (PascalCase of content type ID)
-- If a needed property is not hoisted (private), this skill cannot fix it — component type must be updated first
-- Composites with no `contentProperties` don't need DAs — all content flows through slot children
-- The pointer language has no coalesce operator, so per-value fallbacks (e.g. asset `description` → `title`) cannot be expressed in a DA. They are resolved at design time by sampling; see [references/resolver-patterns.md](references/resolver-patterns.md) "Asset (Media) fields"
-- The CMA returns **both drafts and published entries with no preference between them**. Nothing in a DA's parameter definition can express "prefer published" — `allowedTypes` filters by content type only. If publication state matters for a component, it has to be handled by the marketer at bind time or by the source content model, not here
+An existing recipe marked **API ONLY** is one editors can see but cannot review, change or remove in the component editor. It still records a decision, so follow its *intent*, but don't copy its *shape*. Tell the user it is API only and offer an editable rebuild as a separate decision. Don't fold that into another change.
 
-## Related Skills
+When an existing recipe **contradicts** something the user has told you, don't resolve it silently in either direction. Show both readings as the first question for that region: correct the existing recipe in place (same id and editor pick; every instance that already uses it changes), or add a second recipe beside it (editors then choose between two options that differ only in that one thing). Say which fragments select the recipe today; `discover` lists them. It does not read which binding sets the components placed on an Experience use, so don't tell the user that no page uses a recipe: say that fragments were checked and Experiences were not. `build` warns when a plan id matches an existing recipe and the proposal page badges it, but the decision is the user's.
 
-- the `contentful-guide` skill — general Contentful concepts and API routing
-- the `contentful-migration` skill — content model/schema changes (hoisting a property requires a component-type change, which is out of this skill's scope)
+### 2. Establish intent before entities
 
-## Provenance
+Ask the user, in their words, what editors are meant to be able to do. Then write the contract back to them in this shape and get a nod before touching a mapping:
 
-The procedure, resolver patterns, GraphQL conventions, and API call sequences here were developed and validated against live Contentful spaces. The judgment layer — the content-vs-design test, the public/private golden rule, "should a property be public?", the slot-vs-content-binding distinction and request routing, and source-selection confidence — reflects hoisting and content-binding rules defined by Contentful's Experience Orchestration platform. Where this file and the platform's own behavior disagree, the platform wins — report the discrepancy rather than following this file.
+> Editors choose **[independent inputs]**. The system derives **[related content]**. Editors may vary **[permitted dimensions]**. It prevents **[undesired inconsistencies]**. Exceptions go through **[explicit route]**.
+
+If they don't know, make a provisional assumption, label it, and name the one decision that would change your recommendation. Don't silently pick maximum freedom or maximum rigidity. The full framework, with worked decisions, is in [references/decision-framework.md](references/decision-framework.md). The questions that most often change the design:
+
+- **One governing subject or several?** Must the heading, items and image describe the same thing? If yes, one pick and derive the rest. If editors legitimately mix and match, keep separate picks even though it's more clicking.
+- **Who owns membership of a list?** The experience editor (distinct named positions: separate picks), a content editor (a reference list on an entry: reference-driven collection), or a rule (latest N of a type: query-driven collection)? "Three cards" doesn't settle it; three *named roles* suggests positions, three *interchangeable* cards suggests a collection.
+- **Does this relationship belong to the content?** An Event owns its venue. Derive it; don't ask again. A promotion panel's product is chosen per page. Ask.
+- **Is this a different recipe or another input?** Two products compared side by side are two *parameters* in one binding set. "From a Promotion" vs "from the latest three Articles" are two *binding sets*. Same component, same properties, different editorial contract.
+- **Where should coordination live?** Coordinate at the highest level where the relationship is stable (template for page identity, composed section for a reusable group), but keep the reusable mapping at the lowest level where its meaning holds, and have parents feed children through nested recipes rather than copying mappings. A plain layout container (Section, Columns) owns no binding.
+- **Which content properties are intentionally editor-controlled?** A boolean like `hideCta` is a content property, so it can be bound. Whether to bind it depends on whether the *content* should decide it (the source entry has a `hideCta` field someone maintains) or the *editor* should flip it per placement. Ask. Don't classify it away.
+
+Carry every answer forward. A constraint stated for the hero ("never let editors swap the logo") applies to the testimonial too unless they say otherwise.
+
+### 3. Propose, one region at a time
+
+Write the plan as `<workdir>/plan.json` (format in [references/plan-format.md](references/plan-format.md); a recipe as the API stores it, minus the queries, plus a `review` block of plain-language text), then:
+
+```bash
+node <skill>/scripts/main.js build --env-file <env-file> --plan <workdir>/plan.json --out-dir <workdir>   # validate against the live schema, generate payloads
+node <skill>/scripts/main.js propose --plan <workdir>/plan.json --out-dir <workdir> --title "Title"       # proposal.html for the user
+```
+
+`build` prints, per recipe, its errors, warnings, what fills each property and whether the component editor can edit it; the full report is `<workdir>/build.json`.
+
+`build` catches what the API would reject: fields that don't exist, type mismatches, a selection through a reference the schema types as a union without an `$on` branch (this applies even when only one content type is allowed; the script tells you), a required list with an unmapped member type, writing to a design property, and content properties left unfilled with no explanation. It also checks that the **component editor can edit** each recipe (below). Fix errors before showing the proposal. Nothing is written to Contentful by either script.
+
+#### Keep every binding set editable in the UI
+
+The Management API saves recipes that the component editor can only show as **API only**. Editors can see such a binding set but can't review, change or remove it there; every later change needs the API. The API response doesn't tell you which recipes these are. The editor decides when it loads the recipe, by its own editing rules. `build` checks every payload against those rules and names the part responsible. Without a declared reason an API-only recipe is an **error**, and `apply` refuses it.
+
+The check is a copy of the editor's rules, tested against editor-authored and API-authored recipes, not the editor's own code. It can fall behind the editor. So the last word is the editor: after applying, ask the user to open the component and confirm each new binding set can be edited there.
+
+An API-only result almost always means the design has an editable equivalent. Redesign first:
+
+| API-only cause | Editable design |
+|---|---|
+| Takes the Nth item of a reference list (`…/items/0/…`) | Make each position its own editor pick (two parameters), or feed a nested recipe from a parameter |
+| Fixed value (`$literal`) as a property | Leave the property unbound so the component's default applies, or fill it from a field |
+| Hand-written GraphQL query / raw API resolver | Describe the resolver in the plan (`resolverType: "graphql"` from a parameter, `dataAssembly`, or the collection shorthand) and let `build` write the query |
+| Selection deeper than 4 levels | Move part of the path into a nested recipe for the intermediate entry |
+| Return reads `$parameters/…` directly | Read the picked entry through a resolver |
+
+Only when no editable design meets the editorial contract, **stop and put it to the user as a decision of its own**, not as a line in the proposal:
+- that this binding set will be read-only in the component editor, so later review, edits and removal all go through the API or this skill;
+- the cause `build` reported, in plain words;
+- the editable alternatives you considered and what each one cannot do;
+- a direct question: build it as API only, accept the editable alternative, or drop it.
+
+Only after they say yes in this conversation, add `"apiOnly": { "reason": "<what they agreed to and why>" }` to the recipe. Rebuild. The proposal then shows it with an "API only: needs your confirmation" block. At apply time pass `--allow-api-only <id>` for that recipe only. Never add `apiOnly` on your own judgment, and never use it to get past an error you could design around.
+
+Everything `build` writes is in the shape the editor itself saves. An **existing** recipe can fit the editor's rules and still be in another shape (written through the API by hand or by an older tool). `discover` marks it "not written by the component editor": the editor should open it and would rewrite it on first save. Treat that as probably editable, not confirmed. Say so, and ask the user to check it opens in the component editor before you extend it or copy its convention.
+
+Open `proposal.html` for the user (or describe it if you can't). It is written for editors: per binding set it shows **what the editor picks**, **what fills itself and from where**, **what was left alone and why**, **alternatives considered**, and **questions for you**. Generated queries are collapsed under "technical detail". Lead the conversation from the page, not from IDs. For each region, the user may approve, change a source, change who picks what, or ask for another recipe. Update `plan.json`, rebuild, re-render. Only when a region is settled move on.
+
+Things that belong in the `review` block because the page is where the user sees them:
+- `summary`: one sentence an experience editor would understand.
+- `derived`: why a property comes from where it does when it isn't obvious (`author ← company: house convention, see existing Quote recipe`).
+- `notUsed`: every bindable content property you deliberately didn't fill, with the reason. The validator refuses a required property that is unfilled and unexplained.
+- `alternatives`: the nearest design you rejected and the trade-off. Say what becomes easier *and* what becomes impossible.
+- `questions`: anything you assumed.
+
+### 4. Apply only what was approved
+
+```bash
+node <skill>/scripts/main.js apply --env-file <env-file> --out-dir <workdir> --approved [--only <id,id>] [--no-publish] [--allow-api-only <id,id>]
+```
+
+Creates or updates each Data Assembly (children before parents), publishes it, adds it to the component or template that offers it, then reads everything back and reports saved / published / offered-by / **editable in the UI**. The last of these re-runs the editor check on what the server actually stored. It refuses to run without `--approved`; pass that flag only after the user approved the proposal, and only for the recipes they approved (`--only`). It also refuses any API-only payload not named in `--allow-api-only`. If a saved recipe turns out to be API only although the build found it editable, the run fails and says so. Tell the user, and fix or remove the recipe; don't leave it in place silently.
+
+Linking a recipe changes the component, so editors keep seeing the old published component (without the new option) until it is published. Publishing is bottom-up: every component in the tree and in slot `allowedTypes` must be published first, and a `TypeRef` property is checked against the child's *published* binding sets. `--publish-owners` does this in the right order. Publishing components is a visible change for every editor in the environment, so offer it as a separate decision and don't do it unprompted.
+
+**The API accepts recipes the editor cannot render.** Beyond the editability check, `build` guards two rendering cases found so far (a declared output that doesn't mirror the component's full contract; a `TypeRef` output pointing at a component type instead of the child recipe), but save-time acceptance is not proof the binding works. When an environment exists where the same component was bound through the UI, run `discover` against it and compare shapes before trusting a new pattern; after applying, ask the user to open the component in the editor.
+
+### 5. Close the loop
+
+Report in the user's terms: which binding sets now exist, whether each can be edited in the component editor (name any the user agreed to keep API only), what an experience editor will pick for each, what is still open (unhoisted properties, missing content, a region the user deferred), and what remains at the instance layer. Every API call the script makes is in `<workdir>/api_log.jsonl`; include counts and any failures. If you dry-ran anything or hit an API rejection, say what and how it was resolved.
+
+## Patterns the scripts support
+
+Full examples in [references/plan-format.md](references/plan-format.md).
+
+| Need | Plan shape |
+|---|---|
+| Entry fields → properties | one parameter, `main` resolver, `select: "field"` or `"ref/field"` |
+| Asset image | `"image/url"` (String properties take the URL; alt text from `description` only if the property is a Record) |
+| Rich text | `select: "richField"` into a `RichText` property. The script adds the `document: json` alias. Warn the user that embedded entries/assets inside rich text are not rendered automatically; the component must handle them |
+| Field on a referenced entry | `"author/name"`; if the schema types the reference as a union (it allows, or once allowed, more than one content type), `$on: { type: { Author: "name" } }`. `build` says which |
+| List from a reference field | `source: "$resolvers/main/itemsCursorCollection/items"` with a select map; branch with `$on` per member type and map **every** type the field allows that exists in the environment |
+| Latest N by rule | `collection: { contentTypeName, limit, order: [{ path: "sys.publishedAt", direction: "DESC" }] }`. Ordering is fixed in the recipe (the API currently rejects an editor-editable order). State membership, order, limit and empty-list behaviour in the review |
+| Whole child component (`TypeRef` property) | nested recipe: `resolverType: "dataAssembly"` pointing at the child's binding set, fed from a parameter or from a parent field. The child must exist and be published first; list it earlier in the plan |
+| Two independent picks of the same type | two parameters (`Basic Card 1`, `Basic Card 2`), not two binding sets |
+| Same component, different source | a second binding set linked to the same component |
+| Template-level coordination | same plan shape with `linkTo: [{ kind: "templates", id }]`; the template's own `contentProperties` are the targets |
+
+Things the platform does not do, so don't promise them: picking "the Nth item" of a list (API only at best), per-value fallbacks (`description`, else `title`), reaching unhoisted child properties, preferring published over draft entries, preserving a reference list's authored order through every path (check before promising), nested bindings inside a Looper child.
+
+## When something is rejected anyway
+
+`build` validates against the schema, but the API is the authority. If a PUT returns 422, read `details.errors[].message`: it usually names the field or branch. Fix the plan, rebuild, re-apply only that recipe. Don't work around a validation error by weakening a type (e.g. RichText → String) without telling the user what they lose.
+
+## Sources and provenance
+
+Terminology and personas follow the ExO onboarding guide. The intent questions, the "coordinate high, reuse low" rule and the parameter-vs-binding-set distinction follow Contentful's binding decision framework ([references/decision-framework.md](references/decision-framework.md)). The script is one self-contained file; its only bundled dependency is the public `graphql` package (see `THIRD-PARTY-NOTICES.md`). The content model is read from the environment's GraphQL schema; queries and request bodies are generated and validated against that schema, in the shape the component editor saves, verified against a live environment in October and November 2026. The editability check is a copy of the editor's editing rules as of November 2026; where the schema and the API disagree (editable ordering), `build` follows the API. ExO is in a design-partner programme; re-verify against the current release notes when behaviour looks different.
