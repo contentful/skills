@@ -16,6 +16,21 @@ Use this reference while improving an existing Contentful custom app.
 - Does the change need a content model migration, or can it be handled inside the
   app?
 
+## Prioritization
+
+When a report or review contains several issues, address them in this order
+unless the user says otherwise:
+
+1. Broken or confusing core workflow.
+2. Major mismatch with Forma 36 or Contentful UI patterns.
+3. Missing installation, configuration, loading, empty, or error handling.
+4. Accessibility and clarity.
+5. Tests, build reliability, and maintainability.
+6. Visual polish.
+
+Fix the highest item that fits in one small change, and list the rest as
+follow-up.
+
 ## Code Areas to Inspect
 
 - Location entrypoints such as `src/locations/*`.
@@ -27,6 +42,7 @@ Use this reference while improving an existing Contentful custom app.
   `sdk.parameters.installation` instead of CMA app-installation calls unless the
   app truly needs remote installation records.
 - App Action or Function handlers.
+- Custom components that recreate Forma 36 components or mix icon systems.
 - Tests for the changed flow.
 - README or setup docs that explain local Contentful wiring.
 
@@ -38,6 +54,8 @@ Use this reference while improving an existing Contentful custom app.
 - Explain connection failures clearly.
 - Store only safe values in non-secret parameters.
 - Keep the app installable without production-only credentials when possible.
+- Follow the configuration screen layout in
+  [UI conventions](ui-conventions.md#configuration-screens).
 
 ### Entry sidebar
 
@@ -57,6 +75,8 @@ Use this reference while improving an existing Contentful custom app.
 - Make the launch point and returned result explicit.
 - Handle cancel, close, loading, empty, and error states.
 - Avoid persisting partial work unless the flow is designed for it.
+- Keep layout consistent with any configuration screen that solves the same
+  task.
 
 ### Page or home
 
@@ -71,6 +91,12 @@ Use this reference while improving an existing Contentful custom app.
 - Keep secrets server-side.
 - Test success, retry, and failure states.
 
+## Platform Fit
+
+- Is the chosen location still appropriate for the workflow?
+- Are permissions and API access as narrow as the feature allows?
+- Are App Actions or Functions used where the platform docs recommend them?
+
 ## Validation Matrix
 
 Choose the checks that match the change:
@@ -79,7 +105,9 @@ Choose the checks that match the change:
 - Typecheck for SDK and field-shape changes.
 - Lint/format for touched files.
 - Production build for dependency or bundling changes.
-- Manual local app flow in the Contentful web app.
+- Manual local app flow in the Contentful web app, after confirming the app
+  definition points at the local URL.
+- Keyboard and label check for UI changes.
 - Runtime config search for `appInstallation.getForOrganization`,
   `appInstallation.get`, and `getForOrganization` when installation-parameter
   access is touched.
@@ -111,3 +139,5 @@ Include:
   `https://www.contentful.com/developers/docs/extensibility/app-framework/app-actions/`
 - Functions:
   `https://www.contentful.com/developers/docs/extensibility/app-framework/functions/`
+- Forma 36:
+  `https://f36.contentful.com/`
