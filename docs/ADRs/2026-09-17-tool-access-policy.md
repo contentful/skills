@@ -21,4 +21,18 @@ Skills that call the CMA follow this order:
 
 - `allowed-tools` frontmatter declares both `Bash(curl *)` and the relevant `mcp__*contentful-mcp__*` tool patterns, so either path is permitted without over-scoping to unrelated tools.
 - Reference docs write procedural steps as `curl` examples first, with a short preamble noting the MCP fallback and the fail-stop behavior, instead of duplicating every step twice.
-- A skill author adding a new CMA-calling skill can reuse this ordering without re-deriving it — see [exo-content-bindings/references/api-workflow.md](../../skills/exo-content-bindings/references/api-workflow.md) for the applied pattern.
+- A skill author adding a new CMA-calling skill can reuse this ordering without re-deriving it.
+
+## Update (2026-11-12): skills that ship a script
+
+`exo-content-bindings` no longer calls the CMA through `curl` examples. It ships a self-contained Node.js script
+(`scripts/main.js`) that reads the environment, generates and validates request bodies, and checks that the
+component editor can edit each result. That check cannot be reproduced with hand-written `curl` or MCP calls,
+so for this skill the order is:
+
+1. **Run the bundled script** when a shell and Node.js are available. Its `allowed-tools` frontmatter declares
+   `Bash(node *)` instead of `Bash(curl *)` and the MCP tool patterns.
+2. **Fail gracefully otherwise.** The skill tells the user it needs a shell and Node.js and stops; it does not fall
+   back to writing Data Assemblies by hand.
+
+The order above still applies to prose skills that call the CMA directly.

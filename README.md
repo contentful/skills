@@ -50,7 +50,7 @@ Run `/reload-plugins` to activate. This registers two MCP servers:
 | **[contentful-custom-app-enhancement](#contentful-custom-app-enhancement)** | Improves and debugs existing Contentful custom apps in customer-owned repos. |
 | **[contentful-personalization](#contentful-personalization)** | Sets up, debugs, and develops personalization and A/B testing with the Experiences SDK. |
 | **[channels-destinations](#channels-destinations)** | Sets up and manages Channels, Destinations, and Destination Nodes via the Destinations Management API. |
-| **[exo-content-bindings](#exo-content-bindings)** | Creates Content Binding Configurations that connect Content Types to Experience Orchestration components. |
+| **[exo-content-bindings](#exo-content-bindings)** | Designs and creates Content Binding Configurations (binding sets) that connect Content Types to Experience Orchestration components and templates. |
 
 The custom app skills are packaged together under `skills/contentful-apps/`.
 
@@ -294,21 +294,23 @@ Set up and manage Channels, Destinations, and Destination Nodes through the Dest
 
 ### exo-content-bindings
 
-Creates Content Binding Configurations, powered by Data Assemblies that connect Content Types to Components. Covers classifying coded vs. composite components, judging content vs. design properties, public/private (hoisted) properties, and slots.
+Designs and creates Content Binding Configurations (binding sets, stored as Data Assemblies) for Experience Orchestration components and templates. It starts from what editors should pick versus what the system should derive, proposes the binding sets on a review page, validates them against the environment's schema, and creates only what was approved. It does not bind entries on a specific Experience or Fragment.
 
 <details>
 <summary>Triggers and details</summary>
 
 <br />
 
-**Activates on:** "create Data Assemblies", "content binding", "data assembly", "prebinding", "bind entries to components", "hydrate a component", "set up a Binding Set"
+**Activates on:** "set up a Binding Set", "content binding configuration", "data assembly", "prebinding", "wire up / bind / hydrate a component", "can the cards come from the section entry", "make this page one selection"
 
 **Covers:**
-- Space introspection and coded vs. composite component classification
-- The content-property vs. design-property test, and the public/private hoisting rule
-- Resolver patterns — entity, collection, nested Data Assembly, asset/Media fields, deep binding, polymorphic branching
-- RichText handling, GraphQL query conventions, and the content-type-field-to-content-property type mapping
-- A complete worked example, plus binding-set and DA-reuse guidance
+- Read-only discovery: components, templates, the content model as the bindings layer sees it, and every existing binding set in plain language
+- The editorial contract first: who chooses what, what is derived, and where coordination should live (template, section or component)
+- Entry, reference-list, query-collection and nested binding sets, with queries generated and validated against the environment's GraphQL schema
+- A check that each binding set can be edited in the component editor, with an explicit decision when one would be API only
+- A proposal page for review, then create, publish and link only what was approved
+
+**Requires:** Node.js 20+ and an agent with shell access. The bundled script is self-contained (no install step).
 
 </details>
 

@@ -25,6 +25,9 @@ contentful-management
 esbuild
     License: MIT
     https://github.com/evanw/esbuild [npmjs.com]
+graphql
+    License: MIT
+    https://github.com/graphql/graphql-js [npmjs.com]
 oxlint
     License: MIT
     https://oxc.rs/docs/guide/usage/linter [npmjs.com]

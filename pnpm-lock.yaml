@@ -191,6 +191,9 @@ importers:
       esbuild:
         specifier: ^0.28.2
         version: 0.28.2
+      graphql:
+        specifier: ^16.15.0
+        version: 16.15.0
       oxlint:
         specifier: ^1.61.0
         version: 1.61.0
@@ -1565,6 +1568,10 @@ packages:
   gopd@1.2.0:
     resolution: {integrity: sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==}
     engines: {node: '>= 0.4'}
+
+  graphql@16.15.0:
+    resolution: {integrity: sha512-32kz9FecohDiC/tgcViwnRXM7HFBVTPiW7pHO+DikKOI5KjhU/jNULOReXsrFqt2WAYbE9xFXsTffJw6iTO8qw==}
+    engines: {node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0}
 
   has-symbols@1.1.0:
     resolution: {integrity: sha512-1cDNdwJ2Jaohmb3sg4OmKaMBwuC48sYni5HUw2DvsC8LjGTLK9h+eb1X6RyuOHe4hT0ULCW68iomhjUoKUqlPQ==}
@@ -3397,6 +3404,8 @@ snapshots:
   globals@17.13.0: {}
 
   gopd@1.2.0: {}
+
+  graphql@16.15.0: {}
 
   has-symbols@1.1.0: {}
 
