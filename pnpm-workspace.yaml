@@ -2,7 +2,7 @@ overrides:
   contentful-sdk-core>qs: 6.16.0
   basic-ftp: 6.2.4
   express-rate-limit: 8.7.4
-  hono: 4.13.17
+  hono: 4.13.18
   ip-address: 10.7.6
 
 allowBuilds:
