@@ -95,11 +95,20 @@ Before each CMA request, require the token without printing it:
 | Parameters | Each entry has `id` and explicit `required`. Do not use a keyed parameter map. |
 | Schema | Trace every selected GraphQL path against the current target schema. Do not infer GraphQL type behavior from a CMA `Link` or allowed content types. |
 | `$on.type` | Use it at every `UNION` or `INTERFACE` selection boundary, including a one-member union. Use an ordinary selector for a concrete `OBJECT`. |
-| Pointers | Keep `_node`, `<field>CursorCollection/items`, and linked-value transport boundaries in `$from.source`; do not flatten across them in a string select path. |
+| Pointers | Keep resolver, collection, and linked-value transport boundaries in `$from.source`; do not flatten across them in a string select path. |
 | Requiredness | Never map an optional source to a required target without a verified query-level guarantee. |
 | Collections | Never use `items/0`, `items/1`, or another index to fill individual required nested inputs. Use separate inputs only when independent selection is acceptable; otherwise report a modeling gap. |
 | Static root collections | Put schema-validated static ordering directly in the GraphQL query. Keep `limit` as the only resolver parameter. Do not use a variable-backed `order`. |
 | UI verification | After CMA save and linking, reopen the exact Binding Set. If that cannot be done, report **CMA-valid; UI editability unverified**. |
+
+## User-facing language
+
+In a Binding Plan, status update, mapping summary, or error explanation,
+describe the editor-visible outcome: the target property, the CMS source, and
+the action the user can take. Do not foreground resolver-pointer mechanics,
+root transport paths, or GraphQL type inference unless the user asks for a
+technical diagnosis. The final review payload can contain persisted resolver
+syntax because it is needed to review the DA itself.
 
 ## Binding Plan and names
 
@@ -133,11 +142,14 @@ Prefer: Recent AI actions
 
 ## Final report
 
-After every write, re-read the saved DA and report the complete persisted
-configuration in an actual expandable Markdown/HTML `<details>` block. Include
-the server-assigned `sys`, `parameters`, `resolvers`, and `return`, followed by
-a short target-link verification line. State whether the exact Binding Set was
-reopened in the Experience UI; never call it UI-compatible without that check.
+After every write, re-read the saved DA and report a portable review projection
+under a normal Markdown heading with a `jsonc` code block. Do not require HTML
+`<details>`, which does not render consistently across agent harnesses. Include
+the full `metadata`, `name`, `description`, `parameters`, `resolvers`, and
+`return`; omit only server-assigned `sys` with a short comment that it is not
+relevant for review. Follow with target-link verification and whether the exact
+Binding Set reopened in the Experience UI; never call it UI-compatible without
+that check.
 
 For general Contentful concepts or API selection, use the `contentful-guide`
 skill. For content-model migrations, use the `contentful-migration` skill.

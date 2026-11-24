@@ -143,17 +143,25 @@ successful link do not alone establish UI editability.
 
 ## 6. Final response
 
-Render the saved body—not a proposed fragment—in an expandable container:
+Re-read the saved DA, then render this portable review projection—not an HTML
+container or a proposed fragment:
 
 ````markdown
-<details>
-<summary>Final submitted Data Assembly</summary>
+### Final Data Assembly (review payload)
 
-```json
-{ "sys": { "id": "…" }, "parameters": [], "resolvers": {}, "return": {} }
+```jsonc
+{
+  // … server-assigned sys omitted; it is not relevant for review.
+  "metadata": { "tags": [] },
+  "name": "…",
+  "description": "…",
+  "parameters": [],
+  "resolvers": {},
+  "return": {}
+}
 ```
-
-</details>
 ````
 
-Follow it with the target-link result and the UI verification outcome.
+Keep `parameters`, `resolvers`, and `return` complete so the DA remains
+reviewable. Follow the block with the target-link result and the UI verification
+outcome.
