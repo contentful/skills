@@ -142,14 +142,16 @@ Prefer: Recent AI actions
 
 ## Final report
 
-After every write, re-read the saved DA and report a portable review projection
-under a normal Markdown heading with a `jsonc` code block. Do not require HTML
-`<details>`, which does not render consistently across agent harnesses. Include
-the full `metadata`, `name`, `description`, `parameters`, `resolvers`, and
-`return`; omit only server-assigned `sys` with a short comment that it is not
-relevant for review. Follow with target-link verification and whether the exact
-Binding Set reopened in the Experience UI; never call it UI-compatible without
-that check.
+After every write, re-read the saved DA and render a review projection. Use a
+documented native collapsible mechanism when the active harness provides one;
+in Codex, use HTML `<details>`. Use the harness's documented expandable form
+when known, or fall back to a normal Markdown heading with a `jsonc` code block
+when none is available. Do not invent a collapsible syntax. In every form,
+include the full `metadata`, `name`, `description`, `parameters`, `resolvers`,
+and `return`; omit only server-assigned `sys` with a short comment that it is
+not relevant for review. Follow with target-link verification and whether the
+exact Binding Set reopened in the Experience UI; never call it UI-compatible
+without that check.
 
 For general Contentful concepts or API selection, use the `contentful-guide`
 skill. For content-model migrations, use the `contentful-migration` skill.

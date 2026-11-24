@@ -143,8 +143,11 @@ successful link do not alone establish UI editability.
 
 ## 6. Final response
 
-Re-read the saved DA, then render this portable review projection—not an HTML
-container or a proposed fragment:
+Re-read the saved DA, then render this review projection—not a proposed
+fragment. Use the active harness's documented native collapsible mechanism when
+it provides one. In Codex, use the `<details>` form below. In another harness,
+use its documented expandable mechanism when known; otherwise use the portable
+heading and `jsonc` block. Do not invent a collapsible syntax.
 
 ````markdown
 ### Final Data Assembly (review payload)
@@ -160,6 +163,27 @@ container or a proposed fragment:
   "return": {}
 }
 ```
+````
+
+For Codex, wrap the same payload as follows:
+
+````markdown
+<details>
+<summary>Final Data Assembly (review payload)</summary>
+
+```jsonc
+{
+  // … server-assigned sys omitted; it is not relevant for review.
+  "metadata": { "tags": [] },
+  "name": "…",
+  "description": "…",
+  "parameters": [],
+  "resolvers": {},
+  "return": {}
+}
+```
+
+</details>
 ````
 
 Keep `parameters`, `resolvers`, and `return` complete so the DA remains
