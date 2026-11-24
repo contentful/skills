@@ -50,7 +50,7 @@ Run `/reload-plugins` to activate. This registers two MCP servers:
 | **[contentful-custom-app-enhancement](#contentful-custom-app-enhancement)** | Improves and debugs existing Contentful custom apps in customer-owned repos. |
 | **[contentful-personalization](#contentful-personalization)** | Sets up, debugs, and develops personalization and A/B testing with the Experiences SDK. |
 | **[channels-destinations](#channels-destinations)** | Sets up and manages Channels, Destinations, and Destination Nodes via the Destinations Management API. |
-| **[exo-content-bindings](#exo-content-bindings)** | Creates Content Binding Configurations that connect Content Types to Experience Orchestration components. |
+| **[author-content-bindings](#author-content-bindings)** | Creates UI-compatible Data Assemblies (Binding Sets) that connect CMS content to Components and Experience Templates. |
 
 The custom app skills are packaged together under `skills/contentful-apps/`.
 
@@ -99,7 +99,7 @@ Skills auto-discover from `.agents/skills/` when added to your project. Use `/sk
 npx skills add contentful/skills --skill contentful-personalization
 ```
 
-Available: `contentful-guide`, `contentful-api`, `contentful-nextjs`, `contentful-migration`, `contentful-env-analysis`, `contentful-custom-app-from-scratch`, `contentful-custom-app-enhancement`, `contentful-personalization`, `channels-destinations`
+Available: `contentful-guide`, `contentful-api`, `contentful-nextjs`, `contentful-migration`, `contentful-env-analysis`, `contentful-custom-app-from-scratch`, `contentful-custom-app-enhancement`, `contentful-personalization`, `channels-destinations`, `author-content-bindings`
 
 </details>
 
@@ -292,23 +292,23 @@ Set up and manage Channels, Destinations, and Destination Nodes through the Dest
 
 </details>
 
-### exo-content-bindings
+### author-content-bindings
 
-Creates Content Binding Configurations, powered by Data Assemblies that connect Content Types to Components. Covers classifying coded vs. composite components, judging content vs. design properties, public/private (hoisted) properties, and slots.
+Creates and updates Data Assemblies, shown as Binding Sets in the Experience UI. It maps CMS entries or Assets to public content properties on Components and Experience Templates.
 
 <details>
 <summary>Triggers and details</summary>
 
 <br />
 
-**Activates on:** "create Data Assemblies", "content binding", "data assembly", "prebinding", "bind entries to components", "hydrate a component", "set up a Binding Set"
+**Activates on:** "create a Binding Set", "content binding", "data assembly", "prebinding", "wire CMS content", "bind entries to components", "hydrate a component", "map an entry to a template"
 
 **Covers:**
-- Space introspection and coded vs. composite component classification
-- The content-property vs. design-property test, and the public/private hoisting rule
-- Resolver patterns — entity, collection, nested Data Assembly, asset/Media fields, deep binding, polymorphic branching
-- RichText handling, GraphQL query conventions, and the content-type-field-to-content-property type mapping
-- A complete worked example, plus binding-set and DA-reuse guidance
+- CMA-led authoring with the current sys-free write contract and ordered parameter arrays
+- Schema-driven GraphQL type tracing, canonical pointers, and `$on.type` only at abstract boundaries
+- Entity, Asset, nested, and static root-collection resolver patterns
+- Requiredness, collection-position, and API-only safeguards
+- Persisted-body, target-link, and Experience UI editability verification
 
 </details>
 
