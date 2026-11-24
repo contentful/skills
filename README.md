@@ -50,7 +50,7 @@ Run `/reload-plugins` to activate. This registers two MCP servers:
 | **[contentful-custom-app-enhancement](#contentful-custom-app-enhancement)** | Improves and debugs existing Contentful custom apps in customer-owned repos. |
 | **[contentful-personalization](#contentful-personalization)** | Sets up, debugs, and develops personalization and A/B testing with the Experiences SDK. |
 | **[channels-destinations](#channels-destinations)** | Sets up and manages Channels, Destinations, and Destination Nodes via the Destinations Management API. |
-| **[author-content-bindings](#author-content-bindings)** | Creates UI-compatible Data Assemblies (Binding Sets) that connect CMS content to Components and Experience Templates. |
+| **[author-content-bindings](#author-content-bindings)** | Creates Binding Sets (content binding configurations) that connect Content Types to Components and Experience Templates. |
 
 The custom app skills are packaged together under `skills/contentful-apps/`.
 
@@ -294,7 +294,7 @@ Set up and manage Channels, Destinations, and Destination Nodes through the Dest
 
 ### author-content-bindings
 
-Creates and updates Data Assemblies, shown as Binding Sets in the Experience UI. It maps CMS entries or Assets to public content properties on Components and Experience Templates.
+Creates Binding Sets — content binding configurations that connect Content Types to public content properties on Components and Experience Templates. Binding Sets are stored as Data Assemblies.
 
 <details>
 <summary>Triggers and details</summary>

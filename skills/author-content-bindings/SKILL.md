@@ -1,15 +1,16 @@
 ---
 name: author-content-bindings
 description: >-
-  Create or update Contentful Data Assemblies (Binding Sets) that map CMS entries
-  or assets to public content properties on Components and Experience Templates.
-  Uses the current CMA contract, target GraphQL schema, and Experience UI
-  compatibility checks. Use when asked to create a Binding Set, author a Data
-  Assembly, wire CMS content to a component, map an entry or asset to a template,
-  or configure reusable content bindings. Also triggers on "content binding",
-  "data assembly", "binding set", "prebinding", and "hydrate a component".
-  Not for building a component tree, filling a slot, or choosing the concrete
-  source on an existing Experience or Experience Fragment.
+  Create or update Contentful Binding Sets: reusable content binding configurations
+  that map CMS entries or assets to public content properties on Components and
+  Experience Templates. Binding Sets are stored as Data Assemblies. Uses the
+  current CMA contract, target GraphQL schema, and Experience UI compatibility
+  checks. Use when asked to create a Binding Set, author a Data Assembly, wire
+  CMS content to a component, map an entry or asset to a template, or configure
+  reusable content bindings. Also triggers on "content binding", "data assembly",
+  "binding set", "prebinding", and "hydrate a component". Not for building a
+  component tree, filling a slot, or choosing the concrete source on an existing
+  Experience or Experience Fragment.
 license: MIT
 argument-hint: "[space id] [component or template]"
 allowed-tools: Bash(curl *) mcp__contentful-mcp__* mcp__plugin_contentful_contentful-mcp__*
@@ -20,20 +21,20 @@ metadata:
 
 # Author Content Bindings
 
-Create Data Assemblies (DAs), shown as **Binding Sets** in the Experience UI.
-A DA is a reusable recipe: it maps CMS data into a Component or Experience
-Template's public content properties. It is not an instance-level choice of a
-specific entry.
+Create or update **Binding Sets**: reusable content binding configurations that
+map CMS data into a Component or Experience Template's public content
+properties. Binding Sets are stored as Data Assemblies. They are not an
+instance-level choice of a specific entry.
 
 ## Scope
 
 | Request | Correct layer |
 | --- | --- |
-| "Create a Binding Set" or "map a page hero to Hero" | This skill: DA recipe layer. |
-| "Choose the entry for this Experience" | Instance-level binding; it consumes a DA. |
+| "Create a Binding Set" or "map a page hero to Hero" | This skill: Binding Set authoring. |
+| "Choose the entry for this Experience" | Instance-level binding; it consumes a Binding Set. |
 | "Put this Component in a slot" or "build the tree" | Component or template assembly. |
 
-The target tree reads through `$contentProperties/...`. Every DA return key
+The target tree reads through `$contentProperties/...`. Every Binding Set return key
 must therefore be an existing public content-property ID. Do not create return
 values that no Component or template reads.
 
@@ -54,7 +55,7 @@ https://app.contentful.com/spaces/{spaceId}/environments/{environmentId}/compone
 
 The URL identifies the target; it does not authorize access. If the token is
 unavailable, ask for secure CMA access and stop before authoring. Do not use a
-logged-in browser session to retrieve a token or create a Data Assembly.
+logged-in browser session to retrieve a token or create a Binding Set.
 
 Before each CMA request, require the token without printing it:
 
@@ -65,7 +66,7 @@ Before each CMA request, require the token without printing it:
 ## Workflow
 
 1. **Resolve the target.** Confirm space, environment, and Component or
-   Experience Template ID. Fetch the target, its existing Data Assemblies,
+   Experience Template ID. Fetch the target, its existing Binding Sets,
    content types, and representative source entries.
 2. **Fetch the target GraphQL schema.** Immediately before designing mappings,
    fetch `graphql_schema`. It is the source of truth for GraphQL field names,
@@ -76,15 +77,15 @@ Before each CMA request, require the token without printing it:
 4. **Create a Binding Plan.** Show the target properties, source fields,
    requiredness, resolver shape, title, description, and every intentional
    omission. Get explicit approval before any write.
-5. **Construct one complete persisted DA body.** Use the current sys-free
+5. **Construct one complete persisted Binding Set body.** Use the current sys-free
    format, an ordered `parameters` array, and the pattern that matches the
    source shape. See [CMA workflow](references/cma-workflow.md) and
    [resolver patterns](references/resolver-patterns.md).
-6. **Write, link, and verify.** Save the DA, re-read it, preserve and verify
-   the target's DA links, then reopen the exact Binding Set in the Experience
+6. **Write, link, and verify.** Save the Binding Set, re-read it, preserve and
+   verify the target's Binding Set links, then reopen the exact Binding Set in the Experience
    UI. CMA acceptance alone is not proof that the Binding Set is editable.
 7. **Hand off publication.** Ask the user to review and publish through the
-   Component or Experience Template editor. Do not publish a Data Assembly
+   Component or Experience Template editor. Do not publish a Binding Set
    through a CMA `/published` endpoint.
 
 ## Non-negotiable construction rules
@@ -108,11 +109,11 @@ describe the editor-visible outcome: the target property, the CMS source, and
 the action the user can take. Do not foreground resolver-pointer mechanics,
 root transport paths, or GraphQL type inference unless the user asks for a
 technical diagnosis. The final review payload can contain persisted resolver
-syntax because it is needed to review the DA itself.
+syntax because it is needed to review the Binding Set itself.
 
 ## Binding Plan and names
 
-Show the complete plan before writing. For each DA include:
+Show the complete plan before writing. For each Binding Set include:
 
 - target Component or Experience Template and public content properties;
 - parameter IDs and allowed Entry or Asset types;
@@ -142,7 +143,7 @@ Prefer: Recent AI actions
 
 ## Final report
 
-After every write, re-read the saved DA and render a review projection. Use a
+After every write, re-read the saved Binding Set and render a review projection. Use a
 documented native collapsible mechanism when the active harness provides one;
 in Codex, use HTML `<details>`. Use the harness's documented expandable form
 when known, or fall back to a normal Markdown heading with a `jsonc` code block
