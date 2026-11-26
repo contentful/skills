@@ -120,7 +120,7 @@ Before each CMA request, require the token without printing it:
 | Pointers | Keep resolver, collection, and linked-value transport boundaries in `$from.source`; do not flatten across them in a string select path. |
 | Requiredness | Never map an optional source to a required target without a verified query-level guarantee. |
 | Collections | Never use `items/0`, `items/1`, or another index to fill individual required nested inputs. Use separate inputs only when independent selection is acceptable; otherwise report a modeling gap. |
-| Static root collections | Put schema-validated static ordering directly in the GraphQL query. Keep `limit` as the only resolver parameter. Do not use a variable-backed `order`. |
+| Static root collections | Use the UI-shaped locked `Record` query parameter, with the same ID as its resolver. Bind `limit` and schema-validated `$order` variables to its `Number` and `OrderExpression` fallback fields. This keeps the behavior fixed while matching the editor's persisted format. |
 | Target ownership | A Data Assembly belongs to one Component or Experience Template. Never link the same Data Assembly to another target; create a distinct Data Assembly even when the contracts and mappings are identical. |
 | UI check | When a logged-in browser session is already available, reopen the exact Binding Set and confirm it is editable. Otherwise, report **CMA-valid; UI editability unverified** and ask the user to check the target in their browser. |
 

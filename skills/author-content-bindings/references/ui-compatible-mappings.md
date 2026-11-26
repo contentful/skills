@@ -91,32 +91,49 @@ Create separate inputs and choose each entry independently when configuring the
 Experience or Experience Fragment.
 ```
 
-## Root collections: static order only
+## Root collections: UI-shaped fixed order
 
 For a recommended root collection, validate the target schema's order enum and
-put static ordering directly in the query:
+use the editor's persisted form: a locked `Record` parameter with the same ID
+as the resolver. Its fallback values keep the limit and order fixed, while its
+fields bind the GraphQL variables:
 
-```graphql
-query ($limit: Int!) {
-  aiActionTemplateCursorCollection(
-    limit: $limit,
-    order: [sys_publishedAt_DESC]
-  ) {
-    items { title description }
+```jsonc
+{
+  "parameters": [{
+    "id": "actions",
+    "type": "Record",
+    "required": true,
+    "locked": true,
+    "fields": [
+      { "id": "limit", "type": "Number", "fallbackValue": 3 },
+      {
+        "id": "order",
+        "type": "OrderExpression",
+        "fallbackValue": [{ "path": "sys.publishedAt", "direction": "desc" }],
+        "target": {
+          "resourceLink": "crn:contentful:::content:spaces/$self/environments/$self/contentTypes/aiActionTemplate"
+        }
+      }
+    ]
+  }],
+  "resolvers": {
+    "actions": {
+      "source": "Contentful:GraphQL",
+      "query": "query ($limit: Int!, $order: [AiActionTemplateOrder]) { aiActionTemplateCursorCollection(limit: $limit, order: $order) { items { title description } } }",
+      "parameters": {
+        "limit": "$parameters/actions/limit",
+        "order": "$parameters/actions/order"
+      }
+    }
   }
 }
 ```
 
-Keep only `limit` as a resolver parameter:
-
-```json
-"parameters": { "limit": { "$literal": 3 } }
-```
-
-Do not declare `$order` or add an `order` resolver parameter for a static
-collection. That shape can be CMA-valid but opens as API-only in the Experience
-UI. Dynamic `where` filters, extra root fields, or custom root arguments are
-API-only exceptions and require explicit user confirmation.
+The locked Record and both bindings are one shape. Do not replace only part of
+it with an inline enum or a standalone `$order` pointer. Dynamic `where`
+filters, extra root fields, or custom root arguments are API-only exceptions
+and require explicit user confirmation.
 
 ## API-only exception
 
