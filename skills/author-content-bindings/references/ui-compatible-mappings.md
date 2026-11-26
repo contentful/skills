@@ -108,9 +108,11 @@ For `Array<Link<Entry>>`, do not use array indexes such as `items/0` or
 items are optional from the mapping's type perspective, even when sampled
 entries currently have enough items.
 
-Use separate required inputs only when independently choosing the entries in
-an Experience or Experience Fragment is acceptable. If the source relationship
-must be retained by position, report a component or content-modeling gap.
+If a shared parameter cannot cover nested Binding Sets directly, prefer
+explicitly hoisting nested child parameters as separate inputs. Do not propose a
+partial Binding Set if it can be avoided through hoisting or other similar
+options. If the source relationship must be retained by position, report a
+component or content-modeling gap.
 
 Use UI-level language first:
 
