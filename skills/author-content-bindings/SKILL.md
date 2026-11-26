@@ -86,6 +86,8 @@ Before each CMA request, require the token without printing it:
 2. **Fetch the target GraphQL schema.** Immediately before designing mappings,
    fetch `graphql_schema`. It is the source of truth for GraphQL field names,
    concrete versus abstract return types, and valid ordering enums.
+   Use Component/Experience Template and content-type metadata for user-facing
+   labels, descriptions, and semantics in the Binding Plan; keep IDs secondary.
 3. **Classify the request.** Map only public `contentProperties`. A slot child
    owns its own Binding Set. Do not map a design property or a private child
    property.
