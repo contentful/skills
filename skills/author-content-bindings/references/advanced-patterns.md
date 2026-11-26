@@ -72,7 +72,8 @@ Only use multiple allowed types when one DA contract supports every branch. The
 
 Use a nested DA only when the target property represents a child Component's
 complete contract. Create and link the child DA before the parent. The parent
-returns the whole child resolver, not a child field.
+returns the whole child resolver as `{ "$from": "$resolvers/<resolverId>" }`,
+not a child field or bare resolver string.
 
 ```json
 {
@@ -114,7 +115,7 @@ returns the whole child resolver, not a child field.
   },
   "return": {
     "title": { "$from": { "source": "$resolvers/book/_node", "select": { "$on": { "type": { "Book": "title" } } } } },
-    "author": "$resolvers/author"
+    "author": { "$from": "$resolvers/author" }
   }
 }
 ```
