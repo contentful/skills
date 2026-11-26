@@ -145,10 +145,11 @@ contain persisted resolver syntax because it is needed to review the Binding
 Set itself.
 
 Before approval, lead with concise target context and the mapping table.
-Existing Binding Sets only affect the new-versus-update decision, so mention
-them only when that changes the plan; do not render a JSON or pseudo-JSON
-before/after `dataAssemblies` comparison. Keep `(required)` out of human-facing
-property labels, parameter labels, names, descriptions, and mapping summaries.
+Describe the proposed functionality and mappings directly. Do not add a generic
+“Before / After” contrast when creating a new Binding Set. Include a comparison
+only when modifying an existing Binding Set or when the user explicitly asks
+for one. Keep `(required)` out of human-facing property labels, parameter
+labels, names, descriptions, and mapping summaries.
 `required: true` remains in the persisted body and matters in user-facing copy
 only when it creates a mapping constraint or error.
 
