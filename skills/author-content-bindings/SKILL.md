@@ -96,9 +96,11 @@ Before each CMA request, require the token without printing it:
 3. **Classify the request.** Map only public `contentProperties`. A slot child
    owns its own Binding Set. Do not map a design property or a private child
    property.
-4. **Create a Binding Plan.** Show the target properties, source fields,
-   requiredness, resolver shape, title, description, and every intentional
-   omission. Get explicit approval before any write.
+4. **Create a Binding Plan.** Start with a short target line and a readable
+   target-property-to-CMS-source table, then show the title, description,
+   resolver shape, and every intentional omission. Keep requiredness as
+   validation evidence; surface it only when it changes the plan. Get explicit
+   approval before any write.
 5. **Construct one complete persisted Binding Set body.** Use the current sys-free
    format, an ordered `parameters` array, and the pattern that matches the
    source shape. See [CMA workflow](references/cma-workflow.md) and
@@ -119,7 +121,7 @@ Before each CMA request, require the token without printing it:
 | Concern | Required behavior |
 | --- | --- |
 | CMA body | Send `metadata`, `name`, `description`, ordered `parameters`, `resolvers`, and `return`. Never send top-level `sys` or `sys.dataType`. |
-| Parameters | Each entry has `id` and explicit `required`. Do not use a keyed parameter map. |
+| Parameters | Each newly authored parameter is mandatory: set explicit `required: true`. Do not use a keyed parameter map. |
 | Schema | Trace every selected GraphQL path against the current target schema. Use the Content-Type definition for reference topology, allowed types, and requiredness; use the schema for GraphQL type behavior. |
 | `$on.type` | Use it at every `UNION` or `INTERFACE` selection boundary, including a one-member union. Use an ordinary selector for a concrete `OBJECT`. |
 | Pointers | Keep `_node` and collection envelopes in `$from.source`. Prefer a direct selector path for a single `Link<Entry>` to a concrete `OBJECT`, unless a same-environment UI Binding Set differs; use an inner mapping for a union/interface branch, collection, or transformation. |
@@ -142,13 +144,22 @@ unless the user asks for a technical diagnosis. The final review payload can
 contain persisted resolver syntax because it is needed to review the Binding
 Set itself.
 
+Before approval, lead with concise target context and the mapping table.
+Existing Binding Sets only affect the new-versus-update decision, so mention
+them only when that changes the plan; do not render a JSON or pseudo-JSON
+before/after `dataAssemblies` comparison. Keep `(required)` out of human-facing
+property labels, parameter labels, names, descriptions, and mapping summaries.
+`required: true` remains in the persisted body and matters in user-facing copy
+only when it creates a mapping constraint or error.
+
 ## Binding Plan and names
 
 Show the complete plan before writing. For each Binding Set include:
 
 - target Component or Experience Template and public content-property labels;
 - parameter labels and allowed Entry or Asset types;
-- source fields and type/requiredness evidence;
+- source fields and mapping evidence; explain requiredness only for an
+  actionable mismatch;
 - resolver kind and GraphQL shape;
 - intentional omissions and any requested API-only exception;
 - a user-facing Binding Set name and description.
