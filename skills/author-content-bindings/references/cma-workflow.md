@@ -5,17 +5,24 @@ Assembly. It documents the current Experience CMA contract.
 
 ## 1. Inspect before designing
 
-Set the target only after confirming the space and environment. Keep the token
-in the shell or secret store; never place it in a Binding Plan or DA body.
+Set the target only after confirming the space, environment, target kind, and
+target ID. Keep the token in the shell or secret store; never place it in a
+Binding Plan or DA body.
 
 ```bash
 : "${CMA_TOKEN:?CMA_TOKEN must be set by a secret store or environment}"
 API_HOST="https://api.contentful.com"
 BASE_URL="$API_HOST/spaces/$SPACE_ID/environments/$ENVIRONMENT_ID"
 
+case "$TARGET_KIND" in
+  component) TARGET_URL="$BASE_URL/components/$TARGET_ID" ;;
+  experience-template) TARGET_URL="$BASE_URL/experience_templates/$TARGET_ID" ;;
+  *) printf '%s\n' "Unknown target kind: $TARGET_KIND" >&2; exit 1 ;;
+esac
+
 curl --fail --silent --show-error \
   -H "Authorization: Bearer $CMA_TOKEN" \
-  "$BASE_URL/components/$COMPONENT_ID"
+  "$TARGET_URL"
 
 curl --fail --silent --show-error \
   -H "Authorization: Bearer $CMA_TOKEN" \
@@ -32,8 +39,8 @@ test -s graphql-schema.graphql
 ```
 
 For an Experience Template, use the verified
-`$BASE_URL/experience_templates/$TEMPLATE_ID` target endpoint. Do not use
-retired `/component_types` or `/templates` endpoints.
+`$BASE_URL/experience_templates/$TARGET_ID` target endpoint. Do not use
+retired `/component_types` or `/templates` CMA endpoints.
 
 Sample one or two Entries for each candidate source type. Field names alone do
 not prove semantic fit or requiredness.
@@ -90,12 +97,14 @@ not complete.
 ## 4. Link without replacing existing work
 
 Read the target immediately before updating it. Preserve every existing
-`dataAssemblies` link and its order. A Component or template normally has one
-linked DA; append another only when the approved Binding Plan explicitly asks
-for an additional Binding Set.
+`dataAssemblies` link and its order. A Data Assembly is owned by one Component
+or Experience Template: never attach an existing Data Assembly to another
+target. Create a distinct Data Assembly for that target, even when the contract
+and mappings are identical. A target normally has one linked DA; append another
+only when the approved Binding Plan explicitly asks for an additional Binding
+Set.
 
 ```bash
-TARGET_URL="$BASE_URL/components/$COMPONENT_ID"
 TARGET_RESPONSE=$(curl --fail --silent --show-error \
   -H "Authorization: Bearer $CMA_TOKEN" "$TARGET_URL")
 TARGET_VERSION=$(printf '%s' "$TARGET_RESPONSE" \
@@ -127,19 +136,25 @@ Re-read the target. Verify the new DA occurs exactly once and every prior link
 remains, in the same order. For an existing, different DA link, stop unless the
 approved plan explicitly authorizes an additional link.
 
-## 5. Verify in the Experience UI
+## 5. Verify in the Experience UI when a logged-in session is available
 
 Do not publish the DA through CMA or a `/published` endpoint. After the save,
 DA re-read, and target-link verification:
+
+When authoring or inspecting through an authenticated browser session, or when
+one is already available:
 
 1. Open the exact Component or Experience Template in the Experience UI.
 2. Reopen the exact linked Binding Set.
 3. Confirm that it loads with its mappings and is editable.
 4. Ask the user to review and publish through that editor.
 
-If the UI cannot be opened in an authenticated session, report the result as
-**CMA-valid; UI editability unverified**. CMA acceptance, inferred types, and a
-successful link do not alone establish UI editability.
+When no authenticated browser session is available, do not attempt automated UI
+verification. Report **CMA-valid; UI editability unverified**, ask the user to
+open the target and check that the Binding Set renders and is meaningful, and
+end the final response with the direct target URL as a clickable Markdown link.
+CMA acceptance, inferred types, and a successful link do not alone establish
+UI editability.
 
 ## 6. Final response
 
@@ -187,5 +202,6 @@ For Codex, wrap the same payload as follows:
 ````
 
 Keep `parameters`, `resolvers`, and `return` complete so the DA remains
-reviewable. Follow the block with the target-link result and the UI verification
-outcome.
+reviewable. Follow the block with the target-link result and the UI-check
+outcome. When UI verification was unavailable, include the direct Component or
+Experience Template URL as a clickable Markdown final handoff link.
