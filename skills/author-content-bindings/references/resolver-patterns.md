@@ -137,12 +137,31 @@ the collection field and `sys_publishedAt_DESC` enum in the target schema.
   "metadata": { "tags": [] },
   "name": "Recent AI actions",
   "description": "Displays the three most recently published AI actions.",
-  "parameters": [],
+  "parameters": [{
+    "id": "actions",
+    "type": "Record",
+    "required": true,
+    "locked": true,
+    "fields": [
+      { "id": "limit", "type": "Number", "fallbackValue": 3 },
+      {
+        "id": "order",
+        "type": "OrderExpression",
+        "fallbackValue": [{ "path": "sys.publishedAt", "direction": "desc" }],
+        "target": {
+          "resourceLink": "crn:contentful:::content:spaces/$self/environments/$self/contentTypes/aiActionTemplate"
+        }
+      }
+    ]
+  }],
   "resolvers": {
     "actions": {
       "source": "Contentful:GraphQL",
-      "query": "query ($limit: Int!) { aiActionTemplateCursorCollection(limit: $limit, order: [sys_publishedAt_DESC]) { items { title description } } }",
-      "parameters": { "limit": { "$literal": 3 } }
+      "query": "query ($limit: Int!, $order: [AiActionTemplateOrder]) { aiActionTemplateCursorCollection(limit: $limit, order: $order) { items { title description } } }",
+      "parameters": {
+        "limit": "$parameters/actions/limit",
+        "order": "$parameters/actions/order"
+      }
     }
   },
   "return": {
@@ -156,8 +175,8 @@ the collection field and `sys_publishedAt_DESC` enum in the target schema.
 }
 ```
 
-Do not add `$order` or an `order` resolver parameter. See
-[UI-compatible mappings](ui-compatible-mappings.md#root-collections-static-order-only).
+Use the complete locked Record shape for both query variables. See
+[UI-compatible mappings](ui-compatible-mappings.md#root-collections-ui-shaped-fixed-order).
 
 ## Direct Asset to scalar properties
 

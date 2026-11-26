@@ -45,6 +45,13 @@ retired `/component_types` or `/templates` CMA endpoints.
 Sample one or two Entries for each candidate source type. Field names alone do
 not prove semantic fit or requiredness.
 
+For every Content Type proposed in `allowedTypes`, a selected `Link<Entry>`
+field's `linkContentType` validation, or an `Array<Link<Entry>>` item's
+validation, read `$BASE_URL/content_types/{id}` directly. A `404` may mean the
+type was deleted or is unreadable to the user: do not include it in the Binding
+Set. Block a required mapping, or remove an optional alternative and obtain
+approval for the revised plan.
+
 ## 2. OpenAPI-derived write contract
 
 This compact contract covers the shared POST and PUT body. Before writing, use

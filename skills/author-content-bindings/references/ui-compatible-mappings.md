@@ -1,8 +1,9 @@
 # UI-compatible mappings
 
 Use this reference while designing a return map. CMA may accept broader shapes
-than the Experience UI can reopen. The target environment's GraphQL schema and
-the final UI reopen are the sources of truth.
+than the Experience UI can reopen. The target environment's GraphQL schema
+governs query type mechanics, Content-Type fields govern reference topology,
+and the final UI reopen verifies the persisted shape.
 
 ## Trace the current target schema
 
@@ -19,10 +20,44 @@ boundary:
 The type is schema-specific. Do not copy `$on.type` from another environment or
 infer it from CMA field validations.
 
+## Trace the source Content Type as well
+
+For every selected path, record the CMA field shape, requiredness, allowed
+types, GraphQL return type, and chosen pointer form. Read each planned
+parameter type and every `linkContentType` ID on a selected `Link<Entry>` or
+`Array<Link<Entry>>` field directly. A `404` means the type may be deleted or
+unreadable: do not put it in `allowedTypes`, a GraphQL branch, or a field
+mapping. Block a required mapping; remove an optional alternative and obtain
+approval for the revised plan. An unrestricted reference has no finite
+allowed-type list, so mark that uncertainty rather than claiming every target
+type was checked.
+
 ## Preserve transport boundaries
 
 Put transport boundaries in `$from.source`, then make the next typed selection
 in `$from.select`.
+
+```json
+{
+  "$from": {
+    "source": "$resolvers/hero/_node",
+    "select": {
+      "$on": { "type": { "PageHero": "headline" } }
+    }
+  }
+}
+```
+
+Do not flatten `_node` into a string selector:
+
+```json
+{ "$from": { "source": "$resolvers/hero", "select": "_node/headline" } }
+```
+
+Use the same rule for `<field>CursorCollection/items`. For a single
+`Link<Entry>` with a concrete GraphQL `OBJECT`, prefer a simple reference path
+in the current selector; a same-environment UI Binding Set takes priority when
+one exists:
 
 ```json
 {
@@ -35,15 +70,9 @@ in `$from.select`.
 }
 ```
 
-Do not flatten `_node` into a string selector:
-
-```json
-{ "$from": { "source": "$resolvers/section", "select": "_node/title/title" } }
-```
-
-Use the same rule for `<field>CursorCollection/items` and for a linked value
-that begins an inner mapping. A concrete linked object uses a plain inner
-selector; an abstract linked value uses a nested `$on.type` branch.
+Use an inner mapping for a union/interface branch, a collection, or a
+transformation. The CMA Link shape does not decide whether `$on.type` is
+needed; the GraphQL return type does.
 
 ## Pointer depth and collections
 

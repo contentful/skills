@@ -82,12 +82,17 @@ Before each CMA request, require the token without printing it:
 
 1. **Resolve the target.** Confirm space, environment, target kind, and target
    ID. Fetch the target, its existing Binding Sets,
-   content types, and representative source entries.
+   content types, and representative source entries. Before using a Content
+   Type in a planned parameter, query branch, or reference path, read it
+   directly. A `404` can mean it was deleted or is unreadable: omit an
+   optional alternative, or block a required mapping.
 2. **Fetch the target GraphQL schema.** Immediately before designing mappings,
    fetch `graphql_schema`. It is the source of truth for GraphQL field names,
    concrete versus abstract return types, and valid ordering enums.
-   Use Component/Experience Template and content-type metadata for user-facing
-   labels, descriptions, and semantics in the Binding Plan; keep IDs secondary.
+   Pair it with Content-Type fields to establish reference topology, allowed
+   types, and requiredness. Use Component/Experience Template and content-type
+   metadata for user-facing labels, descriptions, and semantics in the Binding
+   Plan; keep IDs secondary.
 3. **Classify the request.** Map only public `contentProperties`. A slot child
    owns its own Binding Set. Do not map a design property or a private child
    property.
@@ -115,10 +120,11 @@ Before each CMA request, require the token without printing it:
 | --- | --- |
 | CMA body | Send `metadata`, `name`, `description`, ordered `parameters`, `resolvers`, and `return`. Never send top-level `sys` or `sys.dataType`. |
 | Parameters | Each entry has `id` and explicit `required`. Do not use a keyed parameter map. |
-| Schema | Trace every selected GraphQL path against the current target schema. Do not infer GraphQL type behavior from a CMA `Link` or allowed content types. |
+| Schema | Trace every selected GraphQL path against the current target schema. Use the Content-Type definition for reference topology, allowed types, and requiredness; use the schema for GraphQL type behavior. |
 | `$on.type` | Use it at every `UNION` or `INTERFACE` selection boundary, including a one-member union. Use an ordinary selector for a concrete `OBJECT`. |
-| Pointers | Keep resolver, collection, and linked-value transport boundaries in `$from.source`; do not flatten across them in a string select path. |
+| Pointers | Keep `_node` and collection envelopes in `$from.source`. Prefer a direct selector path for a single `Link<Entry>` to a concrete `OBJECT`, unless a same-environment UI Binding Set differs; use an inner mapping for a union/interface branch, collection, or transformation. |
 | Requiredness | Never map an optional source to a required target without a verified query-level guarantee. |
+| Content-Type availability | Directly read every planned parameter type and every allowed type on a selected `Link<Entry>` or `Array<Link<Entry>>`. Treat a `404` as deleted or unreadable; omit it or block the mapping. |
 | Collections | Never use `items/0`, `items/1`, or another index to fill individual required nested inputs. Use separate inputs only when independent selection is acceptable; otherwise report a modeling gap. |
 | Static root collections | Use the UI-shaped locked `Record` query parameter, with the same ID as its resolver. Bind `limit` and schema-validated `$order` variables to its `Number` and `OrderExpression` fallback fields. This keeps the behavior fixed while matching the editor's persisted format. |
 | Target ownership | A Data Assembly belongs to one Component or Experience Template. Never link the same Data Assembly to another target; create a distinct Data Assembly even when the contracts and mappings are identical. |
