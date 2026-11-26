@@ -45,24 +45,47 @@ retired `/component_types` or `/templates` CMA endpoints.
 Sample one or two Entries for each candidate source type. Field names alone do
 not prove semantic fit or requiredness.
 
-## 2. Current persisted body
+## 2. OpenAPI-derived write contract
 
-A DA POST or PUT body is sys-free and uses this top-level shape:
+This compact contract covers the shared POST and PUT body. Before writing, use
+the current [create Data Assembly schema](https://www.contentful.com/developers/docs/references/experience-management-api/data-assemblies/create-data-assembly/)
+or [upsert Data Assembly schema](https://www.contentful.com/developers/docs/references/experience-management-api/data-assemblies/upsert-data-assembly/)
+when the API may have changed or any field is uncertain.
 
-```json
+```jsonc
 {
   "metadata": { "tags": [] },
-  "name": "Recent AI actions",
-  "description": "Displays a selected title and the three most recently published AI actions.",
-  "parameters": [],
-  "resolvers": {},
-  "return": {}
+  "name": "string",
+  "description": "string",
+  "parameters": [{
+    "id": "string",
+    "name": "optional display name",
+    "required": true,
+    "type": "ResourceLink",
+    "allowedResources": [{
+      "type": "Contentful:Entry",
+      "source": "crn:contentful:::content:spaces/$self/environments/$self",
+      "allowedTypes": ["<contentTypeId>"]
+    }]
+  }],
+  "resolvers": {
+    "<resolverId>": {
+      "source": "Contentful:GraphQL",
+      "query": "string",
+      "parameters": { "<queryVariable>": "<DA pointer or literal>" }
+    }
+  },
+  "return": {
+    "<publicContentPropertyId>": {
+      "$from": { "source": "$resolvers/<resolverId>/...", "select": "..." }
+    }
+  }
 }
 ```
 
-`parameters` is an ordered array. Every parameter has an `id` and an explicit
-`required` value. CMA derives `sys.dataType`; do not supply it in the body.
-Resolver kind is derived from the GraphQL query. Do not set `kind`.
+Every parameter has an `id` and an explicit `required` value. CMA derives
+`sys.dataType`; do not supply it in the body. Resolver kind is derived from the
+GraphQL query. Do not set `kind`.
 
 Before each request, generate one complete body and validate it:
 
