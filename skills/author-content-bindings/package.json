@@ -1,0 +1,10 @@
+{
+  "name": "@contentful/skill-author-content-bindings",
+  "version": "1.0.0",
+  "description": "Create and update Contentful Data Assemblies (Binding Sets) for Components and Experience Templates",
+  "license": "MIT",
+  "files": [
+    "SKILL.md",
+    "references/**"
+  ]
+}

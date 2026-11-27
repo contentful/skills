@@ -1,0 +1,186 @@
+# UI-compatible mappings
+
+Use this reference while designing a return map. CMA may accept broader shapes
+than the Experience UI can reopen. The target environment's GraphQL schema
+governs query type mechanics, Content-Type fields govern reference topology,
+and the final UI reopen verifies the persisted shape.
+
+## Trace the current target schema
+
+Fetch `graphql_schema` immediately before authoring. For every resolver query
+and nested `$from`, record the unwrapped GraphQL return type at the selection
+boundary:
+
+| Return type | Query and return-map form |
+| --- | --- |
+| `UNION` or `INTERFACE` | Query `__typename` and inline fragments; use matching `$on.type` branches. A one-member union still needs `$on.type`. |
+| `OBJECT` | Use an ordinary selector. Do not add `$on.type` only because the CMA field is a `Link` or permits one content type. |
+| Scalar or enum | Use a terminal selector and verify target type and requiredness. |
+
+The type is schema-specific. Do not copy `$on.type` from another environment or
+infer it from CMA field validations.
+
+## Trace the source Content Type as well
+
+For every selected path, record the CMA field shape, requiredness, allowed
+types, GraphQL return type, and chosen pointer form. Read each planned
+parameter type and every `linkContentType` ID on a selected `Link<Entry>` or
+`Array<Link<Entry>>` field directly. A `404` means the type may be deleted or
+unreadable: do not put it in `allowedTypes`, a GraphQL branch, or a field
+mapping. Block a required mapping; remove an optional alternative and obtain
+approval for the revised plan. An unrestricted reference has no finite
+allowed-type list, so mark that uncertainty rather than claiming every target
+type was checked.
+
+## Preserve transport boundaries
+
+Put transport boundaries in `$from.source`, then make the next typed selection
+in `$from.select`.
+
+```json
+{
+  "$from": {
+    "source": "$resolvers/hero/_node",
+    "select": {
+      "$on": { "type": { "PageHero": "headline" } }
+    }
+  }
+}
+```
+
+Do not flatten `_node` into a string selector:
+
+```json
+{ "$from": { "source": "$resolvers/hero", "select": "_node/headline" } }
+```
+
+Use the same rule for `<field>CursorCollection/items`. For a single
+`Link<Entry>` with a concrete GraphQL `OBJECT`, prefer a simple reference path
+in the current selector; a same-environment UI Binding Set takes priority when
+one exists:
+
+```json
+{
+  "$from": {
+    "source": "$resolvers/section/_node",
+    "select": {
+      "$on": { "type": { "SectionTextWithMedia": "title/title" } }
+    }
+  }
+}
+```
+
+Use an inner mapping for a union/interface branch, a collection, or a
+transformation. The CMA Link shape does not decide whether `$on.type` is
+needed; the GraphQL return type does.
+
+## Pointer depth and collections
+
+Apply the four-segment editor-compatibility guideline independently within each
+pointer-expression scope. `items` is an iteration boundary, not a selected
+traversal segment. For example, this is depth four, not five:
+
+```text
+itemsCursorCollection → media → image → url
+```
+
+```json
+{
+  "$from": {
+    "source": "$resolvers/section/_node/itemsCursorCollection/items",
+    "select": { "imageSrc": "media/image/url" }
+  }
+}
+```
+
+This plain selector is correct only if the item and `media` are concrete
+objects in the current schema. Use the required nested `$on.type` branches for
+union or interface boundaries.
+
+## Requiredness is a gate
+
+Compare source availability with every target requirement, including nested
+Record fields and Array items. An optional source cannot satisfy a required
+target unless a verified query guarantee makes it present.
+
+For `Array<Link<Entry>>`, do not use array indexes such as `items/0` or
+`items/1` to fill separate required nested Component contracts. Collection
+items are optional from the mapping's type perspective, even when sampled
+entries currently have enough items.
+
+If a shared parameter cannot cover nested Binding Sets directly, prefer
+explicitly hoisting nested child parameters as separate inputs. Do not propose a
+partial Binding Set if it can be avoided through hoisting or other similar
+options. If the source relationship must be retained by position, report a
+component or content-modeling gap.
+
+Use UI-level language first:
+
+```text
+The {fieldName} collection cannot populate these nested Components by position.
+Create separate inputs and choose each entry independently when configuring the
+Experience or Experience Fragment.
+```
+
+## Root collections: UI-shaped fixed order
+
+For a recommended root collection, validate the target schema's order enum and
+use the editor's persisted form: a locked `Record` parameter with the same ID
+as the resolver. Its fallback values keep the limit and order fixed, while its
+fields bind the GraphQL variables:
+
+```jsonc
+{
+  "parameters": [{
+    "id": "actions",
+    "type": "Record",
+    "required": true,
+    "locked": true,
+    "fields": [
+      { "id": "limit", "type": "Number", "fallbackValue": 3 },
+      {
+        "id": "order",
+        "type": "OrderExpression",
+        "fallbackValue": [{ "path": "sys.publishedAt", "direction": "desc" }],
+        "target": {
+          "resourceLink": "crn:contentful:::content:spaces/$self/environments/$self/contentTypes/aiActionTemplate"
+        }
+      }
+    ]
+  }],
+  "resolvers": {
+    "actions": {
+      "source": "Contentful:GraphQL",
+      "query": "query ($limit: Int!, $order: [AiActionTemplateOrder]) { aiActionTemplateCursorCollection(limit: $limit, order: $order) { items { title description } } }",
+      "parameters": {
+        "limit": "$parameters/actions/limit",
+        "order": "$parameters/actions/order"
+      }
+    }
+  }
+}
+```
+
+The locked Record and both bindings are one shape. Do not replace only part of
+it with an inline enum or a standalone `$order` pointer. Dynamic `where`
+filters, extra root fields, or custom root arguments are API-only exceptions
+and require explicit user confirmation.
+
+## API-only exception
+
+When the user requires a non-recommended shape, describe the smallest specific
+deviation and ask before writing it:
+
+```text
+⚠️ API-only exception proposed
+
+The requested {behavior} requires {specific non-recommended shape}. CMA may
+accept it, but the Binding Set may not open or remain editable in the Experience
+UI. Future changes could require CMA/API calls rather than the editor.
+
+Proceed with this API-only exception?
+```
+
+After any approved exception, reopen the exact Binding Set. If it is not
+editable, report it as API-only rather than presenting it as a normal Binding
+Set.

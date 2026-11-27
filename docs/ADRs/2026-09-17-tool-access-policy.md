@@ -5,7 +5,7 @@
 
 ## Context
 
-Skills that operate on live Contentful spaces (e.g. `exo-content-bindings`, `contentful-migration`) need to call the Contentful Management API. An agent running a skill may have different tools available depending on the host platform: a shell/exec tool (for `curl`), the `contentful-mcp` MCP server, both, or neither.
+Skills that operate on live Contentful spaces (e.g. `author-content-bindings`, `contentful-migration`) need to call the Contentful Management API. An agent running a skill may have different tools available depending on the host platform: a shell/exec tool (for `curl`), the `contentful-mcp` MCP server, both, or neither.
 
 Each `SKILL.md`'s `allowed-tools` frontmatter and its reference docs need one consistent, statable rule for which tool to reach for, rather than leaving each skill to invent its own ordering or silently assume a tool is present.
 
@@ -21,4 +21,4 @@ Skills that call the CMA follow this order:
 
 - `allowed-tools` frontmatter declares both `Bash(curl *)` and the relevant `mcp__*contentful-mcp__*` tool patterns, so either path is permitted without over-scoping to unrelated tools.
 - Reference docs write procedural steps as `curl` examples first, with a short preamble noting the MCP fallback and the fail-stop behavior, instead of duplicating every step twice.
-- A skill author adding a new CMA-calling skill can reuse this ordering without re-deriving it — see [exo-content-bindings/references/api-workflow.md](../../skills/exo-content-bindings/references/api-workflow.md) for the applied pattern.
+- A skill author adding a new CMA-calling skill can reuse this ordering without re-deriving it — see [author-content-bindings/references/cma-workflow.md](../../skills/author-content-bindings/references/cma-workflow.md) for the applied pattern.
